@@ -10,6 +10,7 @@ namespace YourProjectName.Models
         // Ticket information
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string Priority { get; set; } = "Medium";
         public string Status { get; set; } = "Open"; // e.g., Open, InProgress, Closed
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
