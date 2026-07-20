@@ -1,7 +1,8 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+﻿@page "/tickets"
+@using Microsoft.AspNetCore.Components.Authorization
 @using TicketHub.Core.Entities
 @using TicketSystem.Application.Interfaces
-@page "/tickets"
+@rendermode InteractiveServer
 @inject ITicketService TicketService
 
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
