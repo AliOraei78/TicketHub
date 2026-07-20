@@ -1,0 +1,6 @@
+@import url('css/vazirmatn-font-face.css');
+@import "tailwindcss";
+
+@theme {
+    --font-sans: Vazirmatn, sans-serif;
+}

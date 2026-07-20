@@ -1,0 +1,241 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using TicketHub.Core.Entities
+@using TicketSystem.Application.Interfaces
+@page "/tickets"
+@inject ITicketService TicketService
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">سامانه مدیریت تیکت‌ها</h1>
+            <p class="text-sm text-gray-500 mt-1">تیکت‌های پشتیبانی خود را مشاهده، فیلتر و مدیریت کنید.</p>
+        </div>
+        <button @onclick="OpenCreateModal" class="smooth-transition bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 flex items-center gap-2 hover:scale-105 active:scale-95">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            ثبت تیکت جدید
+        </button>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-400 font-medium">کل تیکت‌ها</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1">@tickets.Count()</h3>
+            </div>
+            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-400 font-medium">تیکت‌های باز</p>
+                <h3 class="text-2xl font-bold text-emerald-600 mt-1">@tickets.Count(t => t.Status == "Open")</h3>
+            </div>
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-400 font-medium">اولویت بحرانی</p>
+                <h3 class="text-2xl font-bold text-rose-600 mt-1">@tickets.Count(t => t.Priority == "Critical")</h3>
+            </div>
+            <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="relative w-full md:w-80">
+            <input @bind="searchQuery" @bind:event="oninput" type="text" placeholder="جستجو در عنوان تیکت‌ها..." class="w-full pr-10 pl-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute right-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </div>
+
+        <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+            <button @onclick='() => SetStatusFilter("")' class="smooth-transition px-4 py-2 rounded-xl text-sm font-medium @(selectedStatus == "" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100")">همه</button>
+            <button @onclick='() => SetStatusFilter("Open")' class="smooth-transition px-4 py-2 rounded-xl text-sm font-medium @(selectedStatus == "Open" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100/70")">باز</button>
+            <button @onclick='() => SetStatusFilter("Closed")' class="smooth-transition px-4 py-2 rounded-xl text-sm font-medium @(selectedStatus == "Closed" ? "bg-gray-400 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200")">بسته شده</button>
+        </div>
+    </div>
+
+    <!-- Tickets Main Grid/List -->
+    @if (filteredTickets == null)
+    {
+        <div class="flex justify-center items-center py-20">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+    }
+    else if (!filteredTickets.Any())
+    {
+        <div class="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293H10.828a1 1 0 01-.707-.293L7.707 13.293a1 1 0 00-.707-.293H4" /></svg>
+            <p class="text-gray-500 font-medium">هیچ تیکتی یافت نشد.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 gap-4">
+            @foreach (var ticket in filteredTickets)
+            {
+                <div class="smooth-transition bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600 smooth-transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg group-hover:text-blue-600 smooth-transition">@ticket.Title</h4>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-1 max-w-xl">@ticket.Description</p>
+                            <div class="flex gap-4 mt-2 text-xs text-gray-400">
+                                <span>تاریخ: @ticket.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</span>
+                                <span>شناسه پروژه: @ticket.ProjectId</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
+                        <!-- Priority Badge -->
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold @GetPriorityClass(ticket.Priority)">
+                            @ticket.Priority
+                        </span>
+                        <!-- Status Badge -->
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold @GetStatusClass(ticket.Status)">
+                            @(ticket.Status == "Open" ? "باز" : "بسته شده")
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Animated Create Ticket Modal -->
+@if (isCreateModalOpen)
+{
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-[fadeIn_0.2s_ease-out]">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all scale-100" dir="rtl">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800 text-lg">ایجاد تیکت پشتیبانی جدید</h3>
+                <button @onclick="CloseCreateModal" class="text-gray-400 hover:text-gray-600 smooth-transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <EditForm Model="@newTicket" OnValidSubmit="HandleCreateTicket" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">عنوان تیکت</label>
+                    <InputText @bind-Value="newTicket.Title" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="یک عنوان کوتاه بنویسید" required />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
+                        <InputSelect @bind-Value="newTicket.Priority" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition">
+                            <option value="Low">Low (کم)</option>
+                            <option value="Medium">Medium (متوسط)</option>
+                            <option value="High">High (زیاد)</option>
+                            <option value="Critical">Critical (بحرانی)</option>
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">پروژه مربوطه</label>
+                        <InputNumber @bind-Value="newTicket.ProjectId" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" required />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">توضیحات تیکت</label>
+                    <InputTextArea @bind-Value="newTicket.Description" rows="4" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." required />
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" @onclick="CloseCreateModal" class="smooth-transition px-5 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">انصراف</button>
+                    <button type="submit" class="smooth-transition px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/10">ثبت تیکت</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    // Inject the cascading authentication state
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    private IEnumerable<Ticket> tickets = new List<Ticket>();
+    private string searchQuery = string.Empty;
+    private string selectedStatus = string.Empty;
+    private bool isCreateModalOpen = false;
+    private Ticket newTicket = new Ticket();
+
+    private IEnumerable<Ticket> filteredTickets => tickets
+        .Where(t => string.IsNullOrEmpty(selectedStatus) || t.Status == selectedStatus)
+        .Where(t => string.IsNullOrEmpty(searchQuery) || t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTickets();
+    }
+
+    private async Task LoadTickets()
+    {
+        tickets = await TicketService.GetAllTicketsAsync();
+    }
+
+    private void SetStatusFilter(string status)
+    {
+        selectedStatus = status;
+    }
+
+    private async Task OpenCreateModal()
+    {
+        // Get current user state securely
+        var authState = await AuthState;
+        var user = authState.User;
+
+        // Extract UserId from standard claims
+        var userIdString = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        int currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
+
+        newTicket = new Ticket
+        {
+            Status = "Open",
+            Priority = "Medium",
+            UserId = currentUserId, // Replaced hardcoded ID with dynamic User ID
+            ProjectId = 1 // We will fix this in the Projects step
+        };
+        isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        isCreateModalOpen = false;
+    }
+
+    private async Task HandleCreateTicket()
+    {
+        newTicket.CreatedAt = DateTime.UtcNow;
+        await TicketService.CreateTicketAsync(newTicket);
+        await LoadTickets();
+        isCreateModalOpen = false;
+    }
+
+    private string GetPriorityClass(string priority) => priority switch
+    {
+        "Low" => "bg-blue-50 text-blue-600",
+        "Medium" => "bg-amber-50 text-amber-600",
+        "High" => "bg-orange-50 text-orange-600",
+        "Critical" => "bg-rose-50 text-rose-600",
+        _ => "bg-gray-50 text-gray-600"
+    };
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Open" => "bg-emerald-100 text-emerald-800",
+        "Closed" => "bg-gray-100 text-gray-600",
+        _ => "bg-gray-100 text-gray-600"
+    };
+}
