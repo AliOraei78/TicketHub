@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="TicketHub.csproj" />
+  <Project Path="TicketSystem.Application/TicketHub.Application.csproj" />
+  <Project Path="TicketSystem.Core/TicketHub.Core.csproj" />
+  <Project Path="TicketSystem.Infrastructure/TicketHub.Infrastructure.csproj" />
+  <Project Path="TicketSystem.Web/TicketHub.Web.csproj" />
 </Solution>
