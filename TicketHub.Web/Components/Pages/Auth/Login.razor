@@ -1,19 +1,17 @@
-﻿@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-@page "/login"
-@rendermode InteractiveServer
+﻿@page "/login"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using System.ComponentModel.DataAnnotations
-@using TicketHub.Infrastructure.Data
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.EntityFrameworkCore
-@using TicketHub.Web.Security
-@inject NavigationManager Navigation
+@using TicketHub.Infrastructure.Data
 @inject AppDbContext DbContext
-@inject CustomAuthStateProvider AuthProvider
+@inject NavigationManager Navigation
 
 <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" dir="rtl">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            ورود به حساب کاربری
-        </h2>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">ورود به حساب کاربری</h2>
         <p class="mt-2 text-center text-sm text-gray-600">
             حساب کاربری ندارید؟ <a href="/register" class="font-medium text-blue-600 hover:text-blue-500">ثبت‌نام کنید</a>
         </p>
@@ -21,45 +19,29 @@
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
-            <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm">
+            <!-- اضافه شدن formname و method="post" -->
+            <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm" method="post">
                 <DataAnnotationsValidator />
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <div class="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium">
-                        @errorMessage
-                    </div>
+                    <div class="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium">@errorMessage</div>
                 }
 
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">ایمیل</label>
-                        <div class="mt-1">
-                            <InputText @bind-Value="loginModel.Email" type="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                            <ValidationMessage For="@(() => loginModel.Email)" class="text-xs text-red-500 mt-1" />
-                        </div>
+                        <InputText @bind-Value="loginModel.Email" type="email" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">رمز عبور</label>
-                        <div class="mt-1">
-                            <InputText @bind-Value="loginModel.Password" type="password" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                            <ValidationMessage For="@(() => loginModel.Password)" class="text-xs text-red-500 mt-1" />
-                        </div>
+                        <InputText @bind-Value="loginModel.Password" type="password" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                     </div>
 
-                    <div>
-                        <button type="submit" disabled="@isLoading" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition disabled:opacity-70">
-                            @if (isLoading)
-                            {
-                                <span class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                            }
-                            else
-                            {
-                                <span>ورود</span>
-                            }
-                        </button>
-                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        ورود
+                    </button>
                 </div>
             </EditForm>
         </div>
@@ -67,54 +49,46 @@
 </div>
 
 @code {
-    private LoginViewModel loginModel = new();
-    private bool isLoading = false;
+    [SupplyParameterFromForm] // الزامی برای دریافت اطلاعات فرم
+    private LoginViewModel loginModel { get; set; } = new();
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
     private string? errorMessage;
 
     private async Task HandleLogin()
     {
-        isLoading = true;
-        errorMessage = null;
+        var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
 
-        try
+        // بررسی اینکه آیا کاربر وجود دارد و آیا پسورد با هش BCrypt مطابقت دارد
+        if (user != null && BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password))
         {
-            // Find user in database
-            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
-
-            if (user != null)
+            var claims = new List<Claim>
             {
-                // Verify BCrypt password
-                bool isValid = BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password);
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
 
-                if (isValid)
-                {
-                    // Create session string: Id|Name|Role
-                    var sessionData = $"{user.Id}|{user.Name}|{user.Role}";
-                    await AuthProvider.UpdateAuthenticationState(sessionData);
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
 
-                    Navigation.NavigateTo("/", true);
-                    return;
-                }
-            }
+            // صدور کوکی استاندارد دات‌نت
+            await HttpContext!.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-            errorMessage = "ایمیل یا رمز عبور اشتباه است.";
+            Navigation.NavigateTo("/");
         }
-        catch (Exception)
+        else
         {
-            errorMessage = "خطایی رخ داد. لطفاً مجدداً تلاش کنید.";
-        }
-        finally
-        {
-            isLoading = false;
+            errorMessage = "ایمیل یا رمز عبور اشتباه است. (اگر ادمین هستید، مطمئن شوید رمز در دیتابیس Hash شده باشد)";
         }
     }
-    private class LoginViewModel
-    {
-        [Required(ErrorMessage = "ایمیل الزامی است")]
-        [EmailAddress(ErrorMessage = "فرمت ایمیل معتبر نیست")]
-        public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "رمز عبور الزامی است")]
-        public string Password { get; set; } = string.Empty;
+    public class LoginViewModel
+    {
+        [Required] public string Email { get; set; } = "";
+        [Required] public string Password { get; set; } = "";
     }
 }
