@@ -1,0 +1,123 @@
+﻿@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@page "/register"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using TicketSystem.Application.Interfaces
+@using TicketHub.Core.Entities
+@inject NavigationManager Navigation
+@* Inject your db context or user service here *@
+
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" dir="rtl">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            ثبت‌نام در سامانه
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            یا <a href="/login" class="font-medium text-blue-600 hover:text-blue-500">وارد حساب کاربری خود شوید</a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
+            <EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="registerForm">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium">
+                        @errorMessage
+                    </div>
+                }
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">نام و نام خانوادگی</label>
+                        <div class="mt-1">
+                            <InputText @bind-Value="registerModel.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => registerModel.Name)" class="text-xs text-red-500 mt-1" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ایمیل</label>
+                        <div class="mt-1">
+                            <InputText @bind-Value="registerModel.Email" type="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => registerModel.Email)" class="text-xs text-red-500 mt-1" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">رمز عبور</label>
+                        <div class="mt-1">
+                            <InputText @bind-Value="registerModel.Password" type="password" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => registerModel.Password)" class="text-xs text-red-500 mt-1" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" disabled="@isLoading" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition disabled:opacity-70">
+                            @if (isLoading)
+                            {
+                                <span class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                            }
+                            else
+                            {
+                                <span>ثبت‌نام</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterViewModel registerModel = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    // TODO: Inject your actual UserService or DbContext here in the next step
+    private async Task HandleRegister()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Simulate network delay
+            await Task.Delay(1000);
+
+            // Hash password using BCrypt
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerModel.Password);
+
+            // TODO: Save user to database with Default Role "User"
+            // var newUser = new User { Name = registerModel.Name, Email = registerModel.Email, Password = hashedPassword, Role = "User" };
+            // await UserService.CreateAsync(newUser);
+
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception)
+        {
+            errorMessage = "خطایی در ثبت‌نام رخ داد. لطفاً مجدداً تلاش کنید.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private class RegisterViewModel
+    {
+        [Required(ErrorMessage = "وارد کردن نام الزامی است")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "وارد کردن ایمیل الزامی است")]
+        [EmailAddress(ErrorMessage = "فرمت ایمیل صحیح نیست")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "رمز عبور الزامی است")]
+        [MinLength(6, ErrorMessage = "رمز عبور باید حداقل ۶ کاراکتر باشد")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

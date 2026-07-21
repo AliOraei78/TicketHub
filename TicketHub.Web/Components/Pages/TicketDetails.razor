@@ -1,0 +1,125 @@
+﻿@page "/tickets/{TicketId:int}"
+@rendermode InteractiveServer
+@using TicketHub.Core.Entities
+@using TicketSystem.Application.Interfaces
+@inject ITicketService TicketService
+@inject NavigationManager Navigation
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <!-- Back to List Button -->
+    <button @onclick="GoBack" class="smooth-transition mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7" /></svg>
+        بازگشت به لیست تیکت‌ها
+    </button>
+
+    @if (ticket == null)
+    {
+        <div class="flex justify-center items-center py-20">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <!-- Main Content Area -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Ticket Main Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start border-b border-gray-50 pb-4 mb-4">
+                        <div>
+                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
+                                پروژه: @(ticket.Project?.Name ?? "عمومی")
+                            </span>
+                            <h1 class="text-2xl font-black text-gray-800 mt-2">@ticket.Title</h1>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed text-sm whitespace-pre-line">@ticket.Description</p>
+                </div>
+
+                <!-- Placeholder for Replies Section (Step 6 Extensions) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <h3 class="font-bold text-gray-800 border-b border-gray-50 pb-2">پاسخ‌های تیکت</h3>
+                    <div class="p-4 bg-gray-50 rounded-xl text-center text-sm text-gray-400 border border-dashed border-gray-200">
+                        در حال حاضر پاسخی برای این تیکت ثبت نشده است.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Actions & Info Area -->
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <h3 class="font-bold text-gray-800 border-b border-gray-50 pb-2">مدیریت وضعیت تیکت</h3>
+
+                    <!-- Status Indicator and Update Dropdown -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">وضعیت فعلی</label>
+                        <select @value="ticket.Status" @onchange="UpdateStatus" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 smooth-transition font-medium">
+                            <option value="Open">Open (باز)</option>
+                            <option value="Closed">Closed (بسته شده)</option>
+                        </select>
+                    </div>
+
+                    <!-- Priority Metadata Info -->
+                    <div class="pt-2">
+                        <label class="block text-xs font-medium text-gray-400 mb-1">اولویت تیکت</label>
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold @GetPriorityClass(ticket.Priority)">
+                            @ticket.Priority
+                        </span>
+                    </div>
+
+                    <!-- Meta Details -->
+                    <div class="border-t border-gray-50 pt-4 space-y-2 text-xs text-gray-400">
+                        <div class="flex justify-between">
+                            <span>ثبت کننده:</span>
+                            <span class="font-medium text-gray-700">@(ticket.User?.Name ?? "کاربر ناشناس")</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>تاریخ ایجاد:</span>
+                            <span class="font-medium text-gray-700">@ticket.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int TicketId { get; set; }
+
+    private Ticket? ticket;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ticket = await TicketService.GetTicketByIdAsync(TicketId);
+
+        // Redirect back if ticket is not found
+        if (ticket == null)
+        {
+            Navigation.NavigateTo("/tickets");
+        }
+    }
+
+    private async Task UpdateStatus(ChangeEventArgs e)
+    {
+        if (ticket == null || e.Value == null) return;
+
+        ticket.Status = e.Value.ToString() ?? "Open";
+        await TicketService.UpdateTicketAsync(ticket);
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/tickets");
+    }
+
+    private string GetPriorityClass(string priority) => priority switch
+    {
+        "Low" => "bg-blue-50 text-blue-600",
+        "Medium" => "bg-amber-50 text-amber-600",
+        "High" => "bg-orange-50 text-orange-600",
+        "Critical" => "bg-rose-50 text-rose-600",
+        _ => "bg-gray-50 text-gray-600"
+    };
+}

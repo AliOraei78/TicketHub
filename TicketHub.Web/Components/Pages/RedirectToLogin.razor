@@ -1,0 +1,9 @@
+﻿@inject NavigationManager Navigation
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Redirect the unauthenticated user to the login page smoothly
+        Navigation.NavigateTo("/login");
+    }
+}

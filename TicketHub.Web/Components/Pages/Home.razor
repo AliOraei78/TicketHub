@@ -1,9 +1,166 @@
-﻿@page "/Home"
+﻿@page "/"
+@page "/home"
+@rendermode InteractiveServer
+@using TicketHub.Core.Entities
+@using TicketSystem.Application.Interfaces
+@inject ITicketService TicketService
+@inject IProjectService ProjectService
+@inject NavigationManager Navigation
 
-<h1 class="text-5xl font-bold text-blue-600">
-    تیکت هاب
-</h1>
+<PageTitle>داشبورد | سامانه تیکتینگ</PageTitle>
 
-<p class="text-xl">
-    سیستم مدیریت تیکت
-</p>
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <!-- Welcome Banner -->
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 rounded-3xl p-8 md:p-10 text-white shadow-xl shadow-blue-900/20 mb-8 relative overflow-hidden">
+        <div class="relative z-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">خوش آمدید به تیکت‌هاب</h1>
+            <p class="text-blue-100 text-lg max-w-2xl">سیستم یکپارچه مدیریت درخواست‌ها و پشتیبانی. وضعیت تیکت‌های خود را در یک نگاه بررسی کنید.</p>
+        </div>
+        <!-- Decorative SVG -->
+        <svg class="absolute left-0 top-0 h-full opacity-10 transform -translate-x-1/4 scale-150" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polygon fill="currentColor" points="0,100 100,0 100,100" />
+        </svg>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <!-- Total Tickets -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md smooth-transition">
+            <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 mb-1">کل تیکت‌ها</p>
+                <h3 class="text-3xl font-black text-gray-800">@totalTickets</h3>
+            </div>
+        </div>
+
+        <!-- Open Tickets -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md smooth-transition">
+            <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 mb-1">تیکت‌های باز</p>
+                <h3 class="text-3xl font-black text-emerald-600">@openTickets</h3>
+            </div>
+        </div>
+
+        <!-- Closed Tickets -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md smooth-transition">
+            <div class="p-4 bg-gray-50 text-gray-500 rounded-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 mb-1">بسته شده</p>
+                <h3 class="text-3xl font-black text-gray-600">@closedTickets</h3>
+            </div>
+        </div>
+
+        <!-- Total Projects -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md smooth-transition">
+            <div class="p-4 bg-purple-50 text-purple-600 rounded-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 mb-1">پروژه‌های فعال</p>
+                <h3 class="text-3xl font-black text-gray-800">@totalProjects</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tickets Section -->
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+            <h2 class="text-xl font-bold text-gray-800">آخرین تیکت‌های ثبت شده</h2>
+            <button @onclick='() => Navigation.NavigateTo("/tickets")' class="text-sm font-medium text-blue-600 hover:text-blue-800 smooth-transition flex items-center gap-1">
+                مشاهده همه
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        </div>
+
+        <div class="p-0">
+            @if (recentTickets == null)
+            {
+                <div class="flex justify-center items-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+            }
+            else if (!recentTickets.Any())
+            {
+                <div class="text-center py-12 text-gray-400 text-sm">
+                    تیکتی برای نمایش وجود ندارد.
+                </div>
+            }
+            else
+            {
+                <div class="divide-y divide-gray-50">
+                    @foreach (var ticket in recentTickets)
+                    {
+                        <div @onclick="() => NavigateToDetails(ticket.Id)" class="p-5 hover:bg-slate-50 cursor-pointer smooth-transition flex flex-col md:flex-row justify-between md:items-center gap-4 group">
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 @(ticket.Status == "Open" ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-500")">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 group-hover:text-blue-600 smooth-transition">@ticket.Title</h4>
+                                    <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                                        <span>@(ticket.Project?.Name ?? "عمومی")</span>
+                                        <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                        <span>@ticket.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 border-t md:border-none pt-3 md:pt-0">
+                                <span class="px-2.5 py-1 rounded-md text-xs font-semibold @GetPriorityClass(ticket.Priority)">
+                                    @ticket.Priority
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private int totalTickets = 0;
+    private int openTickets = 0;
+    private int closedTickets = 0;
+    private int totalProjects = 0;
+
+    private IEnumerable<Ticket>? recentTickets;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch data from services
+        var tickets = await TicketService.GetAllTicketsAsync();
+        var projects = await ProjectService.GetAllProjectsAsync();
+
+        // Calculate metrics for dashboard display
+        totalTickets = tickets.Count();
+        openTickets = tickets.Count(t => t.Status == "Open");
+        closedTickets = tickets.Count(t => t.Status == "Closed");
+        totalProjects = projects.Count();
+
+        // Order tickets by creation date descending and take the top 5
+        recentTickets = tickets.OrderByDescending(t => t.CreatedAt).Take(5);
+    }
+
+    private void NavigateToDetails(int id)
+    {
+        // Navigate user to the specific ticket details page
+        Navigation.NavigateTo($"/tickets/{id}");
+    }
+
+    private string GetPriorityClass(string priority) => priority switch
+    {
+        "Low" => "bg-blue-50 text-blue-600",
+        "Medium" => "bg-amber-50 text-amber-600",
+        "High" => "bg-orange-50 text-orange-600",
+        "Critical" => "bg-rose-50 text-rose-600",
+        _ => "bg-gray-50 text-gray-600"
+    };
+}

@@ -1,28 +1,19 @@
 ﻿<!DOCTYPE html>
-<!-- Set language to Persian and direction to RTL -->
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
 
-    <!-- It is highly recommended to remove Bootstrap if you are using Tailwind -->
-    <!-- <link rel="stylesheet" href="bootstrap/bootstrap.min.css" /> -->
-    <!-- Your compiled Tailwind CSS -->
     <link rel="stylesheet" href="app.min.css" />
-
-    <!-- Blazor CSS Isolation -->
     <link rel="stylesheet" href="TicketHub.Web.styles.css" />
-
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="css/Vazirmatn-font-face.css" />
 
-    <!-- Persian Font without ~/ -->
-    <link rel="stylesheet" href="~/css/Vazirmatn-font-face.css" />
-
-    <HeadOutlet />
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 </head>
 <body>
-    <Routes />
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
 </body>
 </html>

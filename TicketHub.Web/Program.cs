@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
 using TicketHub.Infrastructure.Repositories;
-using TicketHub.Web.Auth;
+using TicketHub.Web.Security;
 using TicketHub.Web.Components;
 using TicketSystem.Application.Interfaces;
 using TicketSystem.Application.Services;
@@ -18,9 +18,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Authentication services
-builder.Services.AddAuthorizationCore();
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+// Add authentication services
+builder.Services.AddAuthenticationCore();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<CustomAuthStateProvider>());
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITicketService, TicketService>();
