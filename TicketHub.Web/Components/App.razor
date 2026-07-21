@@ -25,6 +25,6 @@
     // این بخش به صورت هوشمند رندرمود را بر اساس آدرس صفحه تعیین می‌کند
     private Microsoft.AspNetCore.Components.IComponentRenderMode? PageRenderMode =>
         HttpContext != null && (HttpContext.Request.Path.StartsWithSegments("/login") || HttpContext.Request.Path.StartsWithSegments("/register"))
-            ? null // رندر استاتیک (بدون SignalR) برای صفحات لاگین و ثبت‌نام تا کوکی‌ها به درستی تنظیم شوند
-            : InteractiveServer; // رندر تعاملی برای داشبورد و سایر صفحات
+            ? null
+            : new InteractiveServerRenderMode(prerender: false); // <--- تغییر مهم در این خط
 }
