@@ -19,8 +19,8 @@
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
-            <!-- اضافه شدن formname و method="post" -->
-            <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm" method="post">
+            <!-- بدون rendermode تعاملی، فرم به صورت استاندارد POST ارسال می‌شود -->
+            <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm">
                 <DataAnnotationsValidator />
 
                 @if (!string.IsNullOrEmpty(errorMessage))
@@ -32,11 +32,13 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">ایمیل</label>
                         <InputText @bind-Value="loginModel.Email" type="email" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <ValidationMessage For="() => loginModel.Email" class="text-xs text-red-500 mt-1" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">رمز عبور</label>
                         <InputText @bind-Value="loginModel.Password" type="password" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <ValidationMessage For="() => loginModel.Password" class="text-xs text-red-500 mt-1" />
                     </div>
 
                     <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -49,7 +51,7 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm] // الزامی برای دریافت اطلاعات فرم
+    [SupplyParameterFromForm]
     private LoginViewModel loginModel { get; set; } = new();
 
     [CascadingParameter]
@@ -59,9 +61,14 @@
 
     private async Task HandleLogin()
     {
+        if (HttpContext == null)
+        {
+            errorMessage = "خطای ارتباط با سرور رخ داد.";
+            return;
+        }
+
         var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
 
-        // بررسی اینکه آیا کاربر وجود دارد و آیا پسورد با هش BCrypt مطابقت دارد
         if (user != null && BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password))
         {
             var claims = new List<Claim>
@@ -75,20 +82,24 @@
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            // صدور کوکی استاندارد دات‌نت
-            await HttpContext!.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+            // صدور کوکی بدون خطا انجام می‌شود
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/", true);
         }
         else
         {
-            errorMessage = "ایمیل یا رمز عبور اشتباه است. (اگر ادمین هستید، مطمئن شوید رمز در دیتابیس Hash شده باشد)";
+            errorMessage = "ایمیل یا رمز عبور اشتباه است.";
         }
     }
 
     public class LoginViewModel
     {
-        [Required] public string Email { get; set; } = "";
-        [Required] public string Password { get; set; } = "";
+        [Required(ErrorMessage = "وارد کردن ایمیل الزامی است")]
+        [EmailAddress(ErrorMessage = "فرمت ایمیل نامعتبر است")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است")]
+        public string Password { get; set; } = "";
     }
 }
