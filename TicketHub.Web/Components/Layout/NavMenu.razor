@@ -9,7 +9,6 @@
 
     private bool isSettingsOpen = false;
 
-    // اضافه شدن relative برای قرارگیری درست تولتیپ‌ها
     private string GetNavItemClass()
     {
         var paddingClass = IsCollapsed ? "justify-center px-0" : "px-4";
@@ -40,7 +39,6 @@
     }
 }
 
-<!-- کلاس overflow-hidden حذف شد تا تولتیپ‌ها بتوانند از کادر بیرون بزنند -->
 <aside class="h-full flex flex-col bg-slate-900 border-l border-slate-800 text-slate-300">
     <!-- Brand / Logo Section -->
     <div class="@($"h-16 flex items-center {(IsCollapsed ? "justify-center" : "justify-between px-6")} bg-slate-950/50 border-b border-slate-800/60 transition-all duration-300")">
@@ -55,14 +53,12 @@
                 <!-- آیکون هاور (فلش‌ها) -->
                 @if (IsCollapsed)
                 {
-                    <!-- فلش به سمت بیرون (چپ) -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden group-hover:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 }
                 else
                 {
-                    <!-- فلش به سمت داخل (راست) -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden group-hover:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -162,21 +158,23 @@
                 </div>
                 @if (!IsCollapsed)
                 {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform smooth-transition @(isSettingsOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isSettingsOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 }
             </button>
 
-            @if (isSettingsOpen && !IsCollapsed)
-            {
-                <div class="pr-12 pl-4 py-1 space-y-1 animate-[fadeIn_0.2s_ease-out]">
-                    <NavLink class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group" href="settings/roles" @onclick="HandleSideBarClick">
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0 group-hover:bg-blue-500"></span>
-                        <span class="whitespace-nowrap">مدیریت نقش‌ها</span>
-                    </NavLink>
+            <!-- زیرمنوی آکاردئونی با انیمیشن نرمِ CSS Grid -->
+            <div class="grid transition-all duration-300 ease-in-out @(isSettingsOpen && !IsCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")">
+                <div class="overflow-hidden">
+                    <div class="pr-12 pl-4 py-1 space-y-1">
+                        <NavLink class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group" href="settings/roles" @onclick="HandleSideBarClick">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0 group-hover:bg-blue-500 transition-colors"></span>
+                            <span class="whitespace-nowrap">مدیریت نقش‌ها</span>
+                        </NavLink>
+                    </div>
                 </div>
-            }
+            </div>
         </div>
     </nav>
 

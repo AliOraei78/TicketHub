@@ -10,10 +10,21 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="stylesheet" href="css/Vazirmatn-font-face.css" />
 
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body>
-    <Routes @rendermode="InteractiveServer" />
+    <Routes @rendermode="PageRenderMode" />
     <script src="_framework/blazor.web.js"></script>
 </body>
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    // این بخش به صورت هوشمند رندرمود را بر اساس آدرس صفحه تعیین می‌کند
+    private Microsoft.AspNetCore.Components.IComponentRenderMode? PageRenderMode =>
+        HttpContext != null && (HttpContext.Request.Path.StartsWithSegments("/login") || HttpContext.Request.Path.StartsWithSegments("/register"))
+            ? null // رندر استاتیک (بدون SignalR) برای صفحات لاگین و ثبت‌نام تا کوکی‌ها به درستی تنظیم شوند
+            : InteractiveServer; // رندر تعاملی برای داشبورد و سایر صفحات
+}

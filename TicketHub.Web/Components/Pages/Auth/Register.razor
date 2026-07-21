@@ -1,4 +1,5 @@
 ﻿@page "/register"
+@layout TicketHub.Web.Components.Layout.AuthLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using System.ComponentModel.DataAnnotations
 @using TicketHub.Core.Entities
@@ -7,37 +8,61 @@
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
 
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" dir="rtl">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">ثبت‌نام در سامانه</h2>
-    </div>
+<div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden py-12">
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
+    <!-- افکت‌های نوری (Blobs) در پس‌زمینه -->
+    <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
+    <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+
+    <div class="relative z-10 w-full max-w-md px-6">
+
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-black text-white tracking-tight">ایجاد حساب کاربری</h2>
+            <p class="mt-2 text-sm text-slate-400 font-medium">به خانواده تیکت‌هاب بپیوندید</p>
+        </div>
+
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
             <EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="registerForm" method="post">
                 <DataAnnotationsValidator />
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <div class="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm">@errorMessage</div>
+                    <div class="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        @errorMessage
+                    </div>
                 }
 
-                <div class="space-y-6">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium">نام و نام خانوادگی</label>
-                        <InputText @bind-Value="registerModel.Name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl" />
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">نام و نام خانوادگی</label>
+                        <InputText @bind-Value="registerModel.Name" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="مثال: علی محمدی" />
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium">ایمیل</label>
-                        <InputText @bind-Value="registerModel.Email" type="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl" />
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">آدرس ایمیل</label>
+                        <InputText @bind-Value="registerModel.Email" type="email" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="name@company.com" dir="ltr" />
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium">رمز عبور</label>
-                        <InputText @bind-Value="registerModel.Password" type="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl" />
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">رمز عبور</label>
+                        <InputText @bind-Value="registerModel.Password" type="password" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="••••••••" dir="ltr" />
                     </div>
-                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 rounded-xl text-white bg-blue-600 hover:bg-blue-700">ثبت‌نام</button>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25">
+                            ثبت‌نام در سامانه
+                        </button>
+                    </div>
                 </div>
             </EditForm>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-slate-400">
+                    قبلاً ثبت‌نام کرده‌اید؟
+                    <a href="/login" class="font-bold text-blue-400 hover:text-blue-300 transition-colors">وارد شوید</a>
+                </p>
+            </div>
         </div>
     </div>
 </div>
@@ -71,7 +96,6 @@
             DbContext.Users.Add(newUser);
             await DbContext.SaveChangesAsync();
 
-            // ← اضافه کردن نقش پیش‌فرض
             var defaultRole = await DbContext.Roles.FirstOrDefaultAsync(r => r.Name == "User");
             if (defaultRole != null)
             {
