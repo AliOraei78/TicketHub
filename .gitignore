@@ -432,3 +432,6 @@ appsettings.json
 appsettings.Development.json
 appsettings.Production.json
 /TicketHub.Web/Tailwind/tailwindcss.exe
+
+# Ignore DbInitializer because it contains default credentials
+TicketHub.Infrastructure/Data/DbInitializer.cs

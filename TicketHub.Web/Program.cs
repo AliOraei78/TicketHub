@@ -21,8 +21,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.Cookie.Name = "TicketHub_Session";
-        options.LoginPath = "/login"; // مسیر ریدایرکت خودکار
+        options.LoginPath = "/login";
         options.AccessDeniedPath = "/access-denied";
+
+        // --- تنظیمات امنیتی استاندارد ---
+        options.Cookie.HttpOnly = true; // جلوگیری از سرقت کوکی توسط کدهای جاوااسکریپت مخرب (XSS)
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // اطمینان از اینکه کوکی فقط روی بستر امن HTTPS ارسال شود
+        options.Cookie.SameSite = SameSiteMode.Strict; // جلوگیری از ارسال درخواست‌های جعلی از سایت‌های دیگر (حملات CSRF)
+
+        // --- تنظیمات انقضا ---
+        options.ExpireTimeSpan = TimeSpan.FromDays(7); // کوکی بعد از ۷ روز منقضی می‌شود
+        options.SlidingExpiration = true; // اگر کاربر در روز ششم به سایت سر زد، انقضای کوکی خودکار ۷ روز دیگر تمدید می‌شود
     });
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
@@ -33,6 +42,22 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        // فراخوانی متد برای ساخت دیتابیس و داده‌ها
+        await DbInitializer.InitializeAsync(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "خطایی در هنگام ایجاد دیتابیس یا تزریق داده‌ها رخ داد.");
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {

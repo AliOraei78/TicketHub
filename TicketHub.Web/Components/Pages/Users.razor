@@ -4,7 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using UserEntity = TicketHub.Core.Entities.User
 @using TicketHub.Core.Entities
-@using TicketHub.Core.Common
+@using BCrypt.Net
 @inject AppDbContext DbContext
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
@@ -326,7 +326,7 @@
         userInDb.PhoneNumber = editingUser.PhoneNumber;
 
         if (!string.IsNullOrWhiteSpace(newPassword))
-            userInDb.Password = PasswordHasher.HashPassword(newPassword);
+            userInDb.Password = BCrypt.HashPassword(newPassword);
 
         // Update Roles (UserRole)
         var currentUserRoles = await DbContext.UserRoles.Where(ur => ur.UserId == userInDb.Id).ToListAsync();

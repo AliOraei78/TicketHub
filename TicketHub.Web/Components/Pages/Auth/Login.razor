@@ -91,7 +91,15 @@
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+            // تنظیم مشخصات احراز هویت برای دائمی کردن کوکی
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true, // باعث می‌شود کوکی به جای نشست موقت، به عنوان یک فایل دائمی در مرورگر ذخیره شود
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            };
+
+            // پاس دادن authProperties به عنوان پارامتر سوم
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
             Navigation.NavigateTo("/", true);
         }

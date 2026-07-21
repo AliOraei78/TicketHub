@@ -60,7 +60,9 @@ namespace TicketHub.Infrastructure.Data
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Project)
                 .WithMany(p => p.Tickets)
-                .HasForeignKey(t => t.ProjectId);
+                .HasForeignKey(t => t.ProjectId)
+                .IsRequired(false) // <--- این خط به EF Core می‌فهماند که پروژه الزامی نیست
+                .OnDelete(DeleteBehavior.SetNull); ;
         }
     }
 }
