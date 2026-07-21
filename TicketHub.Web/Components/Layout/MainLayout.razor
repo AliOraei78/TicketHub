@@ -10,7 +10,7 @@
         nav a.active svg {
             color: rgb(37 99 235) !important;
         }
-    /* انیمیشن نرم برای باز و بسته شدن سایدبار */
+
     .sidebar-transition {
         transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -20,8 +20,8 @@
 
     <!-- Desktop Sidebar -->
     <div class="hidden md:block @(isSidebarCollapsed ? "w-20" : "w-64") h-screen sticky top-0 flex-shrink-0 z-20 shadow-xl shadow-slate-900/5 sidebar-transition">
-        <!-- پاس دادن وضعیت کشویی به منو -->
-        <NavMenu IsMobileMenuOpen="false" IsCollapsed="isSidebarCollapsed" OnExpandRequested="OpenSidebar" />
+        <!-- پاس دادن رویداد جدید به منو -->
+        <NavMenu IsMobileMenuOpen="false" IsCollapsed="isSidebarCollapsed" OnExpandRequested="OpenSidebar" OnToggleSidebar="ToggleDesktopSidebar" />
     </div>
 
     <!-- Mobile Sidebar Drawer Overlay -->
@@ -42,13 +42,6 @@
             <div class="flex items-center gap-3">
                 <!-- دکمه همبرگری موبایل -->
                 <button @onclick="ToggleMobileMenu" class="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 smooth-transition border border-slate-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-
-                <!-- دکمه کشویی کردن سایدبار برای دسکتاپ -->
-                <button @onclick="ToggleDesktopSidebar" class="hidden md:block p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 smooth-transition border border-transparent hover:border-slate-100" title="باز/بسته کردن منو">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>

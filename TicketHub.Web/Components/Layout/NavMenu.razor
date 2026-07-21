@@ -5,22 +5,25 @@
 
     [Parameter] public bool IsCollapsed { get; set; }
     [Parameter] public EventCallback OnExpandRequested { get; set; }
+    [Parameter] public EventCallback OnToggleSidebar { get; set; }
 
     private bool isSettingsOpen = false;
 
-    // متد جدید برای جلوگیری از خطای RZ9986 و حذف کدهای تکراری
+    // اضافه شدن relative برای قرارگیری درست تولتیپ‌ها
     private string GetNavItemClass()
     {
         var paddingClass = IsCollapsed ? "justify-center px-0" : "px-4";
-        return $"flex items-center gap-3 {paddingClass} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group";
+        return $"relative flex items-center gap-3 {paddingClass} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group";
     }
 
     private async Task HandleSideBarClick()
     {
-        if (IsMobileMenuOpen)
-        {
-            await CloseMobileMenu.InvokeAsync();
-        }
+        if (IsMobileMenuOpen) await CloseMobileMenu.InvokeAsync();
+    }
+
+    private async Task HandleToggleSidebar()
+    {
+        await OnToggleSidebar.InvokeAsync();
     }
 
     private async Task HandleSettingsClick()
@@ -37,20 +40,40 @@
     }
 }
 
-<aside class="h-full flex flex-col bg-slate-900 border-l border-slate-800 text-slate-300 overflow-hidden">
+<!-- کلاس overflow-hidden حذف شد تا تولتیپ‌ها بتوانند از کادر بیرون بزنند -->
+<aside class="h-full flex flex-col bg-slate-900 border-l border-slate-800 text-slate-300">
     <!-- Brand / Logo Section -->
     <div class="@($"h-16 flex items-center {(IsCollapsed ? "justify-center" : "justify-between px-6")} bg-slate-950/50 border-b border-slate-800/60 transition-all duration-300")">
-        <a class="text-xl font-black text-white flex items-center gap-3 smooth-transition hover:opacity-90" href="" @onclick="HandleSideBarClick" title="@(IsCollapsed ? "داشبورد اصلی" : "")">
-            <div class="w-8 h-8 rounded-xl bg-blue-600 flex-shrink-0 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+        <div class="flex items-center gap-3">
+            <!-- دکمه آیکون با قابلیت تغییر به فلش در زمان هاور -->
+            <button type="button" @onclick="HandleToggleSidebar" class="w-8 h-8 rounded-xl bg-blue-600 flex-shrink-0 flex items-center justify-center shadow-lg shadow-blue-500/30 smooth-transition hover:bg-blue-500 group relative cursor-pointer">
+                <!-- آیکون اصلی (در حالت عادی نمایش داده می‌شود) -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white block group-hover:hidden" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
                 </svg>
-            </div>
+
+                <!-- آیکون هاور (فلش‌ها) -->
+                @if (IsCollapsed)
+                {
+                    <!-- فلش به سمت بیرون (چپ) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden group-hover:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                }
+                else
+                {
+                    <!-- فلش به سمت داخل (راست) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden group-hover:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                }
+            </button>
+
             @if (!IsCollapsed)
             {
-                <span class="tracking-tight text-base font-bold text-gray-100 whitespace-nowrap">سامانه تیکت‌هاب</span>
+                <a href="" class="tracking-tight text-base font-bold text-gray-100 whitespace-nowrap hover:text-blue-400 smooth-transition">سامانه تیکت‌هاب</a>
             }
-        </a>
+        </div>
 
         <!-- Mobile Close Button -->
         @if (!IsCollapsed)
@@ -64,8 +87,8 @@
     </div>
 
     <!-- Navigation Links -->
-    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-        <NavLink class="@GetNavItemClass()" href="" Match="NavLinkMatch.All" @onclick="HandleSideBarClick" title="@(IsCollapsed ? "داشبورد اصلی" : "")">
+    <nav class="@($"flex-1 p-4 space-y-2 {(IsCollapsed ? "overflow-visible" : "overflow-y-auto overflow-x-hidden")}")">
+        <NavLink class="@GetNavItemClass()" href="" Match="NavLinkMatch.All" @onclick="HandleSideBarClick">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
@@ -73,9 +96,13 @@
             {
                 <span class="whitespace-nowrap">داشبورد اصلی</span>
             }
+            @if (IsCollapsed)
+            {
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">داشبورد اصلی</span>
+            }
         </NavLink>
 
-        <NavLink class="@GetNavItemClass()" href="tickets" @onclick="HandleSideBarClick" title="@(IsCollapsed ? "مدیریت تیکت‌ها" : "")">
+        <NavLink class="@GetNavItemClass()" href="tickets" @onclick="HandleSideBarClick">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
@@ -83,9 +110,13 @@
             {
                 <span class="whitespace-nowrap">مدیریت تیکت‌ها</span>
             }
+            @if (IsCollapsed)
+            {
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">مدیریت تیکت‌ها</span>
+            }
         </NavLink>
 
-        <NavLink class="@GetNavItemClass()" href="projects" @onclick="HandleSideBarClick" title="@(IsCollapsed ? "پروژه‌ها" : "")">
+        <NavLink class="@GetNavItemClass()" href="projects" @onclick="HandleSideBarClick">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
@@ -93,10 +124,13 @@
             {
                 <span class="whitespace-nowrap">پروژه‌ها</span>
             }
+            @if (IsCollapsed)
+            {
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">پروژه‌ها</span>
+            }
         </NavLink>
 
-        <!-- Users Menu Section -->
-        <NavLink class="@GetNavItemClass()" href="users" @onclick="HandleSideBarClick" title="@(IsCollapsed ? "مدیریت کاربران" : "")">
+        <NavLink class="@GetNavItemClass()" href="users" @onclick="HandleSideBarClick">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
@@ -104,11 +138,14 @@
             {
                 <span class="whitespace-nowrap">مدیریت کاربران</span>
             }
+            @if (IsCollapsed)
+            {
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">مدیریت کاربران</span>
+            }
         </NavLink>
 
-        <!-- Settings Section with Submenu -->
         <div class="space-y-1">
-            <button @onclick="HandleSettingsClick" title="@(IsCollapsed ? "تنظیمات سیستم" : "")" class="@($"cursor-pointer w-full flex items-center {(IsCollapsed ? "justify-center px-0" : "justify-between px-4")} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group")">
+            <button @onclick="HandleSettingsClick" class="@($"relative cursor-pointer w-full flex items-center {(IsCollapsed ? "justify-center px-0" : "justify-between px-4")} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group")">
                 <div class="flex items-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -117,6 +154,10 @@
                     @if (!IsCollapsed)
                     {
                         <span class="whitespace-nowrap">تنظیمات سیستم</span>
+                    }
+                    @if (IsCollapsed)
+                    {
+                        <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">تنظیمات سیستم</span>
                     }
                 </div>
                 @if (!IsCollapsed)
@@ -127,7 +168,6 @@
                 }
             </button>
 
-            <!-- Submenu Items -->
             @if (isSettingsOpen && !IsCollapsed)
             {
                 <div class="pr-12 pl-4 py-1 space-y-1 animate-[fadeIn_0.2s_ease-out]">
@@ -142,7 +182,7 @@
 
     <!-- Sidebar Footer -->
     <div class="flex flex-col border-t border-slate-800/60 bg-slate-950/20">
-        <a href="/profile" class="@($"flex items-center gap-3 {(IsCollapsed ? "justify-center p-3" : "p-4")} hover:bg-slate-800/40 smooth-transition group")" @onclick="HandleSideBarClick" title="@(IsCollapsed ? "پروفایل من" : "")">
+        <a href="/profile" class="@($"relative flex items-center gap-3 {(IsCollapsed ? "justify-center p-3" : "p-4")} hover:bg-slate-800/40 smooth-transition group")" @onclick="HandleSideBarClick">
             <div class="w-9 h-9 rounded-full bg-slate-700 flex-shrink-0 flex items-center justify-center text-sm font-bold text-white border border-slate-600 group-hover:border-blue-500 smooth-transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             </div>
@@ -153,15 +193,23 @@
                     <p class="text-[10px] text-slate-500 truncate group-hover:text-blue-400">ویرایش اطلاعات</p>
                 </div>
             }
+            @if (IsCollapsed)
+            {
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">پروفایل من</span>
+            }
         </a>
 
         <form action="/logout" method="post" data-enhance="false" class="w-full border-t border-slate-800/60">
             <AntiforgeryToken />
-            <button type="submit" title="@(IsCollapsed ? "خروج" : "")" class="@($"w-full flex items-center justify-center gap-2 {(IsCollapsed ? "p-4" : "p-3")} text-sm font-medium text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 smooth-transition")">
+            <button type="submit" class="@($"relative w-full flex items-center justify-center gap-2 {(IsCollapsed ? "p-4" : "p-3")} text-sm font-medium text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 smooth-transition group")">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 @if (!IsCollapsed)
                 {
                     <span class="whitespace-nowrap">خروج</span>
+                }
+                @if (IsCollapsed)
+                {
+                    <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">خروج</span>
                 }
             </button>
         </form>
