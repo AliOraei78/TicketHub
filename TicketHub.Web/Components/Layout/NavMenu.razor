@@ -64,6 +64,14 @@
             <span>پروژه‌ها</span>
         </NavLink>
 
+        <!-- Users Menu Section -->
+        <NavLink class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group" href="users" @onclick="HandleSideBarClick">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span>مدیریت کاربران</span>
+        </NavLink>
+
         <!-- Settings Section with Submenu -->
         <div class="space-y-1">
             <button @onclick="ToggleSettingsMenu" class="cursor-pointer w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group">
@@ -87,7 +95,6 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-slate-500 group-hover:bg-blue-500"></span>
                         مدیریت نقش‌ها
                     </NavLink>
-                    <!-- Future settings items can be added here -->
                 </div>
             }
         </div>
