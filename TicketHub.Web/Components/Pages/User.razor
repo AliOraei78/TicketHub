@@ -59,8 +59,7 @@
 
             <div class="flex flex-wrap gap-3 w-full md:w-auto">
                 <div class="bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 text-center flex-1 md:flex-initial relative group">
-                    <span class="block text-xs text-gray-400 font-medium">نقش کاربری</span>
-                    <span class="text-sm font-bold text-indigo-600">@currentUser.Role</span>
+                    <span class="block text-xs text-gray-400 font-medium">نقش کاربری</span>                
 
                     <!-- Edit Role Button -->
                     <button @onclick="() => isEditingRole = true" class="absolute -top-2 -right-2 bg-white border border-gray-200 p-1.5 rounded-full text-gray-400 hover:text-indigo-600 hover:border-indigo-200 shadow-sm smooth-transition opacity-0 group-hover:opacity-100">
@@ -151,7 +150,6 @@
 
             if (currentUser != null)
             {
-                selectedRole = currentUser.Role;
                 var allTickets = await TicketService.GetAllTicketsAsync();
                 userTickets = allTickets.Where(t => t.UserId == currentUserId).OrderByDescending(t => t.CreatedAt);
             }
@@ -165,8 +163,7 @@
     {
         if (currentUser != null && !string.IsNullOrEmpty(selectedRole))
         {
-            // Update user role in DB
-            currentUser.Role = selectedRole;
+            // Update user role in DB         
             DbContext.Users.Update(currentUser);
             await DbContext.SaveChangesAsync();
 

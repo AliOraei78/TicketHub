@@ -4,6 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using UserEntity = TicketHub.Core.Entities.User
 @using TicketHub.Core.Entities
+@using TicketHub.Core.Common
 @inject AppDbContext DbContext
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
@@ -31,7 +32,7 @@
                         <tr>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-600">نام کاربر</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-600">ایمیل</th>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">نقش</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">نقش‌ها</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-600 text-center">عملیات</th>
                         </tr>
                     </thead>
@@ -49,9 +50,18 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500" dir="ltr">@user.Email</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold border border-blue-100">
-                                        @user.Role
-                                    </span>
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach (var userRole in user.UserRoles)
+                                        {
+                                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold border border-blue-100">
+                                                @userRole.Role?.Name
+                                            </span>
+                                        }
+                                        @if (!user.UserRoles.Any())
+                                        {
+                                            <span class="text-gray-400 text-xs">بدون نقش</span>
+                                        }
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <button @onclick="() => OpenEditModal(user)"
@@ -201,7 +211,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        users = await DbContext.Users.ToListAsync();
+        // Include UserRoles for eager loading
+        users = await DbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .ToListAsync();
+
         await LoadAvailableData();
     }
 
@@ -228,8 +243,10 @@
         showRoleDropdown = false;
         showProjectDropdown = false;
 
-        SelectedRoles = string.IsNullOrEmpty(user.Role) ? new() : new List<string> { user.Role };
+        // Load selected roles from UserRoles
+        SelectedRoles = user.UserRoles.Select(ur => ur.Role?.Name ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
 
+        // Load selected projects
         SelectedProjectIds = await DbContext.UserProjects
             .Where(up => up.UserId == user.Id)
             .Select(up => up.ProjectId)
@@ -270,25 +287,41 @@
     {
         if (editingUser == null) return;
 
-        var userInDb = await DbContext.Users.FindAsync(editingUser.Id);
+        var userInDb = await DbContext.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == editingUser.Id);
+
         if (userInDb == null) return;
 
-        // Update basic info
         userInDb.Name = editingUser.Name;
         userInDb.Email = editingUser.Email;
         userInDb.PhoneNumber = editingUser.PhoneNumber;
 
         if (!string.IsNullOrWhiteSpace(newPassword))
-            userInDb.Password = newPassword; // TODO: Hash in real app
+            userInDb.Password = PasswordHasher.HashPassword(newPassword);
 
-        // Update Role (first one or joined)
-        userInDb.Role = SelectedRoles.Any() ? string.Join(",", SelectedRoles) : "User";
+        // Update Roles (UserRole)
+        var currentUserRoles = await DbContext.UserRoles.Where(ur => ur.UserId == userInDb.Id).ToListAsync();
+        DbContext.UserRoles.RemoveRange(currentUserRoles);
 
-        // Update UserProjects (Many-to-Many)
+        foreach (var roleName in SelectedRoles.Distinct())
+        {
+            var role = availableRoles.FirstOrDefault(r => r.Name == roleName);
+            if (role != null)
+            {
+                DbContext.UserRoles.Add(new UserRole
+                {
+                    UserId = userInDb.Id,
+                    RoleId = role.Id
+                });
+            }
+        }
+
+        // Update Projects
         var currentProjects = await DbContext.UserProjects.Where(up => up.UserId == userInDb.Id).ToListAsync();
         DbContext.UserProjects.RemoveRange(currentProjects);
 
-        foreach (var projId in SelectedProjectIds)
+        foreach (var projId in SelectedProjectIds.Distinct())
         {
             DbContext.UserProjects.Add(new UserProject
             {
@@ -299,8 +332,12 @@
 
         await DbContext.SaveChangesAsync();
 
-        // Refresh list
-        users = await DbContext.Users.ToListAsync();
+        // Refresh list with includes
+        users = await DbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .ToListAsync();
+
         CloseEditModal();
     }
 }

@@ -1,6 +1,5 @@
 ﻿// TicketHub.Core/Entities/User.cs
 using System.Collections.Generic;
-using System.Net.Sockets;
 
 namespace TicketHub.Core.Entities
 {
@@ -11,10 +10,11 @@ namespace TicketHub.Core.Entities
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        public string Role { get; set; } = "User";
         public string? PhoneNumber { get; set; }
 
+        // Navigation Properties
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();   // ← جدید
     }
 }
