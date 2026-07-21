@@ -10,6 +10,7 @@
 @using TicketHub.Infrastructure.Data
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
+@inject TicketHub.Core.Interfaces.IEmailService EmailService
 
 <!-- Main background with dark gradient and blurred light effects -->
 <div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden">
@@ -115,7 +116,27 @@
             // Block login if email is not confirmed
             if (!user.IsConfirmed)
             {
-                errorMessage = "حساب کاربری شما تایید نشده است. لطفاً به ایمیل خود مراجعه کرده و روی لینک تایید کلیک کنید.";
+                // -- بخش جدید: تولید و ارسال کد مجدد هنگام لاگین --
+                string rawCode = new Random().Next(100000, 999999).ToString();
+                string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
+
+                user.ConfirmationToken = hashedCode;
+                user.TokenExpiration = DateTime.UtcNow.AddMinutes(2); // انقضا: 2 دقیقه
+
+                await DbContext.SaveChangesAsync();
+
+                string emailBody = $@"
+                    <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
+                        <h2>کد تایید حساب کاربری</h2>
+                        <p>کد تایید جدید شما:</p>
+                        <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
+                        <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
+                    </div>";
+
+                await EmailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
+                // ----------------------------------------------------
+
+                Navigation.NavigateTo($"/confirm-email?email={user.Email}");
                 return;
             }
 

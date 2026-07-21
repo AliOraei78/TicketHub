@@ -7,6 +7,7 @@
 @using Microsoft.EntityFrameworkCore
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
+@inject TicketHub.Core.Interfaces.IEmailService EmailService
 
 <div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden py-12">
 
@@ -94,6 +95,7 @@
     private string? errorMessage;
     private bool showSuccessMessage = false;
 
+    // در متد HandleRegister داخل register.razor
     private async Task HandleRegister()
     {
         try
@@ -105,7 +107,10 @@
             }
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerModel.Password);
-            string token = Guid.NewGuid().ToString(); // Generate unique token for email confirmation
+
+            // تولید کد ۶ رقمی تصادفی
+            string rawCode = new Random().Next(100000, 999999).ToString();
+            string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
 
             var newUser = new User
             {
@@ -115,7 +120,9 @@
                 Password = hashedPassword,
                 CreatedAt = DateTime.UtcNow,
                 IsConfirmed = false,
-                ConfirmationToken = token
+                ConfirmationToken = hashedCode,
+                // تنظیم انقضا از همان ابتدا روی 2 دقیقه
+                TokenExpiration = DateTime.UtcNow.AddMinutes(2)
             };
 
             DbContext.Users.Add(newUser);
@@ -124,33 +131,32 @@
             var defaultRole = await DbContext.Roles.FirstOrDefaultAsync(r => r.Name == "User");
             if (defaultRole != null)
             {
-                DbContext.UserRoles.Add(new UserRole
-                {
-                    UserId = newUser.Id,
-                    RoleId = defaultRole.Id
-                });
+                DbContext.UserRoles.Add(new UserRole { UserId = newUser.Id, RoleId = defaultRole.Id });
                 await DbContext.SaveChangesAsync();
             }
 
-            // TODO: Implement actual email sending service here
-            // var confirmationLink = Navigation.GetUriWithQueryParameters(
-            //    Navigation.ToAbsoluteUri("/confirm-email").ToString(),
-            //    new Dictionary<string, object?> { { "token", token }, { "email", newUser.Email } });
-            // await EmailService.SendEmailAsync(newUser.Email, "تایید حساب کاربری", $"لینک تایید: {confirmationLink}");
+            string emailBody = $@"
+            <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
+                <h2>خوش آمدید، {newUser.Name}!</h2>
+                <p>کد تایید حساب کاربری شما:</p>
+                <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
+                <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
+            </div>";
 
-            showSuccessMessage = true;
-            errorMessage = null;
+            await EmailService.SendEmailAsync(newUser.Email, "کد تایید حساب کاربری در تیکت‌هاب", emailBody);
 
-            // Optional: wait a few seconds so the user can read the success message, then redirect
-            // await Task.Delay(3000);
-            // Navigation.NavigateTo("/login");
+            Navigation.NavigateTo($"/confirm-email?email={newUser.Email}");
+        }
+        catch (NavigationException)
+        {
+            // این خطا نیست! مکانیزم Blazor برای ریدایرکت است و باید رها شود
+            throw;
         }
         catch (Exception)
         {
             errorMessage = "خطایی در پردازش اطلاعات رخ داد.";
         }
     }
-
     public class RegisterViewModel
     {
         [Required(ErrorMessage = "وارد کردن نام الزامی است.")]
