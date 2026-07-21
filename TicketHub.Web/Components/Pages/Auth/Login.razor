@@ -67,21 +67,30 @@
             return;
         }
 
-        var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
+        var user = await DbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Email == loginModel.Email);
 
         if (user != null && BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password))
         {
             var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Name),
+        new Claim(ClaimTypes.Email, user.Email)
+    };
+
+            // اضافه کردن نقش‌ها
+            foreach (var userRole in user.UserRoles)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
+                if (userRole.Role != null)
+                    claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+            }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            // صدور کوکی بدون خطا انجام می‌شود
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
             Navigation.NavigateTo("/", true);

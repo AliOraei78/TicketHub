@@ -9,6 +9,20 @@
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
+<div class="mb-6 flex flex-col sm:flex-row gap-4">
+    <div class="flex-1">
+        <input type="text" @bind="searchTerm" @oninput="HandleSearch" placeholder="جستجوی نام یا ایمیل..."
+               class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" />
+    </div>
+    <div>
+        <select @bind="pageSize" class="px-4 py-3 border border-gray-300 rounded-2xl">
+            <option value="10">۱۰ کاربر</option>
+            <option value="25">۲۵ کاربر</option>
+            <option value="50">۵۰ کاربر</option>
+        </select>
+    </div>
+</div>
+
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
     <div class="mb-8 flex justify-between items-center">
         <div>
@@ -84,6 +98,18 @@
             }
         </div>
     }
+</div>
+
+<!-- Pagination -->
+<div class="flex justify-between items-center mt-6">
+    <div>
+        نمایش @( (currentPage - 1) * pageSize + 1 ) تا @Math.Min(currentPage * pageSize, totalUsers) از @totalUsers کاربر
+    </div>
+    <div class="flex gap-2">
+        <button @onclick="PreviousPage" disabled="@(currentPage == 1)" class="px-4 py-2 border rounded-xl">قبلی</button>
+        <span class="px-4 py-2">صفحه @currentPage از @totalPages</span>
+        <button @onclick="NextPage" disabled="@(currentPage >= totalPages)" class="px-4 py-2 border rounded-xl">بعدی</button>
+    </div>
 </div>
 
 <!-- Edit Modal -->
@@ -192,6 +218,7 @@
     </div>
 }
 
+
 @code {
     private List<UserEntity>? users;
     private UserEntity? editingUser;
@@ -209,14 +236,15 @@
     private bool showRoleDropdown = false;
     private bool showProjectDropdown = false;
 
+    private string searchTerm = string.Empty;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalUsers = 0;
+
     protected override async Task OnInitializedAsync()
     {
         // Include UserRoles for eager loading
-        users = await DbContext.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .ToListAsync();
-
+        await LoadUsers();
         await LoadAvailableData();
     }
 
@@ -339,5 +367,51 @@
             .ToListAsync();
 
         CloseEditModal();
+    }
+
+    private async Task HandleSearch(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        currentPage = 1;
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        var query = DbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(u => u.Name.Contains(searchTerm) || u.Email.Contains(searchTerm));
+        }
+
+        totalUsers = await query.CountAsync();
+        users = await query
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    private int totalPages => (int)Math.Ceiling(totalUsers / (double)pageSize);
+
+    private async Task NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            await LoadUsers();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadUsers();
+        }
     }
 }

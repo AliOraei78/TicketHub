@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using TicketHub.Core.Entities
 @using TicketHub.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
 
@@ -51,17 +52,14 @@
     {
         try
         {
-            // بررسی تکراری نبودن ایمیل
             if (DbContext.Users.Any(u => u.Email == registerModel.Email))
             {
                 errorMessage = "این ایمیل قبلاً ثبت شده است.";
                 return;
             }
 
-            // هش کردن اصولی پسورد
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerModel.Password);
 
-            // ذخیره در دیتابیس
             var newUser = new User
             {
                 Name = registerModel.Name,
@@ -73,6 +71,18 @@
             DbContext.Users.Add(newUser);
             await DbContext.SaveChangesAsync();
 
+            // ← اضافه کردن نقش پیش‌فرض
+            var defaultRole = await DbContext.Roles.FirstOrDefaultAsync(r => r.Name == "User");
+            if (defaultRole != null)
+            {
+                DbContext.UserRoles.Add(new UserRole
+                {
+                    UserId = newUser.Id,
+                    RoleId = defaultRole.Id
+                });
+                await DbContext.SaveChangesAsync();
+            }
+
             Navigation.NavigateTo("/login");
         }
         catch (Exception)
@@ -80,7 +90,6 @@
             errorMessage = "خطایی رخ داد.";
         }
     }
-
     public class RegisterViewModel
     {
         [Required] public string Name { get; set; } = "";
