@@ -10,7 +10,7 @@
 
 <div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden py-12">
 
-    <!-- افکت‌های نوری (Blobs) در پس‌زمینه -->
+    <!-- Background Blobs -->
     <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
     <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
 
@@ -33,20 +33,40 @@
                     </div>
                 }
 
+                @if (showSuccessMessage)
+                {
+                    <div class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-sm font-medium flex items-center gap-3">
+                        ثبت‌نام با موفقیت انجام شد. لینک تایید به ایمیل شما ارسال گردید.
+                    </div>
+                }
+
                 <div class="space-y-5">
+                    <!-- Name Input -->
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1.5">نام و نام خانوادگی</label>
                         <InputText @bind-Value="registerModel.Name" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="مثال: علی محمدی" />
+                        <ValidationMessage For="@(() => registerModel.Name)" class="text-rose-400 text-xs mt-1" />
                     </div>
 
+                    <!-- Email Input -->
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1.5">آدرس ایمیل</label>
                         <InputText @bind-Value="registerModel.Email" type="email" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="name@company.com" dir="ltr" />
+                        <ValidationMessage For="@(() => registerModel.Email)" class="text-rose-400 text-xs mt-1" />
                     </div>
 
+                    <!-- Phone Input -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">شماره تماس</label>
+                        <InputText @bind-Value="registerModel.PhoneNumber" type="tel" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="09123456789" dir="ltr" />
+                        <ValidationMessage For="@(() => registerModel.PhoneNumber)" class="text-rose-400 text-xs mt-1" />
+                    </div>
+
+                    <!-- Password Input -->
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1.5">رمز عبور</label>
                         <InputText @bind-Value="registerModel.Password" type="password" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="••••••••" dir="ltr" />
+                        <ValidationMessage For="@(() => registerModel.Password)" class="text-rose-400 text-xs mt-1" />
                     </div>
 
                     <div class="pt-2">
@@ -72,6 +92,7 @@
     private RegisterViewModel registerModel { get; set; } = new();
 
     private string? errorMessage;
+    private bool showSuccessMessage = false;
 
     private async Task HandleRegister()
     {
@@ -84,13 +105,17 @@
             }
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerModel.Password);
+            string token = Guid.NewGuid().ToString(); // Generate unique token for email confirmation
 
             var newUser = new User
             {
                 Name = registerModel.Name,
                 Email = registerModel.Email,
+                PhoneNumber = registerModel.PhoneNumber,
                 Password = hashedPassword,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsConfirmed = false,
+                ConfirmationToken = token
             };
 
             DbContext.Users.Add(newUser);
@@ -107,17 +132,41 @@
                 await DbContext.SaveChangesAsync();
             }
 
-            Navigation.NavigateTo("/login");
+            // TODO: Implement actual email sending service here
+            // var confirmationLink = Navigation.GetUriWithQueryParameters(
+            //    Navigation.ToAbsoluteUri("/confirm-email").ToString(),
+            //    new Dictionary<string, object?> { { "token", token }, { "email", newUser.Email } });
+            // await EmailService.SendEmailAsync(newUser.Email, "تایید حساب کاربری", $"لینک تایید: {confirmationLink}");
+
+            showSuccessMessage = true;
+            errorMessage = null;
+
+            // Optional: wait a few seconds so the user can read the success message, then redirect
+            // await Task.Delay(3000);
+            // Navigation.NavigateTo("/login");
         }
         catch (Exception)
         {
-            errorMessage = "خطایی رخ داد.";
+            errorMessage = "خطایی در پردازش اطلاعات رخ داد.";
         }
     }
+
     public class RegisterViewModel
     {
-        [Required] public string Name { get; set; } = "";
-        [Required] public string Email { get; set; } = "";
-        [Required] public string Password { get; set; } = "";
+        [Required(ErrorMessage = "وارد کردن نام الزامی است.")]
+        public string Name { get; set; } = "";
+
+        [Required(ErrorMessage = "وارد کردن ایمیل الزامی است.")]
+        [EmailAddress(ErrorMessage = "فرمت ایمیل نامعتبر است.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "وارد کردن شماره تماس الزامی است.")]
+        [RegularExpression(@"^09\d{9}$", ErrorMessage = "شماره تماس باید ۱۱ رقم باشد و با 09 شروع شود.")]
+        public string PhoneNumber { get; set; } = "";
+
+        [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است.")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر شامل حروف بزرگ و کوچک انگلیسی، عدد و کاراکتر ویژه (مانند !@#$) باشد.")]
+        public string Password { get; set; } = "";
     }
 }

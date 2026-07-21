@@ -12,6 +12,10 @@ namespace TicketHub.Core.Entities
         public DateTime CreatedAt { get; set; }
         public string? PhoneNumber { get; set; }
 
+        // Added for email confirmation mechanism
+        public bool IsConfirmed { get; set; } = false;
+        public string? ConfirmationToken { get; set; }
+
         // Navigation Properties
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();

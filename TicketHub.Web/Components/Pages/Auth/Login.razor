@@ -1,6 +1,6 @@
 ﻿@page "/login"
 @layout TicketHub.Web.Components.Layout.AuthLayout
-@* نکته: آدرس بالا را بر اساس پوشه Layout خود تنظیم کنید *@
+@* Note: Adjust the above address based on your Layout folder *@
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -11,18 +11,18 @@
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
 
-<!-- پس‌زمینه اصلی با گرادیانت تیره و افکت‌های نوری بلور شده -->
+<!-- Main background with dark gradient and blurred light effects -->
 <div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden">
 
-    <!-- افکت‌های نوری (Blobs) در پس‌زمینه -->
+    <!-- Light effects (Blobs) in the background -->
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
     <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-slate-800/50 rounded-full filter blur-[120px]"></div>
 
-    <!-- کانتینر اصلی فرم (کاملاً وسط‌چین) -->
+    <!-- Main form container (fully centered) -->
     <div class="relative z-10 w-full max-w-md px-6">
 
-        <!-- لوگو و عنوان سامانه -->
+        <!-- Logo and system title -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 transform hover:scale-105 transition-transform duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -33,7 +33,7 @@
             <p class="mt-2 text-sm text-slate-400 font-medium">به پنل مدیریت یکپارچه خوش آمدید</p>
         </div>
 
-        <!-- کارت شیشه‌ای فرم (Glassmorphism) -->
+        <!-- Glassmorphism form card -->
         <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
             <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm" method="post" data-enhance="false">
                 <DataAnnotationsValidator />
@@ -112,6 +112,13 @@
 
         if (user != null && BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password))
         {
+            // Block login if email is not confirmed
+            if (!user.IsConfirmed)
+            {
+                errorMessage = "حساب کاربری شما تایید نشده است. لطفاً به ایمیل خود مراجعه کرده و روی لینک تایید کلیک کنید.";
+                return;
+            }
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

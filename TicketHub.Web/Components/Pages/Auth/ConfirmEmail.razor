@@ -1,0 +1,116 @@
+﻿@page "/confirm-email"
+@layout TicketHub.Web.Components.Layout.AuthLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using TicketHub.Core.Entities
+@using TicketHub.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+
+<div class="relative min-h-screen flex items-center justify-center bg-slate-900 px-4 py-12">
+    <!-- Background effects -->
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full mix-blend-screen filter blur-[100px]"></div>
+
+    <div class="relative z-10 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center">
+        @if (isProcessing)
+        {
+            <!-- Loading State -->
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2">در حال بررسی اطلاعات...</h3>
+            <p class="text-slate-400">لطفاً چند لحظه شکیبا باشید.</p>
+        }
+        else if (isSuccess)
+        {
+            <!-- Success State -->
+            <div class="text-emerald-400 mb-4 bg-emerald-400/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">حساب کاربری تایید شد</h3>
+            <p class="text-slate-400 mb-6">ایمیل شما با موفقیت تایید شد. اکنون می‌توانید از تمامی امکانات پلتفرم استفاده کنید.</p>
+            <a href="/login" class="inline-flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg">
+                ورود به حساب کاربری
+            </a>
+        }
+        else
+        {
+            <!-- Error State -->
+            <div class="text-rose-400 mb-4 bg-rose-400/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">خطا در تایید ایمیل</h3>
+            <p class="text-slate-400 mb-6">@errorMessage</p>
+            <a href="/login" class="inline-flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-all">
+                بازگشت به صفحه ورود
+            </a>
+        }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Token { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+
+    private bool isProcessing = true;
+    private bool isSuccess = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Validate query parameters
+        if (string.IsNullOrEmpty(Token) || string.IsNullOrEmpty(Email))
+        {
+            errorMessage = "لینک تایید نامعتبر است یا ناقص می‌باشد.";
+            isProcessing = false;
+            return;
+        }
+
+        try
+        {
+            // Fetch the user from the database by email
+            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == Email);
+
+            if (user == null)
+            {
+                errorMessage = "کاربری با این ایمیل یافت نشد.";
+                isProcessing = false;
+                return;
+            }
+
+            // Check if the user is already confirmed
+            if (user.IsConfirmed)
+            {
+                errorMessage = "این حساب کاربری پیش از این تایید شده است.";
+                isProcessing = false;
+                return;
+            }
+
+            // Verify the token
+            if (user.ConfirmationToken != Token)
+            {
+                errorMessage = "لینک تایید منقضی شده یا نامعتبر است.";
+                isProcessing = false;
+                return;
+            }
+
+            // Update user properties to reflect confirmed status
+            user.IsConfirmed = true;
+            user.ConfirmationToken = null;
+
+            // Save changes to the database
+            await DbContext.SaveChangesAsync();
+
+            isSuccess = true;
+        }
+        catch (Exception)
+        {
+            errorMessage = "در پردازش اطلاعات مشکلی رخ داد. لطفاً مجدداً تلاش کنید.";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+}
