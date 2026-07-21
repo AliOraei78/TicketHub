@@ -14,6 +14,7 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<UserProject> UserProjects { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

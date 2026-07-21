@@ -1,0 +1,114 @@
+﻿@page "/settings/roles"
+@rendermode InteractiveServer
+@using TicketHub.Core.Entities
+@using TicketHub.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+
+<PageTitle>تنظیمات نقش‌ها | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">مدیریت نقش‌های سیستم</h1>
+        <p class="text-sm text-gray-500 mt-1">در این بخش می‌توانید نقش‌های جدیدی برای سطح دسترسی کاربران تعریف کنید.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Add Role Form -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">ایجاد نقش جدید</h3>
+
+                <EditForm Model="newRole" OnValidSubmit="HandleAddRole">
+                    <DataAnnotationsValidator />
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان نقش (انگلیسی یا فارسی)</label>
+                            <InputText @bind-Value="newRole.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="مثال: Support" />
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+                            ثبت نقش
+                        </button>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="mt-4 p-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-medium text-center">@successMessage</div>
+                }
+            </div>
+        </div>
+
+        <!-- Roles List -->
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50">
+                    <h3 class="font-bold text-gray-800 text-lg">لیست نقش‌های موجود</h3>
+                </div>
+                <div class="p-0">
+                    @if (roles == null)
+                    {
+                        <div class="flex justify-center items-center py-12">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    }
+                    else if (!roles.Any())
+                    {
+                        <div class="text-center py-12 text-gray-400 text-sm">نقشی یافت نشد.</div>
+                    }
+                    else
+                    {
+                        <div class="divide-y divide-gray-50">
+                            @foreach (var role in roles)
+                            {
+                                <div class="p-5 flex items-center justify-between hover:bg-slate-50 smooth-transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.95 11.95 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                        </div>
+                                        <span class="font-bold text-gray-800">@role.Name</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400 border border-gray-100 px-2 py-1 rounded-md bg-white">شناسه: @role.Id</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Role newRole = new();
+    private List<Role>? roles;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+    }
+
+    private async Task LoadRoles()
+    {
+        // Fetch all roles from database
+        roles = await DbContext.Roles.ToListAsync();
+    }
+
+    private async Task HandleAddRole()
+    {
+        if (!string.IsNullOrWhiteSpace(newRole.Name))
+        {
+            DbContext.Roles.Add(newRole);
+            await DbContext.SaveChangesAsync();
+
+            // Reset form and refresh list
+            newRole = new Role();
+            successMessage = "نقش با موفقیت ایجاد شد.";
+            await LoadRoles();
+
+            // Clear message after 3 seconds
+            _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
+        }
+    }
+}
