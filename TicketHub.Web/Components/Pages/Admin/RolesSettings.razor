@@ -1,0 +1,201 @@
+﻿@page "/settings/roles"
+@rendermode InteractiveServer
+@using TicketHub.Core.Entities
+@using TicketHub.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject IJSRuntime JS
+
+<PageTitle>تنظیمات نقش‌ها | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">مدیریت نقش‌های سیستم</h1>
+        <p class="text-sm text-gray-500 mt-1">در این بخش می‌توانید نقش‌های سیستم را ایجاد، ویرایش و یا حذف کنید.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Add/Edit Role Form -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش نقش" : "ایجاد نقش جدید")</h3>
+
+                <EditForm Model="roleModel" OnValidSubmit="HandleSubmitRole">
+                    <DataAnnotationsValidator />
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان نقش (انگلیسی یا فارسی)</label>
+                            <InputText @bind-Value="roleModel.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: Support" />
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+                                @(isEditing ? "ذخیره تغییرات" : "ثبت نقش")
+                            </button>
+                            @if (isEditing)
+                            {
+                                <button type="button" @onclick="CancelEdit" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">
+                                    انصراف
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="mt-4 p-3 @(isError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@successMessage</div>
+                }
+            </div>
+        </div>
+
+        <!-- Roles List -->
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50">
+                    <h3 class="font-bold text-gray-800 text-lg">لیست نقش‌های موجود</h3>
+                </div>
+                <div class="p-0">
+                    @if (roles == null)
+                    {
+                        <div class="flex justify-center items-center py-12">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    }
+                    else if (!roles.Any())
+                    {
+                        <div class="text-center py-12 text-gray-400 text-sm">نقشی یافت نشد.</div>
+                    }
+                    else
+                    {
+                        <div class="divide-y divide-gray-50">
+                            @foreach (var role in roles)
+                            {
+                                <div class="p-5 flex items-center justify-between hover:bg-slate-50 smooth-transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.95 11.95 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                        </div>
+                                        <span class="font-bold text-gray-800">@role.Name</span>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <!-- Edit Action Button -->
+                                        <button type="button" @onclick="() => EditRole(role)" class="relative p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition group">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            <!-- Edit Tooltip -->
+                                            <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">ویرایش نقش</span>
+                                        </button>
+
+                                        <!-- Delete Action Button -->
+                                        <button type="button" @onclick="() => DeleteRole(role)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            <!-- Delete Tooltip -->
+                                            <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">حذف نقش</span>
+                                        </button>
+
+                                        <span class="text-xs text-gray-400 border border-gray-100 px-2 py-1 rounded-md bg-white mr-2">شناسه: @role.Id</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Role roleModel = new();
+    private List<Role>? roles;
+    private string? successMessage;
+    private bool isError = false;
+
+    // متغیرهای حالت ویرایش
+    private bool isEditing = false;
+    private int? editingRoleId = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+    }
+
+    private async Task LoadRoles()
+    {
+        roles = await DbContext.Roles.ToListAsync();
+    }
+
+    private async Task HandleSubmitRole()
+    {
+        if (string.IsNullOrWhiteSpace(roleModel.Name)) return;
+
+        isError = false;
+
+        if (isEditing && editingRoleId.HasValue)
+        {
+            // حالت ویرایش
+            var roleToUpdate = await DbContext.Roles.FindAsync(editingRoleId.Value);
+            if (roleToUpdate != null)
+            {
+                roleToUpdate.Name = roleModel.Name;
+                successMessage = "نقش با موفقیت ویرایش شد.";
+            }
+        }
+        else
+        {
+            // حالت ثبت جدید
+            DbContext.Roles.Add(roleModel);
+            successMessage = "نقش با موفقیت ایجاد شد.";
+        }
+
+        await DbContext.SaveChangesAsync();
+        CancelEdit(); // پاکسازی فرم و برگشت به حالت ثبت جدید
+        await LoadRoles();
+
+        _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
+    }
+
+    private void EditRole(Role role)
+    {
+        isEditing = true;
+        editingRoleId = role.Id;
+        roleModel.Name = role.Name; // انتقال مقادیر به فرم
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        editingRoleId = null;
+        roleModel = new Role();
+        successMessage = null;
+    }
+
+    private async Task DeleteRole(Role role)
+    {
+        // گرفتن تاییدیه از مدیر
+        bool confirm = await JS.InvokeAsync<bool>("confirm", $"آیا از حذف نقش '{role.Name}' مطمئن هستید؟");
+        if (!confirm) return;
+
+        try
+        {
+            DbContext.Roles.Remove(role);
+            await DbContext.SaveChangesAsync();
+
+            isError = false;
+            successMessage = "نقش با موفقیت حذف شد.";
+
+            // اگر در حال ویرایش همان نقشی بودیم که حذف شد، فرم را ریست کن
+            if (isEditing && editingRoleId == role.Id) CancelEdit();
+
+            await LoadRoles();
+        }
+        catch (Exception)
+        {
+            // مدیریت خطای کلید خارجی (FK) در صورت اتصال کاربران به این نقش
+            isError = true;
+            successMessage = "امکان حذف وجود ندارد! ابتدا باید کاربرانی که این نقش را دارند، ویرایش کنید.";
+        }
+
+        _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
+    }
+}
