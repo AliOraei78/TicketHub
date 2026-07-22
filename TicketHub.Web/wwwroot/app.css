@@ -23,3 +23,9 @@
 .page-transition-enter {
     animation: pageFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* حذف کادر مزاحم از دور عناوین صفحات هنگام لود اولیه در بلیزور */
+h1:focus,
+h1:focus-visible {
+    outline: none !important;
+}
