@@ -1,0 +1,78 @@
+﻿<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+    <!-- بخش جستجو -->
+    <div class="relative w-full md:w-80">
+        <input type="text"
+               value="@SearchTerm"
+               @oninput="OnSearchInputChanged"
+               placeholder="@SearchPlaceholder"
+               class="w-full pr-10 pl-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm smooth-transition" />
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute right-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+    </div>
+
+    <!-- بخش انتخاب تعداد در هر صفحه -->
+    <div class="flex w-full md:w-auto justify-end">
+        <select value="@PageSize"
+                @onchange="OnPageSizeChanged"
+                class="px-4 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 smooth-transition bg-white">
+            @foreach (var size in PageSizeOptions)
+            {
+                <option value="@size">@size @ItemName در هر صفحه</option>
+            }
+        </select>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// مقدار فعلی جستجو (جهت استفاده به صورت @bind-SearchTerm)
+    /// </summary>
+    [Parameter]
+    public string SearchTerm { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTermChanged { get; set; }
+
+    /// <summary>
+    /// تعداد آیتم در هر صفحه (جهت استفاده به صورت @bind-PageSize)
+    /// </summary>
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public EventCallback<int> PageSizeChanged { get; set; }
+
+    /// <summary>
+    /// متن Placeholder برای اینپوت جستجو
+    /// </summary>
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "جستجو...";
+
+    /// <summary>
+    /// نام موجودیت برای نمایش در دراپ‌داون (مثل: کاربر، تیکت، پروژه)
+    /// </summary>
+    [Parameter]
+    public string ItemName { get; set; } = "آیتم";
+
+    /// <summary>
+    /// گزینه‌های در دسترس برای تعداد در هر صفحه
+    /// </summary>
+    [Parameter]
+    public List<int> PageSizeOptions { get; set; } = new() { 10, 25, 50, 100 };
+
+    private async Task OnSearchInputChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        await SearchTermChanged.InvokeAsync(value);
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            await PageSizeChanged.InvokeAsync(newSize);
+        }
+    }
+}
