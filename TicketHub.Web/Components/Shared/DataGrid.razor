@@ -1,0 +1,103 @@
+﻿@typeparam TItem
+@typeparam TKey
+
+@if (IsLoading || Items == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="w-full">
+            <table class="w-full text-right flex flex-col">
+                <thead class="bg-gray-100 border-b border-gray-200 table w-full table-fixed shadow-sm">
+                    <tr class="table w-full table-fixed">
+                        @if (ShowSelection)
+                        {
+                            <th class="px-6 py-2 w-[5%]">
+                                <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                                       checked="@IsAllSelected" @onchange="ToggleAll" />
+                            </th>
+                        }
+                        @if (ShowRowIndex)
+                        {
+                            <th class="px-2 py-2 text-sm font-semibold text-gray-700 w-[5%] text-center">ردیف</th>
+                        }
+                        @HeaderTemplate
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-50 block overflow-y-auto h-[450px] w-full custom-scrollbar">
+                    @if (!Items.Any())
+                    {
+                        <EmptyStateTable />
+                    }
+                    else
+                    {
+                        int rowIndex = (CurrentPage - 1) * PageSize + 1;
+                        foreach (var item in Items)
+                        {
+                            var key = KeySelector(item);
+                            <tr @key="key" class="table w-full table-fixed hover:bg-gray-50/50 smooth-transition group/row @RowClassSelector?.Invoke(item)">
+                                @if (ShowSelection)
+                                {
+                                    <td class="px-6 py-2 w-[5%]">
+                                        <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                                               checked="@SelectedKeys.Contains(key)"
+                                               @onchange="@(e => ToggleSelection(key, e.Value))" />
+                                    </td>
+                                }
+                                @if (ShowRowIndex)
+                                {
+                                    <td class="px-2 py-2 w-[5%] text-center text-sm font-medium text-gray-500">
+                                        @(rowIndex++)
+                                    </td>
+                                }
+                                @RowTemplate(item)
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = Array.Empty<TItem>();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public RenderFragment HeaderTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    [Parameter] public Func<TItem, TKey> KeySelector { get; set; } = default!;
+    [Parameter] public Func<TItem, string>? RowClassSelector { get; set; }
+
+    [Parameter] public bool ShowSelection { get; set; } = true;
+    [Parameter] public bool ShowRowIndex { get; set; } = true;
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int PageSize { get; set; } = 10;
+
+    [Parameter] public HashSet<TKey> SelectedKeys { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<TKey>> SelectedKeysChanged { get; set; }
+
+    private bool IsAllSelected => Items.Any() && Items.All(i => SelectedKeys.Contains(KeySelector(i)));
+
+    private async Task ToggleAll(ChangeEventArgs e)
+    {
+        bool isChecked = (bool)(e.Value ?? false);
+        if (isChecked)
+            foreach (var item in Items) SelectedKeys.Add(KeySelector(item));
+        else
+            foreach (var item in Items) SelectedKeys.Remove(KeySelector(item));
+
+        await SelectedKeysChanged.InvokeAsync(SelectedKeys);
+    }
+
+    private async Task ToggleSelection(TKey key, object? value)
+    {
+        bool isChecked = (bool)(value ?? false);
+        if (isChecked) SelectedKeys.Add(key);
+        else SelectedKeys.Remove(key);
+
+        await SelectedKeysChanged.InvokeAsync(SelectedKeys);
+    }
+}

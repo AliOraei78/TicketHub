@@ -1,80 +1,48 @@
 ﻿@using TicketHub.Core.Entities
 @using TicketHub.Web.Components.Shared
 
-@if (IsLoading || Users == null)
-{
-    <LoadingSpinner />
-}
-else
-{
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="w-full">
-            <table class="w-full text-right flex flex-col">
+<DataGrid TItem="User" TKey="int"
+          Items="Users"
+          IsLoading="IsLoading"
+          KeySelector="u => u.Id"
+          RowClassSelector="@(u => DeletingIds.Contains(u.Id) ? "row-exit" : "row-enter")"
+          CurrentPage="CurrentPage"
+          PageSize="PageSize"
+          @bind-SelectedKeys="SelectedIds">
 
-                <thead class="bg-gray-100 border-b border-gray-200 table w-full table-fixed shadow-sm">
-                    <tr class="table w-full table-fixed">
-                        <th class="px-6 py-2 w-[5%]">
-                            <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                                   checked="@IsAllSelected" @onchange="ToggleAll" />
-                        </th>
-                        <th class="px-2 py-2 text-sm font-semibold text-gray-700 w-[5%] text-center">ردیف</th>
-                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">نام کاربر</th>
-                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[30%]">ایمیل</th>
-                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نقش‌ها</th>
-                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
-                    </tr>
-                </thead>
+    <HeaderTemplate>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">نام کاربر</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[30%]">ایمیل</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نقش‌ها</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
+    </HeaderTemplate>
 
-                <tbody class="divide-y divide-gray-50 block overflow-y-auto h-[450px] w-full custom-scrollbar">
-                    @if (!Users.Any())
-                    {
-                        <EmptyStateTable />
-                    }
-                    else
-                    {
-                        int rowIndex = (CurrentPage - 1) * PageSize + 1;
+    <RowTemplate Context="user">
+        <td class="px-6 py-2 w-[25%]">
+            <div class="flex items-center gap-3">
+                <TextAvatar Text="@user.Name" />
+                <span class="font-medium text-gray-800 truncate">@user.Name</span>
+            </div>
+        </td>
+        <td class="px-6 py-2 text-sm text-gray-500 w-[30%] truncate" dir="ltr">@user.Email</td>
+        <td class="px-6 py-2 w-[20%]">
+            <div class="flex flex-wrap gap-1">
+                @foreach (var userRole in user.UserRoles)
+                {
+                    <Badge>@userRole.Role?.Name</Badge>
+                }
+                @if (!user.UserRoles.Any())
+                {
+                    <span class="text-gray-400 text-xs">بدون نقش</span>
+                }
+            </div>
+        </td>
+        <td class="px-6 py-2 text-center w-[15%]">
+            <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" />
+        </td>
+    </RowTemplate>
 
-                        @foreach (var user in Users)
-                        {
-                            <tr @key="user.Id" class="table w-full table-fixed hover:bg-gray-50/50 smooth-transition group/row @(DeletingIds.Contains(user.Id) ? "row-exit" : "row-enter")">
-                                <td class="px-6 py-2 w-[5%]">
-                                    <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                                           checked="@SelectedIds.Contains(user.Id)"
-                                           @onchange="@(e => ToggleSelection(user.Id, e.Value))" />
-                                </td>
-                                <td class="px-2 py-2 w-[5%] text-center text-sm font-medium text-gray-500">
-                                    @(rowIndex++)
-                                </td>
-                                <td class="px-6 py-2 w-[25%]">
-                                    <div class="flex items-center gap-3">
-                                        <TextAvatar Text="@user.Name" />
-                                        <span class="font-medium text-gray-800 truncate">@user.Name</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-2 text-sm text-gray-500 w-[30%] truncate" dir="ltr">@user.Email</td>
-                                <td class="px-6 py-2 w-[20%]">
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach (var userRole in user.UserRoles)
-                                        {
-                                            <Badge>@userRole.Role?.Name</Badge>
-                                        }
-                                        @if (!user.UserRoles.Any())
-                                        {
-                                            <span class="text-gray-400 text-xs">بدون نقش</span>
-                                        }
-                                    </div>
-                                </td>
-                                <td class="px-6 py-2 text-center w-[15%]">
-                                    <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" />
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
+</DataGrid>
 
 @code {
     [Parameter] public List<User> Users { get; set; } = new();
@@ -82,35 +50,10 @@ else
     [Parameter] public EventCallback<User> OnEdit { get; set; }
     [Parameter] public EventCallback<User> OnDelete { get; set; }
 
-    // New parameters for calculating the correct row number
     [Parameter] public int CurrentPage { get; set; } = 1;
     [Parameter] public int PageSize { get; set; } = 10;
 
     [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
     [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
-
-    private bool IsAllSelected => Users.Any() && Users.All(u => SelectedIds.Contains(u.Id));
-
-    private async Task ToggleAll(ChangeEventArgs e)
-    {
-        bool isChecked = (bool)(e.Value ?? false);
-        if (isChecked)
-        {
-            foreach (var user in Users) SelectedIds.Add(user.Id);
-        }
-        else
-        {
-            foreach (var user in Users) SelectedIds.Remove(user.Id);
-        }
-        await SelectedIdsChanged.InvokeAsync(SelectedIds);
-    }
-
-    private async Task ToggleSelection(int id, object? value)
-    {
-        bool isChecked = (bool)(value ?? false);
-        if (isChecked) SelectedIds.Add(id);
-        else SelectedIds.Remove(id);
-        await SelectedIdsChanged.InvokeAsync(SelectedIds);
-    }
 }
