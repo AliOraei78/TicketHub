@@ -100,7 +100,7 @@
     {
         try
         {
-            if (DbContext.Users.Any(u => u.Email == registerModel.Email))
+            if (await DbContext.Users.AnyAsync(u => u.Email == registerModel.Email))
             {
                 errorMessage = "این ایمیل قبلاً ثبت شده است.";
                 return;

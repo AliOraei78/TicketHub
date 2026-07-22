@@ -4,6 +4,14 @@
 <ModalDialog IsOpen="IsOpen" Title="@(Model.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
     <EditForm Model="@Model" OnValidSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]">
         <div class="p-8 space-y-8 overflow-y-auto flex-1">
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium">
+                    @ErrorMessage
+                </div>
+            }
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <CustomInput Label="نام کاربر" @bind-Value="Model.Name" IsRequired="true" />
                 <CustomInput Label="ایمیل" Type="email" @bind-Value="Model.Email" Dir="ltr" IsRequired="true" />
@@ -59,6 +67,7 @@
     [Parameter] public List<int> SelectedProjectIds { get; set; } = new();
     [Parameter] public EventCallback<UserFormSubmissionResult> OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
 
     private async Task HandleSubmit()
     {

@@ -12,7 +12,7 @@
 
 <!-- پدینگ p-4 به p-3 و gap-5 به gap-3 کاهش یافت -->
 <div class="container mx-auto p-3 md:p-4 flex flex-col gap-3" dir="rtl">
-    <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal" >
+    <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal">
         <Icon>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -45,8 +45,7 @@
     <Pagination CurrentPage="currentPage" PageSize="pageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
 </div>
 
-<UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" AvailableProjects="availableProjects" SelectedRoles="selectedRoles" SelectedProjectIds="selectedProjectIds" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" />
-
+<UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" AvailableProjects="availableProjects" SelectedRoles="selectedRoles" SelectedProjectIds="selectedProjectIds" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" ErrorMessage="@formErrorMessage" />
 <ConfirmDeleteModal IsOpen="showDeleteModal" Description="@($"آیا از حذف کاربر {userToDelete?.Name} مطمئن هستید؟")" ErrorMessage="@deleteErrorMessage" OnConfirm="ConfirmDeleteUser" OnCancel="CloseDeleteModal" />
 
 @code {
@@ -87,6 +86,8 @@
     private HashSet<int> deletingUserIds = new();
     private bool isBulkDelete = false;
 
+    private string? formErrorMessage;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadAvailableData();
@@ -126,6 +127,7 @@
         passwordInput = string.Empty;
         selectedRoles.Clear();
         selectedProjectIds.Clear();
+        formErrorMessage = null;
         isUserModalOpen = true;
     }
 
@@ -143,6 +145,7 @@
         passwordInput = string.Empty;
         selectedRoles = user.UserRoles.Select(ur => ur.Role?.Name ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
         selectedProjectIds = await DbContext.UserProjects.Where(up => up.UserId == user.Id).Select(up => up.ProjectId).ToListAsync();
+        formErrorMessage = null;
         isUserModalOpen = true;
     }
 
@@ -150,10 +153,29 @@
 
     private async Task HandleSaveUser(UserFormSubmissionResult payload)
     {
+        formErrorMessage = null;
         userModel = payload.User;
         passwordInput = payload.Password;
         selectedRoles = payload.SelectedRoles;
         selectedProjectIds = payload.SelectedProjectIds;
+
+        // جلوگیری از درج ایمیل تکراری برای ایجاد و ویرایش
+        if (await DbContext.Users.AnyAsync(u => u.Email == userModel.Email && u.Id != userModel.Id))
+        {
+            formErrorMessage = "این ایمیل قبلاً ثبت شده است.";
+            return;
+        }
+
+        // بررسی استاندارد رمز عبور قوی (در صورت ایجاد کاربر جدید یا وارد کردن رمز جدید در ویرایش)
+        if (userModel.Id == 0 || !string.IsNullOrWhiteSpace(passwordInput))
+        {
+            var passwordRegex = new System.Text.RegularExpressions.Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$");
+            if (!passwordRegex.IsMatch(passwordInput))
+            {
+                formErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر شامل حروف بزرگ و کوچک انگلیسی، عدد و کاراکتر ویژه (مانند !@#$) باشد.";
+                return;
+            }
+        }
 
         if (userModel.Id == 0)
         {
@@ -268,4 +290,6 @@
     {
         selectedUserIds.Clear();
     }
+
+
 }

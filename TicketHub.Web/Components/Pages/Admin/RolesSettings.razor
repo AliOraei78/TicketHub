@@ -14,7 +14,7 @@
                 Description="در این بخش می‌توانید نقش‌های سیستم را ایجاد، ویرایش و یا حذف کنید.">
         <Icon>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
             </svg>
         </Icon>
     </PageHeader>
@@ -65,53 +65,53 @@
                     </div>
                 </div>
                 <div class="p-0">
-                    @if (roles == null)
-                    {
-                        <LoadingSpinner />
-                    }
-                    else if (!FilteredRoles.Any())
-                    {
-                        <div class="text-center py-12 text-gray-400 text-sm">
-                            @(string.IsNullOrWhiteSpace(searchTerm) ? "نقشی یافت نشد." : "هیچ نقشی با این نام پیدا نشد.")
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="divide-y divide-gray-50">
-                            @foreach (var role in FilteredRoles)
-                            {
-                                <div class="p-5 flex items-center justify-between hover:bg-slate-50 smooth-transition">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.95 11.95 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                        </div>
-                                        <span class="font-bold text-gray-800">@role.Name</span>
+                    <DataGrid TItem="Role" TKey="int"
+                              Items="FilteredRoles"
+                              IsLoading="roles == null"
+                              KeySelector="r => r.Id"
+                              SelectedKeys="selectedRoleIds"
+                              SelectedKeysChanged="OnSelectionChanged"
+                              ShowRowIndex="false">
+
+                        <HeaderTemplate>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">عنوان نقش</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[120px]">عملیات</th>
+                        </HeaderTemplate>
+
+                        <RowTemplate Context="role">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.95 11.95 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                                     </div>
-
-                                    <div class="flex items-center gap-2">
-                                        <!-- Edit Action Button -->
-                                        <button type="button" @onclick="() => EditRole(role)" class="relative p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition group">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                            <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">ویرایش نقش</span>
-                                        </button>
-
-                                        <!-- Delete Action Button -->
-                                        <button type="button" @onclick="() => OpenDeleteModal(role)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">حذف نقش</span>
-                                        </button>
-
-                                        <span class="text-xs text-gray-400 border border-gray-100 px-2 py-1 rounded-md bg-white mr-2">شناسه: @role.Id</span>
+                                    <div>
+                                        <span class="font-bold text-gray-800 block">@role.Name</span>
+                                        <span class="text-xs text-gray-400">شناسه: @role.Id</span>
                                     </div>
                                 </div>
-                            }
-                        </div>
-                    }
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @onclick="() => EditRole(role)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition" title="ویرایش">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button type="button" @onclick="() => OpenDeleteModal(role)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition" title="حذف">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </RowTemplate>
+                    </DataGrid>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Toolbar for Bulk Actions -->
+<BulkActionToolbar SelectedCount="selectedRoleIds.Count"
+                   OnCancel="ClearSelection"
+                   OnDelete="OpenBulkDeleteModal" />
 
 <!-- Animated Delete Modal -->
 <ConfirmDeleteModal IsOpen="showDeleteModal"
@@ -122,6 +122,12 @@
 
 
 @code {
+
+    // متغیرهای Bulk Action
+    private HashSet<int> selectedRoleIds = new();
+    private bool isBulkDelete = false;
+    private string deleteModalDescription = string.Empty;
+
     private Role roleModel = new();
     private List<Role>? roles;
     private string? successMessage;
@@ -197,10 +203,34 @@
         successMessage = null;
     }
 
-    // باز کردن مودال حذف
+    private void HandleSearch(string term)
+    {
+        searchTerm = term;
+    }
+
+    private void OnSelectionChanged(HashSet<int> newKeys)
+    {
+        selectedRoleIds = newKeys;
+    }
+
+    private void ClearSelection()
+    {
+        selectedRoleIds.Clear();
+    }
+
+    private void OpenBulkDeleteModal()
+    {
+        isBulkDelete = true;
+        deleteModalDescription = $"آیا از حذف {selectedRoleIds.Count} نقش انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        showDeleteModal = true;
+    }
+
+    // باز کردن مودال حذف برای یک آیتم
     private void OpenDeleteModal(Role role)
     {
         roleToDelete = role;
+        isBulkDelete = false;
+        deleteModalDescription = $"آیا از حذف نقش «{role.Name}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
         showDeleteModal = true;
     }
 
@@ -209,39 +239,44 @@
     {
         showDeleteModal = false;
         roleToDelete = null;
+        isBulkDelete = false;
     }
 
-    // تایید و اجرای حذف
+    // تایید و اجرای حذف (هم تکی و هم گروهی)
     private async Task ConfirmDelete()
     {
-        if (roleToDelete == null) return;
-
         try
         {
-            DbContext.Roles.Remove(roleToDelete);
-            await DbContext.SaveChangesAsync();
+            if (isBulkDelete)
+            {
+                var rolesToRemove = await DbContext.Roles.Where(r => selectedRoleIds.Contains(r.Id)).ToListAsync();
+                DbContext.Roles.RemoveRange(rolesToRemove);
+                await DbContext.SaveChangesAsync();
+
+                successMessage = $"{rolesToRemove.Count} نقش با موفقیت حذف شدند.";
+                ClearSelection();
+            }
+            else if (roleToDelete != null)
+            {
+                DbContext.Roles.Remove(roleToDelete);
+                await DbContext.SaveChangesAsync();
+
+                successMessage = "نقش با موفقیت حذف شد.";
+                if (isEditing && editingRoleId == roleToDelete.Id) CancelEdit();
+            }
 
             isError = false;
-            successMessage = "نقش با موفقیت حذف شد.";
-
-            if (isEditing && editingRoleId == roleToDelete.Id) CancelEdit();
-
             await LoadRoles();
         }
         catch (Exception)
         {
             isError = true;
-            successMessage = "امکان حذف وجود ندارد! ابتدا باید کاربرانی که این نقش را دارند، ویرایش کنید.";
+            successMessage = "امکان حذف وجود ندارد! ابتدا باید کاربرانی که این نقش‌ها را دارند، ویرایش کنید.";
         }
         finally
         {
             CancelDelete(); // بستن مودال در هر صورت
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
-    }
-
-    private void HandleSearch(string term)
-    {
-        searchTerm = term;
     }
 }
