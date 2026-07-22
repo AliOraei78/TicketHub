@@ -10,26 +10,39 @@
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
-<div class="container mx-auto p-4 md:p-8" dir="rtl">
+<!-- پدینگ p-4 به p-3 و gap-5 به gap-3 کاهش یافت -->
+<div class="container mx-auto p-3 md:p-4 flex flex-col gap-3" dir="rtl">
     <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal" />
 
-    <!-- استفاده از کامپوننت داینامیک جدید -->
-    <ListFilterToolbar @bind-SearchTerm="searchTerm"
-                       @bind-PageSize="pageSize"
-                       SearchPlaceholder="جستجوی نام یا ایمیل..."
-                       ItemName="کاربر" />
+    <!-- ارتفاع نوار و پدینگ‌های داخل آن کمتر شد -->
+    <div class="min-h-[56px] transition-all duration-300">
+        @if (selectedUserIds.Any())
+        {
+            <div class="h-full px-4 py-2 bg-rose-50 border border-rose-200 rounded-2xl flex justify-between items-center shadow-sm animate-[fadeIn_0.2s_ease-out]">
+                <div class="flex items-center gap-4">
+                    <button @onclick="() => selectedUserIds.Clear()" class="p-1 text-rose-500 hover:bg-rose-200 rounded-lg smooth-transition" title="لغو انتخاب">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                    <span class="text-rose-800 font-bold text-sm">@selectedUserIds.Count کاربر انتخاب شده</span>
+                </div>
+                <button @onclick="OpenBulkDeleteModal" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md shadow-rose-600/20 text-sm font-bold transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    حذف @(selectedUserIds.Count > 1 ? "گروهی" : "")
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="animate-[fadeIn_0.2s_ease-out]">
+                <ListFilterToolbar @bind-SearchTerm="searchTerm"
+                                   @bind-PageSize="pageSize"
+                                   SearchPlaceholder="جستجوی نام یا ایمیل..."
+                                   ItemName="کاربر" />
+            </div>
+        }
+    </div>
 
-    <!-- نوار شناور برای حذف گروهی (فقط وقتی تیک خورده باشند نمایش داده می‌شود) -->
-    @if (selectedUserIds.Any())
-    {
-        <div class="mb-4 p-3 bg-rose-50 border border-rose-100 rounded-xl flex justify-between items-center transition-all duration-300">
-            <span class="text-rose-700 font-medium">@selectedUserIds.Count کاربر انتخاب شده است</span>
-            <button @onclick="OpenBulkDeleteModal" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm text-sm font-medium transition-colors">
-                @(selectedUserIds.Count > 1 ? "Delete All" : "Delete")
-            </button>
-        </div>
-    }
-
+    <!-- جدول -->
     <UserTable Users="users" IsLoading="isLoading"
                OnEdit="OpenEditModal"
                OnDelete="OpenDeleteModal"
@@ -38,11 +51,7 @@
                CurrentPage="currentPage"
                PageSize="pageSize" />
 
-    <ConfirmDeleteModal IsOpen="showDeleteModal"
-                        Description="@(isBulkDelete ? $"آیا از حذف {selectedUserIds.Count} کاربر انتخاب شده مطمئن هستید؟" : $"آیا از حذف کاربر {userToDelete?.Name} مطمئن هستید؟")"
-                        ErrorMessage="@deleteErrorMessage"
-                        OnConfirm="ConfirmDeleteUser"
-                        OnCancel="CloseDeleteModal" />
+    <!-- صفحه‌بندی -->
     <Pagination CurrentPage="currentPage" PageSize="pageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
 </div>
 

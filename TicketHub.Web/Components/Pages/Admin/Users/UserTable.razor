@@ -9,87 +9,102 @@
 else
 {
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <!-- اسکرول از این دایو حذف شد -->
         <div class="w-full">
-            <!-- تبدیل جدول به ساختار flex برای کنترل بهتر بدنه -->
             <table class="w-full text-right flex flex-col">
 
-                <!-- هدر سالید (بدون شفافیت) شد و عرض ستون‌ها ثابت (table-fixed) در نظر گرفته شد -->
                 <thead class="bg-gray-100 border-b border-gray-200 table w-full table-fixed shadow-sm">
                     <tr class="table w-full table-fixed">
-                        <th class="px-6 py-4 w-16">
+                        <th class="px-6 py-2 w-[5%]">
                             <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                                    checked="@IsAllSelected" @onchange="ToggleAll" />
                         </th>
-                        <!-- تعیین عرض مشخص (مثلا w-3/12) برای هم‌تراز شدن هدر و بدنه -->
-                        <th class="px-6 py-4 text-sm font-semibold text-gray-700 w-3/12">نام کاربر</th>
-                        <th class="px-6 py-4 text-sm font-semibold text-gray-700 w-3/12">ایمیل</th>
-                        <th class="px-6 py-4 text-sm font-semibold text-gray-700 w-3/12">نقش‌ها</th>
-                        <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-2/12">عملیات</th>
+                        <th class="px-2 py-2 text-sm font-semibold text-gray-700 w-[5%] text-center">ردیف</th>
+                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">نام کاربر</th>
+                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[30%]">ایمیل</th>
+                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نقش‌ها</th>
+                        <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
                     </tr>
                 </thead>
 
-                <!-- اسکرول فقط به tbody داده شد -->
-                <tbody class="divide-y divide-gray-50 block overflow-y-auto max-h-[60vh] w-full custom-scrollbar">
-                    @foreach (var user in Users)
+                <tbody class="divide-y divide-gray-50 block overflow-y-auto h-[450px] w-full custom-scrollbar">
+                    @if (!Users.Any())
                     {
-                        <tr @key="user.Id" class="table w-full table-fixed hover:bg-gray-50/50 smooth-transition group/row @(DeletingIds.Contains(user.Id) ? "row-exit" : "row-enter")">
-                            <td class="px-6 py-4 w-16">
-                                <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                                       checked="@SelectedIds.Contains(user.Id)"
-                                       @onchange="@(e => ToggleSelection(user.Id, e.Value))" />
-                            </td>
-                            <td class="px-6 py-4 w-3/12">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold shadow-sm shrink-0">
-                                        @(string.IsNullOrEmpty(user.Name) ? "U" : user.Name.Substring(0, 1).ToUpper())
-                                    </div>
-                                    <span class="font-medium text-gray-800 truncate">@user.Name</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-500 w-3/12 truncate" dir="ltr">@user.Email</td>
-                            <td class="px-6 py-4 w-3/12">
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach (var userRole in user.UserRoles)
-                                    {
-                                        <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold border border-blue-100">@userRole.Role?.Name</span>
-                                    }
-                                    @if (!user.UserRoles.Any())
-                                    {
-                                        <span class="text-gray-400 text-xs">بدون نقش</span>
-                                    }
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-center w-2/12">
-                                <div class="flex items-center justify-center gap-2">
-                                    <button type="button" @onclick="() => OnEdit.InvokeAsync(user)" class="p-2 text-indigo-500 hover:bg-indigo-100 rounded-lg smooth-transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 5.232z" /></svg>
-                                    </button>
-                                    <button type="button" @onclick="() => OnDelete.InvokeAsync(user)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </div>
+                        <!-- Empty state message centered inside the fixed-height table body -->
+                        <tr class="flex items-center justify-center h-full w-full">
+                            <td class="text-center text-sm text-gray-500">
+                                هیچ کاربری در سیستم ثبت نشده است.
                             </td>
                         </tr>
+                    }
+                    else
+                    {
+                        int rowIndex = (CurrentPage - 1) * PageSize + 1;
+
+                        @foreach (var user in Users)
+                        {
+                            <tr @key="user.Id" class="table w-full table-fixed hover:bg-gray-50/50 smooth-transition group/row @(DeletingIds.Contains(user.Id) ? "row-exit" : "row-enter")">
+                                <!-- Keep the existing td elements here -->
+                                <td class="px-6 py-2 w-[5%]">
+                                    <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                                           checked="@SelectedIds.Contains(user.Id)"
+                                           @onchange="@(e => ToggleSelection(user.Id, e.Value))" />
+                                </td>
+                                <td class="px-2 py-2 w-[5%] text-center text-sm font-medium text-gray-500">
+                                    @(rowIndex++)
+                                </td>
+                                <td class="px-6 py-2 w-[25%]">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 text-sm bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold shadow-sm shrink-0">
+                                            @(string.IsNullOrEmpty(user.Name) ? "U" : user.Name.Substring(0, 1).ToUpper())
+                                        </div>
+                                        <span class="font-medium text-gray-800 truncate">@user.Name</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-2 text-sm text-gray-500 w-[30%] truncate" dir="ltr">@user.Email</td>
+                                <td class="px-6 py-2 w-[20%]">
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach (var userRole in user.UserRoles)
+                                        {
+                                            <span class="px-3 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold border border-blue-100">@userRole.Role?.Name</span>
+                                        }
+                                        @if (!user.UserRoles.Any())
+                                        {
+                                            <span class="text-gray-400 text-xs">بدون نقش</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-6 py-2 text-center w-[15%]">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button type="button" @onclick="() => OnEdit.InvokeAsync(user)" class="p-1.5 text-indigo-500 hover:bg-indigo-100 rounded-lg smooth-transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 5.232z" /></svg>
+                                        </button>
+                                        <button type="button" @onclick="() => OnDelete.InvokeAsync(user)" class="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
         </div>
-        @if (!Users.Any())
-        {
-            <div class="text-center py-10 text-sm text-gray-500">هیچ کاربری در سیستم ثبت نشده است.</div>
-        }
     </div>
 }
+
 @code {
     [Parameter] public List<User> Users { get; set; } = new();
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public EventCallback<User> OnEdit { get; set; }
     [Parameter] public EventCallback<User> OnDelete { get; set; }
 
+    // پارامترهای جدید برای محاسبه درست شماره ردیف
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int PageSize { get; set; } = 10;
+
     [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
-    [Parameter] public HashSet<int> DeletingIds { get; set; } = new(); // برای انیمیشن حذف
+    [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
 
     private bool IsAllSelected => Users.Any() && SelectedIds.Count == Users.Count;
 
