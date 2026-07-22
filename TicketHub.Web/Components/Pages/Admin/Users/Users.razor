@@ -12,7 +12,13 @@
 
 <!-- پدینگ p-4 به p-3 و gap-5 به gap-3 کاهش یافت -->
 <div class="container mx-auto p-3 md:p-4 flex flex-col gap-3" dir="rtl">
-    <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal" />
+    <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal" >
+        <Icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        </Icon>
+    </PageHeader>
 
     <!-- Always visible search bar -->
     <div class="min-h-[56px] mb-2">
