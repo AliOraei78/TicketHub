@@ -22,26 +22,10 @@
                            ItemName="کاربر" />
     </div>
 
-    <!-- Floating bulk action toolbar at the bottom -->
-    @if (selectedUserIds.Any())
-    {
-        <div class="fixed bottom-6 left-1/2 z-50 bg-white border border-rose-200 rounded-2xl p-2 pl-4 flex items-center gap-6 shadow-[0_10px_40px_-10px_rgba(225,29,72,0.3)] animate-[slideUpPopup_0.4s_cubic-bezier(0.16,1,0.3,1)_forwards]" dir="rtl">
-            <div class="flex items-center gap-2 pr-2">
-                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">@selectedUserIds.Count</span>
-                <span class="text-rose-800 font-bold text-sm">مورد انتخاب شده</span>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <button @onclick="() => selectedUserIds.Clear()" class="px-4 py-1.5 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-xl text-sm font-bold smooth-transition">
-                    لغو
-                </button>
-                <button @onclick="OpenBulkDeleteModal" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    حذف
-                </button>
-            </div>
-        </div>
-    }
+    <!-- Floating bulk action toolbar at the bottom (Refactored) -->
+    <BulkActionToolbar SelectedCount="selectedUserIds.Count"
+                       OnCancel="ClearSelection"
+                       OnDelete="OpenBulkDeleteModal" />
     <!-- جدول -->
     <UserTable Users="users" IsLoading="isLoading"
                OnEdit="OpenEditModal"
@@ -273,4 +257,9 @@
     }
 
     private void CloseDeleteModal() { showDeleteModal = false; userToDelete = null; isBulkDelete = false; }
+
+    private void ClearSelection()
+    {
+        selectedUserIds.Clear();
+    }
 }
