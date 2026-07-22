@@ -11,22 +11,13 @@
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
-
-    <PageHeader 
-        Title="مدیریت کاربران" 
-        Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." 
-        ButtonText="افزودن کاربر جدید" 
-        ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20"
-        OnActionClick="OpenCreateModal" />
-    <!-- Filter & Search Bar (مشابه صفحه تیکت‌ها) -->
+    <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal" />
 
     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="relative w-full md:w-80">
-            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="جستجوی نام یا ایمیل..."
-                   class="w-full pr-10 pl-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm smooth-transition" />
+            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="جستجوی نام یا ایمیل..." class="w-full pr-10 pl-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm smooth-transition" />
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute right-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </div>
-
         <div class="flex w-full md:w-auto justify-end">
             <select @bind="pageSize" class="px-4 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 smooth-transition bg-white">
                 <option value="10">۱۰ کاربر در هر صفحه</option>
@@ -36,282 +27,53 @@
         </div>
     </div>
 
-    @if (users == null)
-    {
-        <div class="flex justify-center items-center py-20">
-            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        </div>
-    }
-    else
-    {
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-right">
-                    <thead class="bg-gray-50/50 border-b border-gray-100">
-                        <tr>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">نام کاربر</th>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">ایمیل</th>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">نقش‌ها</th>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-600 text-center">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach (var user in users)
-                        {
-                            <tr class="hover:bg-gray-50/50 smooth-transition group/row">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold shadow-sm">
-                                            @(string.IsNullOrEmpty(user.Name) ? "U" : user.Name.Substring(0, 1).ToUpper())
-                                        </div>
-                                        <span class="font-medium text-gray-800">@user.Name</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500" dir="ltr">@user.Email</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach (var userRole in user.UserRoles)
-                                        {
-                                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold border border-blue-100">
-                                                @userRole.Role?.Name
-                                            </span>
-                                        }
-                                        @if (!user.UserRoles.Any())
-                                        {
-                                            <span class="text-gray-400 text-xs">بدون نقش</span>
-                                        }
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <!-- Edit Action Button -->
-                                        <button type="button" @onclick="() => OpenEditModal(user)" class="relative p-2 text-indigo-500 hover:bg-indigo-100 rounded-lg smooth-transition group">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 5.232z" />
-                                            </svg>
-                                            <!-- Tooltip -->
-                                            <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">ویرایش کاربر</span>
-                                        </button>
+    <UserTable Users="users" IsLoading="isLoading" OnEdit="OpenEditModal" OnDelete="OpenDeleteModal" />
 
-                                        <!-- Delete Action Button -->
-                                        <button type="button" @onclick="() => OpenDeleteModal(user)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                            <!-- Tooltip -->
-                                            <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">حذف کاربر</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            @if (!users.Any())
-            {
-                <div class="text-center py-10 text-sm text-gray-500">هیچ کاربری در سیستم ثبت نشده است.</div>
-            }
-        </div>
-    }
+    <Pagination CurrentPage="currentPage" PageSize="pageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
 </div>
 
-<!-- Pagination -->
-<div class="flex justify-between items-center mt-6">
-    <div>
-        نمایش @( (currentPage - 1) * pageSize + 1 ) تا @Math.Min(currentPage * pageSize, totalUsers) از @totalUsers کاربر
-    </div>
-    <div class="flex gap-2">
-        <button @onclick="PreviousPage" disabled="@(currentPage == 1)" class="px-4 py-2 border rounded-xl hover:bg-gray-50 transition-colors">قبلی</button>
-        <span class="px-4 py-2 font-medium">صفحه @currentPage از @totalPages</span>
-        <button @onclick="NextPage" disabled="@(currentPage >= totalPages)" class="px-4 py-2 border rounded-xl hover:bg-gray-50 transition-colors">بعدی</button>
-    </div>
-</div>
+<UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" AvailableProjects="availableProjects" SelectedRoles="selectedRoles" SelectedProjectIds="selectedProjectIds" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" />
 
-<!-- Unified Create/Edit User Modal -->
-<ModalDialog IsOpen="isUserModalOpen"
-             Title="@(userModel.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")"
-             OnClose="CloseUserModal"
-             MaxWidthClass="max-w-2xl">
-
-    <EditForm Model="@userModel" OnValidSubmit="HandleSaveUser" class="flex flex-col max-h-[85vh]">
-        <div class="p-8 space-y-8 overflow-y-auto flex-1">
-            <!-- Basic Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">نام کاربر</label>
-                    <InputText @bind-Value="userModel.Name" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" required />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
-                    <InputText type="email" @bind-Value="userModel.Email" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" dir="ltr" required />
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">شماره تلفن</label>
-                    <InputText type="tel" @bind-Value="userModel.PhoneNumber" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" dir="ltr" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">@(userModel.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")</label>
-                    <input type="password" @bind="passwordInput" placeholder="@(userModel.Id == 0 ? "رمز عبور را وارد کنید" : "خالی بگذارید اگر تغییری نمی‌خواهید")" required="@(userModel.Id == 0)"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" dir="ltr" />
-                </div>
-            </div>
-
-            <div class="mt-4 flex items-center gap-3">
-                <InputCheckbox id="userIsConfirmed" @bind-Value="userModel.IsConfirmed" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-                <label for="userIsConfirmed" class="text-sm font-medium text-gray-700">نیاز به تایید ایمیل</label>
-            </div>
-
-            <!-- Roles Multi-Select -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">نقش‌ها</label>
-                <div class="relative">
-                    <input type="text" @bind="roleSearch" @bind:event="oninput" @onfocus="() => showRoleDropdown = true" placeholder="جستجو و انتخاب نقش..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" />
-                    @if (showRoleDropdown)
-                    {
-                        <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-auto py-1">
-                            @foreach (var role in availableRoles.Where(r => string.IsNullOrEmpty(roleSearch) || r.Name.Contains(roleSearch, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                <div @onclick="() => ToggleRole(role.Name)" class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-                                    <input type="checkbox" checked="@SelectedRoles.Contains(role.Name)" class="w-4 h-4" />
-                                    <span>@role.Name</span>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach (var role in SelectedRoles)
-                    {
-                        <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-xl text-sm flex items-center">
-                            @role <button type="button" @onclick="() => RemoveRole(role)" class="ml-2 text-indigo-500">×</button>
-                        </span>
-                    }
-                </div>
-            </div>
-
-            <!-- Projects Multi-Select -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">پروژه‌ها</label>
-                <div class="relative">
-                    <input type="text" @bind="projectSearch" @bind:event="oninput" @onfocus="() => showProjectDropdown = true" placeholder="جستجو و انتخاب پروژه..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" />
-                    @if (showProjectDropdown)
-                    {
-                        <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-auto py-1">
-                            @foreach (var proj in availableProjects.Where(p => string.IsNullOrEmpty(projectSearch) || p.Name.Contains(projectSearch, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                <div @onclick="() => ToggleProject(proj.Id)" class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-                                    <input type="checkbox" checked="@SelectedProjectIds.Contains(proj.Id)" class="w-4 h-4" />
-                                    <span>@proj.Name</span>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach (var projId in SelectedProjectIds)
-                    {
-                        var proj = availableProjects.FirstOrDefault(p => p.Id == projId);
-                        if (proj != null)
-                        {
-                            <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-xl text-sm flex items-center">
-                                @proj.Name <button type="button" @onclick="() => RemoveProject(projId)" class="ml-2 text-emerald-500">×</button>
-                            </span>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="px-8 py-6 border-t bg-gray-50 flex gap-3">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl smooth-transition">
-                @(userModel.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")
-            </button>
-            <button type="button" @onclick="CloseUserModal" class="flex-1 border border-gray-300 hover:bg-gray-100 font-medium py-3.5 rounded-2xl smooth-transition">انصراف</button>
-        </div>
-    </EditForm>
-</ModalDialog>
-
-<!-- Animated Delete Modal -->
-@if (showDeleteModal && userToDelete != null)
-{
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop-animate">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center modal-content-animate">
-            <!-- Trash Warning Icon -->
-            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-gray-800 mb-2">حذف حساب کاربری</h3>
-            <p class="text-gray-500 mb-6 text-sm">
-                آیا از حذف کاربر <span class="font-bold text-gray-800">@userToDelete.Name</span> مطمئن هستید؟<br />
-                این عملیات غیرقابل بازگشت است.
-            </p>
-
-            @if (!string.IsNullOrEmpty(deleteErrorMessage))
-            {
-                <div class="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-medium">@deleteErrorMessage</div>
-            }
-
-            <div class="flex gap-3 justify-center">
-                <button @onclick="ConfirmDeleteUser" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-xl hover:bg-rose-700 smooth-transition shadow-lg shadow-rose-500/20">
-                    بله، حذف کن
-                </button>
-                <button @onclick="CloseDeleteModal" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 smooth-transition">
-                    انصراف
-                </button>
-            </div>
-        </div>
-    </div>
-}
-
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@($"آیا از حذف کاربر {userToDelete?.Name} مطمئن هستید؟")" ErrorMessage="@deleteErrorMessage" OnConfirm="ConfirmDeleteUser" OnCancel="CloseDeleteModal" />
 
 @code {
-    private List<UserEntity>? users;
+    private List<UserEntity> users = new();
+    private bool isLoading = true;
 
-    // Unified Modal State
-    private bool isUserModalOpen = false;
-    private UserEntity userModel = new();
-    private string passwordInput = string.Empty;
-
-    // Available Data
     private List<Role> availableRoles = new();
     private List<Project> availableProjects = new();
 
-    // Selections
-    private List<string> SelectedRoles { get; set; } = new();
-    private List<int> SelectedProjectIds { get; set; } = new();
+    private bool isUserModalOpen = false;
+    private UserEntity userModel = new();
+    private string passwordInput = string.Empty;
+    private List<string> selectedRoles = new();
+    private List<int> selectedProjectIds = new();
 
-    // Dropdowns
-    private string roleSearch = string.Empty;
-    private string projectSearch = string.Empty;
-    private bool showRoleDropdown = false;
-    private bool showProjectDropdown = false;
-
-    // Pagination & Search
-    private string searchTerm = string.Empty;
-    private int currentPage = 1;
-    private int pageSize = 10;
-    private int totalUsers = 0;
-    private int totalPages => (int)Math.Ceiling(totalUsers / (double)pageSize);
-
-    // Delete Modal
     private bool showDeleteModal = false;
     private UserEntity? userToDelete;
     private string? deleteErrorMessage;
 
+    private string _searchTerm = string.Empty;
+    private string searchTerm
+    {
+        get => _searchTerm;
+        set { _searchTerm = value; currentPage = 1; _ = LoadUsers(); }
+    }
+
+    private int _pageSize = 10;
+    private int pageSize
+    {
+        get => _pageSize;
+        set { _pageSize = value; currentPage = 1; _ = LoadUsers(); }
+    }
+
+    private int currentPage = 1;
+    private int totalUsers = 0;
+
     protected override async Task OnInitializedAsync()
     {
-        await LoadUsers();
         await LoadAvailableData();
+        await LoadUsers();
     }
 
     private async Task LoadAvailableData()
@@ -320,11 +82,26 @@
         availableProjects = await DbContext.Projects.ToListAsync();
     }
 
-    // --- Modal Management ---
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        var query = DbContext.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            query = query.Where(u => u.Name.Contains(searchTerm) || u.Email.Contains(searchTerm));
+
+        totalUsers = await query.CountAsync();
+        users = await query.Skip((currentPage - 1) * pageSize).Take(pageSize).ToListAsync();
+        isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private void OpenCreateModal()
     {
-        userModel = new UserEntity(); // Id = 0 means Create
-        ResetFormState();
+        userModel = new UserEntity();
+        passwordInput = string.Empty;
+        selectedRoles.Clear();
+        selectedProjectIds.Clear();
         isUserModalOpen = true;
     }
 
@@ -339,68 +116,40 @@
             CreatedAt = user.CreatedAt,
             IsConfirmed = user.IsConfirmed
         };
-
-        ResetFormState();
-        SelectedRoles = user.UserRoles.Select(ur => ur.Role?.Name ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
-        SelectedProjectIds = await DbContext.UserProjects.Where(up => up.UserId == user.Id).Select(up => up.ProjectId).ToListAsync();
-
+        passwordInput = string.Empty;
+        selectedRoles = user.UserRoles.Select(ur => ur.Role?.Name ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
+        selectedProjectIds = await DbContext.UserProjects.Where(up => up.UserId == user.Id).Select(up => up.ProjectId).ToListAsync();
         isUserModalOpen = true;
     }
 
-    private void CloseUserModal()
-    {
-        isUserModalOpen = false;
-        showRoleDropdown = false;
-        showProjectDropdown = false;
-    }
+    private void CloseUserModal() => isUserModalOpen = false;
 
-    private void ResetFormState()
+    private async Task HandleSaveUser(UserFormSubmissionResult payload)
     {
-        passwordInput = string.Empty;
-        SelectedRoles.Clear();
-        SelectedProjectIds.Clear();
-        roleSearch = string.Empty;
-        projectSearch = string.Empty;
-        showRoleDropdown = false;
-        showProjectDropdown = false;
-    }
+        userModel = payload.User;
+        passwordInput = payload.Password;
+        selectedRoles = payload.SelectedRoles;
+        selectedProjectIds = payload.SelectedProjectIds;
 
-    // --- Unified Save Logic ---
-    private async Task HandleSaveUser()
-    {
         if (userModel.Id == 0)
         {
-            // Create Logic
             if (string.IsNullOrWhiteSpace(passwordInput)) return;
-
             userModel.Password = BCrypt.HashPassword(passwordInput);
             userModel.CreatedAt = DateTime.UtcNow;
-
             DbContext.Users.Add(userModel);
-            await DbContext.SaveChangesAsync(); // Save to get the new Id
-
+            await DbContext.SaveChangesAsync();
             AssignRolesAndProjects(userModel.Id);
         }
         else
         {
-            // Edit Logic
             var userInDb = await DbContext.Users.Include(u => u.UserRoles).FirstOrDefaultAsync(u => u.Id == userModel.Id);
             if (userInDb == null) return;
+            userInDb.Name = userModel.Name; userInDb.Email = userModel.Email;
+            userInDb.PhoneNumber = userModel.PhoneNumber; userInDb.IsConfirmed = userModel.IsConfirmed;
+            if (!string.IsNullOrWhiteSpace(passwordInput)) userInDb.Password = BCrypt.HashPassword(passwordInput);
 
-            userInDb.Name = userModel.Name;
-            userInDb.Email = userModel.Email;
-            userInDb.PhoneNumber = userModel.PhoneNumber;
-            userInDb.IsConfirmed = userModel.IsConfirmed;
-
-            if (!string.IsNullOrWhiteSpace(passwordInput))
-            {
-                userInDb.Password = BCrypt.HashPassword(passwordInput);
-            }
-
-            // Remove existing relationships
             var currentRoles = await DbContext.UserRoles.Where(ur => ur.UserId == userInDb.Id).ToListAsync();
             DbContext.UserRoles.RemoveRange(currentRoles);
-
             var currentProjects = await DbContext.UserProjects.Where(up => up.UserId == userInDb.Id).ToListAsync();
             DbContext.UserProjects.RemoveRange(currentProjects);
 
@@ -414,45 +163,20 @@
 
     private void AssignRolesAndProjects(int targetUserId)
     {
-        foreach (var roleName in SelectedRoles.Distinct())
+        foreach (var roleName in selectedRoles.Distinct())
         {
             var role = availableRoles.FirstOrDefault(r => r.Name == roleName);
             if (role != null) DbContext.UserRoles.Add(new UserRole { UserId = targetUserId, RoleId = role.Id });
         }
-
-        foreach (var projId in SelectedProjectIds.Distinct())
+        foreach (var projId in selectedProjectIds.Distinct())
         {
             DbContext.UserProjects.Add(new UserProject { UserId = targetUserId, ProjectId = projId });
         }
     }
 
-    // --- Selectors & Dropdowns ---
-    private void ToggleRole(string roleName)
-    {
-        if (SelectedRoles.Contains(roleName)) SelectedRoles.Remove(roleName);
-        else SelectedRoles.Add(roleName);
-    }
-    private void RemoveRole(string roleName) => SelectedRoles.Remove(roleName);
+    private void OpenDeleteModal(UserEntity user) { userToDelete = user; deleteErrorMessage = null; showDeleteModal = true; }
+    private void CloseDeleteModal() { showDeleteModal = false; userToDelete = null; }
 
-    private void ToggleProject(int projectId)
-    {
-        if (SelectedProjectIds.Contains(projectId)) SelectedProjectIds.Remove(projectId);
-        else SelectedProjectIds.Add(projectId);
-    }
-    private void RemoveProject(int projectId) => SelectedProjectIds.Remove(projectId);
-
-    // --- Delete Methods ---
-    private void OpenDeleteModal(UserEntity user)
-    {
-        userToDelete = user;
-        deleteErrorMessage = null;
-        showDeleteModal = true;
-    }
-    private void CloseDeleteModal()
-    {
-        showDeleteModal = false;
-        userToDelete = null;
-    }
     private async Task ConfirmDeleteUser()
     {
         if (userToDelete == null) return;
@@ -470,28 +194,11 @@
         }
     }
 
-    // --- Pagination & Data Loading ---
-    private async Task HandleSearch(ChangeEventArgs e)
-    {
-        searchTerm = e.Value?.ToString() ?? "";
-        currentPage = 1;
-        await LoadUsers();
-    }
-    private async Task LoadUsers()
-    {
-        var query = DbContext.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).AsQueryable();
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            query = query.Where(u => u.Name.Contains(searchTerm) || u.Email.Contains(searchTerm));
-        }
-
-        totalUsers = await query.CountAsync();
-        users = await query.Skip((currentPage - 1) * pageSize).Take(pageSize).ToListAsync();
-    }
     private async Task NextPage()
     {
-        if (currentPage < totalPages) { currentPage++; await LoadUsers(); }
+        if (currentPage < Math.Ceiling(totalUsers / (double)pageSize)) { currentPage++; await LoadUsers(); }
     }
+
     private async Task PreviousPage()
     {
         if (currentPage > 1) { currentPage--; await LoadUsers(); }
