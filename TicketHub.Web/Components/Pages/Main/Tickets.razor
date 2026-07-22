@@ -3,21 +3,18 @@
 @using TicketHub.Core.Entities
 @using TicketSystem.Application.Interfaces
 @using Microsoft.AspNetCore.Components.Authorization;
+@using TicketHub.Web.Components.Shared
 @inject ITicketService TicketService
 @inject IProjectService ProjectService
 
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
-    <!-- Header Section -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-            <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">سامانه مدیریت تیکت‌ها</h1>
-            <p class="text-sm text-gray-500 mt-1">تیکت‌های پشتیبانی خود را مشاهده، فیلتر و مدیریت کنید.</p>
-        </div>
-        <button @onclick="OpenCreateModal" class="smooth-transition bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 flex items-center gap-2 hover:scale-105 active:scale-95">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-            ثبت تیکت جدید
-        </button>
-    </div>
+
+    <PageHeader 
+        Title="سامانه مدیریت تیکت‌ها" 
+        Description="تیکت‌های پشتیبانی خود را مشاهده، فیلتر و مدیریت کنید." 
+        ButtonText="ثبت تیکت جدید" 
+        ButtonThemeClass="bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
+        OnActionClick="OpenCreateModal" />
 
     <!-- Quick Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

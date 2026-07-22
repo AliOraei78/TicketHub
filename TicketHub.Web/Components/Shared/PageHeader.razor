@@ -1,0 +1,36 @@
+﻿<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">@Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Description))
+        {
+            <p class="text-sm text-gray-500 mt-1">@Description</p>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ButtonText))
+    {
+        <button @onclick="OnActionClick" class="smooth-transition @ButtonThemeClass text-white font-medium px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            @ButtonText
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public string? ButtonText { get; set; }
+
+    [Parameter]
+    public string ButtonThemeClass { get; set; } = "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"; // تم پیش‌فرض
+
+    [Parameter]
+    public EventCallback OnActionClick { get; set; }
+}
