@@ -106,13 +106,19 @@ else
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
     [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
 
-    private bool IsAllSelected => Users.Any() && SelectedIds.Count == Users.Count;
+    private bool IsAllSelected => Users.Any() && Users.All(u => SelectedIds.Contains(u.Id));
 
     private async Task ToggleAll(ChangeEventArgs e)
     {
         bool isChecked = (bool)(e.Value ?? false);
-        if (isChecked) SelectedIds = new HashSet<int>(Users.Select(u => u.Id));
-        else SelectedIds.Clear();
+        if (isChecked)
+        {
+            foreach (var user in Users) SelectedIds.Add(user.Id);
+        }
+        else
+        {
+            foreach (var user in Users) SelectedIds.Remove(user.Id);
+        }
         await SelectedIdsChanged.InvokeAsync(SelectedIds);
     }
 

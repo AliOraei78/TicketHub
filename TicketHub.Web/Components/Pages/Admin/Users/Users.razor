@@ -14,34 +14,34 @@
 <div class="container mx-auto p-3 md:p-4 flex flex-col gap-3" dir="rtl">
     <PageHeader Title="مدیریت کاربران" Description="مشاهده لیست کاربران سیستم و دسترسی‌ها." ButtonText="افزودن کاربر جدید" ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20" OnActionClick="OpenCreateModal" />
 
-    <!-- ارتفاع نوار و پدینگ‌های داخل آن کمتر شد -->
-    <div class="min-h-[56px] transition-all duration-300">
-        @if (selectedUserIds.Any())
-        {
-            <div class="h-full px-4 py-2 bg-rose-50 border border-rose-200 rounded-2xl flex justify-between items-center shadow-sm animate-[fadeIn_0.2s_ease-out]">
-                <div class="flex items-center gap-4">
-                    <button @onclick="() => selectedUserIds.Clear()" class="p-1 text-rose-500 hover:bg-rose-200 rounded-lg smooth-transition" title="لغو انتخاب">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                    <span class="text-rose-800 font-bold text-sm">@selectedUserIds.Count کاربر انتخاب شده</span>
-                </div>
-                <button @onclick="OpenBulkDeleteModal" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md shadow-rose-600/20 text-sm font-bold transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    حذف @(selectedUserIds.Count > 1 ? "گروهی" : "")
-                </button>
-            </div>
-        }
-        else
-        {
-            <div class="animate-[fadeIn_0.2s_ease-out]">
-                <ListFilterToolbar @bind-SearchTerm="searchTerm"
-                                   @bind-PageSize="pageSize"
-                                   SearchPlaceholder="جستجوی نام یا ایمیل..."
-                                   ItemName="کاربر" />
-            </div>
-        }
+    <!-- Always visible search bar -->
+    <div class="min-h-[56px] mb-2">
+        <ListFilterToolbar @bind-SearchTerm="searchTerm"
+                           @bind-PageSize="pageSize"
+                           SearchPlaceholder="جستجوی نام یا ایمیل..."
+                           ItemName="کاربر" />
     </div>
 
+    <!-- Floating bulk action toolbar at the bottom -->
+    @if (selectedUserIds.Any())
+    {
+        <div class="fixed bottom-6 left-1/2 z-50 bg-white border border-rose-200 rounded-2xl p-2 pl-4 flex items-center gap-6 shadow-[0_10px_40px_-10px_rgba(225,29,72,0.3)] animate-[slideUpPopup_0.4s_cubic-bezier(0.16,1,0.3,1)_forwards]" dir="rtl">
+            <div class="flex items-center gap-2 pr-2">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">@selectedUserIds.Count</span>
+                <span class="text-rose-800 font-bold text-sm">مورد انتخاب شده</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button @onclick="() => selectedUserIds.Clear()" class="px-4 py-1.5 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-xl text-sm font-bold smooth-transition">
+                    لغو
+                </button>
+                <button @onclick="OpenBulkDeleteModal" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    حذف
+                </button>
+            </div>
+        </div>
+    }
     <!-- جدول -->
     <UserTable Users="users" IsLoading="isLoading"
                OnEdit="OpenEditModal"
@@ -112,7 +112,6 @@
     private async Task LoadUsers()
     {
         isLoading = true;
-        selectedUserIds.Clear();
         var query = DbContext.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
