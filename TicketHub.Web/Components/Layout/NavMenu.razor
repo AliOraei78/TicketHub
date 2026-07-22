@@ -1,4 +1,6 @@
-﻿@rendermode InteractiveServer
+﻿@using TicketHub.Web.Components.Layout.Shared
+@rendermode InteractiveServer
+
 @code {
     [Parameter] public bool IsMobileMenuOpen { get; set; }
     [Parameter] public EventCallback CloseMobileMenu { get; set; }
@@ -6,14 +8,6 @@
     [Parameter] public bool IsCollapsed { get; set; }
     [Parameter] public EventCallback OnExpandRequested { get; set; }
     [Parameter] public EventCallback OnToggleSidebar { get; set; }
-
-    private bool isSettingsOpen = false;
-
-    private string GetNavItemClass()
-    {
-        var paddingClass = IsCollapsed ? "justify-center px-0" : "px-4";
-        return $"relative flex items-center gap-3 {paddingClass} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group";
-    }
 
     private async Task HandleSideBarClick()
     {
@@ -23,19 +17,6 @@
     private async Task HandleToggleSidebar()
     {
         await OnToggleSidebar.InvokeAsync();
-    }
-
-    private async Task HandleSettingsClick()
-    {
-        if (IsCollapsed)
-        {
-            await OnExpandRequested.InvokeAsync();
-            isSettingsOpen = true;
-        }
-        else
-        {
-            isSettingsOpen = !isSettingsOpen;
-        }
     }
 }
 
@@ -83,101 +64,57 @@
     </div>
 
     <!-- Navigation Links -->
+<!-- Navigation Links -->
     <nav class="@($"flex-1 p-4 space-y-2 {(IsCollapsed ? "overflow-visible" : "overflow-y-auto overflow-x-hidden")}")">
-        <NavLink class="@GetNavItemClass()" href="" Match="NavLinkMatch.All" @onclick="HandleSideBarClick">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            @if (!IsCollapsed)
-            {
-                <span class="whitespace-nowrap">داشبورد اصلی</span>
-            }
-            @if (IsCollapsed)
-            {
-                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">داشبورد اصلی</span>
-            }
-        </NavLink>
+        
+        <NavItem Href="" Title="داشبورد اصلی" Match="NavLinkMatch.All" IsCollapsed="IsCollapsed" OnClick="HandleSideBarClick">
+            <IconContent>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </IconContent>
+        </NavItem>
 
-        <NavLink class="@GetNavItemClass()" href="tickets" @onclick="HandleSideBarClick">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            @if (!IsCollapsed)
-            {
-                <span class="whitespace-nowrap">مدیریت تیکت‌ها</span>
-            }
-            @if (IsCollapsed)
-            {
-                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">مدیریت تیکت‌ها</span>
-            }
-        </NavLink>
+        <NavItem Href="tickets" Title="مدیریت تیکت‌ها" IsCollapsed="IsCollapsed" OnClick="HandleSideBarClick">
+            <IconContent>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            </IconContent>
+        </NavItem>
 
-        <NavLink class="@GetNavItemClass()" href="projects" @onclick="HandleSideBarClick">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            @if (!IsCollapsed)
-            {
-                <span class="whitespace-nowrap">پروژه‌ها</span>
-            }
-            @if (IsCollapsed)
-            {
-                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">پروژه‌ها</span>
-            }
-        </NavLink>
+        <NavItem Href="projects" Title="پروژه‌ها" IsCollapsed="IsCollapsed" OnClick="HandleSideBarClick">
+            <IconContent>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </IconContent>
+        </NavItem>
 
-        <NavLink class="@GetNavItemClass()" href="users" @onclick="HandleSideBarClick">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            @if (!IsCollapsed)
-            {
-                <span class="whitespace-nowrap">مدیریت کاربران</span>
-            }
-            @if (IsCollapsed)
-            {
-                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">مدیریت کاربران</span>
-            }
-        </NavLink>
+        <NavItem Href="users" Title="مدیریت کاربران" IsCollapsed="IsCollapsed" OnClick="HandleSideBarClick">
+            <IconContent>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </IconContent>
+        </NavItem>
 
-        <div class="space-y-1">
-            <button @onclick="HandleSettingsClick" class="@($"relative cursor-pointer w-full flex items-center {(IsCollapsed ? "justify-center px-0" : "justify-between px-4")} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group")">
-                <div class="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    @if (!IsCollapsed)
-                    {
-                        <span class="whitespace-nowrap">تنظیمات سیستم</span>
-                    }
-                    @if (IsCollapsed)
-                    {
-                        <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">تنظیمات سیستم</span>
-                    }
-                </div>
-                @if (!IsCollapsed)
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isSettingsOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                }
-            </button>
+        <NavItem Title="تنظیمات سیستم" IsCollapsed="IsCollapsed" OnExpandRequested="OnExpandRequested">
+            <IconContent>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-500 smooth-transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </IconContent>
+            <ChildContent>
+                <NavLink class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group" href="settings/roles" @onclick="HandleSideBarClick">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0 group-hover:bg-blue-500 transition-colors"></span>
+                    <span class="whitespace-nowrap">مدیریت نقش‌ها</span>
+                </NavLink>
+            </ChildContent>
+        </NavItem>
 
-            <!-- زیرمنوی آکاردئونی با انیمیشن نرمِ CSS Grid -->
-            <div class="grid transition-all duration-300 ease-in-out @(isSettingsOpen && !IsCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")">
-                <div class="overflow-hidden">
-                    <div class="pr-12 pl-4 py-1 space-y-1">
-                        <NavLink class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group" href="settings/roles" @onclick="HandleSideBarClick">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0 group-hover:bg-blue-500 transition-colors"></span>
-                            <span class="whitespace-nowrap">مدیریت نقش‌ها</span>
-                        </NavLink>
-                    </div>
-                </div>
-            </div>
-        </div>
     </nav>
-
     <!-- Sidebar Footer -->
     <div class="flex flex-col border-t border-slate-800/60 bg-slate-950/20">
         <a href="/profile" class="@($"relative flex items-center gap-3 {(IsCollapsed ? "justify-center p-3" : "p-4")} hover:bg-slate-800/40 smooth-transition group")" @onclick="HandleSideBarClick">

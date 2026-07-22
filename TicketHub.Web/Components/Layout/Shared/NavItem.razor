@@ -1,0 +1,87 @@
+﻿@code {
+    [Parameter] public string Href { get; set; } = "";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public RenderFragment? IconContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback OnExpandRequested { get; set; }
+    [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
+
+    private bool isOpen = false;
+
+    private string GetNavItemClass(bool hasSubMenu)
+    {
+        var paddingClass = IsCollapsed ? "justify-center px-0" : (hasSubMenu ? "justify-between px-4" : "px-4");
+        var gapClass = hasSubMenu ? "" : "gap-3";
+        return $"relative w-full flex items-center {gapClass} {paddingClass} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group cursor-pointer";
+    }
+
+    private async Task HandleClick()
+    {
+        if (ChildContent != null)
+        {
+            if (IsCollapsed)
+            {
+                await OnExpandRequested.InvokeAsync();
+                isOpen = true;
+            }
+            else
+            {
+                isOpen = !isOpen;
+            }
+        }
+        else
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+}
+
+@if (ChildContent == null)
+{
+    <NavLink class="@GetNavItemClass(false)" href="@Href" Match="@Match" @onclick="HandleClick">
+        @IconContent
+        @if (!IsCollapsed)
+        {
+            <span class="whitespace-nowrap">@Title</span>
+        }
+        @if (IsCollapsed)
+        {
+            <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">@Title</span>
+        }
+    </NavLink>
+}
+else
+{
+    <div class="space-y-1">
+        <button @onclick="HandleClick" class="@GetNavItemClass(true)">
+            <div class="flex items-center gap-3">
+                @IconContent
+                @if (!IsCollapsed)
+                {
+                    <span class="whitespace-nowrap">@Title</span>
+                }
+            </div>
+
+            @if (IsCollapsed)
+            {
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">@Title</span>
+            }
+            else
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            }
+        </button>
+
+        <div class="grid transition-all duration-300 ease-in-out @(isOpen && !IsCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")">
+            <div class="overflow-hidden">
+                <div class="pr-12 pl-4 py-1 space-y-1">
+                    @ChildContent
+                </div>
+            </div>
+        </div>
+    </div>
+}
