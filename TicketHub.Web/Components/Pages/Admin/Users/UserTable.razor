@@ -8,7 +8,8 @@
           RowClassSelector="@(u => DeletingIds.Contains(u.Id) ? "row-exit" : "row-enter")"
           CurrentPage="CurrentPage"
           PageSize="PageSize"
-          @bind-SelectedKeys="SelectedIds">
+          SelectedKeys="SelectedIds"
+          SelectedKeysChanged="OnSelectionChanged">
 
     <HeaderTemplate>
         <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">نام کاربر</th>
@@ -56,4 +57,10 @@
     [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
     [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
+
+    private async Task OnSelectionChanged(HashSet<int> newKeys)
+    {
+        SelectedIds = newKeys;
+        await SelectedIdsChanged.InvokeAsync(SelectedIds);
+    }
 }
