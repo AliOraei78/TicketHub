@@ -5,96 +5,42 @@
     <EditForm Model="@Model" OnValidSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]">
         <div class="p-8 space-y-8 overflow-y-auto flex-1">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">نام کاربر</label>
-                    <InputText @bind-Value="Model.Name" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" required />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
-                    <InputText type="email" @bind-Value="Model.Email" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" dir="ltr" required />
-                </div>
+                <CustomInput Label="نام کاربر" @bind-Value="Model.Name" IsRequired="true" />
+                <CustomInput Label="ایمیل" Type="email" @bind-Value="Model.Email" Dir="ltr" IsRequired="true" />
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">شماره تلفن</label>
-                    <InputText type="tel" @bind-Value="Model.PhoneNumber" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" dir="ltr" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">@(Model.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")</label>
-                    <input type="password" @bind="PasswordInput" placeholder="@(Model.Id == 0 ? "رمز عبور را وارد کنید" : "خالی بگذارید اگر تغییری نمی‌خواهید")" required="@(Model.Id == 0)" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" dir="ltr" />
-                </div>
+                <CustomInput Label="شماره تلفن" Type="tel" @bind-Value="Model.PhoneNumber" Dir="ltr" />
+                <CustomInput Label="@(Model.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")"
+                             Type="password"
+                             @bind-Value="PasswordInput"
+                             Placeholder="@(Model.Id == 0 ? "رمز عبور را وارد کنید" : "خالی بگذارید اگر تغییری نمی‌خواهید")"
+                             IsRequired="@(Model.Id == 0)"
+                             Dir="ltr" />
             </div>
 
-            <div class="mt-4 flex items-center gap-3">
-                <label for="userIsConfirmed" class="text-sm font-medium text-gray-700">ایمیل تایید شده است؟</label>
-                <InputCheckbox id="userIsConfirmed" @bind-Value="Model.IsConfirmed" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-            </div>
+            <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="Model.IsConfirmed" />
+            <MultiSelectDropdown TItem="Role" TValue="string"
+                                 Label="نقش‌ها"
+                                 Placeholder="جستجو و انتخاب نقش..."
+                                 Items="AvailableRoles"
+                                 @bind-SelectedValues="SelectedRoles"
+                                 ValueSelector="r => r.Name"
+                                 DisplaySelector="r => r.Name"
+                                 BadgeBgClass="bg-indigo-100"
+                                 BadgeTextClass="text-indigo-700"
+                                 BadgeButtonClass="text-indigo-500 hover:text-indigo-900" />
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">نقش‌ها</label>
-                <div class="relative">
-                    <input type="text" @bind="roleSearch" @bind:event="oninput" @onfocus="() => showRoleDropdown = true" @onblur="HideRoleDropdown" placeholder="جستجو و انتخاب نقش..." class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" />                    
-                    @if (showRoleDropdown)
-                    {
-                        <div class="absolute bottom-full mb-1 z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-auto py-1">
-                            @foreach (var role in AvailableRoles.Where(r => string.IsNullOrEmpty(roleSearch) || r.Name.Contains(roleSearch, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                <div @onclick="() => ToggleRole(role.Name)" class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-                                    <input type="checkbox" checked="@SelectedRoles.Contains(role.Name)" class="w-4 h-4" />
-                                    <span>@role.Name</span>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach (var role in SelectedRoles)
-                    {
-                        <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-xl text-sm flex items-center gap-2">
-                            @role
-                            <button type="button" @onclick="() => RemoveRole(role)" class="text-indigo-500 hover:text-indigo-900 text-lg font-bold leading-none">
-                                &times;
-                            </button>
-                        </span>
-                    }
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">پروژه‌ها</label>
-                <div class="relative">
-                    <input type="text" @bind="projectSearch" @bind:event="oninput" @onfocus="() => showProjectDropdown = true" @onblur="HideProjectDropdown" placeholder="جستجو و انتخاب پروژه..." class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500" />                    
-                    @if (showProjectDropdown)
-                    {
-                        <!-- تغییرات در این خط اعمال شده است: bottom-full mb-1 -->
-                        <div class="absolute bottom-full mb-1 z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-auto py-1">
-                            @foreach (var proj in AvailableProjects.Where(p => string.IsNullOrEmpty(projectSearch) || p.Name.Contains(projectSearch, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                <div @onclick="() => ToggleProject(proj.Id)" class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-                                    <input type="checkbox" checked="@SelectedProjectIds.Contains(proj.Id)" class="w-4 h-4" />
-                                    <span>@proj.Name</span>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach (var projId in SelectedProjectIds)
-                    {
-                        var proj = AvailableProjects.FirstOrDefault(p => p.Id == projId);
-                        if (proj != null)
-                        {
-                            <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-xl text-sm flex items-center gap-2">
-                                @proj.Name
-                                <button type="button" @onclick="() => RemoveProject(projId)" class="text-emerald-500 hover:text-emerald-900 text-lg font-bold leading-none">
-                                    &times;
-                                </button>
-                            </span>
-                        }
-                    }
-                </div>
-            </div>
+            <MultiSelectDropdown TItem="Project" TValue="int"
+                                 Label="پروژه‌ها"
+                                 Placeholder="جستجو و انتخاب پروژه..."
+                                 Items="AvailableProjects"
+                                 @bind-SelectedValues="SelectedProjectIds"
+                                 ValueSelector="p => p.Id"
+                                 DisplaySelector="p => p.Name"
+                                 BadgeBgClass="bg-emerald-100"
+                                 BadgeTextClass="text-emerald-700"
+                                 BadgeButtonClass="text-emerald-500 hover:text-emerald-900" />
         </div>
         <div class="px-8 py-6 border-t bg-gray-50 flex gap-3">
             <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl smooth-transition">@(Model.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")</button>
@@ -114,11 +60,6 @@
     [Parameter] public EventCallback<UserFormSubmissionResult> OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private string roleSearch = string.Empty;
-    private string projectSearch = string.Empty;
-    private bool showRoleDropdown = false;
-    private bool showProjectDropdown = false;
-
     private async Task HandleSubmit()
     {
         await OnSubmit.InvokeAsync(new UserFormSubmissionResult
@@ -128,32 +69,5 @@
             SelectedRoles = SelectedRoles,
             SelectedProjectIds = SelectedProjectIds
         });
-    }
-
-    private void ToggleRole(string roleName)
-    {
-        if (SelectedRoles.Contains(roleName)) SelectedRoles.Remove(roleName);
-        else SelectedRoles.Add(roleName);
-    }
-    private void RemoveRole(string roleName) => SelectedRoles.Remove(roleName);
-
-    private void ToggleProject(int projectId)
-    {
-        if (SelectedProjectIds.Contains(projectId)) SelectedProjectIds.Remove(projectId);
-        else SelectedProjectIds.Add(projectId);
-    }
-    private void RemoveProject(int projectId) => SelectedProjectIds.Remove(projectId);
-
-    private async Task HideRoleDropdown()
-    {
-        // یک تاخیر کوتاه برای اینکه رویداد onclick گزینه‌ها فرصت اجرا داشته باشد
-        await Task.Delay(200);
-        showRoleDropdown = false;
-    }
-
-    private async Task HideProjectDropdown()
-    {
-        await Task.Delay(200);
-        showProjectDropdown = false;
     }
 }

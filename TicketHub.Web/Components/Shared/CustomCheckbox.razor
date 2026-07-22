@@ -1,0 +1,25 @@
+﻿<div class="mt-4 flex items-center gap-3">
+    <label for="@Id" class="text-sm font-medium text-gray-700">@Label</label>
+    <input type="checkbox" id="@Id" @bind="CurrentValue" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+
+    private string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    private bool CurrentValue
+    {
+        get => Value;
+        set
+        {
+            if (Value != value)
+            {
+                Value = value;
+                ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+}
