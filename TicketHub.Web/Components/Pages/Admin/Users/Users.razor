@@ -118,6 +118,13 @@
             query = query.Where(u => u.Name.Contains(searchTerm) || u.Email.Contains(searchTerm));
 
         totalUsers = await query.CountAsync();
+
+        int maxPage = totalUsers == 0 ? 1 : (int)Math.Ceiling(totalUsers / (double)pageSize);
+        if (currentPage > maxPage)
+        {
+            currentPage = maxPage;
+        }
+
         users = await query.Skip((currentPage - 1) * pageSize).Take(pageSize).ToListAsync();
         isLoading = false;
         await InvokeAsync(StateHasChanged);
