@@ -67,3 +67,52 @@ h1:focus-visible {
 .modal-content-animate {
     animation: modalScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+.row-enter {
+    animation: slideInFromLeft 0.4s ease-out forwards;
+}
+
+.row-exit {
+    animation: slideOutToLeft 0.4s ease-in forwards;
+}
+
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1; /* رنگ طوسی ملایم */
+    border-radius: 10px;
+}
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8;
+    }
