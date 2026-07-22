@@ -1,0 +1,37 @@
+﻿@if (IsOpen)
+{
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-[fadeIn_0.2s_ease-out]">
+        <div class="bg-white w-full @MaxWidthClass rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all scale-100" dir="rtl">
+
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800 text-lg">@Title</h3>
+                <button type="button" @onclick="OnClose" class="text-gray-400 hover:text-gray-600 smooth-transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body Content -->
+            @ChildContent
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public bool IsOpen { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string MaxWidthClass { get; set; } = "max-w-md"; // برای تیکت‌ها می‌توانیم آن را به max-w-lg تغییر دهیم
+}

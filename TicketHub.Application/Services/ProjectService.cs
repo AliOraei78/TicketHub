@@ -27,5 +27,15 @@ namespace TicketSystem.Application.Services
             // Add a new project to the database
             await _projectRepository.AddAsync(project);
         }
+
+        public async Task UpdateProjectAsync(Project project)
+        {
+            await _projectRepository.UpdateAsync(project);
+        }
+
+        public async Task DeleteProjectAsync(int id)
+        {
+            await _projectRepository.DeleteAsync(id);
+        }
     }
 }

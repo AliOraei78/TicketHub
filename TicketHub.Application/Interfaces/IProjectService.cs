@@ -9,5 +9,7 @@ namespace TicketSystem.Application.Interfaces
     {
         Task<IEnumerable<Project>> GetAllProjectsAsync();
         Task CreateProjectAsync(Project project);
+        Task UpdateProjectAsync(Project project);
+        Task DeleteProjectAsync(int id);
     }
 }
