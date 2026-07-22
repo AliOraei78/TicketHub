@@ -29,3 +29,41 @@ h1:focus,
 h1:focus-visible {
     outline: none !important;
 }
+
+/* انیمیشن پس‌زمینه با تار شدن (Blur) استاندارد و پشتیبانی مرورگرها */
+@keyframes backdropFadeIn {
+    0% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+
+    100% {
+        opacity: 1;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+}
+
+/* انیمیشن پاپ‌آپ (بدون تغییر) */
+@keyframes modalScaleUp {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(15px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-backdrop-animate {
+    animation: backdropFadeIn 0.3s ease-out forwards;
+    /* یک هاله بسیار کم‌رنگ برای ایجاد کنتراست بهتر بین مودال و پس‌زمینه */
+    background-color: rgba(15, 23, 42, 0.2);
+}
+
+.modal-content-animate {
+    animation: modalScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

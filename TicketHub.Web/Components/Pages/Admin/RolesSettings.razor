@@ -4,7 +4,6 @@
 @using TicketHub.Infrastructure.Data
 @using Microsoft.EntityFrameworkCore
 @inject AppDbContext DbContext
-@inject IJSRuntime JS
 
 <PageTitle>تنظیمات نقش‌ها | سامانه تیکتینگ</PageTitle>
 
@@ -48,12 +47,22 @@
             </div>
         </div>
 
-        <!-- Roles List -->
+        <!-- Roles List & Search -->
         <div class="md:col-span-2">
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-6 border-b border-gray-50 bg-gray-50/50">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 class="font-bold text-gray-800 text-lg">لیست نقش‌های موجود</h3>
+
+                    <!-- Search Field -->
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="جستجوی نقش..."
+                               class="w-full pl-4 pr-10 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute right-3 top-2.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
                 </div>
+
                 <div class="p-0">
                     @if (roles == null)
                     {
@@ -61,14 +70,16 @@
                             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                     }
-                    else if (!roles.Any())
+                    else if (!FilteredRoles.Any())
                     {
-                        <div class="text-center py-12 text-gray-400 text-sm">نقشی یافت نشد.</div>
+                        <div class="text-center py-12 text-gray-400 text-sm">
+                            @(string.IsNullOrWhiteSpace(searchTerm) ? "نقشی یافت نشد." : "هیچ نقشی با این نام پیدا نشد.")
+                        </div>
                     }
                     else
                     {
                         <div class="divide-y divide-gray-50">
-                            @foreach (var role in roles)
+                            @foreach (var role in FilteredRoles)
                             {
                                 <div class="p-5 flex items-center justify-between hover:bg-slate-50 smooth-transition">
                                     <div class="flex items-center gap-3">
@@ -82,14 +93,12 @@
                                         <!-- Edit Action Button -->
                                         <button type="button" @onclick="() => EditRole(role)" class="relative p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition group">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                            <!-- Edit Tooltip -->
                                             <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">ویرایش نقش</span>
                                         </button>
 
                                         <!-- Delete Action Button -->
-                                        <button type="button" @onclick="() => DeleteRole(role)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
+                                        <button type="button" @onclick="() => OpenDeleteModal(role)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            <!-- Delete Tooltip -->
                                             <span class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">حذف نقش</span>
                                         </button>
 
@@ -105,15 +114,62 @@
     </div>
 </div>
 
+<!-- Animated Delete Modal -->
+@if (showDeleteModal && roleToDelete != null)
+{
+    <!-- اعمال کلاس پس‌زمینه -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop-animate">
+
+        <!-- اعمال کلاس محتوای مودال -->
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center modal-content-animate">
+
+            <!-- Trash Warning Icon -->
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800 mb-2">حذف نقش سیستم</h3>
+            <p class="text-gray-500 mb-6 text-sm">
+                آیا از حذف نقش <span class="font-bold text-gray-800">@roleToDelete.Name</span> مطمئن هستید؟<br />
+                این عملیات غیرقابل بازگشت است.
+            </p>
+
+            <div class="flex gap-3 justify-center">
+                <button @onclick="ConfirmDelete" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-xl hover:bg-rose-700 smooth-transition shadow-lg shadow-rose-500/20">
+                    بله، حذف کن
+                </button>
+                <button @onclick="CancelDelete" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 smooth-transition">
+                    انصراف
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private Role roleModel = new();
     private List<Role>? roles;
     private string? successMessage;
     private bool isError = false;
 
+    // متغیرهای جستجو
+    private string searchTerm = string.Empty;
+
     // متغیرهای حالت ویرایش
     private bool isEditing = false;
     private int? editingRoleId = null;
+
+    // متغیرهای مودال حذف
+    private bool showDeleteModal = false;
+    private Role? roleToDelete;
+
+    // فیلتر کردن نقش‌ها بر اساس کلمه جستجو شده
+    private IEnumerable<Role> FilteredRoles =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? (roles ?? Enumerable.Empty<Role>())
+            : (roles ?? Enumerable.Empty<Role>()).Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
@@ -133,7 +189,6 @@
 
         if (isEditing && editingRoleId.HasValue)
         {
-            // حالت ویرایش
             var roleToUpdate = await DbContext.Roles.FindAsync(editingRoleId.Value);
             if (roleToUpdate != null)
             {
@@ -143,13 +198,12 @@
         }
         else
         {
-            // حالت ثبت جدید
             DbContext.Roles.Add(roleModel);
             successMessage = "نقش با موفقیت ایجاد شد.";
         }
 
         await DbContext.SaveChangesAsync();
-        CancelEdit(); // پاکسازی فرم و برگشت به حالت ثبت جدید
+        CancelEdit();
         await LoadRoles();
 
         _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
@@ -159,7 +213,7 @@
     {
         isEditing = true;
         editingRoleId = role.Id;
-        roleModel.Name = role.Name; // انتقال مقادیر به فرم
+        roleModel.Name = role.Name;
     }
 
     private void CancelEdit()
@@ -170,32 +224,46 @@
         successMessage = null;
     }
 
-    private async Task DeleteRole(Role role)
+    // باز کردن مودال حذف
+    private void OpenDeleteModal(Role role)
     {
-        // گرفتن تاییدیه از مدیر
-        bool confirm = await JS.InvokeAsync<bool>("confirm", $"آیا از حذف نقش '{role.Name}' مطمئن هستید؟");
-        if (!confirm) return;
+        roleToDelete = role;
+        showDeleteModal = true;
+    }
+
+    // بستن مودال حذف
+    private void CancelDelete()
+    {
+        showDeleteModal = false;
+        roleToDelete = null;
+    }
+
+    // تایید و اجرای حذف
+    private async Task ConfirmDelete()
+    {
+        if (roleToDelete == null) return;
 
         try
         {
-            DbContext.Roles.Remove(role);
+            DbContext.Roles.Remove(roleToDelete);
             await DbContext.SaveChangesAsync();
 
             isError = false;
             successMessage = "نقش با موفقیت حذف شد.";
 
-            // اگر در حال ویرایش همان نقشی بودیم که حذف شد، فرم را ریست کن
-            if (isEditing && editingRoleId == role.Id) CancelEdit();
+            if (isEditing && editingRoleId == roleToDelete.Id) CancelEdit();
 
             await LoadRoles();
         }
         catch (Exception)
         {
-            // مدیریت خطای کلید خارجی (FK) در صورت اتصال کاربران به این نقش
             isError = true;
             successMessage = "امکان حذف وجود ندارد! ابتدا باید کاربرانی که این نقش را دارند، ویرایش کنید.";
         }
-
-        _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
+        finally
+        {
+            CancelDelete(); // بستن مودال در هر صورت
+            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
+        }
     }
 }
