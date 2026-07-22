@@ -22,7 +22,6 @@
 
     <SearchBox Placeholder="جست و جوی عنوان..." OnSearchChanged="HandleSearch" />
 
-    <!-- Projects Grid -->
     @if (projects == null)
     {
         <LoadingSpinner />
@@ -36,14 +35,18 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach (var project in FilteredProjects)
             {
-                <ProjectCard Project="project"
-                             OnEdit="() => OpenEditModal(project)"
-                             OnDelete="() => OpenDeleteModal(project)" />
+                // بررسی اینکه آیا این پروژه در حال حذف شدن است یا خیر
+                bool isDeleting = project.Id == deletingProjectId;
+
+                <div @key="project.Id" class="@(isDeleting ? "fade-out-item" : "fade-in-item")">
+                    <ProjectCard Project="project"
+                                 OnEdit="() => OpenEditModal(project)"
+                                 OnDelete="() => OpenDeleteModal(project)" />
+                </div>
             }
         </div>
     }
 </div>
-
 <!-- Unified Create/Edit Modal with UI matching -->
 <ModalDialog IsOpen="isFormModalOpen"
              Title="@(projectModel.Id == 0 ? "ایجاد پروژه جدید" : "ویرایش پروژه")"
@@ -84,6 +87,8 @@
     // Model for Create/Edit
     private Project projectModel = new Project();
     private bool isFormModalOpen = false;
+
+    private int? deletingProjectId;
 
     // Model for Delete
     private Project? projectToDelete;
@@ -180,9 +185,31 @@
     {
         if (projectToDelete != null)
         {
-            await ProjectService.DeleteProjectAsync(projectToDelete.Id);
+            // 1. ذخیره آیدی پروژه برای جلوگیری از null شدن آن پس از بستن مودال
+            var idToDelete = projectToDelete.Id;
+
+            // 2. تنظیم آیدی برای اعمال کلاس fade-out-item
+            deletingProjectId = idToDelete;
+
+            // 3. بستن مودال تایید حذف
+            CloseDeleteModal();
+
+            // 4. اجبار بلیزور به بروزرسانی رابط کاربری برای شروع انیمیشن
+            StateHasChanged();
+
+            // 5. صبر کردن به مدت 400 میلی‌ثانیه (معادل زمان انیمیشن در CSS)
+            await Task.Delay(400);
+
+            // 6. حذف واقعی پروژه و بارگذاری مجدد اطلاعات
+            await ProjectService.DeleteProjectAsync(idToDelete);
             await LoadProjects();
+
+            // 7. ریست کردن متغیر
+            deletingProjectId = null;
         }
-        CloseDeleteModal();
+        else
+        {
+            CloseDeleteModal();
+        }
     }
 }
