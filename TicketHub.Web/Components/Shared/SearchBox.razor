@@ -1,0 +1,24 @@
+﻿<div class="relative w-full max-w-md mb-6">
+    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+    </div>
+    <input type="text"
+           class="block w-full p-3 pr-10 text-sm text-gray-900 border border-gray-300 rounded-2xl bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 smooth-transition"
+           placeholder="@Placeholder"
+           value="@SearchTerm"
+           @oninput="OnInputChanged" />
+</div>
+
+@code {
+    [Parameter] public string Placeholder { get; set; } = "جستجو...";
+    [Parameter] public string SearchTerm { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        SearchTerm = e.Value?.ToString() ?? string.Empty;
+        await OnSearchChanged.InvokeAsync(SearchTerm);
+    }
+}
