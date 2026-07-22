@@ -6,7 +6,6 @@
 @using TicketHub.Core.Entities
 @using BCrypt.Net
 @inject AppDbContext DbContext
-@inject IJSRuntime JS
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
@@ -90,7 +89,7 @@
                                         </button>
 
                                         <!-- Delete Action Button -->
-                                        <button type="button" @onclick="() => DeleteUser(user)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
+                                        <button type="button" @onclick="() => OpenDeleteModal(user)" class="relative p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition group">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
@@ -125,17 +124,17 @@
     </div>
 </div>
 
-<!-- Edit Modal -->
+<!-- Animated Edit Modal -->
 @if (showEditModal && editingUser != null)
 {
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[92vh] overflow-hidden">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop-animate">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-hidden flex flex-col modal-content-animate">
             <div class="px-8 py-6 border-b flex items-center justify-between">
                 <h2 class="text-2xl font-bold text-gray-800">ویرایش اطلاعات کاربر</h2>
                 <button @onclick="CloseEditModal" class="text-3xl text-gray-400 hover:text-gray-600">×</button>
             </div>
 
-            <div class="p-8 space-y-8 overflow-y-auto" style="max-height: calc(92vh - 180px);">
+            <div class="p-8 space-y-8 overflow-y-auto flex-1">
                 <!-- Basic Info -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -223,13 +222,49 @@
                 </div>
             </div>
 
-            <div class="px-8 py-6 border-t bg-gray-50 flex gap-3 rounded-b-3xl">
+            <div class="px-8 py-6 border-t bg-gray-50 flex gap-3">
                 <button @onclick="SaveUserChanges" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl">ذخیره تغییرات</button>
                 <button @onclick="CloseEditModal" class="flex-1 border border-gray-300 hover:bg-gray-100 font-medium py-3.5 rounded-2xl">انصراف</button>
             </div>
         </div>
     </div>
 }
+
+<!-- Animated Delete Modal -->
+@if (showDeleteModal && userToDelete != null)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop-animate">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center modal-content-animate">
+            <!-- Trash Warning Icon -->
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800 mb-2">حذف حساب کاربری</h3>
+            <p class="text-gray-500 mb-6 text-sm">
+                آیا از حذف کاربر <span class="font-bold text-gray-800">@userToDelete.Name</span> مطمئن هستید؟<br />
+                این عملیات غیرقابل بازگشت است.
+            </p>
+
+            @if (!string.IsNullOrEmpty(deleteErrorMessage))
+            {
+                <div class="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-medium">@deleteErrorMessage</div>
+            }
+
+            <div class="flex gap-3 justify-center">
+                <button @onclick="ConfirmDeleteUser" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-xl hover:bg-rose-700 smooth-transition shadow-lg shadow-rose-500/20">
+                    بله، حذف کن
+                </button>
+                <button @onclick="CloseDeleteModal" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 smooth-transition">
+                    انصراف
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 
 @code {
     private List<UserEntity>? users;
@@ -253,6 +288,11 @@
     private int pageSize = 10;
     private int totalUsers = 0;
 
+    // متغیرهای مودال حذف
+    private bool showDeleteModal = false;
+    private UserEntity? userToDelete;
+    private string? deleteErrorMessage;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadUsers();
@@ -265,22 +305,36 @@
         availableProjects = await DbContext.Projects.ToListAsync();
     }
 
-    // متد جدید برای مدیریت عملیات حذف کاربر
-    private async Task DeleteUser(UserEntity user)
+    private void OpenDeleteModal(UserEntity user)
     {
-        bool confirm = await JS.InvokeAsync<bool>("confirm", $"آیا از حذف کاربر '{user.Name}' مطمئن هستید؟");
-        if (!confirm) return;
+        userToDelete = user;
+        deleteErrorMessage = null;
+        showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        showDeleteModal = false;
+        userToDelete = null;
+        deleteErrorMessage = null;
+    }
+
+    private async Task ConfirmDeleteUser()
+    {
+        if (userToDelete == null) return;
 
         try
         {
-            DbContext.Users.Remove(user);
+            DbContext.Users.Remove(userToDelete);
             await DbContext.SaveChangesAsync();
-            await LoadUsers(); // بروزرسانی مجدد لیست
+            CloseDeleteModal();
+            await LoadUsers();
         }
         catch (Exception)
         {
-            // پیام خطا در صورت وجود کلید خارجی مرتبط (مثل تیکت‌های وابسته به این کاربر)
-            await JS.InvokeVoidAsync("alert", "امکان حذف کاربر وجود ندارد! احتمالاً اطلاعات مرتبطی (مثل تیکت) در سیستم برای این شخص ثبت شده است.");
+            deleteErrorMessage = "امکان حذف کاربر وجود ندارد! احتمالاً اطلاعات مرتبطی (مثل تیکت) در سیستم برای این شخص ثبت شده است.";
+            // تاخیر برای پاک شدن پیام خطا پس از چند ثانیه
+            _ = Task.Delay(4000).ContinueWith(_ => { deleteErrorMessage = null; InvokeAsync(StateHasChanged); });
         }
     }
 
@@ -392,7 +446,7 @@
             .ToListAsync();
 
         CloseEditModal();
-        await LoadUsers(); // اطمینان از بارگیری مجدد بر اساس صفحه بندی و جستجو
+        await LoadUsers();
     }
 
     private async Task HandleSearch(ChangeEventArgs e)
