@@ -11,7 +11,7 @@
 
 <PageTitle>پروفایل کاربری</PageTitle>
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-5xl mx-auto space-y-6 w-full px-4">
     <div>
         <h1 class="text-2xl font-bold text-slate-800">پروفایل کاربری</h1>
         <p class="text-sm text-slate-500 mt-1">مدیریت اطلاعات شخصی و رمز عبور حساب شما.</p>
@@ -29,29 +29,41 @@
 
                 <div class="p-6 space-y-6">
                     <AlertMessage Message="@statusMessage" Type="@(isSuccess ? AlertMessage.AlertType.Success : AlertMessage.AlertType.Error)" IsDark="false" />
-
-                    <!-- بخش اطلاعات استاندارد -->
+                    <!-- نمایش خطاهای تجمیع شده با کنترل کامل عرض و شکست خطوط -->
+                    @if (context.GetValidationMessages().Any())
+                    {
+                        <div class="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100 w-full overflow-hidden">
+                            <ul class="text-rose-600 text-sm list-disc list-inside flex flex-col gap-1.5 w-full">
+                                @foreach (var message in context.GetValidationMessages())
+                                {
+                                    <li class="break-words whitespace-normal leading-relaxed text-justify pe-2">
+                                        @message
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
                             <CustomAuthInput @bind-Value="profileModel.Email"
                                              Label="آدرس ایمیل (شناسه ورود)"
                                              Disabled="true"
                                              HelperText="ایمیل قابل تغییر نمی‌باشد."
-                                             IsDark="false" />
+                                             IsDark="false" HideInlineError="true" />
                         </div>
 
                         <div>
                             <CustomAuthInput @bind-Value="profileModel.Name"
                                          Label="نام و نام خانوادگی"
                                          ValidationFor="() => profileModel.Name"
-                                         IsDark="false" />
+                                             IsDark="false" HideInlineError="true" />
                         </div>
 
                         <div>
                             <CustomAuthInput @bind-Value="profileModel.PhoneNumber"
                                          Label="شماره تماس"
                                          Dir="ltr"
-                                         IsDark="false" />
+                                             IsDark="false" HideInlineError="true" />
                         </div>
                     </div>
 
@@ -60,12 +72,12 @@
                     <!-- بخش تغییر رمز عبور (اختیاری) -->
                     <div>
                         <h3 class="text-base font-semibold text-slate-800 mb-4">تغییر رمز عبور (اختیاری)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="md:col-span-2">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div>
                                 <CustomAuthInput @bind-Value="profileModel.CurrentPassword"
-                                             Label="رمز عبور فعلی"
-                                             Type="password"
-                                             IsDark="false" />
+                                                 Label="رمز عبور فعلی"
+                                                 Type="password"
+                                                 IsDark="false" />
                             </div>
 
                             <div>
@@ -73,7 +85,7 @@
                                              Label="رمز عبور جدید"
                                              Type="password"
                                              ValidationFor="() => profileModel.NewPassword"
-                                             IsDark="false" />
+                                                 IsDark="false" HideInlineError="true" />
                             </div>
 
                             <div>
@@ -81,7 +93,7 @@
                                              Label="تکرار رمز عبور جدید"
                                              Type="password"
                                              ValidationFor="() => profileModel.ConfirmNewPassword"
-                                             IsDark="false" />
+                                                 IsDark="false" HideInlineError="true" />
                             </div>
                         </div>
                     </div>

@@ -20,7 +20,7 @@
             </div>
         }
     </div>
-    @if (ValidationFor != null)
+    @if (ValidationFor != null && !HideInlineError)
     {
         <ValidationMessage For="ValidationFor" class="@($"text-xs {ErrorClass} mt-1.5")" />
     }
@@ -43,6 +43,7 @@
     [Parameter] public string? HelperText { get; set; }
     [Parameter] public bool IsDark { get; set; } = true;
     [Parameter] public Expression<Func<string>>? ValueExpression { get; set; }
+    [Parameter] public bool HideInlineError { get; set; } = false;
 
     private bool HasIcon => Icon != null;
 
