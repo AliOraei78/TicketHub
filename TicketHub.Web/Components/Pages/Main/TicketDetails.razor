@@ -4,6 +4,7 @@
 @using TicketSystem.Application.Interfaces
 @inject ITicketService TicketService
 @inject NavigationManager Navigation
+@inject IStatusService StatusService
 
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
     <!-- Back to List Button -->
@@ -53,9 +54,14 @@
                     <!-- Status Indicator and Update Dropdown -->
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">وضعیت فعلی</label>
-                        <select @value="ticket.Status" @onchange="UpdateStatus" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 smooth-transition font-medium">
-                            <option value="Open">Open (باز)</option>
-                            <option value="Closed">Closed (بسته شده)</option>
+                        <select value="@ticket.StatusId" @onchange="UpdateStatus" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 smooth-transition font-medium">
+                            @if (statuses != null)
+                            {
+                                @foreach (var status in statuses)
+                                {
+                                    <option value="@status.Id">@status.Name</option>
+                                }
+                            }
                         </select>
                     </div>
 
@@ -89,10 +95,15 @@
     public int TicketId { get; set; }
 
     private Ticket? ticket;
+    private IEnumerable<Status> statuses = new List<Status>();
 
     protected override async Task OnInitializedAsync()
     {
+        // Fetch the ticket details
         ticket = await TicketService.GetTicketByIdAsync(TicketId);
+
+        // Fetch all available statuses for the dropdown
+        statuses = await StatusService.GetAllStatusesAsync();
 
         // Redirect back if ticket is not found
         if (ticket == null)
@@ -105,8 +116,16 @@
     {
         if (ticket == null || e.Value == null) return;
 
-        ticket.Status = e.Value.ToString() ?? "Open";
-        await TicketService.UpdateTicketAsync(ticket);
+        // Parse the selected ID and update the StatusId
+        if (int.TryParse(e.Value.ToString(), out int statusId))
+        {
+            ticket.StatusId = statusId;
+
+            // Update the navigation property so the UI reflects the change immediately (optional)
+            ticket.Status = statuses.FirstOrDefault(s => s.Id == statusId)!;
+
+            await TicketService.UpdateTicketAsync(ticket);
+        }
     }
 
     private void GoBack()

@@ -99,7 +99,9 @@
                     {
                         <div @onclick="() => NavigateToDetails(ticket.Id)" class="p-5 hover:bg-slate-50 cursor-pointer smooth-transition flex flex-col md:flex-row justify-between md:items-center gap-4 group">
                             <div class="flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 @(ticket.Status == "Open" ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-500")">
+                                <!-- Replace existing icon div with this: -->
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                     style="background-color: @(ticket.Status?.ColorCode ?? "#6B7280")20; color: @(ticket.Status?.ColorCode ?? "#6B7280");">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
                                 </div>
                                 <div>
@@ -112,7 +114,12 @@
                                 </div>
                             </div>
 
+                            <!-- Replace existing priority container with this: -->
                             <div class="flex items-center gap-2 border-t md:border-none pt-3 md:pt-0">
+                                <span class="px-2.5 py-1 rounded-md text-xs font-semibold"
+                                      style="background-color: @(ticket.Status?.ColorCode ?? "#6B7280")20; color: @(ticket.Status?.ColorCode ?? "#6B7280");">
+                                    @(ticket.Status?.Name ?? "نامشخص")
+                                </span>
                                 <span class="px-2.5 py-1 rounded-md text-xs font-semibold @GetPriorityClass(ticket.Priority)">
                                     @ticket.Priority
                                 </span>
@@ -141,8 +148,8 @@
 
         // Calculate metrics for dashboard display
         totalTickets = tickets.Count();
-        openTickets = tickets.Count(t => t.Status == "Open");
-        closedTickets = tickets.Count(t => t.Status == "Closed");
+        openTickets = tickets.Count(t => t.Status?.Name == "Open");
+        closedTickets = tickets.Count(t => t.Status?.Name == "Closed");
         totalProjects = projects.Count();
 
         // Order tickets by creation date descending and take the top 5

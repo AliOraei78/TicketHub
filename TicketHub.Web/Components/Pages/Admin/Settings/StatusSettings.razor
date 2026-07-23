@@ -1,0 +1,305 @@
+﻿@page "/settings/statuses"
+@rendermode InteractiveServer
+@using TicketHub.Core.Entities
+@using TicketHub.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+@using TicketHub.Web.Components.Shared
+@inject AppDbContext DbContext
+
+<PageTitle>تنظیمات وضعیت‌ها | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+
+    <PageHeader Title="مدیریت وضعیت‌های تیکت"
+                Description="در این بخش می‌توانید وضعیت‌های سیستم را ایجاد، ویرایش و یا حذف کنید و رنگ اختصاصی آن‌ها را تعیین نمایید.">
+        <Icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+        </Icon>
+    </PageHeader>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Add/Edit Status Form -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش وضعیت" : "ایجاد وضعیت جدید")</h3>
+
+                <EditForm Model="statusModel" OnValidSubmit="HandleSubmitStatus">
+                    <DataAnnotationsValidator />
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان وضعیت (انگلیسی یا فارسی)</label>
+                            <InputText @bind-Value="statusModel.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: In Progress" />
+                        </div>
+
+                        <!-- Reusable Color Picker Component -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">رنگ نمایشی</label>
+                            <ColorPicker @bind-Value="statusModel.ColorCode" />
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+                                @(isEditing ? "ذخیره تغییرات" : "ثبت وضعیت")
+                            </button>
+                            @if (isEditing)
+                            {
+                                <button type="button" @onclick="CancelEdit" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">
+                                    انصراف
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="mt-4 p-3 @(isError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@successMessage</div>
+                }
+            </div>
+        </div>
+
+        <!-- Statuses List & Search -->
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg">لیست وضعیت‌های موجود</h3>
+
+                    <!-- Search Field Component -->
+                    <div class="w-full sm:w-72">
+                        <SearchBox Placeholder="جستجوی وضعیت..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                    </div>
+                </div>
+                <div class="p-0">
+                    <DataGrid TItem="Status" TKey="int"
+                              Items="FilteredStatuses"
+                              IsLoading="statuses == null"
+                              KeySelector="s => s.Id"
+                              SelectedKeys="selectedStatusIds"
+                              SelectedKeysChanged="OnSelectionChanged"
+                              ShowRowIndex="false"
+                              EmptyStateValue="وضعیتی">
+
+                        <HeaderTemplate>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">عنوان وضعیت و رنگ</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[120px]">عملیات</th>
+                        </HeaderTemplate>
+
+                        <RowTemplate Context="status">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <!-- Dynamic color badge based on status color -->
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5" style="background-color: @(status.ColorCode ?? "#ccc");">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-gray-800 block">@status.Name</span>
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-mono text-gray-500 bg-gray-100 border border-gray-200" dir="ltr">@(status.ColorCode ?? "#---")</span>
+                                        </div>
+                                        <span class="text-xs text-gray-400">شناسه: @status.Id</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @onclick="() => EditStatus(status)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition" title="ویرایش">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button type="button" @onclick="() => OpenDeleteModal(status)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition" title="حذف">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </RowTemplate>
+                    </DataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar for Bulk Actions -->
+<BulkActionToolbar SelectedCount="selectedStatusIds.Count"
+                   OnCancel="ClearSelection"
+                   OnDelete="OpenBulkDeleteModal" />
+
+<!-- Animated Delete Modal -->
+<ConfirmDeleteModal IsOpen="showDeleteModal"
+                    Description="@deleteModalDescription"
+                    ErrorMessage="@(isError ? successMessage : null)"
+                    OnConfirm="ConfirmDelete"
+                    OnCancel="CancelDelete" />
+
+@code {
+
+    // Bulk action variables
+    private HashSet<int> selectedStatusIds = new();
+    private bool isBulkDelete = false;
+    private string deleteModalDescription = string.Empty;
+
+    // Form and data variables
+    private Status statusModel = new() { ColorCode = "#3b82f6" }; // Default initial color
+    private List<Status>? statuses;
+    private string? successMessage;
+    private bool isError = false;
+
+    // Search variables
+    private string searchTerm = string.Empty;
+
+    // Edit mode variables
+    private bool isEditing = false;
+    private int? editingStatusId = null;
+
+    // Delete modal variables
+    private bool showDeleteModal = false;
+    private Status? statusToDelete;
+
+    // Filter statuses based on search term
+    private IEnumerable<Status> FilteredStatuses =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? (statuses ?? Enumerable.Empty<Status>())
+            : (statuses ?? Enumerable.Empty<Status>()).Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatuses();
+    }
+
+    private async Task LoadStatuses()
+    {
+        statuses = await DbContext.Statuses.ToListAsync();
+    }
+
+    private async Task HandleSubmitStatus()
+    {
+        if (string.IsNullOrWhiteSpace(statusModel.Name)) return;
+
+        isError = false;
+
+        if (isEditing && editingStatusId.HasValue)
+        {
+            var statusToUpdate = await DbContext.Statuses.FindAsync(editingStatusId.Value);
+            if (statusToUpdate != null)
+            {
+                statusToUpdate.Name = statusModel.Name;
+                statusToUpdate.ColorCode = statusModel.ColorCode ?? "#3b82f6"; // Ensure color is not null
+                successMessage = "وضعیت با موفقیت ویرایش شد.";
+            }
+        }
+        else
+        {
+            // Ensure default color if empty
+            if (string.IsNullOrEmpty(statusModel.ColorCode))
+            {
+                statusModel.ColorCode = "#3b82f6";
+            }
+
+            DbContext.Statuses.Add(statusModel);
+            successMessage = "وضعیت با موفقیت ایجاد شد.";
+        }
+
+        await DbContext.SaveChangesAsync();
+        CancelEdit();
+        await LoadStatuses();
+
+        // Clear message after 3 seconds
+        _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
+    }
+
+    private void EditStatus(Status status)
+    {
+        isEditing = true;
+        editingStatusId = status.Id;
+        statusModel.Name = status.Name;
+        statusModel.ColorCode = status.ColorCode ?? "#3b82f6";
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        editingStatusId = null;
+        statusModel = new Status { ColorCode = "#3b82f6" }; // Reset with default color
+        successMessage = null;
+    }
+
+    private void HandleSearch(string term)
+    {
+        searchTerm = term;
+    }
+
+    private void OnSelectionChanged(HashSet<int> newKeys)
+    {
+        selectedStatusIds = newKeys;
+    }
+
+    private void ClearSelection()
+    {
+        selectedStatusIds.Clear();
+    }
+
+    private void OpenBulkDeleteModal()
+    {
+        isBulkDelete = true;
+        deleteModalDescription = $"آیا از حذف {selectedStatusIds.Count} وضعیت انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        showDeleteModal = true;
+    }
+
+    // Open delete modal for a single item
+    private void OpenDeleteModal(Status status)
+    {
+        statusToDelete = status;
+        isBulkDelete = false;
+        deleteModalDescription = $"آیا از حذف وضعیت «{status.Name}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        showDeleteModal = true;
+    }
+
+    // Close delete modal
+    private void CancelDelete()
+    {
+        showDeleteModal = false;
+        statusToDelete = null;
+        isBulkDelete = false;
+    }
+
+    // Confirm and execute deletion (both single and bulk)
+    private async Task ConfirmDelete()
+    {
+        try
+        {
+            if (isBulkDelete)
+            {
+                var statusesToRemove = await DbContext.Statuses.Where(s => selectedStatusIds.Contains(s.Id)).ToListAsync();
+                DbContext.Statuses.RemoveRange(statusesToRemove);
+                await DbContext.SaveChangesAsync();
+
+                successMessage = $"{statusesToRemove.Count} وضعیت با موفقیت حذف شدند.";
+                ClearSelection();
+            }
+            else if (statusToDelete != null)
+            {
+                DbContext.Statuses.Remove(statusToDelete);
+                await DbContext.SaveChangesAsync();
+
+                successMessage = "وضعیت با موفقیت حذف شد.";
+                if (isEditing && editingStatusId == statusToDelete.Id) CancelEdit();
+            }
+
+            isError = false;
+            await LoadStatuses();
+        }
+        catch (Exception)
+        {
+            isError = true;
+            successMessage = "امکان حذف وجود ندارد! ابتدا باید تیکت‌هایی که در این وضعیت هستند را ویرایش کنید.";
+        }
+        finally
+        {
+            CancelDelete(); // Always close the modal
+
+            // Clear message after 4 seconds
+            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
+        }
+    }
+}

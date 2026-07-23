@@ -30,7 +30,7 @@ else
                 <tbody class="divide-y divide-gray-50 block overflow-y-auto h-[450px] w-full custom-scrollbar">
                     @if (!Items.Any())
                     {
-                        <EmptyStateTable />
+                        <EmptyStateTable Value="@EmptyStateValue" />
                     }
                     else
                     {
@@ -70,6 +70,9 @@ else
     [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
     [Parameter] public Func<TItem, TKey> KeySelector { get; set; } = default!;
     [Parameter] public Func<TItem, string>? RowClassSelector { get; set; }
+
+    [Parameter]
+    public string EmptyStateValue { get; set; } = "رکوردی";
 
     [Parameter] public bool ShowSelection { get; set; } = true;
     [Parameter] public bool ShowRowIndex { get; set; } = true;

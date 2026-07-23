@@ -1,0 +1,31 @@
+﻿@namespace TicketHub.Web.Components.Shared
+
+<div class="flex items-center gap-3">
+    <label class="relative cursor-pointer flex-shrink-0 hover:scale-105 transition-transform">
+        <!-- Native HTML5 color input -->
+        <input type="color"
+               value="@Value"
+               @onchange="OnColorChanged"
+               class="w-10 h-10 p-0 border-0 rounded-xl overflow-hidden cursor-pointer shadow-sm bg-transparent" />
+    </label>
+
+    <!-- Display HEX code -->
+    <div class="text-sm text-gray-600 font-mono uppercase bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200" dir="ltr">
+        @Value
+    </div>
+</div>
+
+@code {
+    // Two-way binding parameter
+    [Parameter]
+    public string Value { get; set; } = "#3b82f6"; // Default blue color
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private async Task OnColorChanged(ChangeEventArgs e)
+    {
+        var newColor = e.Value?.ToString() ?? "#3b82f6";
+        await ValueChanged.InvokeAsync(newColor);
+    }
+}

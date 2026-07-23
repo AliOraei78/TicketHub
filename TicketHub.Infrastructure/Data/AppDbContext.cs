@@ -16,6 +16,7 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<UserProject> UserProjects { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<Status> Statuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,6 +64,13 @@ namespace TicketHub.Infrastructure.Data
                 .HasForeignKey(t => t.ProjectId)
                 .IsRequired(false) // <--- این خط به EF Core می‌فهماند که پروژه الزامی نیست
                 .OnDelete(DeleteBehavior.SetNull); ;
+
+            // Ticket to Status relationship
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.Status)
+                .WithMany(s => s.Tickets)
+                .HasForeignKey(t => t.StatusId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
