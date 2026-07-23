@@ -176,6 +176,7 @@
         [Required(ErrorMessage = "وارد کردن نام الزامی است.")]
         public string Name { get; set; } = "";
 
+        [ValidPhoneNumber]
         public string? PhoneNumber { get; set; }
 
         public string? CurrentPassword { get; set; }
@@ -187,5 +188,3 @@
         public string? ConfirmNewPassword { get; set; }
     }
     }
-    }
-}

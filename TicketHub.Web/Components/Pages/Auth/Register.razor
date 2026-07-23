@@ -145,7 +145,7 @@
         public string Email { get; set; } = "";
 
         [Required(ErrorMessage = "وارد کردن شماره تماس الزامی است.")]
-        [RegularExpression(@"^09\d{9}$", ErrorMessage = "شماره تماس باید ۱۱ رقم باشد و با 09 شروع شود.")]
+        [ValidPhoneNumber]
         public string PhoneNumber { get; set; } = "";
 
         [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است.")]

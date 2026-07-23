@@ -166,6 +166,16 @@
             return;
         }
 
+        if (!string.IsNullOrWhiteSpace(userModel.PhoneNumber))
+        {
+            var phoneValidator = new ValidPhoneNumberAttribute();
+            if (!phoneValidator.IsValid(userModel.PhoneNumber))
+            {
+                formErrorMessage = phoneValidator.ErrorMessage;
+                return;
+            }
+        }
+
         // بررسی استاندارد رمز عبور قوی (در صورت ایجاد کاربر جدید یا وارد کردن رمز جدید در ویرایش)
         if (userModel.Id == 0 || !string.IsNullOrWhiteSpace(passwordInput))
         {
