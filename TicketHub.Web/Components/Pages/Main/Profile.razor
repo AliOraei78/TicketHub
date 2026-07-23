@@ -33,11 +33,11 @@
                     <!-- بخش اطلاعات استاندارد -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                            <CustomAuthInput @bind-Value="userEmail"
-                                         Label="آدرس ایمیل (شناسه ورود)"
-                                         Disabled="true"
-                                         HelperText="ایمیل قابل تغییر نمی‌باشد."
-                                         IsDark="false" />
+                            <CustomAuthInput @bind-Value="profileModel.Email"
+                                             Label="آدرس ایمیل (شناسه ورود)"
+                                             Disabled="true"
+                                             HelperText="ایمیل قابل تغییر نمی‌باشد."
+                                             IsDark="false" />
                         </div>
 
                         <div>
@@ -118,7 +118,7 @@
                 var dbUser = await DbContext.Users.FindAsync(currentUserId);
                 if (dbUser != null)
                 {
-                    userEmail = dbUser.Email;
+                    profileModel.Email = dbUser.Email;
                     profileModel.Name = dbUser.Name;
                     profileModel.PhoneNumber = dbUser.PhoneNumber;
                 }
@@ -171,6 +171,8 @@
 
     public class ProfileViewModel
     {
+        public string Email { get; set; } = ""; // این خط اضافه شود
+
         [Required(ErrorMessage = "وارد کردن نام الزامی است.")]
         public string Name { get; set; } = "";
 

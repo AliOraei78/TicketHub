@@ -43,6 +43,12 @@
                          Placeholder="••••••••"
                          Dir="ltr"
                          ValidationFor="() => registerModel.Password" />
+            <CustomAuthInput @bind-Value="registerModel.ConfirmPassword"
+                             Label="تکرار رمز عبور"
+                             Type="password"
+                             Placeholder="••••••••"
+                             Dir="ltr"
+                             ValidationFor="() => registerModel.ConfirmPassword" />
 
             <div class="pt-2">
                 <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25">
@@ -146,5 +152,9 @@
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
             ErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر شامل حروف بزرگ و کوچک انگلیسی، عدد و کاراکتر ویژه (مانند !@#$) باشد.")]
         public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "تکرار رمز عبور الزامی است.")]
+        [Compare(nameof(Password), ErrorMessage = "رمز عبور و تکرار آن مطابقت ندارند.")]
+        public string ConfirmPassword { get; set; } = "";
     }
 }
