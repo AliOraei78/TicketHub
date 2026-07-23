@@ -18,5 +18,7 @@ namespace TicketHub.Core.Entities
 
         public User User { get; set; } = null!;
         public Project? Project { get; set; } = null!;
+        public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+        public ICollection<TransitionHistory> TransitionHistories { get; set; } = new List<TransitionHistory>();
     }
 }

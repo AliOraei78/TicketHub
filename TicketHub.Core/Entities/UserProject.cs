@@ -5,7 +5,7 @@ namespace TicketHub.Core.Entities
     {
         public int UserId { get; set; }
         public int ProjectId { get; set; }
-
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public User User { get; set; } = null!;
         public Project Project { get; set; } = null!;
     }

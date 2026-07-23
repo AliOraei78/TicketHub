@@ -17,6 +17,10 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Status> Statuses { get; set; }
+        public DbSet<Transition> Transitions { get; set; }
+        public DbSet<TransitionHistory> TransitionHistories { get; set; }
+        public DbSet<TransitionRole> TransitionRoles { get; set; }
+        public DbSet<Attachment> Attachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +75,50 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany(s => s.Tickets)
                 .HasForeignKey(t => t.StatusId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Many-to-Many: Transition <-> Role (از طریق TransitionRole)
+            modelBuilder.Entity<TransitionRole>()
+                .HasKey(tr => new { tr.TransitionId, tr.RoleId });
+
+            modelBuilder.Entity<TransitionRole>()
+                .HasOne(tr => tr.Transition)
+                .WithMany(t => t.AllowedRoles)
+                .HasForeignKey(tr => tr.TransitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TransitionRole>()
+                .HasOne(tr => tr.Role)
+                .WithMany(r => r.TransitionRoles)
+                .HasForeignKey(tr => tr.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // One-to-Many: Ticket <-> TransitionHistory
+            modelBuilder.Entity<TransitionHistory>()
+                .HasOne(th => th.Ticket)
+                .WithMany(t => t.TransitionHistories)
+                .HasForeignKey(th => th.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // One-to-Many: Transition <-> TransitionHistory
+            modelBuilder.Entity<TransitionHistory>()
+                .HasOne(th => th.Transition)
+                .WithMany(t => t.Histories)
+                .HasForeignKey(th => th.TransitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // One-to-Many: Ticket <-> Attachment
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.Ticket)
+                .WithMany(t => t.Attachments)
+                .HasForeignKey(a => a.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // One-to-Many: TransitionHistory <-> Attachment
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.TransitionHistory)
+                .WithMany(th => th.Attachments)
+                .HasForeignKey(a => a.TransitionHistoryId)
+                .OnDelete(DeleteBehavior.Restrict); // <--- این خط تغییر کرد
         }
     }
 }
