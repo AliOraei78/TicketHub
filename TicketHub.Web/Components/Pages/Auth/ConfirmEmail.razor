@@ -23,7 +23,7 @@
             <h3 class="text-2xl font-bold text-white mb-2">حساب کاربری تایید شد</h3>
             <p class="text-slate-400 mb-6 leading-relaxed">
                 ایمیل شما با موفقیت تایید شد.<br />
-                تا <span class="font-bold text-blue-400 text-lg">۵ ثانیه</span> دیگر به صفحه ورود منتقل می‌شوید...
+                تا <span class="font-bold text-blue-400 text-lg">@redirectCountdown ثانیه</span> دیگر به صفحه ورود منتقل می‌شوید...
             </p>
             <a href="/login" class="inline-flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg w-full">
                 بازگشت به صفحه ورود
@@ -89,6 +89,8 @@
     public string? Email { get; set; }
 
     private VerifyViewModel verifyModel { get; set; } = new();
+
+    private int redirectCountdown = 5;
 
     private bool isProcessing = false;
     private bool isSuccess = false;
@@ -191,8 +193,12 @@
             // درخواست آپدیت UI برای نمایش پیام موفقیت
             StateHasChanged();
 
-            // تاخیر ۵ ثانیه‌ای
-            await Task.Delay(5000);
+            while (redirectCountdown > 0)
+            {
+                await Task.Delay(1000);
+                redirectCountdown--;
+                StateHasChanged();
+            }
 
             // انتقال کامل (رفرش) به صفحه لاگین تا مشکل HttpContext حل شود
             Navigation.NavigateTo("/login", forceLoad: true);
