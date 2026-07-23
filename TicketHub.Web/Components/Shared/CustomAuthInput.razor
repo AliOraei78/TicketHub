@@ -1,0 +1,56 @@
+﻿<div>
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="block text-sm font-medium @LabelClass mb-1.5">@Label</label>
+    }
+    <div class="relative">
+        <InputText Value="@Value"
+                   ValueChanged="ValueChanged"
+                   ValueExpression="ValueExpression"
+                   type="@Type"
+                   disabled="@Disabled"
+                   class="@($"w-full {(HasIcon ? "pl-4 pr-11" : "px-4")} py-3 {InputClass} transition-all sm:text-sm")"
+                   placeholder="@Placeholder"
+                   dir="@Dir" />
+
+        @if (Icon != null)
+        {
+            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500">
+                @Icon
+            </div>
+        }
+    </div>
+    @if (ValidationFor != null)
+    {
+        <ValidationMessage For="ValidationFor" class="@($"text-xs {ErrorClass} mt-1.5")" />
+    }
+    @if (!string.IsNullOrEmpty(HelperText))
+    {
+        <p class="text-[10px] text-slate-400 mt-1">@HelperText</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public string Dir { get; set; } = "rtl";
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public RenderFragment? Icon { get; set; }
+    [Parameter] public Expression<Func<object?>>? ValidationFor { get; set; }
+    [Parameter] public string? HelperText { get; set; }
+    [Parameter] public bool IsDark { get; set; } = true;
+    [Parameter] public Expression<Func<string>>? ValueExpression { get; set; }
+
+    private bool HasIcon => Icon != null;
+
+    private string LabelClass => IsDark ? "text-slate-300" : "text-slate-700";
+
+    private string InputClass => IsDark
+            ? "bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+            : "bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800";
+
+    private string ErrorClass => IsDark ? "text-rose-400" : "text-rose-500";
+}
