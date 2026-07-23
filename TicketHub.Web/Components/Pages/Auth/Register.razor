@@ -10,72 +10,57 @@
 @inject NavigationManager Navigation
 @inject TicketHub.Core.Interfaces.IEmailService EmailService
 
-<div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden py-12">
+<AuthBackground Title="ایجاد حساب کاربری" Subtitle="به خانواده تیکت‌هاب بپیوندید">
+    <EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="registerForm" method="post">
+        <DataAnnotationsValidator />
 
-    <!-- Background Blobs -->
-    <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
-    <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+        <AlertMessage Message="@errorMessage" Type="AlertMessage.AlertType.Error" />
+        <AlertMessage Message="@(showSuccessMessage ? "ثبت‌نام با موفقیت انجام شد. لینک تایید به ایمیل شما ارسال گردید." : null)" Type="AlertMessage.AlertType.Success" />
 
-    <div class="relative z-10 w-full max-w-md px-6">
+        <div class="space-y-5">
+            <!-- Name Input -->
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">نام و نام خانوادگی</label>
+                <InputText @bind-Value="registerModel.Name" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="مثال: علی محمدی" />
+                <ValidationMessage For="@(() => registerModel.Name)" class="text-rose-400 text-xs mt-1" />
+            </div>
 
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-black text-white tracking-tight">ایجاد حساب کاربری</h2>
-            <p class="mt-2 text-sm text-slate-400 font-medium">به خانواده تیکت‌هاب بپیوندید</p>
-        </div>
+            <!-- Email Input -->
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">آدرس ایمیل</label>
+                <InputText @bind-Value="registerModel.Email" type="email" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="name@company.com" dir="ltr" />
+                <ValidationMessage For="@(() => registerModel.Email)" class="text-rose-400 text-xs mt-1" />
+            </div>
 
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-            <EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="registerForm" method="post">
-                <DataAnnotationsValidator />
+            <!-- Phone Input -->
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">شماره تماس</label>
+                <InputText @bind-Value="registerModel.PhoneNumber" type="tel" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="09123456789" dir="ltr" />
+                <ValidationMessage For="@(() => registerModel.PhoneNumber)" class="text-rose-400 text-xs mt-1" />
+            </div>
 
-                <AlertMessage Message="@errorMessage" Type="AlertMessage.AlertType.Error" />
-                <AlertMessage Message="@(showSuccessMessage ? "ثبت‌نام با موفقیت انجام شد. لینک تایید به ایمیل شما ارسال گردید." : null)" Type="AlertMessage.AlertType.Success" />
+            <!-- Password Input -->
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">رمز عبور</label>
+                <InputText @bind-Value="registerModel.Password" type="password" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="••••••••" dir="ltr" />
+                <ValidationMessage For="@(() => registerModel.Password)" class="text-rose-400 text-xs mt-1" />
+            </div>
 
-                <div class="space-y-5">
-                    <!-- Name Input -->
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1.5">نام و نام خانوادگی</label>
-                        <InputText @bind-Value="registerModel.Name" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="مثال: علی محمدی" />
-                        <ValidationMessage For="@(() => registerModel.Name)" class="text-rose-400 text-xs mt-1" />
-                    </div>
-
-                    <!-- Email Input -->
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1.5">آدرس ایمیل</label>
-                        <InputText @bind-Value="registerModel.Email" type="email" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="name@company.com" dir="ltr" />
-                        <ValidationMessage For="@(() => registerModel.Email)" class="text-rose-400 text-xs mt-1" />
-                    </div>
-
-                    <!-- Phone Input -->
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1.5">شماره تماس</label>
-                        <InputText @bind-Value="registerModel.PhoneNumber" type="tel" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="09123456789" dir="ltr" />
-                        <ValidationMessage For="@(() => registerModel.PhoneNumber)" class="text-rose-400 text-xs mt-1" />
-                    </div>
-
-                    <!-- Password Input -->
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1.5">رمز عبور</label>
-                        <InputText @bind-Value="registerModel.Password" type="password" class="w-full px-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm" placeholder="••••••••" dir="ltr" />
-                        <ValidationMessage For="@(() => registerModel.Password)" class="text-rose-400 text-xs mt-1" />
-                    </div>
-
-                    <div class="pt-2">
-                        <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25">
-                            ثبت‌نام در سامانه
-                        </button>
-                    </div>
-                </div>
-            </EditForm>
-
-            <div class="mt-6 text-center">
-                <p class="text-sm text-slate-400">
-                    قبلاً ثبت‌نام کرده‌اید؟
-                    <a href="/login" class="font-bold text-blue-400 hover:text-blue-300 transition-colors">وارد شوید</a>
-                </p>
+            <div class="pt-2">
+                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25">
+                    ثبت‌نام در سامانه
+                </button>
             </div>
         </div>
+    </EditForm>
+
+    <div class="mt-6 text-center">
+        <p class="text-sm text-slate-400">
+            قبلاً ثبت‌نام کرده‌اید؟
+            <a href="/login" class="font-bold text-blue-400 hover:text-blue-300 transition-colors">وارد شوید</a>
+        </p>
     </div>
-</div>
+</AuthBackground>
 
 @code {
     [SupplyParameterFromForm]
