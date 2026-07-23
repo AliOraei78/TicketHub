@@ -39,6 +39,12 @@
                             <ColorPicker @bind-Value="statusModel.ColorCode" />
                         </div>
 
+                        <!-- Need Approval Checkbox -->
+                        <div class="flex items-center gap-2 pt-2">
+                            <InputCheckbox @bind-Value="statusModel.NeedApproval" id="needApproval" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <label for="needApproval" class="text-sm font-medium text-gray-700 cursor-pointer select-none">نیاز به تایید دارد؟</label>
+                        </div>
+
                         <div class="flex gap-2 pt-2">
                             <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
                                 @(isEditing ? "ذخیره تغییرات" : "ثبت وضعیت")
@@ -89,7 +95,6 @@
                         <RowTemplate Context="status">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <!-- Dynamic color badge based on status color -->
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5" style="background-color: @(status.ColorCode ?? "#ccc");">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
                                     </div>
@@ -97,6 +102,13 @@
                                         <div class="flex items-center gap-2">
                                             <span class="font-bold text-gray-800 block">@status.Name</span>
                                             <span class="px-2 py-0.5 rounded-md text-[10px] font-mono text-gray-500 bg-gray-100 border border-gray-200" dir="ltr">@(status.ColorCode ?? "#---")</span>
+
+                                            @if (status.NeedApproval)
+                                            {
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-600 border border-amber-200">
+                                                    نیاز به تایید
+                                                </span>
+                                            }
                                         </div>
                                         <span class="text-xs text-gray-400">شناسه: @status.Id</span>
                                     </div>
@@ -184,13 +196,13 @@
             if (statusToUpdate != null)
             {
                 statusToUpdate.Name = statusModel.Name;
-                statusToUpdate.ColorCode = statusModel.ColorCode ?? "#3b82f6"; // Ensure color is not null
+                statusToUpdate.ColorCode = statusModel.ColorCode ?? "#3b82f6";
+                statusToUpdate.NeedApproval = statusModel.NeedApproval; // update NeedApproval
                 successMessage = "وضعیت با موفقیت ویرایش شد.";
             }
         }
         else
         {
-            // Ensure default color if empty
             if (string.IsNullOrEmpty(statusModel.ColorCode))
             {
                 statusModel.ColorCode = "#3b82f6";
@@ -204,7 +216,6 @@
         CancelEdit();
         await LoadStatuses();
 
-        // Clear message after 3 seconds
         _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
 
@@ -214,13 +225,14 @@
         editingStatusId = status.Id;
         statusModel.Name = status.Name;
         statusModel.ColorCode = status.ColorCode ?? "#3b82f6";
+        statusModel.NeedApproval = status.NeedApproval; // set value for edit
     }
 
     private void CancelEdit()
     {
         isEditing = false;
         editingStatusId = null;
-        statusModel = new Status { ColorCode = "#3b82f6" }; // Reset with default color
+        statusModel = new Status { ColorCode = "#3b82f6", NeedApproval = false }; // reset NeedApproval
         successMessage = null;
     }
 
