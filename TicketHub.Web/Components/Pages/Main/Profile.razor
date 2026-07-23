@@ -4,6 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
 @using TicketHub.Infrastructure.Data
+@using TicketHub.Web.Components.Shared
 @inject AppDbContext DbContext
 @inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
@@ -27,12 +28,7 @@
                 <DataAnnotationsValidator />
 
                 <div class="p-6 space-y-6">
-                    @if (!string.IsNullOrEmpty(statusMessage))
-                    {
-                        <div class="p-4 rounded-xl text-sm font-medium @(isSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")">
-                            @statusMessage
-                        </div>
-                    }
+                    <AlertMessage Message="@statusMessage" Type="@(isSuccess ? AlertMessage.AlertType.Success : AlertMessage.AlertType.Error)" IsDark="false" />
 
                     <!-- بخش اطلاعات استاندارد -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

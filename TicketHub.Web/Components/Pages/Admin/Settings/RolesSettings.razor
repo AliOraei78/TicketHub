@@ -254,7 +254,10 @@
                 DbContext.Roles.RemoveRange(rolesToRemove);
                 await DbContext.SaveChangesAsync();
 
-                successMessage = $"{rolesToRemove.Count} نقش با موفقیت حذف شدند.";
+                // Set dynamic verb based on count
+                var verb = rolesToRemove.Count == 1 ? "شد" : "شدند";
+                successMessage = $"{rolesToRemove.Count} نقش با موفقیت حذف {verb}.";
+
                 ClearSelection();
             }
             else if (roleToDelete != null)

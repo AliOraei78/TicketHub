@@ -8,46 +8,18 @@
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.EntityFrameworkCore
 @using TicketHub.Infrastructure.Data
+@using TicketHub.Web.Components.Shared
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
 @inject TicketHub.Core.Interfaces.IEmailService EmailService
 
-<!-- Main background with dark gradient and blurred light effects -->
-<div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden">
+<AuthBackground Title="سامانه تیکت‌هاب" Subtitle="به پنل مدیریت یکپارچه خوش آمدید" ShowLogo="true">
+    <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm" method="post" data-enhance="false">
+        <DataAnnotationsValidator />
 
-    <!-- Light effects (Blobs) in the background -->
-    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
-    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-slate-800/50 rounded-full filter blur-[120px]"></div>
+        <AlertMessage Message="@errorMessage" Type="AlertMessage.AlertType.Error" />
 
-    <!-- Main form container (fully centered) -->
-    <div class="relative z-10 w-full max-w-md px-6">
-
-        <!-- Logo and system title -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 transform hover:scale-105 transition-transform duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <h2 class="text-3xl font-black text-white tracking-tight">سامانه تیکت‌هاب</h2>
-            <p class="mt-2 text-sm text-slate-400 font-medium">به پنل مدیریت یکپارچه خوش آمدید</p>
-        </div>
-
-        <!-- Glassmorphism form card -->
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-            <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="loginForm" method="post" data-enhance="false">
-                <DataAnnotationsValidator />
-
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        @errorMessage
-                    </div>
-                }
-
-                <div class="space-y-5">
+        <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1.5">آدرس ایمیل</label>
                         <div class="relative">
@@ -76,7 +48,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
                         </button>
                     </div>
-                </div>
+        </div>
             </EditForm>
 
             <div class="mt-6 text-center">
@@ -85,9 +57,7 @@
                     <a href="/register" class="font-bold text-blue-400 hover:text-blue-300 transition-colors">ثبت‌نام کنید</a>
                 </p>
             </div>
-        </div>
-    </div>
-</div>
+        </AuthBackground>
 
 @code {
     [SupplyParameterFromForm]

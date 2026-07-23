@@ -7,6 +7,7 @@
 @using TicketHub.Core.Entities
 @using TicketHub.Infrastructure.Data
 @using Microsoft.EntityFrameworkCore
+@using TicketHub.Web.Components.Shared
 @inject AppDbContext DbContext
 @inject NavigationManager Navigation
 @inject TicketHub.Core.Interfaces.IEmailService EmailService
@@ -40,18 +41,8 @@
             <EditForm Model="verifyModel" OnValidSubmit="VerifyCode" FormName="verifyForm">
                 <DataAnnotationsValidator />
 
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm">
-                        @errorMessage
-                    </div>
-                }
-                @if (!string.IsNullOrEmpty(successMessage))
-                {
-                    <div class="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm">
-                        @successMessage
-                    </div>
-                }
+                <AlertMessage Message="@errorMessage" Type="AlertMessage.AlertType.Error" />
+                <AlertMessage Message="@successMessage" Type="AlertMessage.AlertType.Success" />
 
                 <div class="mb-5">
                     <InputText @bind-Value="verifyModel.Code"

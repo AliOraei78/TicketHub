@@ -1,0 +1,42 @@
+﻿<div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden py-12">
+    <!-- Background Blobs -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-slate-800/50 rounded-full filter blur-[120px]"></div>
+
+    <div class="relative z-10 w-full max-w-md px-6">
+        @if (ShowHeader)
+        {
+            <div class="text-center mb-8">
+                @if (ShowLogo)
+                {
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 transform hover:scale-105 transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Title))
+                {
+                    <h2 class="text-3xl font-black text-white tracking-tight">@Title</h2>
+                }
+                @if (!string.IsNullOrEmpty(Subtitle))
+                {
+                    <p class="mt-2 text-sm text-slate-400 font-medium">@Subtitle</p>
+                }
+            </div>
+        }
+
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public bool ShowLogo { get; set; } = false;
+    [Parameter] public bool ShowHeader { get; set; } = true;
+}

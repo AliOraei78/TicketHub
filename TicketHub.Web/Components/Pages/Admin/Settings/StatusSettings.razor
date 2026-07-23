@@ -286,7 +286,10 @@
                 DbContext.Statuses.RemoveRange(statusesToRemove);
                 await DbContext.SaveChangesAsync();
 
-                successMessage = $"{statusesToRemove.Count} وضعیت با موفقیت حذف شدند.";
+                // Set dynamic verb based on count
+                var verb = statusesToRemove.Count == 1 ? "شد" : "شدند";
+                successMessage = $"{statusesToRemove.Count} وضعیت با موفقیت حذف {verb}.";
+
                 ClearSelection();
             }
             else if (statusToDelete != null)

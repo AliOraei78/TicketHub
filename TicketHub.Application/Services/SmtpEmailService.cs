@@ -13,7 +13,7 @@ namespace TicketHub.Infrastructure.Services
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential("jenabicoder@gmail.com", "bqowuqyjwktvjswq"),
+                Credentials = new NetworkCredential("jenabicoder@gmail.com", "mdipkbeemzzylldh"),
                 EnableSsl = true,
             };
 
