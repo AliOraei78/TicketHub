@@ -149,8 +149,7 @@
         public string PhoneNumber { get; set; } = "";
 
         [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است.")]
-        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
-            ErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر شامل حروف بزرگ و کوچک انگلیسی، عدد و کاراکتر ویژه (مانند !@#$) باشد.")]
+        [StrongPassword]
         public string Password { get; set; } = "";
 
         [Required(ErrorMessage = "تکرار رمز عبور الزامی است.")]

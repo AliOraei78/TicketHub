@@ -169,10 +169,10 @@
         // بررسی استاندارد رمز عبور قوی (در صورت ایجاد کاربر جدید یا وارد کردن رمز جدید در ویرایش)
         if (userModel.Id == 0 || !string.IsNullOrWhiteSpace(passwordInput))
         {
-            var passwordRegex = new System.Text.RegularExpressions.Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$");
-            if (!passwordRegex.IsMatch(passwordInput))
+            var passwordValidator = new StrongPasswordAttribute();
+            if (!passwordValidator.IsValid(passwordInput))
             {
-                formErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر شامل حروف بزرگ و کوچک انگلیسی، عدد و کاراکتر ویژه (مانند !@#$) باشد.";
+                formErrorMessage = passwordValidator.ErrorMessage;
                 return;
             }
         }
