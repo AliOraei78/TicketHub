@@ -1,0 +1,70 @@
+﻿@using TicketHub.Core.Entities
+@using TicketHub.Web.Components.Shared
+
+<DataGrid TItem="Workflow" TKey="int"
+          Items="Workflows"
+          IsLoading="IsLoading"
+          KeySelector="w => w.Id"
+          RowClassSelector="@(w => DeletingIds.Contains(w.Id) ? "row-exit" : "row-enter")"
+          CurrentPage="CurrentPage"
+          PageSize="PageSize"
+          SelectedKeys="SelectedIds"
+          SelectedKeysChanged="OnSelectionChanged"
+          EmptyStateValue="گردش کاری">
+
+    <HeaderTemplate>
+        <th class="px-6 py-3 text-sm font-semibold text-gray-700 w-[25%]">نام گردش کار</th>
+        <th class="px-6 py-3 text-sm font-semibold text-gray-700 w-[35%]">توضیحات</th>
+        <th class="px-6 py-3 text-sm font-semibold text-gray-700 text-center w-[15%]">آمار پروژه‌ها</th>
+        <th class="px-6 py-3 text-sm font-semibold text-gray-700 text-center w-[15%]">وضعیت‌های متصل</th>
+        <th class="px-6 py-3 text-sm font-semibold text-gray-700 text-center w-[10%]">عملیات</th>
+    </HeaderTemplate>
+
+    <RowTemplate Context="workflow">
+        <td class="px-6 py-3 w-[25%]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                    @workflow.Name.FirstOrDefault()
+                </div>
+                <span class="font-bold text-gray-800 truncate">@workflow.Name</span>
+            </div>
+        </td>
+        <td class="px-6 py-3 text-sm text-gray-500 w-[35%] truncate">
+            @(string.IsNullOrEmpty(workflow.Description) ? "---" : workflow.Description)
+        </td>
+        <td class="px-6 py-3 text-center w-[15%]">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                @workflow.Projects?.Count پروژه
+            </span>
+        </td>
+        <td class="px-6 py-3 text-center w-[15%]">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                @workflow.WorkflowStatuses?.Count وضعیت
+            </span>
+        </td>
+        <td class="px-6 py-3 text-center w-[10%]">
+            <ActionButtons OnEdit="() => OnEdit.InvokeAsync(workflow)" OnDelete="() => OnDelete.InvokeAsync(workflow)" />
+        </td>
+    </RowTemplate>
+
+</DataGrid>
+
+@code {
+    [Parameter] public List<Workflow> Workflows { get; set; } = new();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback<Workflow> OnEdit { get; set; }
+    [Parameter] public EventCallback<Workflow> OnDelete { get; set; }
+
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int PageSize { get; set; } = 10;
+
+    [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
+    [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
+
+    private async Task OnSelectionChanged(HashSet<int> newKeys)
+    {
+        SelectedIds = newKeys;
+        await SelectedIdsChanged.InvokeAsync(SelectedIds);
+    }
+}

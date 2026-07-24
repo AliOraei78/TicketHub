@@ -26,7 +26,6 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<Priority> Priorities { get; set; }
         public DbSet<Workflow> Workflows { get; set; }
         public DbSet<WorkflowStatus> WorkflowStatuses { get; set; }
-        public DbSet<WorkflowTransition> WorkflowTransitions { get; set; }
 
         // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
         // کل متد OnModelCreating را با این کد جایگزین کن:
@@ -40,7 +39,6 @@ namespace TicketHub.Infrastructure.Data
             modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
             modelBuilder.Entity<TransitionRole>().HasKey(tr => new { tr.TransitionId, tr.RoleId });
             modelBuilder.Entity<WorkflowStatus>().HasKey(ws => new { ws.WorkflowId, ws.StatusId });
-            modelBuilder.Entity<WorkflowTransition>().HasKey(wt => new { wt.WorkflowId, wt.TransitionId });
 
             // 2. تنظیم روابط Ticket (جلوگیری از Multiple Cascade Paths)[cite: 3, 10, 14]
             modelBuilder.Entity<Ticket>()
@@ -79,6 +77,16 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(a => a.Ticket).WithMany(t => t.Attachments).HasForeignKey(a => a.TicketId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Attachment>()
                 .HasOne(a => a.TicketHistory).WithMany(th => th.Attachments).HasForeignKey(a => a.TicketHistoryId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Transition>()
+                .HasOne(t => t.Workflow)
+                .WithMany(w => w.Transitions)
+                .HasForeignKey(t => t.WorkflowId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.WorkFlow)
+                .WithMany(w => w.TicketHistories)
+                .HasForeignKey(th => th.WorkFlowId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

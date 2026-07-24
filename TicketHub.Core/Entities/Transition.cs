@@ -18,6 +18,9 @@ public class Transition
     public int ToState { get; set; }
     public Status? ToStatus { get; set; }
 
+    public int WorkflowId { get; set; }
+    public Workflow Workflow { get; set; } = null!;
+
     public int IsAutomated { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? ActivateAt { get; set; }
@@ -26,5 +29,4 @@ public class Transition
     // --- Navigation Properties ---
     public ICollection<TransitionRole> AllowedRoles { get; set; } = new List<TransitionRole>();
     public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
-    public ICollection<WorkflowTransition> WorkflowTransitions { get; set; } = new List<WorkflowTransition>(); // این خط اضافه شود
 }
