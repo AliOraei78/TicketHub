@@ -32,7 +32,8 @@
     <BulkActionToolbar SelectedCount="selectedUserIds.Count"
                        OnCancel="ClearSelection"
                        OnDelete="OpenBulkDeleteModal" 
-                       OnDeactivate="BulkDeactivateUsers" />
+                       OnDeactivate="BulkDeactivateUsers" 
+                       OnActivate="BulkActivateUsers" />
     <!-- جدول -->
     <UserTable Users="users" IsLoading="isLoading"
                OnEdit="OpenEditModal"
@@ -335,6 +336,22 @@
         foreach (var user in usersToDeactivate)
         {
             user.IsActive = false;
+        }
+
+        await DbContext.SaveChangesAsync();
+        ClearSelection();
+        await LoadUsers();
+    }
+
+    private async Task BulkActivateUsers()
+    {
+        var usersToActivate = await DbContext.Users
+            .Where(u => selectedUserIds.Contains(u.Id))
+            .ToListAsync();
+
+        foreach (var user in usersToActivate)
+        {
+            user.IsActive = true;
         }
 
         await DbContext.SaveChangesAsync();
