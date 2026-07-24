@@ -26,7 +26,7 @@ namespace TicketHub.Infrastructure.Repositories
         public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
 
         // Implementation for eager loading
-        public async Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, object?>>[] includes)
         {
             IQueryable<T> query = _dbSet;
 

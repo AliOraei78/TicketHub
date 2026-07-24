@@ -1,9 +1,9 @@
 ﻿@page "/"
 @page "/home"
 @using TicketHub.Core.Entities
-@using TicketSystem.Application.Interfaces
-@inject ITicketService TicketService
-@inject IProjectService ProjectService
+@using TicketHub.Core.Interfaces
+@inject IRepository<Ticket> TicketRepository
+@inject IRepository<Project> ProjectRepository
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -142,9 +142,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch data from services
-        var tickets = await TicketService.GetAllTicketsAsync();
-        var projects = await ProjectService.GetAllProjectsAsync();
+        var tickets = await TicketRepository.GetAllWithIncludesAsync(t => t.Project, t => t.Status, t => t.Priority);
+        var projects = await ProjectRepository.GetAllAsync();
 
         // Calculate metrics for dashboard display
         totalTickets = tickets.Count();

@@ -5,7 +5,7 @@
 namespace TicketHub.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class addedneedapproval : Migration
+    public partial class Addedneedapproval : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

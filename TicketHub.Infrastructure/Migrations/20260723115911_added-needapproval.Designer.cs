@@ -13,7 +13,7 @@ namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260723115911_added-needapproval")]
-    partial class addedneedapproval
+    partial class Addedneedapproval
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

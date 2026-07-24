@@ -1,7 +1,7 @@
-﻿// TicketSystem.Application/DTOs/TicketDto.cs
+﻿// TicketHub.Application/DTOs/TicketDto.cs
 using TicketHub.Core.Entities;
 
-namespace TicketSystem.Application.DTOs
+namespace TicketHub.Application.DTOs
 {
     public class TicketDto
     {

@@ -1,9 +1,9 @@
 ﻿@page "/projects"
 @using TicketHub.Core.Entities
-@using TicketSystem.Application.Interfaces
+@using TicketHub.Core.Interfaces
 @using TicketHub.Web.Components.Shared
 @rendermode InteractiveServer
-@inject IProjectService ProjectService
+@inject IRepository<Project> ProjectRepository
 
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
 
@@ -115,7 +115,7 @@
 
     private async Task LoadProjects()
     {
-        projects = await ProjectService.GetAllProjectsAsync();
+        projects = await ProjectRepository.GetAllAsync();
     }
 
     // --- Create / Edit Methods ---
@@ -147,27 +147,24 @@
         if (projectModel.Id == 0)
         {
             projectModel.CreatedAt = DateTime.UtcNow;
-            await ProjectService.CreateProjectAsync(projectModel);
+            await ProjectRepository.AddAsync(projectModel);
         }
         else
         {
-            // Find the original entity tracked by EF Core
             var trackedProject = projects.FirstOrDefault(p => p.Id == projectModel.Id);
 
             if (trackedProject != null)
             {
-                // Map form values to the original entity
                 trackedProject.Name = projectModel.Name;
                 trackedProject.Description = projectModel.Description;
 
-                await ProjectService.UpdateProjectAsync(trackedProject);
+                await ProjectRepository.UpdateAsync(trackedProject);
             }
         }
 
         await LoadProjects();
         isFormModalOpen = false;
     }
-
     // --- Delete Methods ---
     private void OpenDeleteModal(Project project)
     {
@@ -201,7 +198,7 @@
             await Task.Delay(400);
 
             // 6. حذف واقعی پروژه و بارگذاری مجدد اطلاعات
-            await ProjectService.DeleteProjectAsync(idToDelete);
+            await ProjectRepository.DeleteAsync(idToDelete);
             await LoadProjects();
 
             // 7. ریست کردن متغیر

@@ -12,7 +12,7 @@ namespace TicketHub.Core.Interfaces
         Task<IEnumerable<T>> GetAllAsync();
 
         // Added method for eager loading related entities
-        Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes);
+        Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, object?>>[] includes);
 
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);

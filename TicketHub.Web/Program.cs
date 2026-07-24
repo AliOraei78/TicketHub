@@ -7,8 +7,8 @@ using TicketHub.Infrastructure.Data;
 using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
-using TicketSystem.Application.Interfaces;
-using TicketSystem.Application.Services;
+using TicketHub.Application.Interfaces;
+using TicketHub.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,10 +40,16 @@ builder.Services.AddCascadingAuthenticationState();
 // ----------------------------------------------
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<ITicketService, TicketService>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
+
+// ------ این خطوط باید حذف شوند ------
+// builder.Services.AddScoped<ITicketService, TicketService>();
+// builder.Services.AddScoped<IProjectService, ProjectService>();
+// builder.Services.AddScoped<IStatusService, StatusService>();
+// ------------------------------------
+
+// سرویس‌های مورد نیاز که باقی می‌مانند یا اضافه می‌شوند:
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-builder.Services.AddScoped<IStatusService, StatusService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
