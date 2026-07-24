@@ -2,12 +2,11 @@
 @using TicketHub.Web.Components.Shared
 
 <ModalDialog IsOpen="IsOpen" Title="@(Model.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
-    <EditForm Model="@Model" OnValidSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]">
+    <EditForm Model="@Model" OnValidSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]" novalidate>
         <div class="p-8 space-y-8 overflow-y-auto flex-1">
-
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {
-                <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium">
+                <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium whitespace-pre-line leading-relaxed">
                     @ErrorMessage
                 </div>
             }
@@ -18,7 +17,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CustomInput Label="شماره تلفن" Type="tel" @bind-Value="Model.PhoneNumber" Dir="ltr" />
+                <CustomInput Label="شماره تلفن" Type="tel" @bind-Value="Model.PhoneNumber" Dir="ltr" IsRequired="true" />
                 <CustomInput Label="@(Model.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")"
                              Type="password"
                              @bind-Value="PasswordInput"

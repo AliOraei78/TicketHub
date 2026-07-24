@@ -153,43 +153,58 @@
 
     private async Task HandleSaveUser(UserFormSubmissionResult payload)
     {
-        formErrorMessage = null;
+        var errors = new List<string>();
+
         userModel = payload.User;
         passwordInput = payload.Password;
         selectedRoles = payload.SelectedRoles;
         selectedProjectIds = payload.SelectedProjectIds;
 
-        // جلوگیری از درج ایمیل تکراری برای ایجاد و ویرایش
-        if (await DbContext.Users.AnyAsync(u => u.Email == userModel.Email && u.Id != userModel.Id))
-        {
-            formErrorMessage = "این ایمیل قبلاً ثبت شده است.";
-            return;
-        }
+        // --- بررسی یکپارچه اعتبارسنجی‌ها ---
 
-        if (!string.IsNullOrWhiteSpace(userModel.PhoneNumber))
+        if (string.IsNullOrWhiteSpace(userModel.Name))
+            errors.Add("• نام کاربر الزامی است.");
+
+        if (string.IsNullOrWhiteSpace(userModel.Email))
+            errors.Add("• ایمیل الزامی است.");
+        else if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(userModel.Email))
+            errors.Add("• فرمت ایمیل معتبر نیست.");
+        else if (await DbContext.Users.AnyAsync(u => u.Email == userModel.Email && u.Id != userModel.Id))
+            errors.Add("• این ایمیل قبلاً ثبت شده است.");
+
+        if (string.IsNullOrWhiteSpace(userModel.PhoneNumber))
+            errors.Add("• شماره تلفن الزامی است.");
+        else
         {
             var phoneValidator = new ValidPhoneNumberAttribute();
             if (!phoneValidator.IsValid(userModel.PhoneNumber))
-            {
-                formErrorMessage = phoneValidator.ErrorMessage;
-                return;
-            }
+                errors.Add($"• {phoneValidator.ErrorMessage}");
         }
 
-        // بررسی استاندارد رمز عبور قوی (در صورت ایجاد کاربر جدید یا وارد کردن رمز جدید در ویرایش)
-        if (userModel.Id == 0 || !string.IsNullOrWhiteSpace(passwordInput))
+        if (userModel.Id == 0 && string.IsNullOrWhiteSpace(passwordInput))
+        {
+            errors.Add("• رمز عبور الزامی است.");
+        }
+        else if (userModel.Id == 0 || !string.IsNullOrWhiteSpace(passwordInput))
         {
             var passwordValidator = new StrongPasswordAttribute();
             if (!passwordValidator.IsValid(passwordInput))
-            {
-                formErrorMessage = passwordValidator.ErrorMessage;
-                return;
-            }
+                errors.Add($"• {passwordValidator.ErrorMessage}");
         }
+
+        // اگر خطایی وجود داشت، همه را با هم نمایش بده و خارج شو
+        if (errors.Any())
+        {
+            formErrorMessage = string.Join("\n", errors);
+            return;
+        }
+
+        formErrorMessage = null;
+
+        // --- ادامه عملیات ذخیره در دیتابیس ---
 
         if (userModel.Id == 0)
         {
-            if (string.IsNullOrWhiteSpace(passwordInput)) return;
             userModel.Password = BCrypt.HashPassword(passwordInput);
             userModel.CreatedAt = DateTime.UtcNow;
             DbContext.Users.Add(userModel);
@@ -200,12 +215,17 @@
         {
             var userInDb = await DbContext.Users.Include(u => u.UserRoles).FirstOrDefaultAsync(u => u.Id == userModel.Id);
             if (userInDb == null) return;
-            userInDb.Name = userModel.Name; userInDb.Email = userModel.Email;
-            userInDb.PhoneNumber = userModel.PhoneNumber; userInDb.IsConfirmed = userModel.IsConfirmed;
-            if (!string.IsNullOrWhiteSpace(passwordInput)) userInDb.Password = BCrypt.HashPassword(passwordInput);
+
+            userInDb.Name = userModel.Name;
+            userInDb.Email = userModel.Email;
+            userInDb.PhoneNumber = userModel.PhoneNumber;
+            userInDb.IsConfirmed = userModel.IsConfirmed;
+            if (!string.IsNullOrWhiteSpace(passwordInput))
+                userInDb.Password = BCrypt.HashPassword(passwordInput);
 
             var currentRoles = await DbContext.UserRoles.Where(ur => ur.UserId == userInDb.Id).ToListAsync();
             DbContext.UserRoles.RemoveRange(currentRoles);
+
             var currentProjects = await DbContext.UserProjects.Where(up => up.UserId == userInDb.Id).ToListAsync();
             DbContext.UserProjects.RemoveRange(currentProjects);
 
@@ -216,7 +236,6 @@
         CloseUserModal();
         await LoadUsers();
     }
-
     private void AssignRolesAndProjects(int targetUserId)
     {
         foreach (var roleName in selectedRoles.Distinct())
