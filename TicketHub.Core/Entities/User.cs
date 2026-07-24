@@ -11,13 +11,12 @@ namespace TicketHub.Core.Entities
         public string Password { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? PhoneNumber { get; set; }
-
+        public bool IsActive { get; set; } = true;
         public bool IsConfirmed { get; set; } = false;
         // در این فیلد هشِ کد تایید را ذخیره می‌کنیم
         public string? ConfirmationToken { get; set; }
         // زمان انقضای کد (مثلاً ۱۵ دقیقه)
         public DateTime? TokenExpiration { get; set; }
-
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();

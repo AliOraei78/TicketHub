@@ -10,5 +10,7 @@ public class Comment
     public Ticket Ticket { get; set; } = null!;
 
     public int UserId { get; set; }
-     public User User { get; set; } = null!; 
+    public User User { get; set; } = null!;
+
+    public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>(); 
 }

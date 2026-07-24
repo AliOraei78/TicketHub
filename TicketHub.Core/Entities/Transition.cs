@@ -14,6 +14,8 @@ public class Transition
     public int FromState { get; set; }
     public int ToState { get; set; }
     public int IsAutomated { get; set; }
+    public bool IsActive { get; set; } = true;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public int? WorkflowId { get; set; }
     public Workflow? Workflow { get; set; }
