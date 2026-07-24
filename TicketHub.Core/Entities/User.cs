@@ -21,5 +21,6 @@ namespace TicketHub.Core.Entities
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
 }

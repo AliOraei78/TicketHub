@@ -15,10 +15,12 @@ namespace TicketHub.Core.Entities
         // Add these lines for the new relation:
         public int StatusId { get; set; }
         public Status Status { get; set; } = null!;
-
+        public int? CategoryId { get; set; }
+        public Category? Category { get; set; }
         public User User { get; set; } = null!;
         public Project? Project { get; set; } = null!;
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
         public ICollection<TransitionHistory> TransitionHistories { get; set; } = new List<TransitionHistory>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
 }
