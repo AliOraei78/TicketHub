@@ -159,7 +159,7 @@
     public class LoginViewModel
     {
         [Required(ErrorMessage = "وارد کردن ایمیل الزامی است")]
-        [EmailAddress(ErrorMessage = "فرمت ایمیل نامعتبر است")]
+        [ValidEmail]
         public string Email { get; set; } = "";
 
         [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است")]

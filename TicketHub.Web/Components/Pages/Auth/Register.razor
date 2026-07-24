@@ -25,7 +25,7 @@
 
             <CustomAuthInput @bind-Value="registerModel.Email"
                              Label="آدرس ایمیل"
-                             Type="email"
+                             Type="text"
                              Placeholder="name@company.com"
                              Dir="ltr"
                              ValidationFor="() => registerModel.Email" />
@@ -148,7 +148,7 @@
         public string Name { get; set; } = "";
 
         [Required(ErrorMessage = "وارد کردن ایمیل الزامی است.")]
-        [EmailAddress(ErrorMessage = "فرمت ایمیل نامعتبر است.")]
+        [ValidEmail] // این خط جایگزین صفت پیش‌فرض EmailAddress می‌شود
         public string Email { get; set; } = "";
 
         [Required(ErrorMessage = "وارد کردن شماره تماس الزامی است.")]
