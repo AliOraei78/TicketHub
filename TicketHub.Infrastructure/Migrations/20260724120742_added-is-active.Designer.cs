@@ -13,7 +13,7 @@ namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260724120742_added-is-active")]
-    partial class addedisactive
+    partial class Addedisactive
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

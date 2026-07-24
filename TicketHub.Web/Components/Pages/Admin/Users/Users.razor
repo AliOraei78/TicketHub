@@ -143,7 +143,8 @@
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
             CreatedAt = user.CreatedAt,
-            IsConfirmed = user.IsConfirmed
+            IsConfirmed = user.IsConfirmed,
+            IsActive = user.IsActive
         };
         passwordInput = string.Empty;
         selectedRoles = user.UserRoles.Select(ur => ur.Role?.Name ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
@@ -223,6 +224,7 @@
             userInDb.Email = userModel.Email;
             userInDb.PhoneNumber = userModel.PhoneNumber;
             userInDb.IsConfirmed = userModel.IsConfirmed;
+            userInDb.IsActive = userModel.IsActive;
             if (!string.IsNullOrWhiteSpace(passwordInput))
                 userInDb.Password = BCrypt.HashPassword(passwordInput);
 

@@ -26,7 +26,11 @@
                              Dir="ltr" />
             </div>
 
-            <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="Model.IsConfirmed" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="Model.IsConfirmed" />
+                <CustomCheckbox Label="کاربر فعال است؟" @bind-Value="Model.IsActive" />
+            </div>
+
             <MultiSelectDropdown TItem="Role" TValue="string"
                                  Label="نقش‌ها"
                                  Placeholder="جستجو و انتخاب نقش..."

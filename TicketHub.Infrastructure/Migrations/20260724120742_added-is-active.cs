@@ -5,7 +5,7 @@
 namespace TicketHub.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class addedisactive : Migration
+    public partial class Addedisactive : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
