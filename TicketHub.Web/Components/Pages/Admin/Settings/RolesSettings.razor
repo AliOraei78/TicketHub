@@ -134,7 +134,8 @@
 <!-- Toolbar for Bulk Actions -->
 <BulkActionToolbar SelectedCount="selectedRoleIds.Count"
                    OnCancel="ClearSelection"
-                   OnDelete="OpenBulkDeleteModal" />
+                   OnDelete="OpenBulkDeleteModal" 
+                   OnDeactivate="BulkDeactivateRoles" />
 
 <!-- Animated Delete Modal -->
 <ConfirmDeleteModal IsOpen="showDeleteModal"
@@ -306,5 +307,27 @@
             CancelDelete(); // بستن مودال در هر صورت
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
+    }
+
+    private async Task BulkDeactivateRoles()
+    {
+        var rolesToDeactivate = await DbContext.Roles
+            .Where(r => selectedRoleIds.Contains(r.Id))
+            .ToListAsync();
+
+        foreach (var role in rolesToDeactivate)
+        {
+            role.IsActive = false;
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        var verb = rolesToDeactivate.Count == 1 ? "شد" : "شدند";
+        successMessage = $"{rolesToDeactivate.Count} نقش با موفقیت غیرفعال {verb}.";
+
+        ClearSelection();
+        await LoadRoles();
+
+        _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
 }

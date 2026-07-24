@@ -31,7 +31,8 @@
     <!-- Floating bulk action toolbar at the bottom (Refactored) -->
     <BulkActionToolbar SelectedCount="selectedUserIds.Count"
                        OnCancel="ClearSelection"
-                       OnDelete="OpenBulkDeleteModal" />
+                       OnDelete="OpenBulkDeleteModal" 
+                       OnDeactivate="BulkDeactivateUsers" />
     <!-- جدول -->
     <UserTable Users="users" IsLoading="isLoading"
                OnEdit="OpenEditModal"
@@ -325,5 +326,19 @@
         selectedUserIds.Clear();
     }
 
+    private async Task BulkDeactivateUsers()
+    {
+        var usersToDeactivate = await DbContext.Users
+            .Where(u => selectedUserIds.Contains(u.Id))
+            .ToListAsync();
 
+        foreach (var user in usersToDeactivate)
+        {
+            user.IsActive = false;
+        }
+
+        await DbContext.SaveChangesAsync();
+        ClearSelection();
+        await LoadUsers();
+    }
 }
