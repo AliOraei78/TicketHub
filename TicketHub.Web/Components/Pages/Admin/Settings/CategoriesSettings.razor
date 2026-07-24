@@ -1,0 +1,92 @@
+﻿@page "/settings/categories"
+@rendermode InteractiveServer
+@namespace TicketHub.Web.Components.Pages.Admin.Settings
+@using TicketHub.Core.Entities
+@using TicketHub.Web.Components.Shared
+
+<PageTitle>تنظیمات نوع تیکت | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <PageHeader Title="مدیریت انواع تیکت" Description="در این بخش می‌توانید دسته‌بندی و انواع تیکت‌های سیستم را مدیریت کنید.">
+        <Icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+        </Icon>
+    </PageHeader>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Add/Edit Form -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش نوع تیکت" : "ایجاد نوع جدید")</h3>
+
+                <EditForm Model="categoryModel" OnValidSubmit="HandleSubmitCategory">
+                    <DataAnnotationsValidator />
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان نوع تیکت</label>
+                            <InputText @bind-Value="categoryModel.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: پشتیبانی فنی" />
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+                                @(isEditing ? "ذخیره تغییرات" : "ثبت نوع تیکت")
+                            </button>
+                            @if (isEditing)
+                            {
+                                <button type="button" @onclick="CancelEdit" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">انصراف</button>
+                            }
+                        </div>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="mt-4 p-3 @(isError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@successMessage</div>
+                }
+            </div>
+        </div>
+
+        <!-- Data Grid -->
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg">لیست انواع تیکت</h3>
+                    <div class="w-full sm:w-72">
+                        <SearchBox Placeholder="جستجو..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                    </div>
+                </div>
+                <div class="p-0">
+                    <DataGrid TItem="Category" TKey="int" Items="FilteredCategories" IsLoading="categories == null" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
+                        <HeaderTemplate>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان نوع تیکت</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="category">
+                            <td class="px-6 py-4 w-[80%]">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-800">@category.Name</span>
+                                    <span class="text-xs text-gray-400 mt-1">شناسه: @category.Id | تاریخ ایجاد: @category.CreatedAt.ToShortDateString()</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center w-[15%]">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @onclick="() => EditCategory(category)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition" title="ویرایش">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button type="button" @onclick="() => OpenDeleteModal(category)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition" title="حذف">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </RowTemplate>
+                    </DataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<BulkActionToolbar SelectedCount="selectedCategoryIds.Count" OnCancel="ClearSelection" OnDelete="OpenBulkDeleteModal" />
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(isError ? successMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
