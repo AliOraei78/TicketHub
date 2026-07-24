@@ -14,10 +14,11 @@
 
     <HeaderTemplate>
         <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نام کاربر</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">ایمیل</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نقش‌ها</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">پروژه‌ها</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">ایمیل</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[15%]">نقش‌ها</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[15%]">پروژه‌ها</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[15%]">وضعیت</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[10%]">عملیات</th>
     </HeaderTemplate>
 
     <RowTemplate Context="user">
@@ -27,8 +28,8 @@
                 <span class="font-medium text-gray-800 truncate">@user.Name</span>
             </div>
         </td>
-        <td class="px-6 py-2 text-sm text-gray-500 w-[25%] truncate" dir="ltr">@user.Email</td>
-        <td class="px-6 py-2 w-[20%]">
+        <td class="px-6 py-2 text-sm text-gray-500 w-[20%] truncate" dir="ltr">@user.Email</td>
+        <td class="px-6 py-2 w-[15%]">
             <div class="flex flex-wrap gap-1">
                 @foreach (var userRole in user.UserRoles)
                 {
@@ -40,7 +41,7 @@
                 }
             </div>
         </td>
-        <td class="px-6 py-2 w-[20%]">
+        <td class="px-6 py-2 w-[15%]">
             <div class="flex flex-wrap gap-1">
                 @foreach (var userProject in user.UserProjects)
                 {
@@ -52,7 +53,22 @@
                 }
             </div>
         </td>
-        <td class="px-6 py-2 text-center w-[15%]">
+        <td class="px-6 py-2 w-[15%]">
+            @if (user.IsActive)
+            {
+                <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]"></span>
+                    فعال
+                </span>
+            }
+            else
+            {
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 text-xs font-medium">
+                    غیرفعال
+                </span>
+            }
+        </td>
+        <td class="px-6 py-2 text-center w-[10%]">
             <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" />
         </td>
     </RowTemplate>

@@ -81,12 +81,13 @@
                               EmptyStateValue="نقشی">
 
                         <HeaderTemplate>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان نقش</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[65%]">عنوان نقش</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">وضعیت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
                         </HeaderTemplate>
 
                         <RowTemplate Context="role">
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 w-[65%]">
                                 <div class="flex items-center gap-3 w-[80%]">
                                     <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.95 11.95 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
@@ -96,6 +97,21 @@
                                         <span class="text-xs text-gray-400">شناسه: @role.Id</span>
                                     </div>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 w-[15%]">
+                                @if (role.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-medium">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]"></span>
+                                        فعال
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 text-xs font-medium">
+                                        غیرفعال
+                                    </span>
+                                }
                             </td>
                             <td class="px-6 py-4 text-center w-[15%]">
                                 <div class="flex items-center justify-center gap-2">
