@@ -1,0 +1,40 @@
+﻿<button type="@Type"
+        disabled="@Disabled"
+        class="@CssClass"
+        onclick="showLoadingState(this, '@LoadingText')">
+    @ChildContent
+</button>
+
+<script>
+    function showLoadingState(btn, text) {
+        setTimeout(() => {
+            const form = btn.closest('form');
+            if (!form || form.checkValidity()) {
+                btn.style.pointerEvents = 'none';
+                btn.classList.add('opacity-75');
+
+                // حذف سه نقطه از انتهای متن
+                const cleanText = text.replace(/\.+$/, '').trim();
+
+                // جابجایی متن و انیمیشن + کوچکتر کردن سایز (w-1 h-1)
+                btn.innerHTML = `
+                    <span>${cleanText}</span>
+                    <div class="flex items-center gap-1 mr-2" dir="ltr">
+                        <span class="w-1 h-1 bg-white rounded-full loading-dot" style="animation-delay: 0s;"></span>
+                        <span class="w-1 h-1 bg-white rounded-full loading-dot" style="animation-delay: 0.2s;"></span>
+                        <span class="w-1 h-1 bg-white rounded-full loading-dot" style="animation-delay: 0.4s;"></span>
+                    </div>
+                `;
+            }
+        }, 10);
+    }
+</script>
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Type { get; set; } = "submit";
+    [Parameter] public string CssClass { get; set; } = "w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-75 disabled:cursor-not-allowed";
+    [Parameter] public string LoadingText { get; set; } = "در حال پردازش...";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

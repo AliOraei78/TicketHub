@@ -21,32 +21,35 @@
 
         <div class="space-y-5">
             <CustomAuthInput @bind-Value="loginModel.Email"
-                         Label="آدرس ایمیل"
-                         Type="email"
-                         Placeholder="name@company.com"
-                         Dir="ltr"
-                         ValidationFor="() => loginModel.Email">
+                             Label="آدرس ایمیل"
+                             Type="email"
+                             Placeholder="name@company.com"
+                             Dir="ltr"
+                             ValidationFor="() => loginModel.Email">
                 <Icon>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
                 </Icon>
             </CustomAuthInput>
 
             <CustomAuthInput @bind-Value="loginModel.Password"
-                         Label="رمز عبور"
-                         Type="password"
-                         Placeholder="••••••••"
-                         Dir="ltr"
-                         ValidationFor="() => loginModel.Password">
+                             Label="رمز عبور"
+                             Type="password"
+                             Placeholder="••••••••"
+                             Dir="ltr"
+                             ValidationFor="() => loginModel.Password">
                 <Icon>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </Icon>
             </CustomAuthInput>
 
             <div class="pt-2">
-                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25">
+                <LoadingButton IsLoading="isLoading" LoadingText="در حال ورود...">
                     ورود به سیستم
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
-                </button>
+                    @if (!isLoading)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                    }
+                </LoadingButton>
             </div>
         </div>
     </EditForm>
@@ -68,35 +71,41 @@
     public HttpContext? HttpContext { get; set; }
 
     private string? errorMessage;
+    private bool isLoading = false;
 
     private async Task HandleLogin()
     {
-        if (HttpContext == null)
+        isLoading = true;
+        StateHasChanged();
+        await Task.Delay(10);
+        try
         {
-            errorMessage = "خطای ارتباط با سرور رخ داد.";
-            return;
-        }
-
-        var user = await DbContext.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Email == loginModel.Email);
-
-        if (user != null && BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password))
-        {
-            // Block login if email is not confirmed
-            if (!user.IsConfirmed)
+            if (HttpContext == null)
             {
-                // -- بخش جدید: تولید و ارسال کد مجدد هنگام لاگین --
-                string rawCode = new Random().Next(100000, 999999).ToString();
-                string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
+                errorMessage = "خطای ارتباط با سرور رخ داد.";
+                return;
+            }
 
-                user.ConfirmationToken = hashedCode;
-                user.TokenExpiration = DateTime.UtcNow.AddMinutes(2); // انقضا: 2 دقیقه
+            var user = await DbContext.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Email == loginModel.Email);
 
-                await DbContext.SaveChangesAsync();
+            if (user != null && BCrypt.Net.BCrypt.Verify(loginModel.Password, user.Password))
+            {
+                // Block login if email is not confirmed
+                if (!user.IsConfirmed)
+                {
+                    // -- بخش جدید: تولید و ارسال کد مجدد هنگام لاگین --
+                    string rawCode = new Random().Next(100000, 999999).ToString();
+                    string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
 
-                string emailBody = $@"
+                    user.ConfirmationToken = hashedCode;
+                    user.TokenExpiration = DateTime.UtcNow.AddMinutes(2); // انقضا: 2 دقیقه
+
+                    await DbContext.SaveChangesAsync();
+
+                    string emailBody = $@"
                     <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
                         <h2>کد تایید حساب کاربری</h2>
                         <p>کد تایید جدید شما:</p>
@@ -104,41 +113,46 @@
                         <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
                     </div>";
 
-                await EmailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
-                // ----------------------------------------------------
+                    await EmailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
+                    // ----------------------------------------------------
 
-                Navigation.NavigateTo($"/confirm-email?email={user.Email}");
-                return;
-            }
+                    Navigation.NavigateTo($"/confirm-email?email={user.Email}");
+                    return;
+                }
 
-            var claims = new List<Claim>
+                var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
-            foreach (var userRole in user.UserRoles)
-            {
-                if (userRole.Role != null)
-                    claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+                foreach (var userRole in user.UserRoles)
+                {
+                    if (userRole.Role != null)
+                        claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+                }
+
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                };
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+                Navigation.NavigateTo("/", true);
             }
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            var authProperties = new AuthenticationProperties
+            else
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
-            };
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-            Navigation.NavigateTo("/", true);
+                errorMessage = "ایمیل یا رمز عبور اشتباه است.";
+            }
         }
-        else
+        finally
         {
-            errorMessage = "ایمیل یا رمز عبور اشتباه است.";
+            isLoading = false;
         }
     }
 

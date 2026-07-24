@@ -19,30 +19,30 @@
 
         <div class="space-y-5">
             <CustomAuthInput @bind-Value="registerModel.Name"
-                         Label="نام و نام خانوادگی"
-                         Placeholder="مثال: علی محمدی"
-                         ValidationFor="() => registerModel.Name" />
+                             Label="نام و نام خانوادگی"
+                             Placeholder="مثال: علی محمدی"
+                             ValidationFor="() => registerModel.Name" />
 
             <CustomAuthInput @bind-Value="registerModel.Email"
-                         Label="آدرس ایمیل"
-                         Type="email"
-                         Placeholder="name@company.com"
-                         Dir="ltr"
-                         ValidationFor="() => registerModel.Email" />
+                             Label="آدرس ایمیل"
+                             Type="email"
+                             Placeholder="name@company.com"
+                             Dir="ltr"
+                             ValidationFor="() => registerModel.Email" />
 
             <CustomAuthInput @bind-Value="registerModel.PhoneNumber"
-                         Label="شماره تماس"
-                         Type="tel"
-                         Placeholder="09123456789"
-                         Dir="ltr"
-                         ValidationFor="() => registerModel.PhoneNumber" />
+                             Label="شماره تماس"
+                             Type="tel"
+                             Placeholder="09123456789"
+                             Dir="ltr"
+                             ValidationFor="() => registerModel.PhoneNumber" />
 
             <CustomAuthInput @bind-Value="registerModel.Password"
-                         Label="رمز عبور"
-                         Type="password"
-                         Placeholder="••••••••"
-                         Dir="ltr"
-                         ValidationFor="() => registerModel.Password" />
+                             Label="رمز عبور"
+                             Type="password"
+                             Placeholder="••••••••"
+                             Dir="ltr"
+                             ValidationFor="() => registerModel.Password" />
             <CustomAuthInput @bind-Value="registerModel.ConfirmPassword"
                              Label="تکرار رمز عبور"
                              Type="password"
@@ -51,9 +51,9 @@
                              ValidationFor="() => registerModel.ConfirmPassword" />
 
             <div class="pt-2">
-                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all shadow-lg shadow-blue-500/25">
+                <LoadingButton IsLoading="isLoading" LoadingText="در حال ثبت‌نام...">
                     ثبت‌نام در سامانه
-                </button>
+                </LoadingButton>
             </div>
         </div>
     </EditForm>
@@ -72,10 +72,14 @@
 
     private string? errorMessage;
     private bool showSuccessMessage = false;
+    private bool isLoading = false; // این متغیر اضافه شود
 
     // در متد HandleRegister داخل register.razor
     private async Task HandleRegister()
     {
+        isLoading = true;
+        StateHasChanged();
+        await Task.Delay(10);
         try
         {
             if (await DbContext.Users.AnyAsync(u => u.Email == registerModel.Email))
@@ -127,12 +131,15 @@
         }
         catch (NavigationException)
         {
-            // این خطا نیست! مکانیزم Blazor برای ریدایرکت است و باید رها شود
             throw;
         }
         catch (Exception)
         {
             errorMessage = "خطایی در پردازش اطلاعات رخ داد.";
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
     public class RegisterViewModel
