@@ -10,15 +10,29 @@ namespace TicketHub.Core.Entities;
 public class TicketHistory
 {
     public int Id { get; set; }
-    public int TicketId { get; set; }
-    public int? TransitionId { get; set; } // این خط تغییر کرد (Nullable)
+
+    public int? TicketId { get; set; }
+    public string TicketTitle { get; set; } = string.Empty;
+    public Ticket? Ticket { get; set; } = null!;
+
+    public int? TransitionId { get; set; }
+    public string TransitionTitle { get; set; } = string.Empty;
     public Transition? Transition { get; set; }
-    public int UserId { get; set; }
+
+    public int? UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public User? User { get; set; } = null!;
+
     public int? ParentHistoryId { get; set; }
+    public TicketHistory? ParentHistory { get; set; }
+
     public int? CommentId { get; set; }
-    public Comment? Comment { get; set; } // این خط اضافه شود
+    public Comment? Comment { get; set; }
+    public string? CommentText { get; set; }
+
     public int? WorkFlowId { get; set; }
-    public Workflow? WorkFlow { get; set; } // این خط اضافه شود
+    public Workflow? WorkFlow { get; set; }
+    public string WorkFlowName { get; set; } = string.Empty;
 
     // فیلدهای جدید وضعیت مبدا
     public int? FromStatusId { get; set; }
@@ -32,6 +46,7 @@ public class TicketHistory
 
     public string? MetaData { get; set; } // فیلد JSON
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
-    public Ticket Ticket { get; set; } = null!;
+    public ICollection<TicketHistory> ChildHistories { get; set; } = new List<TicketHistory>();
 }

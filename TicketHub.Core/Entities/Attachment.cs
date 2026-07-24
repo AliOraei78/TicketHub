@@ -14,11 +14,6 @@ public class Attachment
     public int? TicketId { get; set; }
     public Ticket? Ticket { get; set; }
 
-    // 1. Attachment.cs
-    // این فیلدها را به داخل کلاس Attachment اضافه کنید:
-    public int? TransitionId { get; set; }
-    public Transition? Transition { get; set; }
-
     // ارتباط با تاریخچه انتقال (اگر فایل هنگام Transition آپلود شود)
     public int? TicketHistoryId { get; set; }
     public TicketHistory? TicketHistory { get; set; }

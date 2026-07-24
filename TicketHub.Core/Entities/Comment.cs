@@ -6,11 +6,13 @@ public class Comment
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public int TicketId { get; set; }
-    public Ticket Ticket { get; set; } = null!;
+    // Comment.cs
+    public int? TicketId { get; set; }
+    public Ticket? Ticket { get; set; }
 
     public int UserId { get; set; }
     public User User { get; set; } = null!;
 
-    public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>(); 
+    public int? TicketHistoryId { get; set; }
+    public TicketHistory? TicketHistory { get; set; }
 }

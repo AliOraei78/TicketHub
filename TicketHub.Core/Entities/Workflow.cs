@@ -11,4 +11,5 @@ public class Workflow
     public ICollection<Status> Statuses { get; set; } = new List<Status>();
     public ICollection<WorkflowTransition> WorkflowTransitions { get; set; } = new List<WorkflowTransition>();
     public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>(); // این خط اضافه شود
+    public ICollection<WorkflowStatus> WorkflowStatuses { get; set; } = new List<WorkflowStatus>();
 }
