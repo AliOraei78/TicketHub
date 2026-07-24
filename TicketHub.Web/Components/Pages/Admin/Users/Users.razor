@@ -103,7 +103,10 @@
     private async Task LoadUsers()
     {
         isLoading = true;
-        var query = DbContext.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).AsQueryable();
+        var query = DbContext.Users
+                    .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                    .Include(u => u.UserProjects).ThenInclude(up => up.Project) // اضافه شده
+                    .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
             query = query.Where(u => u.Name.Contains(searchTerm) || u.Email.Contains(searchTerm));

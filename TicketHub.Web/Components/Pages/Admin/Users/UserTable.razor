@@ -13,20 +13,21 @@
           EmptyStateValue="کاربری">
 
     <HeaderTemplate>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">نام کاربر</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[30%]">ایمیل</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نام کاربر</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[25%]">ایمیل</th>
         <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نقش‌ها</th>
+        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">پروژه‌ها</th>
         <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
     </HeaderTemplate>
 
     <RowTemplate Context="user">
-        <td class="px-6 py-2 w-[25%]">
+        <td class="px-6 py-2 w-[20%]">
             <div class="flex items-center gap-3">
                 <TextAvatar Text="@user.Name" />
                 <span class="font-medium text-gray-800 truncate">@user.Name</span>
             </div>
         </td>
-        <td class="px-6 py-2 text-sm text-gray-500 w-[30%] truncate" dir="ltr">@user.Email</td>
+        <td class="px-6 py-2 text-sm text-gray-500 w-[25%] truncate" dir="ltr">@user.Email</td>
         <td class="px-6 py-2 w-[20%]">
             <div class="flex flex-wrap gap-1">
                 @foreach (var userRole in user.UserRoles)
@@ -36,6 +37,18 @@
                 @if (!user.UserRoles.Any())
                 {
                     <span class="text-gray-400 text-xs">بدون نقش</span>
+                }
+            </div>
+        </td>
+        <td class="px-6 py-2 w-[20%]">
+            <div class="flex flex-wrap gap-1">
+                @foreach (var userProject in user.UserProjects)
+                {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">@userProject.Project?.Name</span>
+                }
+                @if (!user.UserProjects.Any())
+                {
+                    <span class="text-gray-400 text-xs">بدون پروژه</span>
                 }
             </div>
         </td>
