@@ -120,8 +120,8 @@
                                       style="background-color: @(ticket.Status?.ColorCode ?? "#6B7280")20; color: @(ticket.Status?.ColorCode ?? "#6B7280");">
                                     @(ticket.Status?.Name ?? "نامشخص")
                                 </span>
-                                <span class="px-2.5 py-1 rounded-md text-xs font-semibold @GetPriorityClass(ticket.Priority)">
-                                    @ticket.Priority
+                                <span class="px-2.5 py-1 rounded-md text-xs font-semibold @GetPriorityClass(ticket.Priority?.Name ?? "")">
+                                    @(ticket.Priority?.Name ?? "نامشخص")
                                 </span>
                             </div>
                         </div>

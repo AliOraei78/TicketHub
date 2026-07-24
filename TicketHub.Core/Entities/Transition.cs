@@ -15,7 +15,9 @@ public class Transition
     public int ToState { get; set; }
     public int IsAutomated { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int? WorkflowId { get; set; }
+    public Workflow? Workflow { get; set; }
     // --- Navigation Properties ---
     public ICollection<TransitionRole> AllowedRoles { get; set; } = new List<TransitionRole>();
-    public ICollection<TransitionHistory> Histories { get; set; } = new List<TransitionHistory>();
+    public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
 }

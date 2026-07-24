@@ -15,6 +15,6 @@ public class Attachment
     public Ticket? Ticket { get; set; }
 
     // ارتباط با تاریخچه انتقال (اگر فایل هنگام Transition آپلود شود)
-    public int? TransitionHistoryId { get; set; }
-    public TransitionHistory? TransitionHistory { get; set; }
+    public int? TicketHistoryId { get; set; }
+    public TicketHistory? TicketHistory { get; set; }
 }

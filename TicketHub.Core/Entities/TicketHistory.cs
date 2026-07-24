@@ -7,7 +7,7 @@ using TicketHub.Core.Entities;
 
 namespace TicketHub.Core.Entities;
 
-public class TransitionHistory
+public class TicketHistory
 {
     public int Id { get; set; }
     public int TicketId { get; set; }

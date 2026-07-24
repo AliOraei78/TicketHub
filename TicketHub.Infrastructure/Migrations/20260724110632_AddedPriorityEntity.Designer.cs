@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketHub.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TicketHub.Infrastructure.Data;
 namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260724110632_AddedPriorityEntity")]
+    partial class AddedPriorityEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -156,12 +159,7 @@ namespace TicketHub.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("WorkflowId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("WorkflowId");
 
                     b.ToTable("Projects");
                 });
@@ -208,12 +206,7 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Property<bool>("NeedApproval")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("WorkflowId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("WorkflowId");
 
                     b.ToTable("Statuses");
                 });
@@ -329,12 +322,7 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Property<int>("ToState")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkflowId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("WorkflowId");
 
                     b.ToTable("Transitions");
                 });
@@ -433,29 +421,6 @@ namespace TicketHub.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("TicketHub.Core.Entities.Workflow", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Workflows");
-                });
-
             modelBuilder.Entity("TicketHub.Core.Entities.Attachment", b =>
                 {
                     b.HasOne("TicketHub.Core.Entities.TicketHistory", "TicketHistory")
@@ -490,26 +455,6 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("Ticket");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TicketHub.Core.Entities.Project", b =>
-                {
-                    b.HasOne("TicketHub.Core.Entities.Workflow", "Workflow")
-                        .WithMany("Projects")
-                        .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Workflow");
-                });
-
-            modelBuilder.Entity("TicketHub.Core.Entities.Status", b =>
-                {
-                    b.HasOne("TicketHub.Core.Entities.Workflow", "Workflow")
-                        .WithMany("Statuses")
-                        .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Workflow");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.Ticket", b =>
@@ -569,16 +514,6 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("Ticket");
 
                     b.Navigation("Transition");
-                });
-
-            modelBuilder.Entity("TicketHub.Core.Entities.Transition", b =>
-                {
-                    b.HasOne("TicketHub.Core.Entities.Workflow", "Workflow")
-                        .WithMany("Transitions")
-                        .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Workflow");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.TransitionRole", b =>
@@ -697,15 +632,6 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("UserProjects");
 
                     b.Navigation("UserRoles");
-                });
-
-            modelBuilder.Entity("TicketHub.Core.Entities.Workflow", b =>
-                {
-                    b.Navigation("Projects");
-
-                    b.Navigation("Statuses");
-
-                    b.Navigation("Transitions");
                 });
 #pragma warning restore 612, 618
         }
