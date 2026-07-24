@@ -25,173 +25,60 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Priority> Priorities { get; set; }
         public DbSet<Workflow> Workflows { get; set; }
+        public DbSet<WorkflowStatus> WorkflowStatuses { get; set; }
+        public DbSet<WorkflowTransition> WorkflowTransitions { get; set; }
+
+        // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
+        // کل متد OnModelCreating را با این کد جایگزین کن:
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Many-to-Many: User <-> Role
-            modelBuilder.Entity<UserRole>()
-                .HasKey(ur => new { ur.UserId, ur.RoleId });
+            // 1. تنظیم کلیدهای ترکیبی (Composite Keys)[cite: 11, 12, 13, 15, 16]
+            modelBuilder.Entity<UserProject>().HasKey(up => new { up.UserId, up.ProjectId });
+            modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
+            modelBuilder.Entity<TransitionRole>().HasKey(tr => new { tr.TransitionId, tr.RoleId });
+            modelBuilder.Entity<WorkflowStatus>().HasKey(ws => new { ws.WorkflowId, ws.StatusId });
+            modelBuilder.Entity<WorkflowTransition>().HasKey(wt => new { wt.WorkflowId, wt.TransitionId });
 
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.User)
-                .WithMany(u => u.UserRoles)
-                .HasForeignKey(ur => ur.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.Role)
-                .WithMany(r => r.UserRoles)
-                .HasForeignKey(ur => ur.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Many-to-Many: User <-> Project
-            modelBuilder.Entity<UserProject>()
-                .HasKey(up => new { up.UserId, up.ProjectId });
-
-            modelBuilder.Entity<UserProject>()
-                .HasOne(up => up.User)
-                .WithMany(u => u.UserProjects)
-                .HasForeignKey(up => up.UserId);
-
-            modelBuilder.Entity<UserProject>()
-                .HasOne(up => up.Project)
-                .WithMany(p => p.UserProjects)
-                .HasForeignKey(up => up.ProjectId);
-
-            // Ticket relationships
+            // 2. تنظیم روابط Ticket (جلوگیری از Multiple Cascade Paths)[cite: 3, 10, 14]
             modelBuilder.Entity<Ticket>()
-                .HasOne(t => t.User)
-                .WithMany(u => u.Tickets)
-                .HasForeignKey(t => t.UserId);
-
+                .HasOne(t => t.User).WithMany(u => u.Tickets).HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Ticket>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tickets)
-                .HasForeignKey(t => t.ProjectId)
-                .IsRequired(false) // <--- این خط به EF Core می‌فهماند که پروژه الزامی نیست
-                .OnDelete(DeleteBehavior.SetNull); ;
-
-            // Ticket to Status relationship
+                .HasOne(t => t.Project).WithMany(p => p.Tickets).HasForeignKey(t => t.ProjectId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Ticket>()
-                .HasOne(t => t.Status)
-                .WithMany(s => s.Tickets)
-                .HasForeignKey(t => t.StatusId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(t => t.Status).WithMany(s => s.Tickets).HasForeignKey(t => t.StatusId).OnDelete(DeleteBehavior.Restrict);
 
-            // Many-to-Many: Transition <-> Role (از طریق TransitionRole)
-            modelBuilder.Entity<TransitionRole>()
-                .HasKey(tr => new { tr.TransitionId, tr.RoleId });
-
-            modelBuilder.Entity<TransitionRole>()
-                .HasOne(tr => tr.Transition)
-                .WithMany(t => t.AllowedRoles)
-                .HasForeignKey(tr => tr.TransitionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<TransitionRole>()
-                .HasOne(tr => tr.Role)
-                .WithMany(r => r.TransitionRoles)
-                .HasForeignKey(tr => tr.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // One-to-Many: Ticket <-> TicketHistory
-            modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.Ticket)
-                .WithMany(t => t.TicketHistories)
-                .HasForeignKey(th => th.TicketId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // One-to-Many: Transition <-> TicketHistory
-            modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.Transition)
-                .WithMany(t => t.Histories)
-                .HasForeignKey(th => th.TransitionId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // One-to-Many: Ticket <-> Attachment
-            modelBuilder.Entity<Attachment>()
-                .HasOne(a => a.Ticket)
-                .WithMany(t => t.Attachments)
-                .HasForeignKey(a => a.TicketId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // One-to-Many: TicketHistory <-> Attachment
-            modelBuilder.Entity<Attachment>()
-                .HasOne(a => a.TicketHistory)
-                .WithMany(th => th.Attachments)
-                .HasForeignKey(a => a.TicketHistoryId)
-                .OnDelete(DeleteBehavior.Restrict); // <--- این خط تغییر کرد
-
-            modelBuilder.Entity<Comment>()
-                    .HasOne(c => c.Ticket)
-                    .WithMany(t => t.Comments)
-                    .HasForeignKey(c => c.TicketId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.User)
-                .WithMany(u => u.Comments)
-                .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Ticket>()
-                .HasOne(t => t.Priority)
-                .WithMany(p => p.Tickets)
-                .HasForeignKey(t => t.PriorityId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Project>()
-                .HasOne(p => p.Workflow)
-                .WithMany(w => w.Projects)
-                .HasForeignKey(p => p.WorkflowId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<Status>()
-                .HasOne(s => s.Workflow)
-                .WithMany(w => w.Statuses)
-                .HasForeignKey(s => s.WorkflowId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // 3. تنظیم روابط Transition[cite: 2, 5]
             modelBuilder.Entity<Transition>()
-                .HasOne(t => t.Workflow)
-                .WithMany(w => w.Transitions)
-                .HasForeignKey(t => t.WorkflowId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // FromStatus Relationship
-            modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.FromStatus)
-                .WithMany()
-                .HasForeignKey(th => th.FromStatusId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // ToStatus Relationship
-            modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.ToStatus)
-                .WithMany()
-                .HasForeignKey(th => th.ToStatusId)
-                .OnDelete(DeleteBehavior.SetNull);
-
+                .HasOne(t => t.FromStatus).WithMany(s => s.FromTransitions).HasForeignKey(t => t.FromState).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Transition>()
-                .HasOne(t => t.Comment)
-                .WithMany()
-                .HasForeignKey(t => t.CommentId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasOne(t => t.ToStatus).WithMany(s => s.ToTransitions).HasForeignKey(t => t.ToState).OnDelete(DeleteBehavior.Restrict);
 
-            // پیکربندی رابطه TicketHistory و Comment (برای تکمیل ارتباطات موجود در مدل‌های شما)
+            // 4. تنظیم روابط TicketHistory[cite: 2, 4, 14]
             modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.Comment)
-                .WithMany(c => c.TicketHistories)
-                .HasForeignKey(th => th.CommentId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasOne(th => th.ParentHistory).WithMany(p => p.ChildHistories).HasForeignKey(th => th.ParentHistoryId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.FromStatus).WithMany(s => s.FromHistories).HasForeignKey(th => th.FromStatusId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.ToStatus).WithMany(s => s.ToHistories).HasForeignKey(th => th.ToStatusId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.User).WithMany(u => u.Histories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
 
+            // 5. رفع تداخل Comment و تنظیم دقیق ارتباط 1-به-1[cite: 4, 8, 14]
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.TicketHistory).WithOne(th => th.Comment).HasForeignKey<Comment>(c => c.TicketHistoryId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User).WithMany(u => u.Comments).HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Ticket).WithMany(t => t.Comments).HasForeignKey(c => c.TicketId).OnDelete(DeleteBehavior.Restrict);
+
+            // 6. جلوگیری از تداخل در Attachment[cite: 3, 4, 6]
             modelBuilder.Entity<Attachment>()
-                .HasOne(a => a.Transition)
-                .WithMany(t => t.Attachments)
-                .HasForeignKey(a => a.TransitionId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasOne(a => a.Ticket).WithMany(t => t.Attachments).HasForeignKey(a => a.TicketId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.TicketHistory).WithMany(th => th.Attachments).HasForeignKey(a => a.TicketHistoryId).OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

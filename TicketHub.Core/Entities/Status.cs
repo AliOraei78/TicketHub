@@ -22,5 +22,3 @@ namespace TicketHub.Core.Entities
         public ICollection<WorkflowStatus> WorkflowStatuses { get; set; } = new List<WorkflowStatus>();
     }
 }
-    }
-}
