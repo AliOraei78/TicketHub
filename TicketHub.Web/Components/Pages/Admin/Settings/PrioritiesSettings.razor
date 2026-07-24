@@ -1,0 +1,108 @@
+﻿<!-- Priorities.razor -->
+@page "/settings/priorities"
+@rendermode InteractiveServer
+@namespace TicketHub.Web.Pages.Admin.Settings
+@using TicketHub.Core.Entities
+@using TicketHub.Web.Components.Shared
+
+<PageTitle>تنظیمات اولویت‌ها | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8" dir="rtl">
+    <!-- در فایل Priorities.razor بخش PageHeader را با این کد جایگزین کنید (اضافه شدن آیکون) -->
+    <PageHeader Title="مدیریت اولویت‌ها" Description="ایجاد، ویرایش، حذف و تعیین سطح و رنگ اولویت‌های سیستم.">
+        <Icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+            </svg>
+        </Icon>
+    </PageHeader>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش اولویت" : "ایجاد اولویت جدید")</h3>
+
+                <EditForm Model="priorityModel" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان اولویت</label>
+                            <InputText @bind-Value="priorityModel.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">رنگ نمایشی</label>
+                            <ColorPicker @bind-Value="priorityModel.ColorCode" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">سطح (عدد)</label>
+                            <InputNumber @bind-Value="priorityModel.Level" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" />
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+                                @(isEditing ? "ذخیره تغییرات" : "ثبت اولویت")
+                            </button>
+                            @if (isEditing)
+                            {
+                                <button type="button" @onclick="CancelEdit" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">انصراف</button>
+                            }
+                        </div>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="mt-4 p-3 @(isError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@successMessage</div>
+                }
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg">لیست اولویت‌ها</h3>
+                    <div class="w-full sm:w-72">
+                        <SearchBox Placeholder="جستجوی اولویت..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                    </div>
+                </div>
+                <div class="p-0">
+                    <DataGrid TItem="Priority" TKey="int" Items="FilteredPriorities" IsLoading="priorities == null" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="اولویتی">
+                        <HeaderTemplate>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان، رنگ و سطح</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="priority">
+                            <td class="px-6 py-4 w-[80%]">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5" style="background-color: @(priority.ColorCode ?? "#ccc");">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-gray-800 block">@priority.Name</span>
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">سطح: @priority.Level</span>
+                                        </div>
+                                        <span class="text-xs text-gray-400">شناسه: @priority.Id</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center w-[15%]">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @onclick="() => EditPriority(priority)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg" title="ویرایش">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button type="button" @onclick="() => OpenDeleteModal(priority)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg" title="حذف">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </RowTemplate>
+                    </DataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<BulkActionToolbar SelectedCount="selectedIds.Count" OnCancel="ClearSelection" OnDelete="OpenBulkDeleteModal" />
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(isError ? successMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />

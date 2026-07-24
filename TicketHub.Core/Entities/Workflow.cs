@@ -9,6 +9,6 @@ public class Workflow
 
     public ICollection<Project> Projects { get; set; } = new List<Project>();
     public ICollection<Status> Statuses { get; set; } = new List<Status>();
-    public ICollection<Transition> Transitions { get; set; } = new List<Transition>();
+    public ICollection<WorkflowTransition> WorkflowTransitions { get; set; } = new List<WorkflowTransition>();
     public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>(); // این خط اضافه شود
 }

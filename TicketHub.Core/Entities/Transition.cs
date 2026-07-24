@@ -17,9 +17,12 @@ public class Transition
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public int? WorkflowId { get; set; }
-    public Workflow? Workflow { get; set; }
+    public int? CommentId { get; set; }
+    public Comment? Comment { get; set; }
+
     // --- Navigation Properties ---
     public ICollection<TransitionRole> AllowedRoles { get; set; } = new List<TransitionRole>();
     public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
+    public ICollection<WorkflowTransition> WorkflowTransitions { get; set; } = new List<WorkflowTransition>(); // این خط اضافه شود
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }

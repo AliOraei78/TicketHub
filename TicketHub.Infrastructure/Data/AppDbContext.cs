@@ -108,7 +108,7 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(th => th.Transition)
                 .WithMany(t => t.Histories)
                 .HasForeignKey(th => th.TransitionId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // One-to-Many: Ticket <-> Attachment
             modelBuilder.Entity<Attachment>()
@@ -159,6 +159,39 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany(w => w.Transitions)
                 .HasForeignKey(t => t.WorkflowId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // FromStatus Relationship
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.FromStatus)
+                .WithMany()
+                .HasForeignKey(th => th.FromStatusId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ToStatus Relationship
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.ToStatus)
+                .WithMany()
+                .HasForeignKey(th => th.ToStatusId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Transition>()
+                .HasOne(t => t.Comment)
+                .WithMany()
+                .HasForeignKey(t => t.CommentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // پیکربندی رابطه TicketHistory و Comment (برای تکمیل ارتباطات موجود در مدل‌های شما)
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.Comment)
+                .WithMany(c => c.TicketHistories)
+                .HasForeignKey(th => th.CommentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.Transition)
+                .WithMany(t => t.Attachments)
+                .HasForeignKey(a => a.TransitionId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
