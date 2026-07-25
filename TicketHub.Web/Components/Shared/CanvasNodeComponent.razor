@@ -1,0 +1,41 @@
+﻿<!-- CanvasNodeComponent.razor -->
+@using TicketHub.Core.Common
+
+<div draggable="false" class="absolute w-[150px] rounded-xl shadow-lg border-2 flex flex-col items-center justify-center p-3 select-none z-10 transition-shadow @(IsSelected ? "border-slate-800 shadow-xl ring-4 ring-slate-800/20 scale-105" : "border-black/10 hover:shadow-xl") @(IsConnecting ? "pointer-events-none" : "pointer-events-auto")"
+     style="@($"left: {Node.X}px; top: {Node.Y}px; background-color: {Node.Status.ColorCode}; cursor: {CursorStyle};")"
+     @onpointerdown="e => OnPointerDown.InvokeAsync((e, Node))"
+     @onclick="e => OnClick.InvokeAsync((e, Node))">
+
+    <NodePort PortName="Top" ClassName="-top-3 left-1/2 -translate-x-1/2" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
+    <NodePort PortName="Bottom" ClassName="-bottom-3 left-1/2 -translate-x-1/2" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
+    <NodePort PortName="Right" ClassName="top-1/2 -translate-y-1/2 -right-3" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
+    <NodePort PortName="Left" ClassName="top-1/2 -translate-y-1/2 -left-3" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
+
+    @if (IsSelected)
+    {
+        <button @onpointerdown="() => OnDelete.InvokeAsync(Node)" @onpointerdown:stopPropagation="true" class="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+    }
+
+    <div class="w-full flex-1 flex flex-col items-center justify-center mt-2 min-h-[30px]">
+        <span class="font-bold text-sm text-center block w-full truncate px-2" style="color: @TextColor" title="@Node.Status.Name">@Node.Status.Name</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CanvasNode Node { get; set; } = null!;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool IsConnecting { get; set; }
+    [Parameter] public CanvasNode? ConnectingFromNode { get; set; }
+    [Parameter] public string CursorStyle { get; set; } = "grab";
+    [Parameter] public string TextColor { get; set; } = "#1e293b";
+
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node)> OnPointerDown { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, CanvasNode node)> OnClick { get; set; }
+    [Parameter] public EventCallback<CanvasNode> OnDelete { get; set; }
+    
+    // رویدادهای مربوط به پورت‌ها که به والد پاس داده می‌شوند
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node, string port)> OnPortPointerDown { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node, string port)> OnPortPointerUp { get; set; }
+}

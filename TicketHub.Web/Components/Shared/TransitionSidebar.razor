@@ -1,0 +1,53 @@
+﻿@using TicketHub.Core.Entities
+@using TicketHub.Core.Common
+
+<div class="absolute left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-white border-r border-slate-200 z-30 shadow-2xl transition-transform duration-300 flex flex-col @(Connection != null ? "translate-x-0" : "-translate-x-full")">
+    @if (Connection != null)
+    {
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
+            <div>
+                <h2 class="font-bold text-slate-800">مدیریت انتقال وضعیت</h2>
+            </div>
+            <button @onclick="OnClose" class="w-8 h-8 rounded-lg hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">بستن</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm">@GetNodeName?.Invoke(Connection.FromNodeId)</span>
+                <span>-></span>
+                <span class="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm">@GetNodeName?.Invoke(Connection.ToNodeId)</span>
+            </div>
+
+            <div>
+                <label>عنوان انتقال</label>
+                <input type="text" @bind="Connection.Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl" />
+            </div>
+
+            <div class="pt-2">
+                <label class="block text-sm font-medium text-slate-700 mb-2">نقش‌های مجاز</label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach (var role in AvailableRoles)
+                    {
+                        bool hasRole = Connection.AllowedRoleIds.Contains(role.Id);
+                        <button @key="role.Id" type="button" @onclick="() => OnRoleToggle.InvokeAsync(role.Id)" class="px-3 py-1.5 rounded-lg text-xs font-medium border @(hasRole ? "bg-indigo-50 border-indigo-200" : "bg-white")">
+                            @role.Name
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-slate-200">
+                <button type="button" @onclick="() => OnDelete.InvokeAsync(Connection)" class="w-full py-2.5 rounded-xl text-rose-600 bg-rose-50">حذف این مسیر</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public CanvasConnection? Connection { get; set; }
+    [Parameter] public IEnumerable<Role> AvailableRoles { get; set; } = new List<Role>();
+    [Parameter] public Func<Guid, string>? GetNodeName { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<int> OnRoleToggle { get; set; }
+    [Parameter] public EventCallback<CanvasConnection> OnDelete { get; set; }
+}
