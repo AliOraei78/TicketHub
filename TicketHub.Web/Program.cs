@@ -50,6 +50,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 // سرویس‌های مورد نیاز که باقی می‌مانند یا اضافه می‌شوند:
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 
 var app = builder.Build();
 

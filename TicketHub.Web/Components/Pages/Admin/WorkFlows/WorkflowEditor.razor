@@ -1,0 +1,793 @@
+﻿@page "/workflows/editor/{Id:int?}"
+@layout TicketHub.Web.Components.Layout.EmptyLayout
+@rendermode InteractiveServer
+@using TicketHub.Core.Entities
+@using TicketHub.Core.Interfaces
+@using TicketHub.Application.Interfaces
+
+<div class="flex h-full w-full">
+
+    <!-- Right Sidebar: Statuses -->
+    <div class="w-72 bg-white border-l border-slate-200 flex flex-col z-20 shadow-sm flex-shrink-0">
+        <div class="p-5 border-b border-slate-100">
+            <h2 class="font-bold text-lg text-slate-800">وضعیت‌ها</h2>
+            <p class="text-xs text-slate-500 mt-1">وضعیت مورد نظر را انتخاب و به صفحه اضافه کنید</p>
+        </div>
+        <div class="p-4">
+            <div class="relative">
+                <input type="text" @bind="statusSearchTerm" @bind:event="oninput" placeholder="جستجوی وضعیت..." class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
+                <svg class="w-4 h-4 text-slate-400 absolute right-3 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 pt-0 flex flex-col gap-2 custom-scrollbar">
+            @foreach (var status in FilteredStatuses)
+            {
+                <div @key="status.Id"
+                     draggable="true"
+                     @ondragstart="() => OnStatusDragStart(status)"
+                     class="p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-400 hover:shadow-md transition-all cursor-grab flex items-center justify-between group select-none"
+                     @onclick="() => AddStatusToCanvas(status)">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: @status.ColorCode"></span>
+                        <span class="font-medium text-slate-700 text-sm">@status.Name</span>
+                    </div>
+                    <button type="button" class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Main Area -->
+    <div class="flex-1 flex flex-col relative overflow-hidden">
+
+        <!-- Toolbar -->
+        <div class="h-[90px] bg-white border-b border-slate-200 px-6 py-3 z-20 shadow-sm flex-shrink-0 flex items-center">
+            <div class="flex justify-between items-center max-w-5xl mx-auto w-full gap-4">
+                <div class="flex flex-col gap-1 flex-1">
+                    <input type="text" @bind="workflowName" placeholder="نام جریان کاری..." class="text-xl font-bold text-slate-800 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
+                    <input type="text" @bind="workflowDescription" placeholder="توضیحات جریان کاری (اختیاری)..." class="text-sm text-slate-500 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
+                </div>
+                <div class="flex gap-2">
+                    <a href="/workflows" class="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 text-sm font-medium transition-colors">انصراف و بازگشت</a>
+                    <button @onclick="SaveWorkflowAsync" class="px-5 py-2.5 rounded-xl text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium transition-colors shadow-lg shadow-blue-500/30">ذخیره گردش کار</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="flex-1 relative bg-slate-50 overflow-hidden canvas-pattern outline-none"
+             tabindex="0"
+             @onkeydown="HandleKeyDown"
+             @onpointerdown="CanvasPointerDown"
+             @onpointermove="CanvasMouseMove"
+             @onpointerup="CanvasMouseUp"
+             @onpointerleave="CanvasMouseUp"
+             @ondragenter="() => { }"
+             @ondragenter:preventDefault="true"
+             @ondragover="() => { }"
+             @ondragover:preventDefault="true"
+             @ondrop="CanvasOnDrop">
+
+            <!-- کادر انتخاب -->
+            @if (isBoxSelecting)
+            {
+                <div class="absolute border border-blue-500 bg-blue-500/20 z-50 pointer-events-none"
+                     style="left: @(Math.Min(boxStartX, boxEndX))px; top: @(Math.Min(boxStartY, boxEndY))px; width: @(Math.Abs(boxEndX - boxStartX))px; height: @(Math.Abs(boxEndY - boxStartY))px;">
+                </div>
+            }
+
+            <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
+                    </marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+                    </marker>
+                </defs>
+
+                @foreach (var conn in connections)
+                {
+                    var fromNode = canvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+                    var toNode = canvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+                    if (fromNode != null && toNode != null)
+                    {
+                        bool isSelected = selectedConnections.Contains(conn);
+                        string strokeColor = isSelected ? "#3b82f6" : "#cbd5e1";
+                        string marker = isSelected ? "url(#arrowhead-active)" : "url(#arrowhead)";
+
+                        var sameNodeConnections = connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                        int index = sameNodeConnections.IndexOf(conn);
+
+                        var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                        var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                        <g @key="conn.Id">
+                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index)"
+                                  stroke="transparent" stroke-width="15" fill="none" class="pointer-events-auto cursor-pointer"
+                                  @onclick="e => SelectConnection(e, conn)" />
+
+                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index)"
+                                  stroke="@strokeColor" stroke-width="2.5" fill="none" marker-end="@marker"
+                                  class="transition-colors duration-200" stroke-dasharray="@(conn.IsAutomatic ? "5,5" : "none")" />
+                        </g>
+                    }
+                }
+                @if (isConnecting && connectingFromNode != null)
+                {
+                    var p1 = GetPortCoordinates(connectingFromNode, activeSourcePort);
+                    <path d="@GetBezierPath(p1.X, p1.Y, mouseX, mouseY)"
+                          stroke="#3b82f6" stroke-width="2.5" fill="none" stroke-dasharray="4,4" class="opacity-60" />
+                }
+            </svg>
+
+            <!-- دکمه‌های حذف مسیرها -->
+            @foreach (var conn in connections)
+            {
+                var fromNode = canvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+                var toNode = canvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+                if (fromNode != null && toNode != null)
+                {
+                    @if (selectedConnections.Contains(conn))
+                    {
+                        var sameNodeConnections = connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                        int index = sameNodeConnections.IndexOf(conn);
+
+                        var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                        var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                        var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index);
+
+                        <!-- تغییر به onpointerdown و توقف انتشار به پس‌زمینه -->
+                        <button @key="@($"del-conn-{conn.Id}")" @onpointerdown="() => DeleteSelectedItems(conn)" @onpointerdown:stopPropagation="true" class="absolute w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto" style="@($"left: {center.X - 12}px; top: {center.Y - 12}px;")" title="حذف مسیر">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    }
+                }
+            }
+
+            @foreach (var node in canvasNodes)
+            {
+                <div @key="node.Id" draggable="false" class="absolute w-[150px] rounded-xl shadow-lg border-2 flex flex-col items-center justify-center p-3 select-none z-10 transition-shadow @(selectedNodes.Contains(node) ? "border-slate-800 shadow-xl ring-4 ring-slate-800/20 scale-105" : "border-black/10 hover:shadow-xl") @(isConnecting ? "pointer-events-none" : "pointer-events-auto")"
+                     style="@($"left: {node.X}px; top: {node.Y}px; background-color: {node.Status.ColorCode}; cursor: {(isDragging && draggedNode == node ? "grabbing" : "grab")};")"
+                     @onpointerdown="e => NodeMouseDown(e, node)"
+                     @onclick="e => SelectNode(e, node)">
+
+                    <!-- پورت بالا -->
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-white border @((isConnecting && connectingFromNode != node) ? "border-blue-500 scale-125 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse" : "border-slate-300 hover:border-blue-500 hover:bg-blue-50") flex items-center justify-center cursor-crosshair transition-all z-30 pointer-events-auto shadow-sm" title="بالا"
+                         @onpointerdown='e => OnPortPointerDown(e, node, "Top")' @onpointerdown:stopPropagation="true"
+                         @onpointerup='e => OnPortPointerUp(e, node, "Top")' @onpointerup:stopPropagation="true">
+                        <div class="w-2.5 h-2.5 rounded-full @((isConnecting && connectingFromNode != node) ? "bg-blue-500" : "bg-slate-300")"></div>
+                    </div>
+                    <!-- پورت پایین -->
+                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-white border @((isConnecting && connectingFromNode != node) ? "border-blue-500 scale-125 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse" : "border-slate-300 hover:border-blue-500 hover:bg-blue-50") flex items-center justify-center cursor-crosshair transition-all z-30 pointer-events-auto shadow-sm" title="پایین"
+                         @onpointerdown='e => OnPortPointerDown(e, node, "Bottom")' @onpointerdown:stopPropagation="true"
+                         @onpointerup='e => OnPortPointerUp(e, node, "Bottom")' @onpointerup:stopPropagation="true">
+                        <div class="w-2.5 h-2.5 rounded-full @((isConnecting && connectingFromNode != node) ? "bg-blue-500" : "bg-slate-300")"></div>
+                    </div>
+                    <!-- پورت راست -->
+                    <div class="absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full bg-white border @((isConnecting && connectingFromNode != node) ? "border-blue-500 scale-125 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse" : "border-slate-300 hover:border-blue-500 hover:bg-blue-50") flex items-center justify-center cursor-crosshair transition-all z-30 pointer-events-auto shadow-sm" title="راست"
+                         @onpointerdown='e => OnPortPointerDown(e, node, "Right")' @onpointerdown:stopPropagation="true"
+                         @onpointerup='e => OnPortPointerUp(e, node, "Right")' @onpointerup:stopPropagation="true">
+                        <div class="w-2.5 h-2.5 rounded-full @((isConnecting && connectingFromNode != node) ? "bg-blue-500" : "bg-slate-300")"></div>
+                    </div>
+                    <!-- پورت چپ -->
+                    <div class="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full bg-white border @((isConnecting && connectingFromNode != node) ? "border-blue-500 scale-125 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse" : "border-slate-300 hover:border-blue-500 hover:bg-blue-50") flex items-center justify-center cursor-crosshair transition-all z-30 pointer-events-auto shadow-sm" title="چپ"
+                         @onpointerdown='e => OnPortPointerDown(e, node, "Left")' @onpointerdown:stopPropagation="true"
+                         @onpointerup='e => OnPortPointerUp(e, node, "Left")' @onpointerup:stopPropagation="true">
+                        <div class="w-2.5 h-2.5 rounded-full @((isConnecting && connectingFromNode != node) ? "bg-blue-500" : "bg-slate-300")"></div>
+                    </div>
+
+                    <!-- دکمه حذف وضعیت -->
+                    @if (selectedNodes.Contains(node))
+                    {
+                        <!-- تغییر به onpointerdown و توقف انتشار -->
+                        <button @onpointerdown="() => DeleteSelectedItems(node)" @onpointerdown:stopPropagation="true" class="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    }
+
+                    <!-- متن وضعیت (مرکز) -->
+                    <div class="w-full flex-1 flex flex-col items-center justify-center mt-2 min-h-[30px]">
+                        <span class="font-bold text-sm text-center block w-full truncate px-2" style="color: @GetTextColor(node.Status.ColorCode)" title="@node.Status.Name">@node.Status.Name</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Left Sidebar: Transition Properties -->
+        <div class="absolute left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-white border-r border-slate-200 z-30 shadow-2xl transition-transform duration-300 flex flex-col @(selectedConnections.Count == 1 ? "translate-x-0" : "-translate-x-full")">
+            @if (selectedConnections.Count == 1)
+            {
+                var selectedConnection = selectedConnections.First();
+                <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
+                    <div>
+                        <h2 class="font-bold text-slate-800">مدیریت انتقال وضعیت</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">مسیر بین دو وضعیت</p>
+                    </div>
+                    <button @onclick="() => selectedConnections.Clear()" class="w-8 h-8 rounded-lg hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+                    <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm">@GetNodeName(selectedConnection.FromNodeId)</span>
+                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        <span class="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm">@GetNodeName(selectedConnection.ToNodeId)</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">عنوان انتقال (اختیاری)</label>
+                        <input type="text" @bind="selectedConnection.Name" placeholder="مثال: تایید اولیه..." class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50">
+                        <div>
+                            <p class="text-sm font-medium text-slate-800">انتقال خودکار</p>
+                            <p class="text-xs text-slate-500">سیستم به صورت خودکار منتقل کند</p>
+                        </div>
+                        <button type="button" class="w-11 h-6 rounded-full transition-colors relative focus:outline-none @(selectedConnection.IsAutomatic ? "bg-blue-600" : "bg-slate-200")"
+                                @onclick="() => selectedConnection.IsAutomatic = !selectedConnection.IsAutomatic">
+                            <span class="absolute top-[2px] w-5 h-5 bg-white rounded-full transition-all shadow-sm @(selectedConnection.IsAutomatic ? "left-[2px]" : "right-[2px]")"></span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50">
+                        <div>
+                            <p class="text-sm font-medium text-slate-800">فعال بودن</p>
+                            <p class="text-xs text-slate-500">آیا این مسیر قابل استفاده است؟</p>
+                        </div>
+                        <button type="button" class="w-11 h-6 rounded-full transition-colors relative focus:outline-none @(selectedConnection.IsActive ? "bg-emerald-500" : "bg-slate-200")"
+                                @onclick="() => selectedConnection.IsActive = !selectedConnection.IsActive">
+                            <span class="absolute top-[2px] w-5 h-5 bg-white rounded-full transition-all shadow-sm @(selectedConnection.IsActive ? "left-[2px]" : "right-[2px]")"></span>
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">تاخیر فعال‌سازی (ساعت)</label>
+                        <input type="number" @bind="selectedConnection.DelayHours" placeholder="خالی = بدون تاخیر" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">نقش‌های مجاز</label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach (var role in AvailableRoles)
+                            {
+                                bool hasRole = selectedConnection.AllowedRoleIds.Contains(role.Id);
+                                <button @key="role.Id" type="button" @onclick="() => ToggleRole(role.Id)"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all @(hasRole ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50")">
+                                    @role.Name
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="pt-4 mt-4 border-t border-slate-200">
+                        <button type="button" @onclick="() => DeleteConnection(selectedConnection)" class="w-full py-2.5 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 font-medium transition-colors text-sm flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            حذف این مسیر
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .canvas-pattern {
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 24px 24px;
+        background-position: -12px -12px;
+    }
+</style>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Inject] private IWorkflowRepository WorkflowRepository { get; set; } = default!;
+    [Inject] private IRepository<Status> StatusRepository { get; set; } = default!;
+    [Inject] private IRepository<Role> RoleRepository { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private List<Status> availableStatuses = new();
+    private List<Role> AvailableRoles = new();
+
+    private string workflowName = "";
+    private string workflowDescription = "";
+    private string activeSourcePort = "";
+
+    private bool isBoxSelecting = false;
+    private double boxStartX, boxStartY, boxEndX, boxEndY;
+
+    private string statusSearchTerm = "";
+    private IEnumerable<Status> FilteredStatuses =>
+        string.IsNullOrEmpty(statusSearchTerm) ? availableStatuses : availableStatuses.Where(s => s.Name.Contains(statusSearchTerm));
+
+    public class CanvasNode
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Status Status { get; set; } = null!;
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
+    public class CanvasConnection
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid FromNodeId { get; set; }
+        public Guid ToNodeId { get; set; }
+        public string SourcePort { get; set; } = "Right";
+        public string TargetPort { get; set; } = "Left";
+        public string Name { get; set; } = string.Empty;
+        public bool IsAutomatic { get; set; } = false;
+        public bool IsActive { get; set; } = true;
+        public int? DelayHours { get; set; }
+        public HashSet<int> AllowedRoleIds { get; set; } = new();
+    }
+
+    private List<CanvasNode> canvasNodes = new();
+    private List<CanvasConnection> connections = new();
+
+    private bool isDragging = false;
+    private CanvasNode? draggedNode;
+    private double startMouseX, startMouseY;
+    private double initialNodeX, initialNodeY;
+
+    private bool isConnecting = false;
+    private CanvasNode? connectingFromNode;
+    private double mouseX, mouseY;
+
+    private HashSet<CanvasNode> selectedNodes = new();
+    private HashSet<CanvasConnection> selectedConnections = new();
+
+    private Status? draggingStatusFromSidebar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var statusesFromDb = await StatusRepository.GetAllAsync();
+        availableStatuses = statusesFromDb.ToList();
+
+        var rolesFromDb = await RoleRepository.GetAllAsync();
+        AvailableRoles = rolesFromDb.ToList();
+
+        if (Id.HasValue)
+        {
+            await LoadWorkflowAsync(Id.Value);
+        }
+    }
+
+    private async Task LoadWorkflowAsync(int workflowId)
+    {
+        var workflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
+        if (workflow == null) return;
+
+        canvasNodes = workflow.WorkflowStatuses.Select(ws => new CanvasNode
+        {
+            Id = Guid.NewGuid(),
+            Status = ws.Status,
+            X = ws.PositionX,
+            Y = ws.PositionY
+        }).ToList();
+
+        connections = workflow.Transitions.Select(t => new CanvasConnection
+        {
+            Id = Guid.NewGuid(),
+            FromNodeId = canvasNodes.First(n => n.Status.Id == t.FromState).Id,
+            ToNodeId = canvasNodes.First(n => n.Status.Id == t.ToState).Id,
+            Name = t.Name,
+            IsAutomatic = t.IsAutomated == 1,
+            IsActive = t.IsActive,
+            AllowedRoleIds = t.AllowedRoles.Select(r => r.RoleId).ToHashSet()
+        }).ToList();
+    }
+
+    private void AddStatusToCanvas(Status status)
+    {
+        canvasNodes.Add(new CanvasNode
+        {
+            Status = status,
+            X = 250 + (canvasNodes.Count * 20),
+            Y = 150 + (canvasNodes.Count * 20)
+        });
+    }
+
+    private void RemoveNode(CanvasNode node)
+    {
+        connections.RemoveAll(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
+        canvasNodes.Remove(node);
+        selectedNodes.Remove(node);
+        selectedConnections.RemoveWhere(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
+    }
+
+    private void DeleteConnection(CanvasConnection conn)
+    {
+        connections.Remove(conn);
+        selectedConnections.Remove(conn);
+    }
+
+    private void ToggleRole(int roleId)
+    {
+        var selectedConnection = selectedConnections.FirstOrDefault();
+        if (selectedConnection == null) return;
+
+        if (selectedConnection.AllowedRoleIds.Contains(roleId))
+            selectedConnection.AllowedRoleIds.Remove(roleId);
+        else
+            selectedConnection.AllowedRoleIds.Add(roleId);
+    }
+
+    private void NodeMouseDown(MouseEventArgs e, CanvasNode node)
+    {
+        if (isConnecting) return;
+        isDragging = true;
+        draggedNode = node;
+
+        if (!selectedNodes.Contains(node) && !e.CtrlKey && !e.ShiftKey)
+        {
+            SelectNode(e, node);
+        }
+        else if (e.CtrlKey || e.ShiftKey)
+        {
+            SelectNode(e, node);
+        }
+
+        startMouseX = e.ClientX;
+        startMouseY = e.ClientY;
+        initialNodeX = node.X;
+        initialNodeY = node.Y;
+    }
+
+    private void CanvasPointerDown(PointerEventArgs e)
+    {
+        if (!e.CtrlKey && !e.ShiftKey)
+        {
+            selectedNodes.Clear();
+            selectedConnections.Clear();
+        }
+
+        isBoxSelecting = true;
+        boxStartX = e.ClientX;
+        boxStartY = e.ClientY - 90;
+        boxEndX = boxStartX;
+        boxEndY = boxStartY;
+    }
+
+    private void CanvasMouseMove(MouseEventArgs e)
+    {
+        mouseX = e.ClientX;
+        mouseY = e.ClientY - 90;
+
+        if (isDragging && draggedNode != null)
+        {
+            double dx = e.ClientX - startMouseX;
+            double dy = e.ClientY - startMouseY;
+
+            if (selectedNodes.Contains(draggedNode))
+            {
+                foreach (var node in selectedNodes)
+                {
+                    // در اینجا جابجایی گروهی نیاز به ذخیره آفست‌های اولیه همه نودها دارد
+                    // فعلاً فقط نود درگ‌شده حرکت می‌کند
+                }
+            }
+
+            draggedNode.X = initialNodeX + dx;
+            draggedNode.Y = initialNodeY + dy;
+        }
+        else if (isBoxSelecting)
+        {
+            boxEndX = mouseX;
+            boxEndY = mouseY;
+        }
+    }
+
+    private void CanvasMouseUp(MouseEventArgs e)
+    {
+        if (isBoxSelecting)
+        {
+            ApplyBoxSelection();
+            isBoxSelecting = false;
+        }
+        isDragging = false;
+        draggedNode = null;
+        if (isConnecting)
+        {
+            isConnecting = false;
+            connectingFromNode = null;
+        }
+    }
+
+    private void ApplyBoxSelection()
+    {
+        double left = Math.Min(boxStartX, boxEndX);
+        double top = Math.Min(boxStartY, boxEndY);
+        double right = Math.Max(boxStartX, boxEndX);
+        double bottom = Math.Max(boxStartY, boxEndY);
+
+        // ۱. انتخاب وضعیت‌ها
+        foreach (var node in canvasNodes)
+        {
+            if (node.X + 150 > left && node.X < right && node.Y + 72 > top && node.Y < bottom)
+            {
+                selectedNodes.Add(node);
+            }
+        }
+
+        // ۲. انتخاب مسیرها (Transitions)
+        foreach (var conn in connections)
+        {
+            var fromNode = canvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+            var toNode = canvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+
+            if (fromNode != null && toNode != null)
+            {
+                var sameNodeConnections = connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                int index = sameNodeConnections.IndexOf(conn);
+
+                var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index);
+
+                // بررسی اینکه آیا نقطه مرکزی مسیر داخل کادر قرار گرفته است یا خیر
+                if (center.X >= left && center.X <= right && center.Y >= top && center.Y <= bottom)
+                {
+                    selectedConnections.Add(conn);
+                }
+            }
+        }
+    }
+    private void SelectNode(MouseEventArgs e, CanvasNode node)
+    {
+        if (!e.CtrlKey && !e.ShiftKey)
+        {
+            selectedNodes.Clear();
+            selectedConnections.Clear();
+        }
+        selectedNodes.Add(node);
+    }
+
+    private void SelectConnection(MouseEventArgs e, CanvasConnection conn)
+    {
+        if (!e.CtrlKey && !e.ShiftKey)
+        {
+            selectedNodes.Clear();
+            selectedConnections.Clear();
+        }
+        selectedConnections.Add(conn);
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Delete")
+        {
+            foreach (var node in selectedNodes.ToList())
+            {
+                RemoveNode(node);
+            }
+            foreach (var conn in selectedConnections.ToList())
+            {
+                DeleteConnection(conn);
+            }
+            selectedNodes.Clear();
+            selectedConnections.Clear();
+        }
+    }
+
+    private void OnPortPointerDown(PointerEventArgs e, CanvasNode node, string port)
+    {
+        if (isConnecting)
+        {
+            if (connectingFromNode != null && connectingFromNode != node)
+            {
+                CompleteConnection(node, port);
+            }
+        }
+        else
+        {
+            isConnecting = true;
+            connectingFromNode = node;
+            activeSourcePort = port;
+            selectedNodes.Clear();
+            selectedConnections.Clear();
+        }
+    }
+
+    private void OnPortPointerUp(PointerEventArgs e, CanvasNode node, string port)
+    {
+        if (isConnecting && connectingFromNode != null && connectingFromNode != node)
+        {
+            CompleteConnection(node, port);
+        }
+    }
+
+    private void CompleteConnection(CanvasNode targetNode, string targetPort)
+    {
+        var newConn = new CanvasConnection
+        {
+            FromNodeId = connectingFromNode.Id,
+            ToNodeId = targetNode.Id,
+            SourcePort = activeSourcePort,
+            TargetPort = targetPort
+        };
+        connections.Add(newConn);
+
+        selectedNodes.Clear();
+        selectedConnections.Clear();
+        selectedConnections.Add(newConn);
+
+        isConnecting = false;
+        connectingFromNode = null;
+        activeSourcePort = "";
+    }
+
+    private string GetNodeName(Guid id) => canvasNodes.FirstOrDefault(n => n.Id == id)?.Status.Name ?? "Unknown";
+
+    private string GetBezierPath(double x1, double y1, double x2, double y2, int lineIndex = 0)
+    {
+        double midX = x1 + (x2 - x1) / 2;
+        double midY = y1 + (y2 - y1) / 2;
+
+        if (lineIndex == 0)
+            return $"M {x1} {y1} Q {midX} {midY} {x2} {y2}";
+
+        int multiplier = (lineIndex % 2 == 0) ? (lineIndex / 2) : -(lineIndex / 2 + 1);
+        double offset = multiplier * 40;
+
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double length = Math.Sqrt(dx * dx + dy * dy);
+
+        double nx = -dy / length;
+        double ny = dx / length;
+
+        double cx = midX + nx * offset;
+        double cy = midY + ny * offset;
+
+        return $"M {x1} {y1} Q {cx} {cy} {x2} {y2}";
+    }
+
+    private (double X, double Y) GetBezierCenter(double x1, double y1, double x2, double y2, int lineIndex = 0)
+    {
+        double midX = x1 + (x2 - x1) / 2;
+        double midY = y1 + (y2 - y1) / 2;
+
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double length = Math.Sqrt(dx * dx + dy * dy);
+
+        double nx = length > 0 ? -dy / length : 0;
+        double ny = length > 0 ? dx / length : 0;
+
+        if (lineIndex == 0) return (midX + nx * 20, midY + ny * 20);
+
+        int multiplier = (lineIndex % 2 == 0) ? (lineIndex / 2) : -(lineIndex / 2 + 1);
+        double offset = multiplier * 40;
+
+        double curveMidX = midX + (nx * offset) / 2;
+        double curveMidY = midY + (ny * offset) / 2;
+
+        return (curveMidX + nx * 20, curveMidY + ny * 20);
+    }
+
+    private void OnStatusDragStart(Status status) => draggingStatusFromSidebar = status;
+
+    private void CanvasOnDrop(DragEventArgs e)
+    {
+        if (draggingStatusFromSidebar != null)
+        {
+            canvasNodes.Add(new CanvasNode
+            {
+                Status = draggingStatusFromSidebar,
+                X = Math.Max(0, e.ClientX - 75),
+                Y = Math.Max(0, e.ClientY - 94)
+            });
+            draggingStatusFromSidebar = null;
+        }
+    }
+
+    private (double X, double Y) GetPortCoordinates(CanvasNode node, string port)
+    {
+        return port switch
+        {
+            "Top" => (node.X + 75, node.Y),
+            "Bottom" => (node.X + 75, node.Y + 72),
+            "Left" => (node.X, node.Y + 36),
+            "Right" => (node.X + 150, node.Y + 36),
+            _ => (node.X + 75, node.Y + 36)
+        };
+    }
+
+    private async Task SaveWorkflowAsync()
+    {
+        if (string.IsNullOrWhiteSpace(workflowName)) return;
+
+        var workflow = new Workflow
+        {
+            Name = workflowName,
+            Description = workflowDescription,
+            WorkflowStatuses = canvasNodes.Select(n => new WorkflowStatus
+            {
+                StatusId = n.Status.Id,
+                PositionX = n.X,
+                PositionY = n.Y
+            }).ToList(),
+            Transitions = connections.Select(c =>
+            {
+                var fromStatusId = canvasNodes.First(n => n.Id == c.FromNodeId).Status.Id;
+                var toStatusId = canvasNodes.First(n => n.Id == c.ToNodeId).Status.Id;
+
+                return new Transition
+                {
+                    Name = c.Name,
+                    FromState = fromStatusId,
+                    ToState = toStatusId,
+                    SourcePort = c.SourcePort,
+                    TargetPort = c.TargetPort,
+                    IsAutomated = c.IsAutomatic ? 1 : 0,
+                    IsActive = c.IsActive,
+                    AllowedRoles = c.AllowedRoleIds.Select(roleId => new TransitionRole { RoleId = roleId }).ToList()
+                };
+            }).ToList()
+        };
+
+        if (Id.HasValue)
+        {
+            workflow.Id = Id.Value;
+            await WorkflowRepository.UpdateAsync(workflow);
+        }
+        else
+        {
+            await WorkflowRepository.AddAsync(workflow);
+        }
+
+        Navigation.NavigateTo("/workflows");
+    }
+
+    private string GetTextColor(string hexColor)
+    {
+        if (string.IsNullOrEmpty(hexColor) || !hexColor.StartsWith("#") || hexColor.Length < 7)
+            return "#1e293b";
+
+        try
+        {
+            var r = Convert.ToInt32(hexColor.Substring(1, 2), 16);
+            var g = Convert.ToInt32(hexColor.Substring(3, 2), 16);
+            var b = Convert.ToInt32(hexColor.Substring(5, 2), 16);
+            var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.6 ? "#1e293b" : "#ffffff";
+        }
+        catch
+        {
+            return "#1e293b";
+        }
+    }
+
+    private void DeleteSelectedItems(object clickedItem)
+    {
+        // بررسی اینکه آیا آیتم کلیک شده در لیست انتخاب‌ها هست یا خیر
+        bool isGroupDelete = false;
+
+        if (clickedItem is CanvasNode node && selectedNodes.Contains(node)) isGroupDelete = true;
+        if (clickedItem is CanvasConnection conn && selectedConnections.Contains(conn)) isGroupDelete = true;
+
+        if (isGroupDelete)
+        {
+            // حذف همه موارد انتخاب شده (گروهی)
+            foreach (var n in selectedNodes.ToList()) RemoveNode(n);
+            foreach (var c in selectedConnections.ToList()) DeleteConnection(c);
+
+            selectedNodes.Clear();
+            selectedConnections.Clear();
+        }
+        else
+        {
+            // حذف انفرادی (اگر فقط یک آیتم کلیک شده بود)
+            if (clickedItem is CanvasNode n) RemoveNode(n);
+            if (clickedItem is CanvasConnection c) DeleteConnection(c);
+        }
+    }
+}

@@ -8,4 +8,7 @@ public class WorkflowStatus
 
     public int StatusId { get; set; }
     public Status Status { get; set; } = null!;
+
+    public double PositionX { get; set; }
+    public double PositionY { get; set; }
 }

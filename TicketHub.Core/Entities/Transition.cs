@@ -12,6 +12,9 @@ public class Transition
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
+    public string SourcePort { get; set; } = "Right"; // Top, Bottom, Right, Left
+    public string TargetPort { get; set; } = "Left";
+
     public int FromState { get; set; }
     public Status? FromStatus { get; set; }
 
