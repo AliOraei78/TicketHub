@@ -1,12 +1,11 @@
 ﻿@page "/workflows"
-@namespace TicketHub.Web.Components.Pages.Admin.Settings
+@namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
 @rendermode InteractiveServer
-@inject NavigationManager Navigation
+
 @using TicketHub.Core.Entities
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Web.Components.Pages.Admin.WorkFlows
 @using TicketHub.Application.Interfaces
-@inject IWorkflowRepository WorkflowRepository
 
 <PageTitle>مدیریت جریان‌های کاری | سامانه تیکتینگ</PageTitle>
 
@@ -60,115 +59,3 @@
                     OnPrevious="PreviousPage" />
     </div>
 </div>
-
-@code {
-    private List<Workflow> workflows = new();
-    private HashSet<int> selectedWorkflowIds = new();
-    private HashSet<int> deletingWorkflowIds = new();
-
-    private string searchTerm = string.Empty;
-    private int pageSize = 10;
-    private int currentPage = 1;
-    private int totalWorkflows = 0;
-    private bool isLoading = true; // مقدار اولیه را true قرار دهید
-
-    // این متد در زمان بارگذاری اولیه صفحه اجرا می‌شود
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadWorkflows();
-    }
-
-    private async Task LoadWorkflows()
-    {
-        isLoading = true;
-
-        try
-        {
-            // استفاده از متد GetAllWithIncludesAsync برای بارگذاری پروژه‌ها و وضعیت‌های مرتبط
-            var allWorkflows = await WorkflowRepository.GetAllWithIncludesAsync(
-                w => w.Projects,
-                w => w.WorkflowStatuses
-            );
-
-            // اعمال فیلتر جستجو (در صورت وجود)
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                allWorkflows = allWorkflows.Where(w => w.Name.Contains(searchTerm) ||
-                                                     (w.Description != null && w.Description.Contains(searchTerm)));
-            }
-
-            totalWorkflows = allWorkflows.Count();
-
-            // اعمال صفحه‌بندی (Pagination)
-            workflows = allWorkflows
-                .Skip((currentPage - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private void OpenCreateWorkflow()
-    {
-        Navigation.NavigateTo("/workflows/editor");
-    }
-
-    private void ClearSelection() => selectedWorkflowIds.Clear();
-
-    private void OpenEditWorkflow(Workflow workflow)
-    {
-        Navigation.NavigateTo($"/workflows/editor/{workflow.Id}");
-    }
-
-    private async Task DeleteWorkflow(Workflow workflow)
-    {
-        deletingWorkflowIds.Add(workflow.Id);
-        StateHasChanged();
-
-        await WorkflowRepository.DeleteAsync(workflow.Id);
-
-        deletingWorkflowIds.Remove(workflow.Id);
-        await LoadWorkflows();
-    }
-
-    private async Task OpenBulkDeleteModal()
-    {
-        // اگر کامپوننت مودال مجزا ندارید، منطق حذف گروهی به این شکل است:
-        foreach (var id in selectedWorkflowIds)
-        {
-            await WorkflowRepository.DeleteAsync(id);
-        }
-
-        selectedWorkflowIds.Clear();
-        await LoadWorkflows();
-    }
-
-    private async Task NextPage()
-    {
-        if (currentPage * pageSize < totalWorkflows)
-        {
-            currentPage++;
-            await LoadWorkflows();
-        }
-    }
-
-    private async Task PreviousPage()
-    {
-        if (currentPage > 1)
-        {
-            currentPage--;
-            await LoadWorkflows();
-        }
-    }
-
-    // متدی برای مدیریت تغییرات جستجو
-    private async Task OnSearchTermChanged(string newSearchTerm)
-    {
-        searchTerm = newSearchTerm;
-        currentPage = 1; // بازگشت به صفحه اول هنگام جستجوی جدید
-        await LoadWorkflows();
-    }
-}
