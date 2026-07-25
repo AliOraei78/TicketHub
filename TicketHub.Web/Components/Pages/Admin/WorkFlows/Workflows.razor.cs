@@ -15,8 +15,10 @@ public partial class Workflows : ComponentBase
     private HashSet<int> selectedWorkflowIds = new();
     private HashSet<int> deletingWorkflowIds = new();
 
+    private List<int> myCustomOptions = new() { 8, 16, 24, 32 };
+
     private string searchTerm = string.Empty;
-    private int pageSize = 10;
+    private int pageSize = 8;
     private int currentPage = 1;
     private int totalWorkflows = 0;
     private bool isLoading = true;
