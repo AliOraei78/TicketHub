@@ -74,6 +74,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
                 Y = ws.PositionY
             }).ToList();
 
+            // بخش map کردن transitions
             connections = workflow.Transitions.Select(t => new CanvasConnection
             {
                 Id = Guid.NewGuid(),
@@ -82,6 +83,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
                 Name = t.Name,
                 IsAutomatic = t.IsAutomated == 1,
                 IsActive = t.IsActive,
+                ActivateAt = t.ActivateAt,
                 AllowedRoleIds = t.AllowedRoles.Select(r => r.RoleId).ToHashSet()
             }).ToList();
         }
@@ -281,14 +283,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
 
         private void OnPortPointerDown(PointerEventArgs e, CanvasNode node, string port)
         {
-            if (isConnecting)
-            {
-                if (connectingFromNode != null && connectingFromNode != node)
-                {
-                    CompleteConnection(node, port);
-                }
-            }
-            else
+            if (!isConnecting)
             {
                 isConnecting = true;
                 connectingFromNode = node;
@@ -431,6 +426,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
                         TargetPort = c.TargetPort,
                         IsAutomated = c.IsAutomatic ? 1 : 0,
                         IsActive = c.IsActive,
+                        ActivateAt = c.ActivateAt,
                         AllowedRoles = c.AllowedRoleIds.Select(roleId => new TransitionRole { RoleId = roleId }).ToList()
                     };
                 }).ToList()

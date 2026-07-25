@@ -8,14 +8,14 @@
 
 <div class="flex h-full w-full">
 
-    <StatusSidebar Statuses="availableStatuses" 
-                   OnDragStart="OnStatusDragStart" 
+    <StatusSidebar Statuses="availableStatuses"
+                   OnDragStart="OnStatusDragStart"
                    OnStatusAdd="AddStatusToCanvas" />
 
     <div class="flex-1 flex flex-col relative overflow-hidden">
 
-        <WorkflowToolbar @bind-Name="workflowName" 
-                         @bind-Description="workflowDescription" 
+        <WorkflowToolbar @bind-Name="workflowName"
+                         @bind-Description="workflowDescription"
                          OnSave="SaveWorkflowAsync" />
 
         <div class="flex-1 relative bg-slate-50 overflow-hidden canvas-pattern outline-none"
@@ -46,9 +46,33 @@
 
                 @foreach (var conn in connections)
                 {
-                    // منطق رسم خطوط SVG (کمی پیچیده است، فعلاً اینجا می‌ماند تا زمانی که یک SVG Generator کامپوننت بسازید)
-                    // ... (همان کدهای قبلی <g> و <path> برای رسم خط)
+                    var fromNode = canvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+                    var toNode = canvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+                    if (fromNode != null && toNode != null)
+                    {
+                        bool isSelected = selectedConnections.Contains(conn);
+                        string strokeColor = isSelected ? "#3b82f6" : "#cbd5e1";
+                        string marker = isSelected ? "url(#arrowhead-active)" : "url(#arrowhead)";
+
+                        var sameNodeConnections = connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                        int index = sameNodeConnections.IndexOf(conn);
+
+                        var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                        var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                        <g @key="conn.Id" @onclick:stopPropagation="true">
+                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index)"
+                                  stroke="transparent" stroke-width="15" fill="none" class="pointer-events-auto cursor-pointer"
+                                  @onpointerdown="e => SelectConnection(e, conn)"
+                                  @onpointerdown:stopPropagation="true" />
+
+                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index)"
+                                  stroke="@strokeColor" stroke-width="2.5" fill="none" marker-end="@marker"
+                                  class="transition-colors duration-200" stroke-dasharray="@(conn.IsAutomatic ? "5,5" : "none")" />
+                        </g>
+                    }
                 }
+
                 @if (isConnecting && connectingFromNode != null)
                 {
                     var p1 = GetPortCoordinates(connectingFromNode, activeSourcePort);
@@ -58,7 +82,25 @@
 
             @foreach (var conn in connections)
             {
-                // دکمه حذف مسیرها (کدهای قبلی)
+                var fromNode = canvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+                var toNode = canvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+                if (fromNode != null && toNode != null)
+                {
+                    @if (selectedConnections.Contains(conn))
+                    {
+                        var sameNodeConnections = connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                        int index = sameNodeConnections.IndexOf(conn);
+
+                        var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                        var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                        var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index);
+
+                        <button @key="@($"del-conn-{conn.Id}")" @onpointerdown="() => DeleteSelectedItems(conn)" @onpointerdown:stopPropagation="true" class="absolute w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto" style="@($"left: {center.X - 12}px; top: {center.Y - 12}px;")" title="حذف مسیر">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    }
+                }
             }
 
             @foreach (var node in canvasNodes)
@@ -72,7 +114,7 @@
                                      TextColor="@GetTextColor(node.Status.ColorCode)"
                                      OnPointerDown="args => NodeMouseDown(args.e, args.node)"
                                      OnClick="args => SelectNode(args.e, args.node)"
-                                     OnDelete="DeleteSelectedItems"
+                                     OnDelete="n => DeleteSelectedItems(n)"
                                      OnPortPointerDown="args => OnPortPointerDown(args.e, args.node, args.port)"
                                      OnPortPointerUp="args => OnPortPointerUp(args.e, args.node, args.port)" />
             }

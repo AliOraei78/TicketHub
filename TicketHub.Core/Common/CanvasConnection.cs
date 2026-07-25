@@ -10,6 +10,6 @@ public class CanvasConnection
     public string Name { get; set; } = string.Empty;
     public bool IsAutomatic { get; set; } = false;
     public bool IsActive { get; set; } = true;
-    public int? DelayHours { get; set; }
+    public DateTime? ActivateAt { get; set; }
     public HashSet<int> AllowedRoleIds { get; set; } = new();
 }

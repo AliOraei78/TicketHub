@@ -1,14 +1,18 @@
 ﻿@using TicketHub.Core.Entities
 @using TicketHub.Core.Common
 
-<div class="absolute left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-white border-r border-slate-200 z-30 shadow-2xl transition-transform duration-300 flex flex-col @(Connection != null ? "translate-x-0" : "-translate-x-full")">
+<div class="absolute left-4 top-20 h-[calc(100vh-6rem)] w-80 bg-white border border-slate-200 rounded-2xl z-40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300 flex flex-col overflow-hidden @(Connection != null ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none")">
+
     @if (Connection != null)
     {
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
-            <div>
-                <h2 class="font-bold text-slate-800">مدیریت انتقال وضعیت</h2>
-            </div>
-            <button @onclick="OnClose" class="w-8 h-8 rounded-lg hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">بستن</button>
+        <!-- هدر با دکمه بستن جدید -->
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 flex-shrink-0">
+            <h2 class="font-bold text-sm text-slate-800">مدیریت انتقال وضعیت</h2>
+            <button @onclick="OnClose" class="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-rose-100 hover:text-rose-600 text-slate-500 flex items-center justify-center transition-colors shadow-sm" title="بستن">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
 
         <div class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
@@ -21,6 +25,24 @@
             <div>
                 <label>عنوان انتقال</label>
                 <input type="text" @bind="Connection.Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl" />
+            </div>
+
+            <div class="flex items-center gap-4 pt-1">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" @bind="Connection.IsActive" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                    <span class="text-sm font-medium text-slate-700">فعال</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" @bind="Connection.IsAutomatic" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                    <span class="text-sm font-medium text-slate-700">انتقال خودکار</span>
+                </label>
+            </div>
+
+            <!-- ورودی تاریخ اصلاح شده برای شمسی -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">تاریخ فعال‌سازی</label>
+                <!-- از یک پلاگین JS تقویم شمسی مانند MD.BootstrapPersianDateTimePicker استفاده کنید -->
+                <input type="text" dir="ltr" placeholder="1403/05/12 14:30" @bind="Connection.ActivateAt" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white rounded-xl text-sm transition-colors outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" data-jdp />
             </div>
 
             <div class="pt-2">
