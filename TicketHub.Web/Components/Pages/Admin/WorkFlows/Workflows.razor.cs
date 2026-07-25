@@ -107,4 +107,11 @@ public partial class Workflows : ComponentBase
         currentPage = 1;
         await LoadWorkflows();
     }
+
+    private async Task OnPageSizeChanged(int newSize)
+    {
+        pageSize = newSize;
+        currentPage = 1;
+        await LoadWorkflows();
+    }
 }

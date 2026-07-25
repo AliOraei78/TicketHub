@@ -11,13 +11,13 @@ else if (!Workflows.Any())
 }
 else
 {
-    <div class="grid grid-rows-2 grid-flow-col gap-6 w-max pb-2">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
         @foreach (var workflow in Workflows)
         {
             bool isSelected = SelectedIds.Contains(workflow.Id);
             bool isDeleting = DeletingIds.Contains(workflow.Id);
 
-            <div class="w-[280px] lg:w-[320px] @($"group relative bg-white rounded-3xl p-5 border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col gap-4 overflow-hidden {(isSelected ? "border-indigo-400 ring-2 ring-indigo-50" : "border-gray-100 hover:border-indigo-200")} {(isDeleting ? "opacity-50 scale-95" : "")}")">
+            <div class="w-full @($"group relative bg-white rounded-3xl p-5 border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col gap-4 overflow-hidden {(isSelected ? "border-indigo-400 ring-2 ring-indigo-50" : "border-gray-100 hover:border-indigo-200")} {(isDeleting ? "opacity-50 scale-95" : "")}")">
 
                 <!-- Hover Blob Effect -->
                 <div class="absolute -top-12 -left-12 w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none"></div>
