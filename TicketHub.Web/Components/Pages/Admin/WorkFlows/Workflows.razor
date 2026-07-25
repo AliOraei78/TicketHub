@@ -9,10 +9,9 @@
 
 <PageTitle>مدیریت جریان‌های کاری | سامانه تیکتینگ</PageTitle>
 
-<div class="container mx-auto p-4 md:p-6 lg:max-w-7xl flex flex-col gap-6 relative" dir="rtl">
-
-    <PageHeader Title="جریان‌های کاری (Workflows)"
-                Description="طراحی و مدیریت مسیرهای گردش کار به شکل نوین."
+<div class="container mx-auto p-4 md:p-8 flex flex-col gap-6 relative" dir="rtl">
+    <PageHeader Title="جریان‌های کاری"
+                Description="طراحی و مدیریت مسیرهای جریان کار به شکل نوین."
                 ButtonText="ایجاد جریان کاری جدید"
                 ButtonThemeClass="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30 border-0"
                 OnActionClick="OpenCreateWorkflow">
@@ -25,12 +24,12 @@
         </Icon>
     </PageHeader>
 
-    <div class="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between sticky top-4 z-20">
+        <!-- در فایل Workflows.razor قسمت مربوط به ListFilterToolbar را با این کد جایگزین کنید -->
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-2">
         <div class="w-full md:w-[400px]">
-            <ListFilterToolbar @bind-SearchTerm="searchTerm"
-                               @bind-PageSize="pageSize"
-                               SearchPlaceholder="جستجوی جریان کاری..."
-                               ItemName="گردش کار" />
+            <SearchBox SearchTerm="@searchTerm"
+                         OnSearchChanged="OnSearchTermChanged"
+                         Placeholder="جستجوی جریان کاری..." />
         </div>
 
         <div class="w-full md:w-auto min-h-[40px] flex items-center transition-all duration-300">
@@ -43,17 +42,21 @@
         </div>
     </div>
 
-    <WorkflowCardGrid Workflows="workflows"
-                      IsLoading="isLoading"
-                      @bind-SelectedIds="selectedWorkflowIds"
-                      DeletingIds="deletingWorkflowIds"
-                      OnEdit="OpenEditWorkflow"
-                      OnDelete="DeleteWorkflow" />
+    <div class="overflow-x-auto pb-4">
+        <div class="min-w-[1000px]">
+            <WorkflowCardGrid Workflows="workflows"
+                              IsLoading="isLoading"
+                              @bind-SelectedIds="selectedWorkflowIds"
+                              DeletingIds="deletingWorkflowIds"
+                              OnEdit="OpenEditWorkflow"
+                              OnDelete="DeleteWorkflow" />
+        </div>
+    </div>
 
     <div class="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm mt-2">
         <Pagination CurrentPage="currentPage"
                     PageSize="pageSize"
-                    ItemName="گردش کار"
+                    ItemName="جریان کار"
                     TotalItems="totalWorkflows"
                     OnNext="NextPage"
                     OnPrevious="PreviousPage" />
