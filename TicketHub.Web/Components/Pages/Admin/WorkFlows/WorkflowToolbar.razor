@@ -2,48 +2,34 @@
 <div class="h-[90px] bg-white border-b border-slate-200 px-6 py-3 z-20 shadow-sm flex-shrink-0 flex items-center">
     <div class="flex justify-between items-center max-w-5xl mx-auto w-full gap-4">
         <div class="flex flex-col gap-1 flex-1">
-            <input type="text" @bind="Name" @bind:event="oninput" placeholder="نام جریان کاری..." class="text-xl font-bold text-slate-800 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
-            <input type="text" @bind="Description" @bind:event="oninput" placeholder="توضیحات جریان کاری (اختیاری)..." class="text-sm text-slate-500 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
+            <input type="text" value="@Name" @oninput="OnNameInput" placeholder="نام جریان کاری..." class="text-xl font-bold text-slate-800 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
+            <input type="text" value="@Description" @oninput="OnDescriptionInput" placeholder="توضیحات جریان کاری (اختیاری)..." class="text-sm text-slate-500 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
         </div>
         <div class="flex gap-2">
             <a href="/workflows" class="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 text-sm font-medium transition-colors">انصراف و بازگشت</a>
-            <button @onclick="OnSave" class="px-5 py-2.5 rounded-xl text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium transition-colors shadow-lg shadow-blue-500/30">ذخیره گردش کار</button>
+            <button type="button" @onclick="() => OnSave.InvokeAsync()" class="px-5 py-2.5 rounded-xl text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium transition-colors shadow-lg shadow-blue-500/30">ذخیره جریان کار</button>
         </div>
     </div>
 </div>
 
 @code {
-    private string _name = "";
-    [Parameter]
-    public string Name
-    {
-        get => _name;
-        set
-        {
-            if (_name != value)
-            {
-                _name = value;
-                NameChanged.InvokeAsync(value);
-            }
-        }
-    }
+    [Parameter] public string Name { get; set; } = "";
     [Parameter] public EventCallback<string> NameChanged { get; set; }
 
-    private string _description = "";
-    [Parameter]
-    public string Description
-    {
-        get => _description;
-        set
-        {
-            if (_description != value)
-            {
-                _description = value;
-                DescriptionChanged.InvokeAsync(value);
-            }
-        }
-    }
+    [Parameter] public string Description { get; set; } = "";
     [Parameter] public EventCallback<string> DescriptionChanged { get; set; }
 
     [Parameter] public EventCallback OnSave { get; set; }
+
+    private async Task OnNameInput(ChangeEventArgs e)
+    {
+        Name = e.Value?.ToString() ?? "";
+        await NameChanged.InvokeAsync(Name);
+    }
+
+    private async Task OnDescriptionInput(ChangeEventArgs e)
+    {
+        Description = e.Value?.ToString() ?? "";
+        await DescriptionChanged.InvokeAsync(Description);
+    }
 }

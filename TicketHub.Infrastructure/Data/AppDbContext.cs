@@ -78,15 +78,20 @@ namespace TicketHub.Infrastructure.Data
             modelBuilder.Entity<Attachment>()
                 .HasOne(a => a.TicketHistory).WithMany(th => th.Attachments).HasForeignKey(a => a.TicketHistoryId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Transition>()
-                .HasOne(t => t.Workflow)
-                .WithMany(w => w.Transitions)
-                .HasForeignKey(t => t.WorkflowId)
-                .OnDelete(DeleteBehavior.Restrict);
+                            .HasOne(t => t.Workflow)
+                            .WithMany(w => w.Transitions)
+                            .HasForeignKey(t => t.WorkflowId)
+                            .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<TicketHistory>()
                 .HasOne(th => th.WorkFlow)
                 .WithMany(w => w.TicketHistories)
                 .HasForeignKey(th => th.WorkFlowId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<WorkflowStatus>()
+                .HasOne(ws => ws.Workflow)
+                .WithMany(w => w.WorkflowStatuses)
+                .HasForeignKey(ws => ws.WorkflowId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

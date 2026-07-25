@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketHub.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TicketHub.Infrastructure.Data;
 namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260725144508_UpdatedTransition")]
+    partial class UpdatedTransition
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -673,7 +676,7 @@ namespace TicketHub.Infrastructure.Migrations
                     b.HasOne("TicketHub.Core.Entities.Workflow", "WorkFlow")
                         .WithMany("TicketHistories")
                         .HasForeignKey("WorkFlowId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("FromStatus");
 
@@ -785,7 +788,7 @@ namespace TicketHub.Infrastructure.Migrations
                     b.HasOne("TicketHub.Core.Entities.Workflow", "Workflow")
                         .WithMany("WorkflowStatuses")
                         .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Status");

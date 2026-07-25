@@ -21,4 +21,29 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
                 .ThenInclude(t => t.AllowedRoles)
             .FirstOrDefaultAsync(w => w.Id == id);
     }
+
+    public override async Task DeleteAsync(int id)
+    {
+        var entity = await _dbSet
+            .Include(w => w.Transitions)
+            .Include(w => w.WorkflowStatuses)
+            .FirstOrDefaultAsync(w => w.Id == id);
+
+        if (entity != null)
+        {
+            if (entity.Transitions.Any())
+            {
+                _context.Set<Transition>().RemoveRange(entity.Transitions);
+            }
+
+            if (entity.WorkflowStatuses.Any())
+            {
+                _context.Set<WorkflowStatus>().RemoveRange(entity.WorkflowStatuses);
+            }
+
+            _dbSet.Remove(entity);
+            await SaveChangesAsync();
+        }
+    }
+
 }
