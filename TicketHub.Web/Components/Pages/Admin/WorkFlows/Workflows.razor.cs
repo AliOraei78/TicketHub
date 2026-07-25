@@ -33,7 +33,8 @@ public partial class Workflows : ComponentBase
         {
             var allWorkflows = await WorkflowRepository.GetAllWithIncludesAsync(
                 w => w.Projects,
-                w => w.WorkflowStatuses
+                w => w.WorkflowStatuses,
+                w => w.Transitions // این خط اضافه شد
             );
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -54,7 +55,6 @@ public partial class Workflows : ComponentBase
             isLoading = false;
         }
     }
-
     private void OpenCreateWorkflow() => Navigation.NavigateTo("/workflows/editor");
 
     private void ClearSelection() => selectedWorkflowIds.Clear();

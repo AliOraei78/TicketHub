@@ -46,18 +46,22 @@ else
 
                 <!-- Description -->
                 <p class="text-sm text-gray-500 line-clamp-2 min-h-[2.5rem] z-10 leading-relaxed">
-                    @(string.IsNullOrEmpty(workflow.Description) ? "توضیحاتی برای این گردش کار ثبت نشده است." : workflow.Description)
+                    @(string.IsNullOrEmpty(workflow.Description) ? "توضیحاتی برای این گردش کار ثبت نشده است." : (workflow.Description.Length > 30 ? workflow.Description[..30] + "..." : workflow.Description))
                 </p>
 
                 <!-- Stats Badges -->
-                <div class="flex gap-2 z-10 mt-auto pt-2">
-                    <div class="flex-1 bg-gray-50/80 rounded-xl p-2.5 flex items-center justify-center gap-2 border border-gray-100 group-hover:bg-white transition-colors">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                        <span class="text-xs font-bold text-gray-600">@workflow.Projects?.Count <span class="font-normal text-gray-400">پروژه</span></span>
-                    </div>
-                    <div class="flex-1 bg-gray-50/80 rounded-xl p-2.5 flex items-center justify-center gap-2 border border-gray-100 group-hover:bg-white transition-colors">
+                <div class="flex gap-1.5 z-10 mt-auto pt-2">
+                    <div class="flex-1 bg-gray-50/80 rounded-xl p-2 flex items-center justify-center gap-1.5 border border-gray-100 group-hover:bg-white transition-colors">
                         <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]"></span>
-                        <span class="text-xs font-bold text-gray-600">@workflow.WorkflowStatuses?.Count <span class="font-normal text-gray-400">وضعیت</span></span>
+                        <span class="text-[11px] font-bold text-gray-600 whitespace-nowrap">@(workflow.WorkflowStatuses?.Count ?? 0) <span class="font-normal text-gray-400">وضعیت</span></span>
+                    </div>
+                    <div class="flex-1 bg-gray-50/80 rounded-xl p-2 flex items-center justify-center gap-1.5 border border-gray-100 group-hover:bg-white transition-colors">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                        <span class="text-[11px] font-bold text-gray-600 whitespace-nowrap">@(workflow.Transitions?.Count ?? 0) <span class="font-normal text-gray-400">انتقال</span></span>
+                    </div>
+                    <div class="flex-1 bg-gray-50/80 rounded-xl p-2 flex items-center justify-center gap-1.5 border border-gray-100 group-hover:bg-white transition-colors">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                        <span class="text-[11px] font-bold text-gray-600 whitespace-nowrap">@(workflow.Projects?.Count ?? 0) <span class="font-normal text-gray-400">پروژه</span></span>
                     </div>
                 </div>
 
