@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
 
@@ -62,5 +63,16 @@ namespace TicketHub.Infrastructure.Repositories
         }
 
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+
+        // به انتهای کلاس WorkflowRepository اضافه کنید
+        public async Task<List<Project>> GetProjectsAsync()
+        {
+            return await _context.Set<Project>().ToListAsync();
+        }
+
+        public async Task<List<WorkflowStatus>> GetStatusesAsync()
+        {
+            return await _context.Set<WorkflowStatus>().ToListAsync();
+        }
     }
 }

@@ -31,8 +31,25 @@
                            PageSize="@pageSize"
                            PageSizeChanged="OnPageSizeChanged"
                            SearchPlaceholder="جستجوی جریان کاری..."
-                           ItemName="جریان کار" 
-                           PageSizeOptions= "myCustomOptions" />
+                           ItemName="جریان کار"
+                           PageSizeOptions="myCustomOptions">
+
+            <MultiSelectDropdown TItem="Project" TValue="int"
+                                 Placeholder="پروژه..."
+                                 Items="availableProjects"
+                                 SelectedValues="selectedFilterProjectIds"
+                                 SelectedValuesChanged="FilterProjectsChanged"
+                                 ValueSelector="p => p.Id"
+                                 DisplaySelector="p => p.Name" />
+
+            <MultiSelectDropdown TItem="Status" TValue="int"
+                                 Placeholder="وضعیت..."
+                                 Items="availableStatuses"
+                                 SelectedValues="selectedFilterStatusIds"
+                                 SelectedValuesChanged="FilterStatusesChanged"
+                                 ValueSelector="s => s.Id"
+                                 DisplaySelector="s => s.Name" />
+        </ListFilterToolbar>
 
         @if (selectedWorkflowIds.Any())
         {

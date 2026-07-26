@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @using TicketHub.Web.Components.Pages.Admin.Users
 @using TicketHub.Web.Components.Shared
+@using TicketHub.Core.Entities
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
@@ -19,7 +20,32 @@
         <ListFilterToolbar @bind-SearchTerm="searchTerm"
                            @bind-PageSize="pageSize"
                            SearchPlaceholder="جستجوی نام یا ایمیل..."
-                           ItemName="کاربر" />
+                           ItemName="کاربر">
+
+            <MultiSelectDropdown TItem="Role" TValue="int"
+                                 Placeholder="نقش..."
+                                 Items="availableRoles"
+                                 SelectedValues="selectedFilterRoleIds"
+                                 SelectedValuesChanged="FilterRolesChanged"
+                                 ValueSelector="r => r.Id"
+                                 DisplaySelector="r => r.Name" />
+
+            <MultiSelectDropdown TItem="Project" TValue="int"
+                                 Placeholder="پروژه..."
+                                 Items="availableProjects"
+                                 SelectedValues="selectedFilterProjectIds"
+                                 SelectedValuesChanged="FilterProjectsChanged"
+                                 ValueSelector="p => p.Id"
+                                 DisplaySelector="p => p.Name" />
+
+            <MultiSelectDropdown TItem="StatusOption" TValue="bool"
+                                 Placeholder="وضعیت..."
+                                 Items="statusOptions"
+                                 SelectedValues="selectedFilterStatuses"
+                                 SelectedValuesChanged="FilterStatusesChanged"
+                                 ValueSelector="s => s.Value"
+                                 DisplaySelector="s => s.Name" />
+        </ListFilterToolbar>
     </div>
 
     <BulkActionToolbar SelectedCount="selectedUserIds.Count"

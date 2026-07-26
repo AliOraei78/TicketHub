@@ -15,6 +15,12 @@ public partial class Workflows : ComponentBase
     private HashSet<int> selectedWorkflowIds = new();
     private HashSet<int> deletingWorkflowIds = new();
 
+    private List<Project> availableProjects = new();
+    private List<Status> availableStatuses = new();
+
+    private List<int> selectedFilterProjectIds = new();
+    private List<int> selectedFilterStatusIds = new();
+
     private List<int> myCustomOptions = new() { 8, 16, 24, 32 };
 
     private string searchTerm = string.Empty;
@@ -25,6 +31,8 @@ public partial class Workflows : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        availableProjects = await WorkflowRepository.GetProjectsAsync();
+        availableStatuses = await WorkflowRepository.GetAllStatusesAsync();
         await LoadWorkflows();
     }
 
@@ -45,6 +53,16 @@ public partial class Workflows : ComponentBase
                                                      (w.Description != null && w.Description.Contains(searchTerm)));
             }
 
+            if (selectedFilterProjectIds.Any())
+            {
+                allWorkflows = allWorkflows.Where(w => w.Projects.Any(p => selectedFilterProjectIds.Contains(p.Id)));
+            }
+
+            if (selectedFilterStatusIds.Any())
+            {
+                allWorkflows = allWorkflows.Where(w => w.WorkflowStatuses.Any(s => selectedFilterStatusIds.Contains(s.StatusId)));
+            }
+
             totalWorkflows = allWorkflows.Count();
 
             workflows = allWorkflows
@@ -60,6 +78,9 @@ public partial class Workflows : ComponentBase
     private void OpenCreateWorkflow() => Navigation.NavigateTo("/workflows/editor");
 
     private void ClearSelection() => selectedWorkflowIds.Clear();
+
+    private async Task FilterProjectsChanged(List<int> v) { selectedFilterProjectIds = v; currentPage = 1; await LoadWorkflows(); }
+    private async Task FilterStatusesChanged(List<int> v) { selectedFilterStatusIds = v; currentPage = 1; await LoadWorkflows(); }
 
     private void OpenEditWorkflow(Workflow workflow) => Navigation.NavigateTo($"/workflows/editor/{workflow.Id}");
 

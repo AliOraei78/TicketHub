@@ -46,4 +46,9 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         }
     }
 
+    public async Task<List<Status>> GetAllStatusesAsync()
+    {
+        return await _context.Set<Status>().ToListAsync();
+    }
+
 }
