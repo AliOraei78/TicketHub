@@ -21,7 +21,6 @@ public partial class Users : ComponentBase
 
     private List<int> selectedFilterRoleIds = new();
     private List<int> selectedFilterProjectIds = new();
-    private List<bool> selectedFilterStatuses = new();
 
     private List<Role> availableRoles = new();
     private List<Project> availableProjects = new();
@@ -59,16 +58,16 @@ public partial class Users : ComponentBase
 
     private string? formErrorMessage;
 
-    public class StatusOption { public bool Value { get; set; } public string Name { get; set; } = string.Empty; }
-    private List<StatusOption> statusOptions = new()
-{
-    new() { Value = true, Name = "فعال" },
-    new() { Value = false, Name = "غیرفعال" }
-};
+    private bool? selectedFilterStatus = null;
 
     private async Task FilterRolesChanged(List<int> v) { selectedFilterRoleIds = v; currentPage = 1; await LoadUsers(); }
     private async Task FilterProjectsChanged(List<int> v) { selectedFilterProjectIds = v; currentPage = 1; await LoadUsers(); }
-    private async Task FilterStatusesChanged(List<bool> v) { selectedFilterStatuses = v; currentPage = 1; await LoadUsers(); }
+    private async Task FilterByStatus(bool? status)
+    {
+        selectedFilterStatus = status;
+        currentPage = 1;
+        await LoadUsers();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,8 +99,10 @@ public partial class Users : ComponentBase
         if (selectedFilterProjectIds.Any())
             query = query.Where(u => u.UserProjects.Any(up => selectedFilterProjectIds.Contains(up.ProjectId)));
 
-        if (selectedFilterStatuses.Any())
-            query = query.Where(u => selectedFilterStatuses.Contains(u.IsActive));
+        if (selectedFilterStatus.HasValue)
+        {
+            query = query.Where(u => u.IsActive == selectedFilterStatus.Value);
+        }
 
         totalUsers = await query.CountAsync();
 

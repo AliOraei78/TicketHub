@@ -38,13 +38,18 @@
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
 
-            <MultiSelectDropdown TItem="StatusOption" TValue="bool"
-                                 Placeholder="وضعیت..."
-                                 Items="statusOptions"
-                                 SelectedValues="selectedFilterStatuses"
-                                 SelectedValuesChanged="FilterStatusesChanged"
-                                 ValueSelector="s => s.Value"
-                                 DisplaySelector="s => s.Name" />
+            <!-- فیلتر وضعیت به صورت Segmented Control -->
+            <div class="inline-flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
+                <button type="button" @onclick="() => FilterByStatus(null)" class="@(selectedFilterStatus == null ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                    همه
+                </button>
+                <button type="button" @onclick="() => FilterByStatus(true)" class="@(selectedFilterStatus == true ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                    فعال
+                </button>
+                <button type="button" @onclick="() => FilterByStatus(false)" class="@(selectedFilterStatus == false ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                    غیرفعال
+                </button>
+            </div>
         </ListFilterToolbar>
     </div>
 
