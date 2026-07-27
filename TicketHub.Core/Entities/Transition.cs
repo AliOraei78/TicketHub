@@ -32,4 +32,5 @@ public class Transition
     // --- Navigation Properties ---
     public ICollection<TransitionRole> AllowedRoles { get; set; } = new List<TransitionRole>();
     public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
+    public ICollection<TransitionField> TransitionFields { get; set; } = new List<TransitionField>();
 }

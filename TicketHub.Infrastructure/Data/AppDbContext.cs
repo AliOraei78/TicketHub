@@ -26,6 +26,8 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<Priority> Priorities { get; set; }
         public DbSet<Workflow> Workflows { get; set; }
         public DbSet<WorkflowStatus> WorkflowStatuses { get; set; }
+        public DbSet<FieldType> FieldTypes { get; set; }
+        public DbSet<TransitionField> TransitionFields { get; set; }
 
         // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
         // کل متد OnModelCreating را با این کد جایگزین کن:
@@ -104,6 +106,19 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany(w => w.WorkflowStatuses)
                 .HasForeignKey(ws => ws.WorkflowId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // 7. تنظیم روابط TransitionField
+            modelBuilder.Entity<TransitionField>()
+                .HasOne(tf => tf.Transition)
+                .WithMany(t => t.TransitionFields)
+                .HasForeignKey(tf => tf.TransitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TransitionField>()
+                .HasOne(tf => tf.FieldType)
+                .WithMany(ft => ft.TransitionFields)
+                .HasForeignKey(tf => tf.FieldTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

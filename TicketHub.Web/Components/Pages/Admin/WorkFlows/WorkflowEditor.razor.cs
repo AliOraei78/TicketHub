@@ -89,7 +89,19 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
                 IsAutomatic = t.IsAutomated == 1,
                 IsActive = t.IsActive,
                 ActivateAt = t.ActivateAt,
-                AllowedRoleIds = t.AllowedRoles.Select(r => r.RoleId).ToHashSet()
+                AllowedRoleIds = t.AllowedRoles.Select(r => r.RoleId).ToHashSet(),
+                CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
+                {
+                    Id = tf.Id,
+                    FieldTypeId = tf.FieldTypeId,
+                    FieldName = tf.FieldName,
+                    IsRequired = tf.IsRequired,
+                    SortOrder = tf.SortOrder,
+                    Options = tf.Options,
+                    Placeholder = tf.Placeholder,
+                    DefaultValue = tf.DefaultValue,
+                    IsActive = tf.IsActive
+                }).ToList()
             }).ToList();
         }
 

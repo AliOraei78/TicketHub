@@ -12,4 +12,7 @@ public class CanvasConnection
     public bool IsActive { get; set; } = true;
     public DateTime? ActivateAt { get; set; }
     public HashSet<int> AllowedRoleIds { get; set; } = new();
+
+    // پراپرتی جدید برای نگهداری فیلدهای کاستوم
+    public List<CanvasTransitionField> CustomFields { get; set; } = new();
 }
