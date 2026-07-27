@@ -19,7 +19,24 @@
         </Icon>
     </PageHeader>
 
-    <SearchBox Placeholder="جست و جوی عنوان..." OnSearchChanged="HandleSearch" />
+    <div class="flex flex-col sm:flex-row gap-3 items-center mb-2">
+        <!-- فیلتر وضعیت به صورت Segmented Control -->
+        <div class="inline-flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
+            <button type="button" @onclick="() => FilterByStatus(null)" class="@(selectedFilterStatus == null ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                همه
+            </button>
+            <button type="button" @onclick="() => FilterByStatus(true)" class="@(selectedFilterStatus == true ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                فعال
+            </button>
+            <button type="button" @onclick="() => FilterByStatus(false)" class="@(selectedFilterStatus == false ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                غیرفعال
+            </button>
+        </div>
+
+        <div class="w-full sm:w-72">
+            <SearchBox Placeholder="جست و جوی عنوان..." OnSearchChanged="HandleSearch" />
+        </div>
+    </div>
 
     @if (projects == null)
     {
@@ -98,14 +115,20 @@
     private Project? projectToDelete;
     private bool isDeleteModalOpen = false;
 
-    // Search properties
+    // Search & Filter properties
     private string searchTerm = string.Empty;
+    private bool? selectedFilterStatus = null;
 
-    // Computed property to filter projects based on search term
+    // Computed property to filter projects based on search term and status
     private IEnumerable<Project> FilteredProjects =>
-        string.IsNullOrWhiteSpace(searchTerm)
-            ? projects
-            : projects.Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        projects
+        .Where(p => string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(p => selectedFilterStatus == null || p.IsActive == selectedFilterStatus);
+
+    private void FilterByStatus(bool? status)
+    {
+        selectedFilterStatus = status;
+    }
 
     private void HandleSearch(string term)
     {

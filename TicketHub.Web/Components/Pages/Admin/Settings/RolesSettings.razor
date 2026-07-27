@@ -64,9 +64,24 @@
                 <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 class="font-bold text-gray-800 text-lg">لیست نقش‌های موجود</h3>
 
-                    <!-- Search Field Component -->
-                    <div class="w-full sm:w-72">
-                        <SearchBox Placeholder="جستجوی نقش..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+                        <!-- فیلتر وضعیت به صورت Segmented Control -->
+                        <div class="inline-flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
+                            <button type="button" @onclick="() => FilterByStatus(null)" class="@(selectedFilterStatus == null ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                                همه
+                            </button>
+                            <button type="button" @onclick="() => FilterByStatus(true)" class="@(selectedFilterStatus == true ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                                فعال
+                            </button>
+                            <button type="button" @onclick="() => FilterByStatus(false)" class="@(selectedFilterStatus == false ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700") px-4 py-1.5 text-sm font-medium rounded-lg smooth-transition">
+                                غیرفعال
+                            </button>
+                        </div>
+
+                        <!-- Search Field Component -->
+                        <div class="w-full sm:w-72">
+                            <SearchBox Placeholder="جستجوی نقش..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                        </div>
                     </div>
                 </div>
                 <div class="p-0">
@@ -157,8 +172,9 @@
     private string? successMessage;
     private bool isError = false;
 
-    // متغیرهای جستجو
+    // متغیرهای جستجو و فیلتر وضعیت
     private string searchTerm = string.Empty;
+    private bool? selectedFilterStatus = null;
 
     // متغیرهای حالت ویرایش
     private bool isEditing = false;
@@ -168,11 +184,16 @@
     private bool showDeleteModal = false;
     private Role? roleToDelete;
 
-    // فیلتر کردن نقش‌ها بر اساس کلمه جستجو شده
+    // فیلتر کردن نقش‌ها بر اساس کلمه جستجو شده و وضعیت فعال/غیرفعال بودن
     private IEnumerable<Role> FilteredRoles =>
-        string.IsNullOrWhiteSpace(searchTerm)
-            ? (roles ?? Enumerable.Empty<Role>())
-            : (roles ?? Enumerable.Empty<Role>()).Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        (roles ?? Enumerable.Empty<Role>())
+        .Where(r => string.IsNullOrWhiteSpace(searchTerm) || r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(r => selectedFilterStatus == null || r.IsActive == selectedFilterStatus);
+
+    private void FilterByStatus(bool? status)
+    {
+        selectedFilterStatus = status;
+    }
 
     protected override async Task OnInitializedAsync()
     {
