@@ -17,4 +17,8 @@ public class Attachment
     // ارتباط با تاریخچه انتقال (اگر فایل هنگام Transition آپلود شود)
     public int? TicketHistoryId { get; set; }
     public TicketHistory? TicketHistory { get; set; }
+
+    // به Attachment.cs اضافه شود
+    public int? TransitionFieldId { get; set; }
+    public TransitionField? TransitionField { get; set; }
 }

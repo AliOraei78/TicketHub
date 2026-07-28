@@ -3,6 +3,7 @@ namespace TicketHub.Core.Entities
 {
     public class UserProject
     {
+        public int Id { get; set; } // باید کلید اصلی شود (تغییر در DbContext نیاز است)
         public int UserId { get; set; }
         public int ProjectId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -36,9 +36,16 @@ namespace TicketHub.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // 1. تنظیم کلیدهای ترکیبی (Composite Keys)
-            modelBuilder.Entity<UserProject>().HasKey(up => new { up.UserId, up.ProjectId });
-            modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
+            // 1. تنظیم کلیدهای اصلی و ایندکس‌های یکتا
+            modelBuilder.Entity<UserProject>().HasKey(up => up.Id);
+            modelBuilder.Entity<UserProject>()
+                .HasIndex(up => new { up.UserId, up.ProjectId })
+                .IsUnique();
+
+            modelBuilder.Entity<UserRole>().HasKey(ur => ur.Id);
+            modelBuilder.Entity<UserRole>()
+                .HasIndex(ur => new { ur.UserId, ur.RoleId })
+                .IsUnique();
 
             // استفاده از فیلد Id به عنوان کلید اصلی برای این دو جدول به جای کلید ترکیبی
             modelBuilder.Entity<TransitionRole>().HasKey(tr => tr.Id);
@@ -114,6 +121,13 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany(w => w.WorkflowStatuses)
                 .HasForeignKey(ws => ws.WorkflowId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // به AppDbContext.cs (بخش 7) اضافه شود
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.TransitionField)
+                .WithMany(tf => tf.Attachments)
+                .HasForeignKey(a => a.TransitionFieldId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 8. تنظیم روابط TransitionField
             modelBuilder.Entity<TransitionField>()

@@ -17,4 +17,7 @@ public class TransitionField
     public string? Placeholder { get; set; }
     public string? DefaultValue { get; set; }
     public bool IsActive { get; set; } = true;
+
+    // به TransitionField.cs اضافه شود
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }
