@@ -3,6 +3,7 @@
 public class CanvasConnection
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public int DbId { get; set; } = 0; // <--- این خط باید اضافه شود
     public Guid FromNodeId { get; set; }
     public Guid ToNodeId { get; set; }
     public string SourcePort { get; set; } = "Right";
@@ -13,6 +14,5 @@ public class CanvasConnection
     public DateTime? ActivateAt { get; set; }
     public HashSet<int> AllowedRoleIds { get; set; } = new();
 
-    // پراپرتی جدید برای نگهداری فیلدهای کاستوم
     public List<CanvasTransitionField> CustomFields { get; set; } = new();
 }

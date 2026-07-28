@@ -9,6 +9,7 @@ namespace TicketHub.Core.Entities;
 
 public class TransitionRole
 {
+    public int Id { get; set; } // باید کلید اصلی شود (تغییر در DbContext نیاز است)
     public int TransitionId { get; set; }
     public Transition Transition { get; set; } = null!;
 

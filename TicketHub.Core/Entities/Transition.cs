@@ -29,6 +29,9 @@ public class Transition
     public DateTime? ActivateAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public Guid FromNodeId { get; set; }
+    public Guid ToNodeId { get; set; }
+
     // --- Navigation Properties ---
     public ICollection<TransitionRole> AllowedRoles { get; set; } = new List<TransitionRole>();
     public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
