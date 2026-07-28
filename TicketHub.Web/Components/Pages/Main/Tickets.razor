@@ -6,6 +6,7 @@
 @using TicketHub.Web.Components.Shared
 @inject IRepository<Ticket> TicketRepository
 @inject IRepository<Project> ProjectRepository
+@inject IRepository<Status> StatusRepository
 
 <div class="container mx-auto p-4 md:p-8 flex flex-col gap-3 flex-1" dir="rtl">
     <PageHeader 
@@ -48,17 +49,35 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div class="relative w-full md:w-80">
-            <input @bind="searchQuery" @bind:event="oninput" type="text" placeholder="جستجو در عنوان تیکت‌ها..." class="w-full pr-10 pl-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" />
-            <svg xmlns="http://www.w3.org/2000/xl" class="h-5 w-5 text-gray-400 absolute right-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
+
+        <div class="relative w-full md:w-80 shrink-0">
+            <input @bind="searchQuery" @bind:event="oninput" type="text" placeholder="جستجو در عنوان تیکت‌ها..." class="w-full pr-10 pl-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm bg-gray-50 hover:bg-white focus:bg-white smooth-transition" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute right-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </div>
 
-        <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-            <button @onclick='() => SetStatusFilter("")' class="smooth-transition px-4 py-2 rounded-xl text-sm font-medium @(selectedStatus == "" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100")">همه</button>
-            <button @onclick='() => SetStatusFilter("Open")' class="smooth-transition px-4 py-2 rounded-xl text-sm font-medium @(selectedStatus == "Open" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100/70")">باز</button>
-            <button @onclick='() => SetStatusFilter("Closed")' class="smooth-transition px-4 py-2 rounded-xl text-sm font-medium @(selectedStatus == "Closed" ? "bg-gray-400 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200")">بسته شده</button>
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-start sm:items-center">
+            <div class="w-full sm:w-56">
+                <MultiSelectDropdown TItem="Project" TValue="int"
+                                     Placeholder="پروژه..."
+                                     Items="projects"
+                                     SelectedValues="selectedProjectIds"
+                                     SelectedValuesChanged="FilterProjectsChanged"
+                                     ValueSelector="p => p.Id"
+                                     DisplaySelector="p => p.Name" />
+            </div>
+
+            <div class="w-full sm:w-56">
+                <MultiSelectDropdown TItem="Status" TValue="int"
+                                     Placeholder="وضعیت..."
+                                     Items="statuses"
+                                     SelectedValues="selectedStatusIds"
+                                     SelectedValuesChanged="FilterStatusesChanged"
+                                     ValueSelector="s => s.Id"
+                                     DisplaySelector="s => s.Name" />
+            </div>
         </div>
+
     </div>
 
     <!-- Tickets Main Grid/List -->
@@ -190,24 +209,39 @@
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
 
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
     private IEnumerable<Ticket> tickets = new List<Ticket>();
     private IEnumerable<Project> projects = new List<Project>();
+    private IEnumerable<Status> statuses = new List<Status>();
 
     private string searchQuery = string.Empty;
-    private string selectedStatus = string.Empty;
     private bool isCreateModalOpen = false;
     private Ticket newTicket = new Ticket();
 
-    // Dropdown structural states
+    // --- متغیرهای فیلتر چندانتخابی ---
+    private List<int> selectedProjectIds = new();
+    private List<int> selectedStatusIds = new();
+
+    // --- متغیرهای دراپ‌داون ایجاد تیکت ---
     private bool isProjectDropdownOpen = false;
     private string projectSearchQuery = string.Empty;
     private string? selectedProjectName = null;
 
-    // Update the filteredTickets property
-    private IEnumerable<Ticket> filteredTickets => tickets
-        .Where(t => string.IsNullOrEmpty(selectedStatus) || t.Status?.Name == selectedStatus)
-        .Where(t => string.IsNullOrEmpty(searchQuery) || t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+    // --- متدهای تغییر فیلتر ---
+    private void FilterProjectsChanged(List<int> values) => selectedProjectIds = values;
+    private void FilterStatusesChanged(List<int> values) => selectedStatusIds = values;
 
+    // --- اعمال فیلترها روی لیست تیکت‌ها ---
+    private IEnumerable<Ticket> filteredTickets => tickets
+        .Where(t => !selectedStatusIds.Any() || selectedStatusIds.Contains(t.StatusId))
+        .Where(t => !selectedProjectIds.Any() || selectedProjectIds.Contains(t.ProjectId))
+        .Where(t => string.IsNullOrEmpty(searchQuery) ||
+                    t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+
+    // --- جستجو در دراپ‌داون پروژه‌ها (مدال ایجاد) ---
     private IEnumerable<Project> filteredProjectsForDropdown => projects
         .Where(p => string.IsNullOrEmpty(projectSearchQuery) || p.Name.Contains(projectSearchQuery, StringComparison.OrdinalIgnoreCase));
 
@@ -215,6 +249,7 @@
     {
         await LoadTickets();
         projects = await ProjectRepository.GetAllAsync();
+        statuses = await StatusRepository.GetAllAsync();
     }
 
     private async Task LoadTickets()
@@ -222,12 +257,6 @@
         tickets = await TicketRepository.GetAllWithIncludesAsync(t => t.Project, t => t.Status, t => t.Priority);
     }
 
-    private void SetStatusFilter(string status)
-    {
-        selectedStatus = status;
-    }
-
-    // Update OpenCreateModal to auto-assign StatusId instead of Status string
     private async Task OpenCreateModal()
     {
         var authState = await AuthState;
@@ -238,7 +267,7 @@
         newTicket = new Ticket
         {
             StatusId = 1,
-            PriorityId = 2, // مقدار 2 فرضاً برای Medium
+            PriorityId = 2,
             UserId = currentUserId,
             ProjectId = 0
         };
@@ -292,10 +321,6 @@
         _ => "bg-gray-100 text-gray-600"
     };
 
-    // Add this injection at the top of Tickets.razor if not present
-    @inject NavigationManager Navigation
-
-    // Add this method inside the @code block
     private void NavigateToDetails(int id)
     {
         Navigation.NavigateTo($"/tickets/{id}");
