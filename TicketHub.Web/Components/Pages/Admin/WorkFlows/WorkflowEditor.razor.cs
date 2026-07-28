@@ -266,7 +266,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
                     var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
                     var p2 = GetPortCoordinates(toNode, conn.TargetPort);
 
-                    var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index);
+                    var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index, fromNode.Id, toNode.Id);
 
                     // بررسی اینکه آیا نقطه مرکزی مسیر داخل کادر قرار گرفته است یا خیر
                     if (center.X >= left && center.X <= right && center.Y >= top && center.Y <= bottom)
@@ -361,51 +361,118 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
 
         private string GetNodeName(Guid id) => canvasNodes.FirstOrDefault(n => n.Id == id)?.Status.Name ?? "Unknown";
 
-        private string GetBezierPath(double x1, double y1, double x2, double y2, int lineIndex = 0)
+        private bool CheckCollision(double x1, double y1, double cx, double cy, double x2, double y2, Guid fromNodeId, Guid toNodeId)
+        {
+            // تست نقاط روی منحنی بزیه برای بررسی تداخل
+            double[] tValues = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 };
+
+            foreach (var node in canvasNodes)
+            {
+                // نادیده گرفتن گره‌های مبدا و مقصد خودِ مسیر
+                if (node.Id == fromNodeId || node.Id == toNodeId) continue;
+
+                // مرکز تقریبی گره روی بوم
+                double nodeCenterX = node.X + 75;
+                double nodeCenterY = node.Y + 36;
+
+                foreach (var t in tValues)
+                {
+                    // فرمول منحنی بزیه درجه دو (Quadratic Bezier)
+                    double u = 1 - t;
+                    double px = u * u * x1 + 2 * u * t * cx + t * t * x2;
+                    double py = u * u * y1 + 2 * u * t * cy + t * t * y2;
+
+                    double dx = px - nodeCenterX;
+                    double dy = py - nodeCenterY;
+
+                    // بررسی تداخل با یک بیضی فرضی دور گره به عنوان حریم امن
+                    // شعاع افقی (نصف عرض 150 + حریم) = 95
+                    // شعاع عمودی (نصف ارتفاع 72 + حریم) = 60
+                    if ((dx * dx) / (95 * 95) + (dy * dy) / (60 * 60) <= 1)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private (double cx, double cy) CalculateControlPoint(double x1, double y1, double x2, double y2, int lineIndex, Guid fromNodeId, Guid toNodeId)
         {
             double midX = x1 + (x2 - x1) / 2;
             double midY = y1 + (y2 - y1) / 2;
-
-            if (lineIndex == 0)
-                return $"M {x1} {y1} Q {midX} {midY} {x2} {y2}";
-
-            int multiplier = (lineIndex % 2 == 0) ? (lineIndex / 2) : -(lineIndex / 2 + 1);
-            double offset = multiplier * 40;
 
             double dx = x2 - x1;
             double dy = y2 - y1;
             double length = Math.Sqrt(dx * dx + dy * dy);
 
+            if (length == 0) return (midX, midY);
+
+            // بردار عمود بر خط مستقیم
             double nx = -dy / length;
             double ny = dx / length;
 
-            double cx = midX + nx * offset;
-            double cy = midY + ny * offset;
+            // آفست پایه برای زمانی که دو وضعیت، چندین ارتباط با هم دارند
+            int multiplier = (lineIndex % 2 == 0) ? (lineIndex / 2) : -(lineIndex / 2 + 1);
+            double baseOffset = multiplier * 40;
 
-            return $"M {x1} {y1} Q {cx} {cy} {x2} {y2}";
+            double cx = midX + nx * baseOffset;
+            double cy = midY + ny * baseOffset;
+
+            // اگر در حال رسم خط با ماوس هستیم، از محاسبه برخورد صرف‌نظر کن
+            if (fromNodeId == Guid.Empty || toNodeId == Guid.Empty)
+            {
+                if (lineIndex == 0) return (midX, midY);
+                return (cx, cy);
+            }
+
+            int maxIterations = 20; // حداکثر تلاش برای پیدا کردن مسیر باز
+            double step = 35; // پرش 35 پیکسلی به بیرون در هر قوس برای فرار از گره
+
+            // آرایه‌ای از آفست‌های پینگ‌پونگی: +35, -35, +70, -70 و ...
+            double[] offsetsToTry = new double[maxIterations];
+            for (int i = 0; i < maxIterations; i++)
+            {
+                int sign = (i % 2 == 0) ? 1 : -1;
+                int magnitude = (i / 2) + 1;
+                offsetsToTry[i] = sign * magnitude * step;
+            }
+
+            // چک کردن اینکه آیا خط در حالت عادی برخوردی دارد یا نه
+            if (!CheckCollision(x1, y1, cx, cy, x2, y2, fromNodeId, toNodeId))
+            {
+                if (lineIndex == 0 && baseOffset == 0) return (midX, midY); // ترجیح خط مستقیم
+                return (cx, cy);
+            }
+
+            // در صورت برخورد، تلاش برای پیدا کردن اولین آفستی که با هیچ وضعیتی تداخل ندارد
+            foreach (var testOffset in offsetsToTry)
+            {
+                double testCx = midX + nx * (baseOffset + testOffset);
+                double testCy = midY + ny * (baseOffset + testOffset);
+
+                if (!CheckCollision(x1, y1, testCx, testCy, x2, y2, fromNodeId, toNodeId))
+                {
+                    return (testCx, testCy);
+                }
+            }
+
+            return (cx, cy); // در صورت تراکم شدید، همان منحنی پیش‌فرض را برمی‌گرداند
         }
 
-        private (double X, double Y) GetBezierCenter(double x1, double y1, double x2, double y2, int lineIndex = 0)
+        private string GetBezierPath(double x1, double y1, double x2, double y2, int lineIndex = 0, Guid fromNodeId = default, Guid toNodeId = default)
         {
-            double midX = x1 + (x2 - x1) / 2;
-            double midY = y1 + (y2 - y1) / 2;
+            var cp = CalculateControlPoint(x1, y1, x2, y2, lineIndex, fromNodeId, toNodeId);
+            return $"M {x1} {y1} Q {cp.cx} {cp.cy} {x2} {y2}";
+        }
 
-            double dx = x2 - x1;
-            double dy = y2 - y1;
-            double length = Math.Sqrt(dx * dx + dy * dy);
-
-            double nx = length > 0 ? -dy / length : 0;
-            double ny = length > 0 ? dx / length : 0;
-
-            if (lineIndex == 0) return (midX + nx * 20, midY + ny * 20);
-
-            int multiplier = (lineIndex % 2 == 0) ? (lineIndex / 2) : -(lineIndex / 2 + 1);
-            double offset = multiplier * 40;
-
-            double curveMidX = midX + (nx * offset) / 2;
-            double curveMidY = midY + (ny * offset) / 2;
-
-            return (curveMidX + nx * 20, curveMidY + ny * 20);
+        private (double X, double Y) GetBezierCenter(double x1, double y1, double x2, double y2, int lineIndex = 0, Guid fromNodeId = default, Guid toNodeId = default)
+        {
+            var cp = CalculateControlPoint(x1, y1, x2, y2, lineIndex, fromNodeId, toNodeId);
+            // محاسبه دقیق مرکز روی منحنی بزیه برای قرارگیری دکمه حذف
+            double curveMidX = 0.25 * x1 + 0.5 * cp.cx + 0.25 * x2;
+            double curveMidY = 0.25 * y1 + 0.5 * cp.cy + 0.25 * y2;
+            return (curveMidX, curveMidY);
         }
 
         private void OnStatusDragStart(Status status) => draggingStatusFromSidebar = status;

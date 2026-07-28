@@ -79,12 +79,12 @@
                         var p2 = GetPortCoordinates(toNode, conn.TargetPort);
 
                         <g @key="conn.Id" @onclick:stopPropagation="true">
-                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index)"
+                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId)"
                                   stroke="transparent" stroke-width="15" fill="none" class="pointer-events-auto cursor-pointer"
                                   @onpointerdown="e => SelectConnection(e, conn)"
                                   @onpointerdown:stopPropagation="true" />
 
-                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index)"
+                            <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId)"
                                   stroke="@strokeColor" stroke-width="2.5" fill="none" marker-end="@marker"
                                   class="transition-colors duration-200" stroke-dasharray="@(conn.IsAutomatic ? "5,5" : "none")" />
                         </g>
@@ -112,7 +112,7 @@
                         var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
                         var p2 = GetPortCoordinates(toNode, conn.TargetPort);
 
-                        var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index);
+                        var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId);
 
                         <button @key="@($"del-conn-{conn.Id}")" @onpointerdown="() => DeleteSelectedItems(conn)" @onpointerdown:stopPropagation="true" class="absolute w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto" style="@($"left: {center.X - 12}px; top: {center.Y - 12}px;")" title="حذف مسیر">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
