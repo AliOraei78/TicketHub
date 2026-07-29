@@ -9,7 +9,7 @@ using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
 using UserEntity = TicketHub.Core.Entities.User;
 
-namespace TicketHub.Web.Components.Pages.Admin.Settings;
+namespace TicketHub.Web.Components.Pages.Admin.Users;
 
 public partial class Users : ComponentBase
 {

@@ -5,7 +5,7 @@ using TicketHub.Core.Entities;
 using TicketHub.Web.Facades;
 using TicketHub.Web.States;
 
-namespace TicketHub.Web.Pages.Admin.Settings;
+namespace TicketHub.Web.Components.Pages.Admin.Settings;
 
 public partial class PrioritiesSettings : ComponentBase, IDisposable
 {
