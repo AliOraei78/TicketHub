@@ -2,16 +2,17 @@
 using TicketHub.Application.Services;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
+using TicketHub.Web.States;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TicketHub.Web.Components.Pages.Admin.Projects;
 
-public partial class Projects : ComponentBase
+public partial class Projects : ComponentBase, IDisposable
 {
     [Inject] public IProjectService ProjectService { get; set; } = default!;
 
-    private IEnumerable<Project> projects = new List<Project>();
-    private IEnumerable<Workflow> workflows = new List<Workflow>();
+    // اگر اینترفیس ساختید از IProjectState وگرنه از ProjectState استفاده کنید
+    [Inject] public ProjectState State { get; set; } = default!;
 
     private Project projectModel = new Project();
     private bool isFormModalOpen = false;
@@ -20,24 +21,21 @@ public partial class Projects : ComponentBase
     private Project? projectToDelete;
     private bool isDeleteModalOpen = false;
 
-    private string searchTerm = string.Empty;
-    private bool? selectedFilterStatus = null;
-
-    private IEnumerable<Project> FilteredProjects =>
-        projects
-        .Where(p => string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-        .Where(p => selectedFilterStatus == null || p.IsActive == selectedFilterStatus);
-
-    private void FilterByStatus(bool? status) => selectedFilterStatus = status;
-    private void HandleSearch(string term) => searchTerm = term;
-
     protected override async Task OnInitializedAsync()
     {
-        workflows = await ProjectService.GetWorkflowsAsync();
-        await LoadProjects();
+        State.OnChange += StateHasChanged;
+        await State.InitializeAsync();
     }
 
-    private async Task LoadProjects() => projects = await ProjectService.GetProjectsAsync();
+    // پیاده‌سازی متد Dispose برای رفع ارور CS0535
+    public void Dispose()
+    {
+        State.OnChange -= StateHasChanged;
+    }
+
+    private void FilterByStatus(bool? status) => State.SetFilter(status);
+
+    private void HandleSearch(string term) => State.SetSearchTerm(term);
 
     private void OpenCreateModal()
     {
@@ -69,7 +67,8 @@ public partial class Projects : ComponentBase
         }
         else
         {
-            var trackedProject = projects.FirstOrDefault(p => p.Id == projectModel.Id);
+            // خواندن لیست پروژه‌ها از State
+            var trackedProject = State.Projects.FirstOrDefault(p => p.Id == projectModel.Id);
             if (trackedProject != null)
             {
                 trackedProject.Name = projectModel.Name;
@@ -81,7 +80,8 @@ public partial class Projects : ComponentBase
             }
         }
 
-        await LoadProjects();
+        // بارگذاری مجدد از طریق State
+        await State.ReloadProjectsAsync();
         isFormModalOpen = false;
     }
 
@@ -109,7 +109,9 @@ public partial class Projects : ComponentBase
             await Task.Delay(400);
 
             await ProjectService.DeleteProjectAsync(idToDelete);
-            await LoadProjects();
+
+            // بارگذاری مجدد از طریق State
+            await State.ReloadProjectsAsync();
 
             deletingProjectId = null;
         }

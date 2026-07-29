@@ -13,6 +13,7 @@ using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
 using TicketHub.Web.Middlewares;
+using TicketHub.Web.States;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -70,6 +71,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ProjectState>();
 
 var app = builder.Build();
 

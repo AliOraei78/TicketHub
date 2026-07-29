@@ -1,0 +1,44 @@
+﻿@typeparam TItem
+
+@if (Items == null)
+{
+    @if (LoadingTemplate != null)
+    {
+        @LoadingTemplate
+    }
+    else
+    {
+        <LoadingSpinner />
+    }
+}
+else if (!Items.Any())
+{
+    @if (EmptyTemplate != null)
+    {
+        @EmptyTemplate
+    }
+    else
+    {
+        <EmptyState Message="@EmptyMessage" />
+    }
+}
+else
+{
+    <div class="@ContainerClass">
+        @foreach (var item in Items)
+        {
+            @ItemTemplate(item)
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter, EditorRequired] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+
+    [Parameter] public RenderFragment? LoadingTemplate { get; set; }
+    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+
+    [Parameter] public string EmptyMessage { get; set; } = "هیچ داده‌ای یافت نشد.";
+    [Parameter] public string ContainerClass { get; set; } = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+}
