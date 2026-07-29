@@ -1,0 +1,25 @@
+﻿@typeparam TValue
+
+<div class="relative flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
+    <!-- پس‌زمینه متحرک -->
+    <div class="absolute right-1 top-1 bottom-1 w-20 rounded-lg transition-all duration-300 ease-out shadow-sm
+    @BackgroundClassSelector(SelectedValue)"></div>
+
+    @foreach (var item in Options)
+    {
+        <button type="button" @onclick="() => OnValueChanged.InvokeAsync(item)"
+                class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @ItemClassSelector(item, SelectedValue)">
+            @ItemTemplate(item)
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TValue> Options { get; set; } = default!;
+    [Parameter] public TValue SelectedValue { get; set; }
+    [Parameter] public EventCallback<TValue> OnValueChanged { get; set; }
+
+    [Parameter, EditorRequired] public RenderFragment<TValue> ItemTemplate { get; set; } = default!;
+    [Parameter] public Func<TValue, string> BackgroundClassSelector { get; set; } = _ => "";
+    [Parameter] public Func<TValue, TValue, string> ItemClassSelector { get; set; } = (_, __) => "";
+}

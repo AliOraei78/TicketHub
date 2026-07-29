@@ -18,41 +18,12 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Add/Edit Role Form -->
         <div class="md:col-span-1">
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
-                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(IsEditing ? "ویرایش نقش" : "ایجاد نقش جدید")</h3>
-
-                <EditForm Model="RoleModel" OnValidSubmit="HandleSubmitRole">
-                    <DataAnnotationsValidator />
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان نقش (انگلیسی یا فارسی)</label>
-                            <InputText @bind-Value="RoleModel.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: Support" />
-                        </div>
-
-                        <div class="flex items-center mt-3">
-                            <InputCheckbox @bind-Value="RoleModel.IsActive" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" id="roleIsActive" />
-                            <label for="roleIsActive" class="mr-2 block text-sm font-medium text-gray-700">نقش فعال است؟</label>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
-                                @(IsEditing ? "ذخیره تغییرات" : "ثبت نقش")
-                            </button>
-                            @if (IsEditing)
-                            {
-                                <button type="button" @onclick="CancelEdit" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">
-                                    انصراف
-                                </button>
-                            }
-                        </div>
-                    </div>
-                </EditForm>
-
-                @if (!string.IsNullOrEmpty(SuccessMessage))
-                {
-                    <div class="mt-4 p-3 @(IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@SuccessMessage</div>
-                }
-            </div>
+            <RoleForm Model="RoleModel"
+                      IsEditing="IsEditing"
+                      SuccessMessage="SuccessMessage"
+                      IsError="IsError"
+                      OnValidSubmit="HandleSubmitRole"
+                      OnCancel="CancelEdit" />
         </div>
 
         <!-- Roles List & Search -->
@@ -63,25 +34,16 @@
 
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
                         <!-- فیلتر وضعیت به صورت کشویی -->
-                        <div class="relative flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
-                            <!-- پس‌زمینه متحرک -->
-                            <div class="absolute right-1 top-1 bottom-1 w-20 rounded-lg transition-all duration-300 ease-out shadow-sm
-                                @(SelectedFilterStatus == null ? "translate-x-0 bg-gray-900" :
-                                    SelectedFilterStatus == true ? "-translate-x-full bg-emerald-600" :
-                                    "-translate-x-[200%] bg-gray-400")">
-                            </div>
-
-                            <!-- دکمه‌ها -->
-                            <button type="button" @onclick="() => FilterByStatus(null)" class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @(SelectedFilterStatus == null ? "text-white" : "text-gray-600 hover:text-gray-900")">
-                                همه
-                            </button>
-                            <button type="button" @onclick="() => FilterByStatus(true)" class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @(SelectedFilterStatus == true ? "text-white" : "text-emerald-600 hover:text-emerald-700")">
-                                فعال
-                            </button>
-                            <button type="button" @onclick="() => FilterByStatus(false)" class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @(SelectedFilterStatus == false ? "text-white" : "text-gray-500 hover:text-gray-700")">
-                                غیرفعال
-                            </button>
-                        </div>
+                        <GenericStatusFilter TValue="bool?"
+                                             Options="new bool?[] { null, true, false }"
+                                             SelectedValue="SelectedFilterStatus"
+                                             OnValueChanged="FilterByStatus"
+                                             BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
+                                             ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
+                            <ItemTemplate Context="status">
+                                @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
+                            </ItemTemplate>
+                        </GenericStatusFilter>
 
                         <!-- Search Field Component -->
                         <div class="w-full sm:w-72">
