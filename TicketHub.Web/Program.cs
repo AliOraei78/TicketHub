@@ -12,7 +12,9 @@ using TicketHub.Infrastructure.Data;
 using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
+using TicketHub.Web.Facades;
 using TicketHub.Web.Middlewares;
+using TicketHub.Web.State;
 using TicketHub.Web.States;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +74,12 @@ builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ProjectState>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<CategoryState>();
+builder.Services.AddScoped<CategoryFacade>();
+builder.Services.AddScoped<IPriorityService, PriorityService>();
+builder.Services.AddScoped<PriorityState>();
+builder.Services.AddScoped<PriorityFacade>();
 
 var app = builder.Build();
 

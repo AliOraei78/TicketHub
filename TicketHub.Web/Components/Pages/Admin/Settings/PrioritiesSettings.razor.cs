@@ -3,21 +3,21 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
 using TicketHub.Infrastructure.Data;
+using TicketHub.Web.Facades;
+using TicketHub.Web.States;
 
 namespace TicketHub.Web.Pages.Admin.Settings;
 
-public partial class PrioritiesSettings : ComponentBase
+public partial class PrioritiesSettings : ComponentBase, IDisposable
 {
-    [Inject] public AppDbContext DbContext { get; set; } = default!;
+    [Inject] public PriorityFacade Facade { get; set; } = default!;
+    [Inject] public PriorityState State { get; set; } = default!;
 
     protected HashSet<int> selectedIds = new();
     protected bool isBulkDelete = false;
     protected string deleteModalDescription = string.Empty;
 
     protected Priority priorityModel = new() { ColorCode = "#6B7280", Level = 1 };
-    protected List<Priority>? priorities;
-    protected string? successMessage;
-    protected bool isError = false;
 
     protected string searchTerm = string.Empty;
     protected bool isEditing = false;
@@ -26,42 +26,33 @@ public partial class PrioritiesSettings : ComponentBase
     protected bool showDeleteModal = false;
     protected Priority? itemToDelete;
 
+    // خواندن داده‌ها از State
     protected IEnumerable<Priority> FilteredPriorities =>
         string.IsNullOrWhiteSpace(searchTerm)
-            ? (priorities ?? Enumerable.Empty<Priority>())
-            : (priorities ?? Enumerable.Empty<Priority>()).Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            ? (State.Priorities ?? Enumerable.Empty<Priority>())
+            : (State.Priorities ?? Enumerable.Empty<Priority>()).Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
-    protected override async Task OnInitializedAsync() => await LoadData();
+    protected override void OnInitialized()
+    {
+        State.OnChange += StateHasChanged; // متصل کردن تغییرات State به رندر صفحه
+    }
 
-    private async Task LoadData() => priorities = await DbContext.Priorities.ToListAsync();
+    public void Dispose()
+    {
+        State.OnChange -= StateHasChanged; // پاکسازی
+    }
+
+    protected override async Task OnInitializedAsync() => await Facade.LoadPrioritiesAsync();
 
     protected async Task HandleSubmit()
     {
         if (string.IsNullOrWhiteSpace(priorityModel.Name)) return;
-        isError = false;
 
-        if (isEditing && editingId.HasValue)
-        {
-            var item = await DbContext.Priorities.FindAsync(editingId.Value);
-            if (item != null)
-            {
-                item.Name = priorityModel.Name;
-                item.ColorCode = priorityModel.ColorCode ?? "#6B7280";
-                item.Level = priorityModel.Level;
-                successMessage = "اولویت با موفقیت ویرایش شد.";
-            }
-        }
-        else
-        {
-            if (string.IsNullOrEmpty(priorityModel.ColorCode)) priorityModel.ColorCode = "#6B7280";
-            DbContext.Priorities.Add(priorityModel);
-            successMessage = "اولویت با موفقیت ایجاد شد.";
-        }
+        if (!isEditing && string.IsNullOrEmpty(priorityModel.ColorCode))
+            priorityModel.ColorCode = "#6B7280";
 
-        await DbContext.SaveChangesAsync();
+        await Facade.SavePriorityAsync(priorityModel, isEditing);
         CancelEdit();
-        await LoadData();
-        _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
 
     protected void EditPriority(Priority item)
@@ -69,6 +60,7 @@ public partial class PrioritiesSettings : ComponentBase
         isEditing = true;
         editingId = item.Id;
         priorityModel.Name = item.Name;
+        priorityModel.Id = item.Id;
         priorityModel.ColorCode = item.ColorCode ?? "#6B7280";
         priorityModel.Level = item.Level;
     }
@@ -78,7 +70,6 @@ public partial class PrioritiesSettings : ComponentBase
         isEditing = false;
         editingId = null;
         priorityModel = new Priority { ColorCode = "#6B7280", Level = 1 };
-        successMessage = null;
     }
 
     protected void HandleSearch(string term) => searchTerm = term;
@@ -109,35 +100,16 @@ public partial class PrioritiesSettings : ComponentBase
 
     protected async Task ConfirmDelete()
     {
-        try
+        if (isBulkDelete)
         {
-            if (isBulkDelete)
-            {
-                var items = await DbContext.Priorities.Where(p => selectedIds.Contains(p.Id)).ToListAsync();
-                DbContext.Priorities.RemoveRange(items);
-                await DbContext.SaveChangesAsync();
-                successMessage = $"{items.Count} اولویت با موفقیت حذف شدند.";
-                ClearSelection();
-            }
-            else if (itemToDelete != null)
-            {
-                DbContext.Priorities.Remove(itemToDelete);
-                await DbContext.SaveChangesAsync();
-                successMessage = "اولویت با موفقیت حذف شد.";
-                if (isEditing && editingId == itemToDelete.Id) CancelEdit();
-            }
-            isError = false;
-            await LoadData();
+            await Facade.DeleteBulkAsync(selectedIds);
+            ClearSelection();
         }
-        catch
+        else if (itemToDelete != null)
         {
-            isError = true;
-            successMessage = "امکان حذف وجود ندارد! ابتدا باید تیکت‌های مرتبط با این اولویت را ویرایش کنید.";
+            await Facade.DeletePriorityAsync(itemToDelete);
+            if (isEditing && editingId == itemToDelete.Id) CancelEdit();
         }
-        finally
-        {
-            CancelDelete();
-            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
-        }
+        CancelDelete();
     }
 }

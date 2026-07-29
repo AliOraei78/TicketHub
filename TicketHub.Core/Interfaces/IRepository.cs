@@ -18,5 +18,6 @@ namespace TicketHub.Core.Interfaces
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id);
         Task SaveChangesAsync();
+        Task DeleteRangeAsync(IEnumerable<T> entities);
     }
 }

@@ -1,44 +1,45 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
-using TicketHub.Infrastructure.Data;
+using TicketHub.Web.Facades;
+using TicketHub.Web.State;
 
-// تغییر به مسیر دقیق بر اساس ارورهای شما
 namespace TicketHub.Web.Components.Pages.Admin.Settings;
 
-public partial class CategoriesSettings : ComponentBase
+public partial class CategoriesSettings : ComponentBase, IDisposable
 {
-    [Inject] public AppDbContext DbContext { get; set; } = default!;
+    // اینجکت کردن Facade و State به جای سرویس مستقیم
+    [Inject] public CategoryFacade CategoryFacade { get; set; } = default!;
+    [Inject] public CategoryState categoryState { get; set; } = default!;
 
     private HashSet<int> selectedCategoryIds = new();
     private bool isBulkDelete = false;
     private string deleteModalDescription = string.Empty;
 
     private Category categoryModel = new();
-    private List<Category>? categories;
     private string? successMessage;
     private bool isError = false;
     private string searchTerm = string.Empty;
 
     private bool isEditing = false;
+    // دیگر نیازی به نگه‌داری ID به صورت جداگانه نیست چون مدل خودش ID دارد
+    // اما برای کنترل لاجیک فرم بد نیست نگهش داریم
     private int? editingCategoryId = null;
 
     private bool showDeleteModal = false;
     private Category? categoryToDelete;
 
+    // فیلتر کردن از State خوانده می‌شود
     private IEnumerable<Category> FilteredCategories =>
         string.IsNullOrWhiteSpace(searchTerm)
-            ? (categories ?? Enumerable.Empty<Category>())
-            : (categories ?? Enumerable.Empty<Category>()).Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            ? categoryState.Categories
+            : categoryState.Categories.Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCategories();
-    }
+        // ساب‌اسکرایب به تغییرات State
+        categoryState.OnChange += StateHasChanged;
 
-    private async Task LoadCategories()
-    {
-        categories = await DbContext.Set<Category>().ToListAsync();
+        await CategoryFacade.LoadCategoriesAsync();
     }
 
     private async Task HandleSubmitCategory()
@@ -47,25 +48,23 @@ public partial class CategoriesSettings : ComponentBase
 
         isError = false;
 
+        // اگر در حال ویرایش هستیم، مطمئن شویم آیدی درست ست شده
         if (isEditing && editingCategoryId.HasValue)
         {
-            var categoryToUpdate = await DbContext.Set<Category>().FindAsync(editingCategoryId.Value);
-            if (categoryToUpdate != null)
-            {
-                categoryToUpdate.Name = categoryModel.Name;
-                successMessage = "نوع تیکت با موفقیت ویرایش شد.";
-            }
-        }
-        else
-        {
-            categoryModel.CreatedAt = DateTime.UtcNow;
-            DbContext.Set<Category>().Add(categoryModel);
-            successMessage = "نوع تیکت با موفقیت ایجاد شد.";
+            categoryModel.Id = editingCategoryId.Value;
         }
 
-        await DbContext.SaveChangesAsync();
-        CancelEdit();
-        await LoadCategories();
+        try
+        {
+            await CategoryFacade.AddOrUpdateAsync(categoryModel, isEditing);
+            successMessage = isEditing ? "نوع تیکت با موفقیت ویرایش شد." : "نوع تیکت با موفقیت ایجاد شد.";
+            CancelEdit();
+        }
+        catch (Exception)
+        {
+            isError = true;
+            successMessage = "خطایی در ذخیره اطلاعات رخ داد.";
+        }
 
         _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
@@ -74,7 +73,9 @@ public partial class CategoriesSettings : ComponentBase
     {
         isEditing = true;
         editingCategoryId = category.Id;
-        categoryModel.Name = category.Name;
+
+        // ایجاد یک کپی جدید تا تغییرات موقت مستقیما روی استیت اعمال نشود
+        categoryModel = new Category { Id = category.Id, Name = category.Name };
     }
 
     private void CancelEdit()
@@ -83,6 +84,7 @@ public partial class CategoriesSettings : ComponentBase
         editingCategoryId = null;
         categoryModel = new Category();
         successMessage = null;
+        isError = false;
     }
 
     private void HandleSearch(string term)
@@ -128,24 +130,18 @@ public partial class CategoriesSettings : ComponentBase
         {
             if (isBulkDelete)
             {
-                var categoriesToRemove = await DbContext.Set<Category>().Where(c => selectedCategoryIds.Contains(c.Id)).ToListAsync();
-                DbContext.Set<Category>().RemoveRange(categoriesToRemove);
-                await DbContext.SaveChangesAsync();
-
-                successMessage = $"{categoriesToRemove.Count} آیتم با موفقیت حذف {(categoriesToRemove.Count == 1 ? "شد" : "شدند")}.";
+                await CategoryFacade.DeleteRangeAsync(selectedCategoryIds);
+                successMessage = $"{selectedCategoryIds.Count} آیتم با موفقیت حذف {(selectedCategoryIds.Count == 1 ? "شد" : "شدند")}.";
                 ClearSelection();
             }
             else if (categoryToDelete != null)
             {
-                DbContext.Set<Category>().Remove(categoryToDelete);
-                await DbContext.SaveChangesAsync();
-
+                await CategoryFacade.DeleteAsync(categoryToDelete);
                 successMessage = "نوع تیکت با موفقیت حذف شد.";
                 if (isEditing && editingCategoryId == categoryToDelete.Id) CancelEdit();
             }
 
             isError = false;
-            await LoadCategories();
         }
         catch (Exception)
         {
@@ -157,5 +153,11 @@ public partial class CategoriesSettings : ComponentBase
             CancelDelete();
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
+    }
+
+    public void Dispose()
+    {
+        // آنساب‌اسکرایب برای جلوگیری از مموری لیک
+        categoryState.OnChange -= StateHasChanged;
     }
 }

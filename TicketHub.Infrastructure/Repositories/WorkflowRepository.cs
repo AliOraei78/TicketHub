@@ -53,4 +53,14 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         return await _context.Set<Status>().ToListAsync();
     }
 
+    // به انتهای کلاس WorkflowRepository اضافه کنید
+    public async Task<List<Project>> GetProjectsAsync()
+    {
+        return await _context.Set<Project>().ToListAsync();
+    }
+
+    public async Task<List<WorkflowStatus>> GetStatusesAsync()
+    {
+        return await _context.Set<WorkflowStatus>().ToListAsync();
+    }
 }

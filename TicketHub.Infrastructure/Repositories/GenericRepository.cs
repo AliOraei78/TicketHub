@@ -24,7 +24,7 @@ namespace TicketHub.Infrastructure.Repositories
 
         public async Task<T?> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
 
-        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.AsNoTracking().ToListAsync();
 
         // Implementation for eager loading
         public async Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, object?>>[] includes)
@@ -48,6 +48,7 @@ namespace TicketHub.Infrastructure.Repositories
 
         public async Task UpdateAsync(T entity)
         {
+            _context.ChangeTracker.Clear();
             _dbSet.Update(entity);
             await SaveChangesAsync();
         }
@@ -64,15 +65,11 @@ namespace TicketHub.Infrastructure.Repositories
 
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 
-        // به انتهای کلاس WorkflowRepository اضافه کنید
-        public async Task<List<Project>> GetProjectsAsync()
+        public async Task DeleteRangeAsync(IEnumerable<T> entities)
         {
-            return await _context.Set<Project>().ToListAsync();
-        }
-
-        public async Task<List<WorkflowStatus>> GetStatusesAsync()
-        {
-            return await _context.Set<WorkflowStatus>().ToListAsync();
+            _context.ChangeTracker.Clear();
+            _dbSet.RemoveRange(entities);
+            await SaveChangesAsync();
         }
     }
 }
