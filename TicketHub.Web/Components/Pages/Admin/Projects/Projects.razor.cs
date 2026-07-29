@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using TicketHub.Application.Services;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -7,8 +8,7 @@ namespace TicketHub.Web.Components.Pages.Admin.Projects;
 
 public partial class Projects : ComponentBase
 {
-    [Inject] public IRepository<Project> ProjectRepository { get; set; } = default!;
-    [Inject] public IRepository<Workflow> WorkflowRepository { get; set; } = default!;
+    [Inject] public IProjectService ProjectService { get; set; } = default!;
 
     private IEnumerable<Project> projects = new List<Project>();
     private IEnumerable<Workflow> workflows = new List<Workflow>();
@@ -33,11 +33,11 @@ public partial class Projects : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        workflows = await WorkflowRepository.GetAllAsync();
+        workflows = await ProjectService.GetWorkflowsAsync();
         await LoadProjects();
     }
 
-    private async Task LoadProjects() => projects = await ProjectRepository.GetAllAsync();
+    private async Task LoadProjects() => projects = await ProjectService.GetProjectsAsync();
 
     private void OpenCreateModal()
     {
@@ -65,8 +65,7 @@ public partial class Projects : ComponentBase
     {
         if (projectModel.Id == 0)
         {
-            projectModel.CreatedAt = DateTime.UtcNow;
-            await ProjectRepository.AddAsync(projectModel);
+            await ProjectService.AddProjectAsync(projectModel);
         }
         else
         {
@@ -78,7 +77,7 @@ public partial class Projects : ComponentBase
                 trackedProject.IsActive = projectModel.IsActive;
                 trackedProject.WorkflowId = projectModel.WorkflowId;
 
-                await ProjectRepository.UpdateAsync(trackedProject);
+                await ProjectService.UpdateProjectAsync(trackedProject);
             }
         }
 
@@ -109,7 +108,7 @@ public partial class Projects : ComponentBase
             StateHasChanged();
             await Task.Delay(400);
 
-            await ProjectRepository.DeleteAsync(idToDelete);
+            await ProjectService.DeleteProjectAsync(idToDelete);
             await LoadProjects();
 
             deletingProjectId = null;

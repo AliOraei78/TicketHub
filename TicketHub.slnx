@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="TicketHub.Application/TicketHub.Application.csproj" />
   <Project Path="TicketHub.Core/TicketHub.Core.csproj" />
   <Project Path="TicketHub.Infrastructure/TicketHub.Infrastructure.csproj" />
