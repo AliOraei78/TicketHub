@@ -1,8 +1,7 @@
 ﻿// Priorities.razor.cs
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
+using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
-using TicketHub.Infrastructure.Data;
 using TicketHub.Web.Facades;
 using TicketHub.Web.States;
 
@@ -17,20 +16,20 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
     protected bool isBulkDelete = false;
     protected string deleteModalDescription = string.Empty;
 
-    protected Priority priorityModel = new() { ColorCode = "#6B7280", Level = 1 };
+    protected PriorityDto priorityModel = new() { ColorCode = "#6B7280", Level = 1 };
 
     protected string searchTerm = string.Empty;
     protected bool isEditing = false;
     protected int? editingId = null;
 
     protected bool showDeleteModal = false;
-    protected Priority? itemToDelete;
+    protected PriorityDto? itemToDelete;
 
     // خواندن داده‌ها از State
-    protected IEnumerable<Priority> FilteredPriorities =>
+    protected IEnumerable<PriorityDto> FilteredPriorities =>
         string.IsNullOrWhiteSpace(searchTerm)
-            ? (State.Priorities ?? Enumerable.Empty<Priority>())
-            : (State.Priorities ?? Enumerable.Empty<Priority>()).Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            ? (State.Priorities ?? Enumerable.Empty<PriorityDto>())
+            : (State.Priorities ?? Enumerable.Empty<PriorityDto>()).Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override void OnInitialized()
     {
@@ -55,7 +54,7 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
         CancelEdit();
     }
 
-    protected void EditPriority(Priority item)
+    protected void EditPriority(PriorityDto item)
     {
         isEditing = true;
         editingId = item.Id;
@@ -69,7 +68,7 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
     {
         isEditing = false;
         editingId = null;
-        priorityModel = new Priority { ColorCode = "#6B7280", Level = 1 };
+        priorityModel = new PriorityDto { ColorCode = "#6B7280", Level = 1 };
     }
 
     protected void HandleSearch(string term) => searchTerm = term;
@@ -83,7 +82,7 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
         showDeleteModal = true;
     }
 
-    protected void OpenDeleteModal(Priority item)
+    protected void OpenDeleteModal(PriorityDto item)
     {
         itemToDelete = item;
         isBulkDelete = false;

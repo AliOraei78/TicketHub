@@ -1,5 +1,5 @@
-﻿@using TicketHub.Core.Entities
-@using Microsoft.AspNetCore.Components.Forms
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using TicketHub.Application.DTOs
 
 <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator />
@@ -34,7 +34,7 @@
 
 
 @code{
-    [Parameter, EditorRequired] public Priority Model { get; set; } = default!;
+    [Parameter, EditorRequired] public PriorityDto Model { get; set; } = default!;
     [Parameter] public bool IsEditing { get; set; }
     [Parameter, EditorRequired] public EventCallback OnValidSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }

@@ -1,6 +1,5 @@
-﻿using TicketHub.Application.Interfaces;
-using TicketHub.Core.Entities;
-using TicketHub.Core.Interfaces;
+﻿using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Web.States;
 
 namespace TicketHub.Web.Facades;
@@ -22,7 +21,7 @@ public class PriorityFacade
         _state.SetPriorities(data.ToList());
     }
 
-    public async Task SavePriorityAsync(Priority priority, bool isEditing)
+    public async Task SavePriorityAsync(PriorityDto priority, bool isEditing)
     {
         if (isEditing) await _service.UpdateAsync(priority);
         else await _service.AddAsync(priority);
@@ -32,7 +31,7 @@ public class PriorityFacade
         ClearMessage();
     }
 
-    public async Task DeletePriorityAsync(Priority priority)
+    public async Task DeletePriorityAsync(PriorityDto priority)
     {
         try
         {

@@ -1,7 +1,7 @@
 ﻿@page "/settings/priorities"
 @rendermode InteractiveServer
 @namespace TicketHub.Web.Pages.Admin.Settings
-@using TicketHub.Core.Entities
+@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
 <PageTitle>تنظیمات اولویت‌ها | سامانه تیکتینگ</PageTitle>
@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 <div class="p-0">
-                    <DataGrid TItem="Priority" TKey="int" Items="FilteredPriorities" IsLoading="State.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="اولویتی">
+                    <DataGrid TItem="PriorityDto" TKey="int" Items="FilteredPriorities" IsLoading="State.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="اولویتی">
                         <HeaderTemplate>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان، رنگ و سطح</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
