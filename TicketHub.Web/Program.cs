@@ -81,6 +81,9 @@ builder.Services.AddScoped<CategoryFacade>();
 builder.Services.AddScoped<IPriorityService, PriorityService>();
 builder.Services.AddScoped<PriorityState>();
 builder.Services.AddScoped<PriorityFacade>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<RoleState>();
+builder.Services.AddScoped<RoleFacade>();
 
 var app = builder.Build();
 

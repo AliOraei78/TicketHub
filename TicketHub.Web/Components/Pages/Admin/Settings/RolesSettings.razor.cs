@@ -1,220 +1,65 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
-using Mapster;
+﻿using Mapster;
+using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Infrastructure.Data;
-using TicketHub.Core.Entities;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
+using TicketHub.Web.Facades;
+using TicketHub.Web.State;
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings;
 
-public partial class RolesSettings : ComponentBase
+public partial class RolesSettings : ComponentBase, IDisposable
 {
-    [Inject]
-    protected AppDbContext DbContext { get; set; } = default!;
-
-    protected HashSet<int> SelectedRoleIds { get; set; } = new();
-    protected RoleDto RoleModel { get; set; } = new();
-    protected List<RoleDto>? Roles { get; set; }
-    protected string? SuccessMessage { get; set; }
-    protected bool IsError { get; set; }
-    protected string SearchTerm { get; set; } = string.Empty;
-    protected bool? SelectedFilterStatus { get; set; } = null;
-    protected bool IsEditing { get; set; } = false;
-    protected bool ShowDeleteModal { get; set; } = false;
-    protected string DeleteModalDescription { get; set; } = string.Empty;
-
-    private bool _isBulkDelete = false;
-    private int? _editingRoleId = null;
-    private RoleDto? _roleToDelete;
+    [Inject] protected RoleFacade Facade { get; set; } = default!;
+    [Inject] protected RoleState State { get; set; } = default!;
 
     protected IEnumerable<RoleDto> FilteredRoles =>
-        (Roles ?? Enumerable.Empty<RoleDto>())
-        .Where(r => string.IsNullOrWhiteSpace(SearchTerm) || r.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
-        .Where(r => SelectedFilterStatus == null || r.IsActive == SelectedFilterStatus);
+        (State.Roles ?? Enumerable.Empty<RoleDto>())
+        .Where(r => string.IsNullOrWhiteSpace(State.SearchTerm) || r.Name.Contains(State.SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(r => State.SelectedFilterStatus == null || r.IsActive == State.SelectedFilterStatus);
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadRoles();
+        State.OnChange += StateHasChanged;
+        await Facade.LoadRolesAsync();
     }
 
-    protected void FilterByStatus(bool? status)
-    {
-        SelectedFilterStatus = status;
-    }
-
-    private async Task LoadRoles()
-    {
-        Roles = await DbContext.Roles.ProjectToType<RoleDto>().ToListAsync();
-    }
+    public void Dispose() => State.OnChange -= StateHasChanged;
 
     protected async Task HandleSubmitRole()
     {
-        if (string.IsNullOrWhiteSpace(RoleModel.Name)) return;
-
-        IsError = false;
-
-        if (IsEditing && _editingRoleId.HasValue)
-        {
-            var roleToUpdate = await DbContext.Roles.FindAsync(_editingRoleId.Value);
-            if (roleToUpdate != null)
-            {
-                RoleModel.Adapt(roleToUpdate);
-                SuccessMessage = "نقش با موفقیت ویرایش شد.";
-            }
-        }
-        else
-        {
-            var newRole = RoleModel.Adapt<Role>();
-            DbContext.Roles.Add(newRole);
-            SuccessMessage = "نقش با موفقیت ایجاد شد.";
-        }
-
-        await DbContext.SaveChangesAsync();
-        CancelEdit();
-        await LoadRoles();
-
-        _ = Task.Delay(3000).ContinueWith(_ => { SuccessMessage = null; InvokeAsync(StateHasChanged); });
-    }
-
-    protected void EditRole(RoleDto role)
-    {
-        IsEditing = true;
-        _editingRoleId = role.Id;
-        RoleModel = role.Adapt<RoleDto>();
-    }
-
-    protected void CancelEdit()
-    {
-        IsEditing = false;
-        _editingRoleId = null;
-        RoleModel = new RoleDto();
-        SuccessMessage = null;
-    }
-
-    protected void HandleSearch(string term)
-    {
-        SearchTerm = term;
-    }
-
-    protected void OnSelectionChanged(HashSet<int> newKeys)
-    {
-        SelectedRoleIds = newKeys;
-    }
-
-    protected void ClearSelection()
-    {
-        SelectedRoleIds.Clear();
-    }
-
-    protected void OpenBulkDeleteModal()
-    {
-        _isBulkDelete = true;
-        DeleteModalDescription = $"آیا از حذف {SelectedRoleIds.Count} نقش انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
-        ShowDeleteModal = true;
-    }
-
-    protected void OpenDeleteModal(RoleDto role)
-    {
-        _roleToDelete = role;
-        _isBulkDelete = false;
-        DeleteModalDescription = $"آیا از حذف نقش «{role.Name}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
-        ShowDeleteModal = true;
-    }
-
-    protected void CancelDelete()
-    {
-        ShowDeleteModal = false;
-        _roleToDelete = null;
-        _isBulkDelete = false;
+        await Facade.SubmitRoleAsync();
+        ClearMessageAfterDelay(3000);
     }
 
     protected async Task ConfirmDelete()
     {
-        try
-        {
-            if (_isBulkDelete)
-            {
-                var rolesToRemove = await DbContext.Roles.Where(r => SelectedRoleIds.Contains(r.Id)).ToListAsync();
-                DbContext.Roles.RemoveRange(rolesToRemove);
-                await DbContext.SaveChangesAsync();
-
-                var verb = rolesToRemove.Count == 1 ? "شد" : "شدند";
-                SuccessMessage = $"{rolesToRemove.Count} نقش با موفقیت حذف {verb}.";
-                ClearSelection();
-            }
-            else if (_roleToDelete != null)
-            {
-                var roleEntity = await DbContext.Roles.FindAsync(_roleToDelete.Id);
-                if (roleEntity != null)
-                {
-                    DbContext.Roles.Remove(roleEntity);
-                    await DbContext.SaveChangesAsync();
-                }
-
-                SuccessMessage = "نقش با موفقیت حذف شد.";
-                if (IsEditing && _editingRoleId == _roleToDelete.Id) CancelEdit();
-            }
-
-            IsError = false;
-            await LoadRoles();
-        }
-        catch (Exception)
-        {
-            IsError = true;
-            SuccessMessage = "امکان حذف وجود ندارد! ابتدا باید کاربرانی که این نقش‌ها را دارند، ویرایش کنید.";
-        }
-        finally
-        {
-            CancelDelete();
-            _ = Task.Delay(4000).ContinueWith(_ => { SuccessMessage = null; IsError = false; InvokeAsync(StateHasChanged); });
-        }
+        await Facade.ConfirmDeleteAsync();
+        ClearMessageAfterDelay(4000);
     }
 
     protected async Task BulkDeactivateRoles()
     {
-        var rolesToDeactivate = await DbContext.Roles
-            .Where(r => SelectedRoleIds.Contains(r.Id))
-            .ToListAsync();
-
-        foreach (var role in rolesToDeactivate)
-        {
-            role.IsActive = false;
-        }
-
-        await DbContext.SaveChangesAsync();
-
-        var verb = rolesToDeactivate.Count == 1 ? "شد" : "شدند";
-        SuccessMessage = $"{rolesToDeactivate.Count} نقش با موفقیت غیرفعال {verb}.";
-
-        ClearSelection();
-        await LoadRoles();
-
-        _ = Task.Delay(4000).ContinueWith(_ => { SuccessMessage = null; InvokeAsync(StateHasChanged); });
+        await Facade.BulkDeactivateAsync();
+        ClearMessageAfterDelay(4000);
     }
 
     protected async Task BulkActivateRoles()
     {
-        var rolesToActivate = await DbContext.Roles
-            .Where(r => SelectedRoleIds.Contains(r.Id))
-            .ToListAsync();
-
-        foreach (var role in rolesToActivate)
-        {
-            role.IsActive = true;
-        }
-
-        await DbContext.SaveChangesAsync();
-
-        var verb = rolesToActivate.Count == 1 ? "شد" : "شدند";
-        SuccessMessage = $"{rolesToActivate.Count} نقش با موفقیت فعال {verb}.";
-
-        ClearSelection();
-        await LoadRoles();
-
-        _ = Task.Delay(4000).ContinueWith(_ => { SuccessMessage = null; InvokeAsync(StateHasChanged); });
+        await Facade.BulkActivateAsync();
+        ClearMessageAfterDelay(4000);
     }
+
+    private void ClearMessageAfterDelay(int delay)
+    {
+        _ = Task.Delay(delay).ContinueWith(_ => { State.SuccessMessage = null; State.IsError = false; InvokeAsync(StateHasChanged); });
+    }
+
+    protected void FilterByStatus(bool? status) { State.SelectedFilterStatus = status; State.NotifyStateChanged(); }
+    protected void HandleSearch(string term) { State.SearchTerm = term; State.NotifyStateChanged(); }
+    protected void OnSelectionChanged(HashSet<int> newKeys) { State.SelectedRoleIds = newKeys; State.NotifyStateChanged(); }
+    protected void ClearSelection() { State.SelectedRoleIds.Clear(); State.NotifyStateChanged(); }
+    protected void EditRole(RoleDto role) { State.IsEditing = true; State.EditingRoleId = role.Id; State.RoleModel = role.Adapt<RoleDto>(); State.NotifyStateChanged(); }
+    protected void CancelEdit() => State.ClearForm();
+    protected void OpenBulkDeleteModal() { State.IsBulkDelete = true; State.DeleteModalDescription = $"آیا از حذف {State.SelectedRoleIds.Count} نقش انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است."; State.ShowDeleteModal = true; State.NotifyStateChanged(); }
+    protected void OpenDeleteModal(RoleDto role) { State.RoleToDelete = role; State.IsBulkDelete = false; State.DeleteModalDescription = $"آیا از حذف نقش «{role.Name}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است."; State.ShowDeleteModal = true; State.NotifyStateChanged(); }
+    protected void CancelDelete() => State.ClearDeleteModal();
 }
