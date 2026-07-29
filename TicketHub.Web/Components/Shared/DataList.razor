@@ -1,0 +1,31 @@
+﻿@typeparam TItem
+
+@if (Items == null)
+{
+    <div class="flex justify-center items-center py-20">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+}
+else if (!Items.Any())
+{
+    <div class="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293H10.828a1 1 0 01-.707-.293L7.707 13.293a1 1 0 00-.707-.293H4" /></svg>
+        <p class="text-gray-500 font-medium">@EmptyMessage</p>
+    </div>
+}
+else
+{
+    <div class="@ContainerClass">
+        @foreach (var item in Items)
+        {
+            @ItemTemplate(item)
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+    [Parameter] public string EmptyMessage { get; set; } = "اطلاعاتی یافت نشد.";
+    [Parameter] public string ContainerClass { get; set; } = "grid grid-cols-1 gap-4";
+}

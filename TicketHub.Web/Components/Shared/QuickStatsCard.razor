@@ -1,0 +1,17 @@
+﻿<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+        <p class="text-sm text-gray-400 font-medium">@Title</p>
+        <h3 class="text-2xl font-bold mt-1 @ValueColorClass">@Value</h3>
+    </div>
+    <div class="p-3 rounded-xl @IconThemeClass">
+        @Icon
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string ValueColorClass { get; set; } = "text-gray-800";
+    [Parameter] public string IconThemeClass { get; set; } = "bg-blue-50 text-blue-600";
+    [Parameter] public RenderFragment Icon { get; set; } = default!;
+}
