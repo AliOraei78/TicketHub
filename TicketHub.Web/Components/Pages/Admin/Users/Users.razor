@@ -78,5 +78,5 @@
     <Pagination CurrentPage="currentPage" PageSize="pageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
 </div>
 
-<UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" AvailableProjects="availableProjects" SelectedRoles="selectedRoles" SelectedProjectIds="selectedProjectIds" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" ErrorMessage="@formErrorMessage" />
+<UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" SelectedRoles="selectedRoles" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" ErrorMessage="@formErrorMessage" />
 <ConfirmDeleteModal IsOpen="showDeleteModal" Description="@($"آیا از حذف کاربر {userToDelete?.Name} مطمئن هستید؟")" ErrorMessage="@deleteErrorMessage" OnConfirm="ConfirmDeleteUser" OnCancel="CloseDeleteModal" />

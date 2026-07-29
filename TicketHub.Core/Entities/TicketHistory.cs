@@ -23,6 +23,10 @@ public class TicketHistory
     public string UserName { get; set; } = string.Empty;
     public User? User { get; set; } = null!;
 
+    public int? RoleId { get; set; }
+    public string RoleName { get; set; } = string.Empty;
+    public Role? Role { get; set; } = null!;
+
     public int? ParentHistoryId { get; set; }
     public TicketHistory? ParentHistory { get; set; }
 

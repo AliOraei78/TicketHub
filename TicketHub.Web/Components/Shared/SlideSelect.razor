@@ -39,7 +39,7 @@
     [Parameter] public Func<TItem, string> TextSelector { get; set; } = default!;
     [Parameter] public Func<TItem, TValue> ValueSelector { get; set; } = default!;
 
-    [Parameter] public TValue Value { get; set; }
+    [Parameter] public TValue? Value { get; set; }
     [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
 
     [Parameter] public bool AllowClear { get; set; } = true;

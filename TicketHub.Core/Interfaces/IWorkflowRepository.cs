@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 
-namespace TicketHub.Application.Interfaces;
+namespace TicketHub.Core.Interfaces;
 
 public interface IWorkflowRepository : IRepository<Workflow>
 {

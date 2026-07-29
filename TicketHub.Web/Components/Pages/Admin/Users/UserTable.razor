@@ -29,6 +29,7 @@
             </div>
         </td>
         <td class="px-6 py-2 text-sm text-gray-500 w-[20%] truncate" dir="ltr">@user.Email</td>
+        <!-- ستون نقش ها -->
         <td class="px-6 py-2 w-[15%]">
             <div class="flex flex-wrap gap-1">
                 @foreach (var userRole in user.UserRoles)
@@ -41,13 +42,23 @@
                 }
             </div>
         </td>
+        <!-- ستون پروژه ها -->
         <td class="px-6 py-2 w-[15%]">
             <div class="flex flex-wrap gap-1">
-                @foreach (var userProject in user.UserProjects)
-                {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">@userProject.Project?.Name</span>
+                @{
+                    var userProjects = user.UserRoles
+                        .Where(ur => ur.Role?.RoleProjects != null)
+                        .SelectMany(ur => ur.Role.RoleProjects)
+                        .Select(rp => rp.Project)
+                        .Where(p => p != null)
+                        .DistinctBy(p => p.Id)
+                        .ToList();
                 }
-                @if (!user.UserProjects.Any())
+                @foreach (var project in userProjects)
+                {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">@project.Name</span>
+                }
+                @if (!userProjects.Any())
                 {
                     <span class="text-gray-400 text-xs">بدون پروژه</span>
                 }

@@ -1,7 +1,7 @@
 ﻿// TicketHub.Infrastructure/Repositories/WorkflowRepository.cs
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using TicketHub.Application.Interfaces;
+using TicketHub.Core.Interfaces;
 using TicketHub.Core.Entities;
 using TicketHub.Infrastructure.Data;
 

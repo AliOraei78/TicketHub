@@ -16,6 +16,6 @@ namespace TicketHub.Core.Entities
         public Workflow? Workflow { get; set; }
 
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
-        public ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
+        public ICollection<RoleProject> RoleProjects { get; set; } = new List<RoleProject>();
     }
 }

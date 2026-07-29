@@ -41,17 +41,6 @@
                                  BadgeBgClass="bg-indigo-100"
                                  BadgeTextClass="text-indigo-700"
                                  BadgeButtonClass="text-indigo-500 hover:text-indigo-900" />
-
-            <MultiSelectDropdown TItem="Project" TValue="int"
-                                 Label="پروژه‌ها"
-                                 Placeholder="جستجو و انتخاب پروژه..."
-                                 Items="AvailableProjects"
-                                 @bind-SelectedValues="SelectedProjectIds"
-                                 ValueSelector="p => p.Id"
-                                 DisplaySelector="p => p.Name"
-                                 BadgeBgClass="bg-emerald-100"
-                                 BadgeTextClass="text-emerald-700"
-                                 BadgeButtonClass="text-emerald-500 hover:text-emerald-900" />
         </div>
         <div class="px-8 py-6 border-t bg-gray-50 flex gap-3">
             <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl smooth-transition">@(Model.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")</button>
@@ -65,9 +54,7 @@
     [Parameter] public User Model { get; set; } = new();
     [Parameter] public string PasswordInput { get; set; } = string.Empty;
     [Parameter] public List<Role> AvailableRoles { get; set; } = new();
-    [Parameter] public List<Project> AvailableProjects { get; set; } = new();
     [Parameter] public List<string> SelectedRoles { get; set; } = new();
-    [Parameter] public List<int> SelectedProjectIds { get; set; } = new();
     [Parameter] public EventCallback<UserFormSubmissionResult> OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public string? ErrorMessage { get; set; }
@@ -79,7 +66,6 @@
             User = Model,
             Password = PasswordInput,
             SelectedRoles = SelectedRoles,
-            SelectedProjectIds = SelectedProjectIds
         });
     }
 }

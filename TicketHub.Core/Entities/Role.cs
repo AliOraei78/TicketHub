@@ -10,5 +10,7 @@ namespace TicketHub.Core.Entities
         // Navigation Property جدید
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<TransitionRole> TransitionRoles { get; set; } = new List<TransitionRole>();
+        public ICollection<RoleProject> RoleProjects { get; set; } = new List<RoleProject>();
+        public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
     }
 }

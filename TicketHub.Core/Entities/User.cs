@@ -18,7 +18,6 @@ namespace TicketHub.Core.Entities
         // زمان انقضای کد (مثلاً ۱۵ دقیقه)
         public DateTime? TokenExpiration { get; set; }
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
-        public ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();

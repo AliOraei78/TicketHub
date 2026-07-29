@@ -13,8 +13,8 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
-        public DbSet<UserProject> UserProjects { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<RoleProject> RoleProjects { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Transition> Transitions { get; set; }
@@ -35,12 +35,6 @@ namespace TicketHub.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // 1. تنظیم کلیدهای اصلی و ایندکس‌های یکتا
-            modelBuilder.Entity<UserProject>().HasKey(up => up.Id);
-            modelBuilder.Entity<UserProject>()
-                .HasIndex(up => new { up.UserId, up.ProjectId })
-                .IsUnique();
 
             modelBuilder.Entity<UserRole>().HasKey(ur => ur.Id);
             modelBuilder.Entity<UserRole>()
@@ -78,7 +72,10 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(th => th.Transition).WithMany(t => t.Histories).HasForeignKey(th => th.TransitionId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.User).WithMany(u => u.Histories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(th => th.User).WithMany(u => u.Histories).HasForeignKey(th => th.RoleId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TicketHistory>()
+                .HasOne(th => th.Role).WithMany(u => u.Histories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TicketHistory>()
                 .HasOne(th => th.ParentHistory).WithMany(p => p.ChildHistories).HasForeignKey(th => th.ParentHistoryId).OnDelete(DeleteBehavior.Restrict);
@@ -141,6 +138,12 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany(ft => ft.TransitionFields)
                 .HasForeignKey(tf => tf.FieldTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // تنظیمات9.  RoleProject
+            modelBuilder.Entity<RoleProject>().HasKey(rp => rp.Id);
+            modelBuilder.Entity<RoleProject>()
+                .HasIndex(rp => new { rp.RoleId, rp.ProjectId })
+                .IsUnique();
         }
     }
 }
