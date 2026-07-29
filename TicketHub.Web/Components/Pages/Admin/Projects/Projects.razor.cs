@@ -1,59 +1,46 @@
-﻿using Microsoft.AspNetCore.Components;
-using TicketHub.Application.Services;
+﻿using Mapster;
+using Microsoft.AspNetCore.Components;
+using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
-using TicketHub.Core.Interfaces;
-using TicketHub.Web.States;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using TicketHub.Web.Facades;
 
 namespace TicketHub.Web.Components.Pages.Admin.Projects;
 
 public partial class Projects : ComponentBase, IDisposable
 {
-    [Inject] public IProjectService ProjectService { get; set; } = default!;
+    [Inject] public ProjectFacade ProjectFacade { get; set; } = default!;
 
-    // اگر اینترفیس ساختید از IProjectState وگرنه از ProjectState استفاده کنید
-    [Inject] public ProjectState State { get; set; } = default!;
-
-    private Project projectModel = new Project();
-    private bool isFormModalOpen = false;
+    private ProjectDto projectModel = new();
+    private bool isFormModalOpen;
     private int? deletingProjectId;
 
-    private Project? projectToDelete;
-    private bool isDeleteModalOpen = false;
+    private ProjectDto? projectToDelete;
+    private bool isDeleteModalOpen;
 
     protected override async Task OnInitializedAsync()
     {
-        State.OnChange += StateHasChanged;
-        await State.InitializeAsync();
+        ProjectFacade.OnChange += StateHasChanged;
+        await ProjectFacade.InitializeAsync();
     }
 
-    // پیاده‌سازی متد Dispose برای رفع ارور CS0535
     public void Dispose()
     {
-        State.OnChange -= StateHasChanged;
+        ProjectFacade.OnChange -= StateHasChanged;
     }
 
-    private void FilterByStatus(bool? status) => State.SetFilter(status);
+    private void FilterByStatus(bool? status) => ProjectFacade.SetFilter(status);
 
-    private void HandleSearch(string term) => State.SetSearchTerm(term);
+    private void HandleSearch(string term) => ProjectFacade.SetSearchTerm(term);
 
     private void OpenCreateModal()
     {
-        projectModel = new Project();
+        projectModel = new ProjectDto();
         isFormModalOpen = true;
     }
 
-    private void OpenEditModal(Project project)
+    private void OpenEditModal(ProjectDto project)
     {
-        projectModel = new Project
-        {
-            Id = project.Id,
-            Name = project.Name,
-            Description = project.Description,
-            CreatedAt = project.CreatedAt,
-            IsActive = project.IsActive,
-            WorkflowId = project.WorkflowId
-        };
+        projectModel = project.Adapt<ProjectDto>();
         isFormModalOpen = true;
     }
 
@@ -61,31 +48,11 @@ public partial class Projects : ComponentBase, IDisposable
 
     private async Task HandleSaveProject()
     {
-        if (projectModel.Id == 0)
-        {
-            await ProjectService.AddProjectAsync(projectModel);
-        }
-        else
-        {
-            // خواندن لیست پروژه‌ها از State
-            var trackedProject = State.Projects.FirstOrDefault(p => p.Id == projectModel.Id);
-            if (trackedProject != null)
-            {
-                trackedProject.Name = projectModel.Name;
-                trackedProject.Description = projectModel.Description;
-                trackedProject.IsActive = projectModel.IsActive;
-                trackedProject.WorkflowId = projectModel.WorkflowId;
-
-                await ProjectService.UpdateProjectAsync(trackedProject);
-            }
-        }
-
-        // بارگذاری مجدد از طریق State
-        await State.ReloadProjectsAsync();
+        await ProjectFacade.SaveProjectAsync(projectModel);
         isFormModalOpen = false;
     }
 
-    private void OpenDeleteModal(Project project)
+    private void OpenDeleteModal(ProjectDto project)
     {
         projectToDelete = project;
         isDeleteModalOpen = true;
@@ -108,11 +75,7 @@ public partial class Projects : ComponentBase, IDisposable
             StateHasChanged();
             await Task.Delay(400);
 
-            await ProjectService.DeleteProjectAsync(idToDelete);
-
-            // بارگذاری مجدد از طریق State
-            await State.ReloadProjectsAsync();
-
+            await ProjectFacade.DeleteProjectAsync(idToDelete);
             deletingProjectId = null;
         }
         else

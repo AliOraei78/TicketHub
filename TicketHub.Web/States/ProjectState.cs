@@ -1,5 +1,6 @@
 ﻿using TicketHub.Core.Entities;
 using TicketHub.Application.Services;
+using TicketHub.Application.DTOs;
 
 namespace TicketHub.Web.States;
 
@@ -9,14 +10,14 @@ public class ProjectState
 
     public ProjectState(IProjectService projectService) => _projectService = projectService;
 
-    public IEnumerable<Project> Projects { get; private set; } = new List<Project>();
-    public IEnumerable<Workflow> Workflows { get; private set; } = new List<Workflow>();
+    public IEnumerable<ProjectDto> Projects { get; private set; } = new List<ProjectDto>();
+    public IEnumerable<WorkflowDto> Workflows { get; private set; } = new List<WorkflowDto>();
     public string SearchTerm { get; private set; } = string.Empty;
     public bool? SelectedFilterStatus { get; private set; }
 
     public event Action? OnChange;
 
-    public IEnumerable<Project> FilteredProjects =>
+    public IEnumerable<ProjectDto> FilteredProjects =>
         Projects
         .Where(p => string.IsNullOrWhiteSpace(SearchTerm) || p.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
         .Where(p => SelectedFilterStatus == null || p.IsActive == SelectedFilterStatus);

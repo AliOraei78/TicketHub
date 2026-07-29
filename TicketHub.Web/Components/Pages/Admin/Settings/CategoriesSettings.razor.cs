@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
 using TicketHub.Web.Facades;
 using TicketHub.Web.State;
@@ -15,7 +16,7 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private bool isBulkDelete = false;
     private string deleteModalDescription = string.Empty;
 
-    private Category categoryModel = new();
+    private CategoryDto categoryModel = new();
     private string? successMessage;
     private bool isError = false;
     private string searchTerm = string.Empty;
@@ -26,10 +27,10 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private int? editingCategoryId = null;
 
     private bool showDeleteModal = false;
-    private Category? categoryToDelete;
+    private CategoryDto? categoryToDelete;
 
     // فیلتر کردن از State خوانده می‌شود
-    private IEnumerable<Category> FilteredCategories =>
+    private IEnumerable<CategoryDto> FilteredCategories =>
         string.IsNullOrWhiteSpace(searchTerm)
             ? categoryState.Categories
             : categoryState.Categories.Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
@@ -69,20 +70,20 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
 
-    private void EditCategory(Category category)
+    private void EditCategory(CategoryDto category)
     {
         isEditing = true;
         editingCategoryId = category.Id;
 
         // ایجاد یک کپی جدید تا تغییرات موقت مستقیما روی استیت اعمال نشود
-        categoryModel = new Category { Id = category.Id, Name = category.Name };
+        categoryModel = new CategoryDto { Id = category.Id, Name = category.Name };
     }
 
     private void CancelEdit()
     {
         isEditing = false;
         editingCategoryId = null;
-        categoryModel = new Category();
+        categoryModel = new CategoryDto();
         successMessage = null;
         isError = false;
     }
@@ -109,7 +110,7 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         showDeleteModal = true;
     }
 
-    private void OpenDeleteModal(Category category)
+    private void OpenDeleteModal(CategoryDto category)
     {
         categoryToDelete = category;
         isBulkDelete = false;

@@ -1,4 +1,6 @@
-﻿using TicketHub.Core.Entities;
+﻿using Mapster;
+using TicketHub.Application.DTOs;
+using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 
 namespace TicketHub.Application.Services;
@@ -14,17 +16,30 @@ public class ProjectService : IProjectService
         _workflowRepo = workflowRepo;
     }
 
-    public async Task<IEnumerable<Project>> GetProjectsAsync() => await _projectRepo.GetAllAsync();
-
-    public async Task<IEnumerable<Workflow>> GetWorkflowsAsync() => await _workflowRepo.GetAllAsync();
-
-    public async Task AddProjectAsync(Project project)
+    public async Task<IEnumerable<ProjectDto>> GetProjectsAsync()
     {
-        project.CreatedAt = DateTime.UtcNow;
-        await _projectRepo.AddAsync(project);
+        var projects = await _projectRepo.GetAllAsync();
+        return projects.Adapt<IEnumerable<ProjectDto>>();
     }
 
-    public async Task UpdateProjectAsync(Project project) => await _projectRepo.UpdateAsync(project);
+    public async Task<IEnumerable<WorkflowDto>> GetWorkflowsAsync()
+    {
+        var workflows = await _workflowRepo.GetAllAsync();
+        return workflows.Adapt<IEnumerable<WorkflowDto>>();
+    }
+
+    public async Task AddProjectAsync(ProjectDto dto)
+    {
+        var entity = dto.Adapt<Project>();
+        entity.CreatedAt = DateTime.UtcNow;
+        await _projectRepo.AddAsync(entity);
+    }
+
+    public async Task UpdateProjectAsync(ProjectDto dto)
+    {
+        var entity = dto.Adapt<Project>();
+        await _projectRepo.UpdateAsync(entity);
+    }
 
     public async Task DeleteProjectAsync(int id) => await _projectRepo.DeleteAsync(id);
 }

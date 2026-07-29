@@ -1,4 +1,4 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 
 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md smooth-transition group relative">
 
@@ -54,7 +54,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public Project Project { get; set; } = default!;
+    public ProjectDto Project { get; set; } = default!;
 
     [Parameter]
     public EventCallback OnEdit { get; set; }

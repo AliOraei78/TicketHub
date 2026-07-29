@@ -74,6 +74,7 @@ builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ProjectState>();
+builder.Services.AddScoped<ProjectFacade>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<CategoryState>();
 builder.Services.AddScoped<CategoryFacade>();

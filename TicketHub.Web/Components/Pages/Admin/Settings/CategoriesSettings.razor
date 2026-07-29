@@ -1,7 +1,7 @@
 ﻿@page "/settings/categories"
 @rendermode InteractiveServer
 @namespace TicketHub.Web.Components.Pages.Admin.Settings
-@using TicketHub.Core.Entities
+@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
 <PageTitle>تنظیمات نوع تیکت | سامانه تیکتینگ</PageTitle>
@@ -41,7 +41,7 @@
                     </div>
                 </div>
                 <div class="p-0">
-                    <DataGrid TItem="Category" TKey="int" Items="FilteredCategories" IsLoading="categoryState.IsLoading" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
+                    <DataGrid TItem="CategoryDto" TKey="int" Items="FilteredCategories" IsLoading="categoryState.IsLoading" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
                         <HeaderTemplate>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان نوع تیکت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>

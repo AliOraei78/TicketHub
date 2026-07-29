@@ -1,4 +1,4 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 
 <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator />
@@ -28,7 +28,7 @@
 }
 
 @code {
-    [Parameter] public Category Model { get; set; } = new();
+    [Parameter] public CategoryDto Model { get; set; } = new();
     [Parameter] public bool IsEditing { get; set; }
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }

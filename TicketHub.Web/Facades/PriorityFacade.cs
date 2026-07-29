@@ -50,7 +50,8 @@ public class PriorityFacade
     public async Task DeleteBulkAsync(IEnumerable<int> ids)
     {
         await _service.DeleteRangeAsync(ids);
-        _state.SetMessage($"{ids.Count()} اولویت با موفقیت حذف شدند.");
+        var count = ids.Count();
+        _state.SetMessage($"{count} اولویت با موفقیت حذف {(count == 1 ? "شد" : "شدند")}.");
         await LoadPrioritiesAsync();
         ClearMessage();
     }

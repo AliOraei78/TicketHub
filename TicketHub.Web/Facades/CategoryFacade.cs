@@ -1,4 +1,6 @@
-﻿using TicketHub.Application.Interfaces;
+﻿using Mapster;
+using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Core.Entities;
 using TicketHub.Web.State;
 
@@ -20,14 +22,17 @@ public class CategoryFacade
         _categoryState.IsLoading = true;
         _categoryState.NotifyStateChanged();
 
-        _categoryState.Categories = await _categoryService.GetAllAsync();
+        var categories = await _categoryService.GetAllAsync();
+        _categoryState.Categories = categories.Adapt<List<CategoryDto>>();
 
         _categoryState.IsLoading = false;
         _categoryState.NotifyStateChanged();
     }
 
-    public async Task AddOrUpdateAsync(Category category, bool isEditing)
+    public async Task AddOrUpdateAsync(CategoryDto categoryDto, bool isEditing)
     {
+        var category = categoryDto.Adapt<Category>();
+
         if (isEditing)
             await _categoryService.UpdateAsync(category);
         else
@@ -36,8 +41,9 @@ public class CategoryFacade
         await LoadCategoriesAsync();
     }
 
-    public async Task DeleteAsync(Category category)
+    public async Task DeleteAsync(CategoryDto categoryDto)
     {
+        var category = categoryDto.Adapt<Category>();
         await _categoryService.DeleteAsync(category);
         await LoadCategoriesAsync();
     }
