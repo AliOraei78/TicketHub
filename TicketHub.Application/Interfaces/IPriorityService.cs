@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TicketHub.Core.Entities;
+﻿using TicketHub.Application.DTOs;
 
 namespace TicketHub.Application.Interfaces;
 
 public interface IPriorityService
 {
-    Task<IEnumerable<Priority>> GetAllAsync();
-    Task AddAsync(Priority priority);
-    Task UpdateAsync(Priority priority);
+    Task<IEnumerable<PriorityDto>> GetAllAsync();
+    Task AddAsync(PriorityDto priorityDto);
+    Task UpdateAsync(PriorityDto priorityDto);
     Task DeleteAsync(int id);
     Task DeleteRangeAsync(IEnumerable<int> ids);
 }

@@ -22,8 +22,8 @@ public class CategoryFacade
         _categoryState.IsLoading = true;
         _categoryState.NotifyStateChanged();
 
-        var categories = await _categoryService.GetAllAsync();
-        _categoryState.Categories = categories.Adapt<List<CategoryDto>>();
+        // نیازی به Adapt مجدد نیست
+        _categoryState.Categories = await _categoryService.GetAllAsync();
 
         _categoryState.IsLoading = false;
         _categoryState.NotifyStateChanged();
@@ -31,20 +31,17 @@ public class CategoryFacade
 
     public async Task AddOrUpdateAsync(CategoryDto categoryDto, bool isEditing)
     {
-        var category = categoryDto.Adapt<Category>();
-
         if (isEditing)
-            await _categoryService.UpdateAsync(category);
+            await _categoryService.UpdateAsync(categoryDto);
         else
-            await _categoryService.AddAsync(category);
+            await _categoryService.AddAsync(categoryDto);
 
         await LoadCategoriesAsync();
     }
 
     public async Task DeleteAsync(CategoryDto categoryDto)
     {
-        var category = categoryDto.Adapt<Category>();
-        await _categoryService.DeleteAsync(category);
+        await _categoryService.DeleteAsync(categoryDto);
         await LoadCategoriesAsync();
     }
 

@@ -1,4 +1,6 @@
-﻿using TicketHub.Application.Interfaces;
+﻿using Mapster;
+using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 
@@ -13,11 +15,17 @@ public class PriorityService : IPriorityService
         _repository = repository;
     }
 
-    public async Task<IEnumerable<Priority>> GetAllAsync() => await _repository.GetAllAsync();
+    public async Task<IEnumerable<PriorityDto>> GetAllAsync()
+    {
+        var data = await _repository.GetAllAsync();
+        return data.Adapt<IEnumerable<PriorityDto>>();
+    }
 
-    public async Task AddAsync(Priority priority) => await _repository.AddAsync(priority);
+    public async Task AddAsync(PriorityDto priorityDto)
+        => await _repository.AddAsync(priorityDto.Adapt<Priority>());
 
-    public async Task UpdateAsync(Priority priority) => await _repository.UpdateAsync(priority);
+    public async Task UpdateAsync(PriorityDto priorityDto)
+        => await _repository.UpdateAsync(priorityDto.Adapt<Priority>());
 
     public async Task DeleteAsync(int id) => await _repository.DeleteAsync(id);
 
