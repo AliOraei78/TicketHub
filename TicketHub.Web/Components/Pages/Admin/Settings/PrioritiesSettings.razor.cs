@@ -107,6 +107,7 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
         else if (itemToDelete != null)
         {
             await Facade.DeletePriorityAsync(itemToDelete);
+            selectedIds.Remove(itemToDelete.Id);
             if (isEditing && editingId == itemToDelete.Id) CancelEdit();
         }
         CancelDelete();

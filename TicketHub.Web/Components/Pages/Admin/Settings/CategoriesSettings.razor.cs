@@ -139,6 +139,7 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
             {
                 await CategoryFacade.DeleteAsync(categoryToDelete);
                 successMessage = "نوع تیکت با موفقیت حذف شد.";
+                selectedCategoryIds.Remove(categoryToDelete.Id);
                 if (isEditing && editingCategoryId == categoryToDelete.Id) CancelEdit();
             }
 
