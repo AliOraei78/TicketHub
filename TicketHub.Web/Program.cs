@@ -1,3 +1,5 @@
+using Mapster;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies; // اضافه شود
 using Microsoft.AspNetCore.Components.Authorization;
@@ -24,6 +26,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
     .EnableSensitiveDataLogging() // ثبت مقادیر ارسال شده به دیتابیس در لاگ
            .EnableDetailedErrors());     // نمایش جزئیات دقیق‌تر خطاهای EF
+
+// --- افزودن کدهای Mapster ---
+var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
+// مسیر اسمبلی حاوی MapsterConfig.cs را بدهید (مثلا typeof(MapsterConfig).Assembly)
+typeAdapterConfig.Scan(typeof(TicketHub.Application.Mapping.MapsterConfig).Assembly);
+builder.Services.AddSingleton(typeAdapterConfig);
+builder.Services.AddScoped<IMapper, ServiceMapper>();
+// ------------------------------
 
 // --------- بخش جدید احراز هویت با کوکی ---------
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
