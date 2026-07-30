@@ -1,20 +1,21 @@
-﻿using TicketHub.Application.DTOs;
+﻿using Mapster;
+using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Web.States;
-using Mapster;
 
 namespace TicketHub.Web.Facades;
 
 public class UserFacade
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
     private readonly IRepository<Role> _roleRepository;
     private readonly IRepository<Project> _projectRepository;
 
-    public UserFacade(IUserRepository userRepository, IRepository<Role> roleRepo, IRepository<Project> projectRepo)
+    public UserFacade(IUserService userService, IRepository<Role> roleRepo, IRepository<Project> projectRepo)
     {
-        _userRepository = userRepository;
+        _userService = userService;
         _roleRepository = roleRepo;
         _projectRepository = projectRepo;
     }
@@ -30,16 +31,13 @@ public class UserFacade
 
     public async Task<(List<UserDto> Users, int TotalCount)> GetUsersAsync(UserState state)
     {
-        var result = await _userRepository.GetFilteredUsersAsync(
+        return await _userService.GetFilteredUsersAsync(
             state.SearchTerm,
             state.SelectedFilterRoleIds,
             state.SelectedFilterProjectIds,
             state.SelectedFilterStatus,
             state.CurrentPage,
             state.PageSize);
-
-        var userDtos = result.Users.Adapt<List<UserDto>>();
-        return (userDtos, result.TotalCount);
     }
 
     public async Task<List<string>> SaveUserAsync(UserDto userModel, string passwordInput, List<string> selectedRoles, List<RoleDto> availableRoles)
@@ -53,7 +51,7 @@ public class UserFacade
             errors.Add($"• {new ValidEmailAttribute().ErrorMessage}");
         else
         {
-            var allUsers = await _userRepository.GetAllAsync();
+            var allUsers = await _userService.GetAllAsync();
             if (allUsers.Any(u => u.Email == userModel.Email && u.Id != userModel.Id))
                 errors.Add("• این ایمیل قبلاً ثبت شده است.");
         }
@@ -70,49 +68,22 @@ public class UserFacade
         if (errors.Any()) return errors;
 
         var roleIdsToAssign = availableRoles.Where(r => selectedRoles.Contains(r.Name)).Select(r => r.Id).ToList();
-
         // این بلوک را جایگزین کنید
         if (userModel.Id == 0)
         {
-            var newUser = userModel.Adapt<User>();
-            newUser.Password = BCrypt.Net.BCrypt.HashPassword(passwordInput);
-            newUser.CreatedAt = DateTime.UtcNow;
-
-            await _userRepository.AddAsync(newUser);
-            await _userRepository.UpdateUserRolesAsync(newUser.Id, roleIdsToAssign);
+            await _userService.CreateAsync(userModel, passwordInput, roleIdsToAssign);
         }
         else
         {
-            var userInDb = await _userRepository.GetByIdAsync(userModel.Id);
-            if (userInDb == null) return errors;
-
-            userInDb.Name = userModel.Name;
-            userInDb.Email = userModel.Email;
-            userInDb.PhoneNumber = userModel.PhoneNumber;
-            userInDb.IsConfirmed = userModel.IsConfirmed;
-            userInDb.IsActive = userModel.IsActive;
-            if (!string.IsNullOrWhiteSpace(passwordInput))
-                userInDb.Password = BCrypt.Net.BCrypt.HashPassword(passwordInput);
-
-            await _userRepository.UpdateAsync(userInDb);
-            await _userRepository.UpdateUserRolesAsync(userInDb.Id, roleIdsToAssign);
+            await _userService.UpdateAsync(userModel, passwordInput, roleIdsToAssign);
         }
 
         return errors;
     }
 
+    // 4. تغییر متد ExecuteBulkActionAsync
     public async Task ExecuteBulkActionAsync(HashSet<int> userIds, string actionType, int? singleId = null)
     {
-        switch (actionType)
-        {
-            case "Delete":
-                await _userRepository.BulkDeleteAsync(userIds); break;
-            case "SingleDelete":
-                if (singleId.HasValue) await _userRepository.DeleteAsync(singleId.Value); break;
-            case "Activate":
-                await _userRepository.BulkUpdateStatusAsync(userIds, true); break;
-            case "Deactivate":
-                await _userRepository.BulkUpdateStatusAsync(userIds, false); break;
-        }
+        await _userService.ExecuteBulkActionAsync(userIds, actionType, singleId);
     }
 }
