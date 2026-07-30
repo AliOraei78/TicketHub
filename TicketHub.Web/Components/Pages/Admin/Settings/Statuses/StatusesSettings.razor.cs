@@ -1,28 +1,23 @@
 ﻿using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Application.Interfaces;
+using TicketHub.Web.Facades;
 using Mapster;
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings.Statuses;
 
-public partial class StatusesSettings : ComponentBase
+public partial class StatusesSettings : ComponentBase, IDisposable
 {
     [Inject]
-    private IStatusService StatusService { get; set; } = default!;
+    private StatusFacade Facade { get; set; } = default!;
 
     // Bulk action variables
-    private HashSet<int> selectedStatusIds = new();
     private bool isBulkDelete = false;
     private string deleteModalDescription = string.Empty;
 
     // Form and data variables
     private StatusDto statusModel = new() { ColorCode = "#3b82f6" };
-    private List<StatusDto>? statuses;
     private string? successMessage;
     private bool isError = false;
-
-    // Search variables
-    private string searchTerm = string.Empty;
 
     // Edit mode variables
     private bool isEditing = false;
@@ -34,18 +29,19 @@ public partial class StatusesSettings : ComponentBase
 
     // Filter statuses based on search term
     private IEnumerable<StatusDto> FilteredStatuses =>
-            string.IsNullOrWhiteSpace(searchTerm)
-                ? (statuses ?? Enumerable.Empty<StatusDto>())
-                : (statuses ?? Enumerable.Empty<StatusDto>()).Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            string.IsNullOrWhiteSpace(Facade.State.SearchTerm)
+                ? (Facade.State.Statuses ?? Enumerable.Empty<StatusDto>())
+                : (Facade.State.Statuses ?? Enumerable.Empty<StatusDto>()).Where(s => s.Name.Contains(Facade.State.SearchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadStatuses();
+        Facade.State.OnStateChange += StateHasChanged;
+        await Facade.LoadStatusesAsync();
     }
 
-    private async Task LoadStatuses()
+    public void Dispose()
     {
-        statuses = await StatusService.GetAllAsync();
+        Facade.State.OnStateChange -= StateHasChanged;
     }
 
     private async Task HandleSubmitStatus()
@@ -56,18 +52,18 @@ public partial class StatusesSettings : ComponentBase
         if (isEditing && editingStatusId.HasValue)
         {
             statusModel.Id = editingStatusId.Value;
-            await StatusService.UpdateAsync(statusModel);
+            await Facade.UpdateAsync(statusModel);
             successMessage = "وضعیت با موفقیت ویرایش شد.";
         }
         else
         {
             statusModel.ColorCode = string.IsNullOrEmpty(statusModel.ColorCode) ? "#3b82f6" : statusModel.ColorCode;
-            await StatusService.AddAsync(statusModel);
+            await Facade.AddAsync(statusModel);
             successMessage = "وضعیت با موفقیت ایجاد شد.";
         }
 
         CancelEdit();
-        await LoadStatuses();
+        await Facade.LoadStatusesAsync();
         _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
 
@@ -75,7 +71,6 @@ public partial class StatusesSettings : ComponentBase
     {
         isEditing = true;
         editingStatusId = status.Id;
-        // استفاده از Mapster برای کلون کردن آبجکت جهت جلوگیری از تغییر مستقیم رفرنس
         statusModel = status.Adapt<StatusDto>();
     }
 
@@ -89,27 +84,26 @@ public partial class StatusesSettings : ComponentBase
 
     private void HandleSearch(string term)
     {
-        searchTerm = term;
+        Facade.State.SearchTerm = term;
     }
 
     private void OnSelectionChanged(HashSet<int> newKeys)
     {
-        selectedStatusIds = newKeys;
+        Facade.State.SelectedStatusIds = newKeys;
     }
 
     private void ClearSelection()
     {
-        selectedStatusIds.Clear();
+        Facade.State.SelectedStatusIds.Clear();
     }
 
     private void OpenBulkDeleteModal()
     {
         isBulkDelete = true;
-        deleteModalDescription = $"آیا از حذف {selectedStatusIds.Count} وضعیت انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        deleteModalDescription = $"آیا از حذف {Facade.State.SelectedStatusIds.Count} وضعیت انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
         showDeleteModal = true;
     }
 
-    // Open delete modal for a single item
     private void OpenDeleteModal(StatusDto status)
     {
         statusToDelete = status;
@@ -118,7 +112,6 @@ public partial class StatusesSettings : ComponentBase
         showDeleteModal = true;
     }
 
-    // Close delete modal
     private void CancelDelete()
     {
         showDeleteModal = false;
@@ -126,28 +119,27 @@ public partial class StatusesSettings : ComponentBase
         isBulkDelete = false;
     }
 
-    // Confirm and execute deletion (both single and bulk)
     private async Task ConfirmDelete()
     {
         try
         {
             if (isBulkDelete)
             {
-                await StatusService.DeleteRangeAsync(selectedStatusIds);
-                var verb = selectedStatusIds.Count == 1 ? "شد" : "شدند";
-                successMessage = $"{selectedStatusIds.Count} وضعیت با موفقیت حذف {verb}.";
+                await Facade.DeleteRangeAsync(Facade.State.SelectedStatusIds);
+                var verb = Facade.State.SelectedStatusIds.Count == 1 ? "شد" : "شدند";
+                successMessage = $"{Facade.State.SelectedStatusIds.Count} وضعیت با موفقیت حذف {verb}.";
                 ClearSelection();
             }
             else if (statusToDelete != null)
             {
-                await StatusService.DeleteAsync(statusToDelete.Id);
+                await Facade.DeleteAsync(statusToDelete.Id);
                 successMessage = "وضعیت با موفقیت حذف شد.";
-                selectedStatusIds.Remove(statusToDelete.Id);
+                Facade.State.SelectedStatusIds.Remove(statusToDelete.Id);
                 if (isEditing && editingStatusId == statusToDelete.Id) CancelEdit();
             }
 
             isError = false;
-            await LoadStatuses();
+            await Facade.LoadStatusesAsync();
         }
         catch (Exception)
         {

@@ -85,7 +85,8 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<RoleState>();
 builder.Services.AddScoped<RoleFacade>();
 builder.Services.AddScoped<IStatusService, StatusService>();
-
+builder.Services.AddScoped<StatusState>();
+builder.Services.AddScoped<StatusFacade>();
 
 var app = builder.Build();
 

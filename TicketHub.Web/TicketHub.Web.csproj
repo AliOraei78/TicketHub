@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Pages\Auth\Shared\" />
     <Folder Include="Controllers\" />
     <Folder Include="Security\" />
   </ItemGroup>

@@ -3,7 +3,6 @@
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Application.DTOs
 
-
 <PageTitle>تنظیمات وضعیت‌ها | سامانه تیکتینگ</PageTitle>
 
 <div class="container mx-auto p-4 md:p-8 flex flex-col gap-3 flex-1" dir="rtl">
@@ -22,21 +21,10 @@
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
                 <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش وضعیت" : "ایجاد وضعیت جدید")</h3>
 
-                <div class="md:col-span-1">
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
-                        <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش وضعیت" : "ایجاد وضعیت جدید")</h3>
-
-                        <StatusForm Model="statusModel"
-                                    IsEditing="isEditing"
-                                    OnSubmit="HandleSubmitStatus"
-                                    OnCancel="CancelEdit" />
-
-                        @if (!string.IsNullOrEmpty(successMessage))
-                        {
-                            <div class="mt-4 p-3 @(isError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@successMessage</div>
-                        }
-                    </div>
-                </div>
+                <StatusForm Model="statusModel"
+                            IsEditing="isEditing"
+                            OnSubmit="HandleSubmitStatus"
+                            OnCancel="CancelEdit" />
 
                 @if (!string.IsNullOrEmpty(successMessage))
                 {
@@ -53,15 +41,15 @@
 
                     <!-- Search Field Component -->
                     <div class="w-full sm:w-72">
-                        <SearchBox Placeholder="جستجوی وضعیت..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                        <SearchBox Placeholder="جستجوی وضعیت..." SearchTerm="@Facade.State.SearchTerm" OnSearchChanged="HandleSearch" />
                     </div>
                 </div>
                 <div class="p-0">
                     <DataGrid TItem="@StatusDto" TKey="int"
                               Items="FilteredStatuses"
-                              IsLoading="statuses == null"
+                              IsLoading="Facade.State.Statuses == null"
                               KeySelector="s => s.Id"
-                              SelectedKeys="selectedStatusIds"
+                              SelectedKeys="Facade.State.SelectedStatusIds"
                               SelectedKeysChanged="OnSelectionChanged"
                               ShowRowIndex="false"
                               EmptyStateValue="وضعیتی">
@@ -79,7 +67,7 @@
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <span class="font-bold text-gray-800 block">@status.Name</span>                                           
+                                            <span class="font-bold text-gray-800 block">@status.Name</span>
 
                                             @if (status.NeedApproval)
                                             {
@@ -111,7 +99,7 @@
 </div>
 
 <!-- Toolbar for Bulk Actions -->
-<BulkActionToolbar SelectedCount="selectedStatusIds.Count"
+<BulkActionToolbar SelectedCount="Facade.State.SelectedStatusIds.Count"
                    OnCancel="ClearSelection"
                    OnDelete="OpenBulkDeleteModal" />
 
