@@ -26,27 +26,27 @@
     </HeaderTemplate>
 
     <ToolbarTemplate>
-        <ListFilterToolbar SearchTerm="@searchTerm"
+        <ListFilterToolbar SearchTerm="@Facade.State.SearchTerm"
                            SearchTermChanged="OnSearchTermChanged"
-                           PageSize="@pageSize"
+                           PageSize="@Facade.State.PageSize"
                            PageSizeChanged="OnPageSizeChanged"
                            SearchPlaceholder="جستجوی جریان کاری..."
                            ItemName="جریان کار"
-                           PageSizeOptions="myCustomOptions">
+                           PageSizeOptions="Facade.State.MyCustomOptions">
 
             <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                  Placeholder="پروژه..."
-                                 Items="availableProjects"
-                                 SelectedValues="selectedFilterProjectIds"
+                                 Items="Facade.State.AvailableProjects"
+                                 SelectedValues="Facade.State.SelectedFilterProjectIds"
                                  SelectedValuesChanged="FilterProjectsChanged"
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
         </ListFilterToolbar>
 
-        @if (selectedWorkflowIds.Any())
+        @if (Facade.State.SelectedWorkflowIds.Any())
         {
             <div class="w-full flex justify-end animate-[fadeIn_0.2s_ease-out]">
-                <BulkActionToolbar SelectedCount="selectedWorkflowIds.Count"
+                <BulkActionToolbar SelectedCount="Facade.State.SelectedWorkflowIds.Count"
                                    OnCancel="ClearSelection"
                                    OnDelete="OpenBulkDeleteModal" />
             </div>
@@ -54,26 +54,26 @@
     </ToolbarTemplate>
 
     <ListTemplate>
-        <WorkflowCardGrid Workflows="workflows"
-                          IsLoading="isLoading"
-                          @bind-SelectedIds="selectedWorkflowIds"
-                          DeletingIds="deletingWorkflowIds"
+        <WorkflowCardGrid Workflows="Facade.State.Workflows"
+                          IsLoading="Facade.State.IsLoading"
+                          @bind-SelectedIds="Facade.State.SelectedWorkflowIds"
+                          DeletingIds="Facade.State.DeletingWorkflowIds"
                           OnEdit="OpenEditWorkflow"
                           OnDelete="DeleteWorkflow" />
     </ListTemplate>
 
     <PaginationTemplate>
-        <Pagination CurrentPage="currentPage"
-                    PageSize="pageSize"
+        <Pagination CurrentPage="Facade.State.CurrentPage"
+                    PageSize="Facade.State.PageSize"
                     ItemName="جریان کار"
-                    TotalItems="totalWorkflows"
+                    TotalItems="Facade.State.TotalWorkflows"
                     OnNext="NextPage"
                     OnPrevious="PreviousPage" />
     </PaginationTemplate>
 
     <ModalTemplate>
-        <ConfirmDeleteModal IsOpen="isDeleteModalOpen"
-                            Description="@deleteModalDescription"
+        <ConfirmDeleteModal IsOpen="Facade.State.IsDeleteModalOpen"
+                            Description="@Facade.State.DeleteModalDescription"
                             OnConfirm="ConfirmDeleteAsync"
                             OnCancel="CancelDelete" />
     </ModalTemplate>

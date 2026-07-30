@@ -1,183 +1,96 @@
 ﻿using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Application.Interfaces;
-using TicketHub.Application.Services;
+using TicketHub.Web.Facades; // فضای نام Facade را تنظیم کنید
 using System.Threading;
 
 namespace TicketHub.Web.Components.Pages.Admin.WorkFlows;
 
-public partial class Workflows : ComponentBase
+public partial class Workflows : ComponentBase, IDisposable
 {
     [Inject] private NavigationManager Navigation { get; set; } = default!;
-    [Inject] private IWorkflowService WorkflowService { get; set; } = default!;
-    [Inject] private IProjectService ProjectService { get; set; } = default!;
-
-    private List<WorkflowDto> workflows = new();
-    private HashSet<int> selectedWorkflowIds = new();
-    private HashSet<int> deletingWorkflowIds = new();
+    [Inject] public WorkflowFacade Facade { get; set; } = default!; // اضافه شدن Facade
 
     private CancellationTokenSource? _searchCts;
 
-    private List<ProjectDto> availableProjects = new();
-    private List<StatusDto> availableStatuses = new();
-
-    private List<int> selectedFilterProjectIds = new();
-    private List<int> selectedFilterStatusIds = new();
-
-    private List<int> myCustomOptions = new() { 8, 16, 24, 32 };
-
-    private string searchTerm = string.Empty;
-    private int pageSize = 8;
-    private int currentPage = 1;
-    private int totalWorkflows = 0;
-    private bool isLoading = true;
-
-    // متغیرهای مدیریت مودال حذف
-    private bool isDeleteModalOpen = false;
-    private string deleteModalDescription = string.Empty;
-    private WorkflowDto? workflowToDelete = null;
-    private bool isBulkDelete = false;
-
     protected override async Task OnInitializedAsync()
     {
-        // دریافت اطلاعات به صورت متوالی برای جلوگیری از تداخل DbContext
-        availableProjects = (await ProjectService.GetProjectsAsync()).ToList();
-        availableStatuses = await WorkflowService.GetAllStatusesAsync();
-
-        await LoadWorkflows();
+        Facade.State.OnChange += StateHasChanged;
+        await Facade.InitializeAsync();
     }
 
-    private async Task LoadWorkflows()
-    {
-        isLoading = true;
-        try
-        {
-            var allWorkflows = (await WorkflowService.GetAllAsync()).AsEnumerable();
-
-            // انتساب پروژه‌ها
-            foreach (var w in allWorkflows)
-                w.Projects = availableProjects.Where(p => p.WorkflowId == w.Id).ToList();
-
-            // فیلتر جستجو
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                allWorkflows = allWorkflows.Where(w =>
-                    w.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    (w.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-
-            // فیلتر پروژه‌ها
-            if (selectedFilterProjectIds.Any())
-            {
-                var targetWorkflowIds = availableProjects
-                    .Where(p => selectedFilterProjectIds.Contains(p.Id) && p.WorkflowId.HasValue)
-                    .Select(p => p.WorkflowId!.Value)
-                    .ToHashSet();
-
-                allWorkflows = allWorkflows.Where(w => targetWorkflowIds.Contains(w.Id));
-            }
-
-            // فیلتر وضعیت‌ها
-            if (selectedFilterStatusIds.Any())
-            {
-                allWorkflows = allWorkflows.Where(w =>
-                    w.WorkflowStatuses.Any(ws => selectedFilterStatusIds.Contains(ws.StatusId)));
-            }
-
-            // اعمال صفحه‌بندی بهینه
-            totalWorkflows = allWorkflows.Count();
-            currentPage = totalWorkflows == 0 ? 1 : Math.Min(currentPage, (int)Math.Ceiling((double)totalWorkflows / pageSize));
-
-            workflows = allWorkflows
-                .Skip((currentPage - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
+    public void Dispose() => Facade.State.OnChange -= StateHasChanged;
 
     private void OpenCreateWorkflow() => Navigation.NavigateTo("/workflows/editor");
 
-    private void ClearSelection() => selectedWorkflowIds.Clear();
-
-    private async Task FilterProjectsChanged(List<int> v) { selectedFilterProjectIds = v; currentPage = 1; await LoadWorkflows(); }
-
     private void OpenEditWorkflow(WorkflowDto workflow) => Navigation.NavigateTo($"/workflows/editor/{workflow.Id}");
+
+    private void ClearSelection() => Facade.State.SelectedWorkflowIds.Clear();
+
+    private async Task FilterProjectsChanged(List<int> v)
+    {
+        Facade.State.SelectedFilterProjectIds = v;
+        Facade.State.CurrentPage = 1;
+        await Facade.LoadWorkflowsAsync();
+    }
 
     private void DeleteWorkflow(WorkflowDto workflow)
     {
-        workflowToDelete = workflow;
-        isBulkDelete = false;
-        deleteModalDescription = $"آیا از حذف جریان کاری '{workflow.Name}' اطمینان دارید؟";
-        isDeleteModalOpen = true;
+        Facade.State.WorkflowToDelete = workflow;
+        Facade.State.IsBulkDelete = false;
+        Facade.State.DeleteModalDescription = $"آیا از حذف جریان کاری '{workflow.Name}' اطمینان دارید؟";
+        Facade.State.IsDeleteModalOpen = true;
     }
 
     private void OpenBulkDeleteModal()
     {
-        isBulkDelete = true;
-        workflowToDelete = null;
-        deleteModalDescription = $"آیا از حذف {selectedWorkflowIds.Count} جریان کاری انتخاب شده اطمینان دارید؟";
-        isDeleteModalOpen = true;
+        Facade.State.IsBulkDelete = true;
+        Facade.State.WorkflowToDelete = null;
+        Facade.State.DeleteModalDescription = $"آیا از حذف {Facade.State.SelectedWorkflowIds.Count} جریان کاری انتخاب شده اطمینان دارید؟";
+        Facade.State.IsDeleteModalOpen = true;
     }
 
     private async Task ConfirmDeleteAsync()
     {
-        isDeleteModalOpen = false;
+        Facade.State.IsDeleteModalOpen = false;
 
-        if (isBulkDelete)
+        if (Facade.State.IsBulkDelete)
+            await Facade.BulkDeleteAsync();
+        else if (Facade.State.WorkflowToDelete != null)
         {
-            foreach (var id in selectedWorkflowIds)
-            {
-                await WorkflowService.DeleteAsync(id);
-            }
-            selectedWorkflowIds.Clear();
+            Facade.State.DeletingWorkflowIds.Add(Facade.State.WorkflowToDelete.Id);
+            await Facade.DeleteWorkflowAsync(Facade.State.WorkflowToDelete.Id);
+            Facade.State.DeletingWorkflowIds.Remove(Facade.State.WorkflowToDelete.Id);
         }
-        else if (workflowToDelete != null)
-        {
-            deletingWorkflowIds.Add(workflowToDelete.Id);
-            StateHasChanged();
-
-            await WorkflowService.DeleteAsync(workflowToDelete.Id);
-
-            deletingWorkflowIds.Remove(workflowToDelete.Id);
-            // حذف از لیست انتخاب شده‌ها برای بروزرسانی تعداد
-            selectedWorkflowIds.Remove(workflowToDelete.Id);
-        }
-
-        await LoadWorkflows();
     }
 
     private void CancelDelete()
     {
-        isDeleteModalOpen = false;
-        workflowToDelete = null;
+        Facade.State.IsDeleteModalOpen = false;
+        Facade.State.WorkflowToDelete = null;
     }
 
     private async Task NextPage()
     {
-        if (currentPage * pageSize < totalWorkflows)
+        if (Facade.State.CurrentPage * Facade.State.PageSize < Facade.State.TotalWorkflows)
         {
-            currentPage++;
-            await LoadWorkflows();
+            Facade.State.CurrentPage++;
+            await Facade.LoadWorkflowsAsync();
         }
     }
 
     private async Task PreviousPage()
     {
-        if (currentPage > 1)
+        if (Facade.State.CurrentPage > 1)
         {
-            currentPage--;
-            await LoadWorkflows();
+            Facade.State.CurrentPage--;
+            await Facade.LoadWorkflowsAsync();
         }
     }
 
     private async Task OnSearchTermChanged(string newSearchTerm)
     {
-        searchTerm = newSearchTerm;
-        currentPage = 1;
+        Facade.State.SearchTerm = newSearchTerm;
+        Facade.State.CurrentPage = 1;
 
         _searchCts?.Cancel();
         _searchCts = new CancellationTokenSource();
@@ -186,21 +99,15 @@ public partial class Workflows : ComponentBase
         try
         {
             await Task.Delay(400, token);
-
-            if (!token.IsCancellationRequested)
-            {
-                await LoadWorkflows();
-            }
+            if (!token.IsCancellationRequested) await Facade.LoadWorkflowsAsync();
         }
-        catch (TaskCanceledException)
-        {
-        }
+        catch (TaskCanceledException) { }
     }
 
     private async Task OnPageSizeChanged(int newSize)
     {
-        pageSize = newSize;
-        currentPage = 1;
-        await LoadWorkflows();
+        Facade.State.PageSize = newSize;
+        Facade.State.CurrentPage = 1;
+        await Facade.LoadWorkflowsAsync();
     }
 }

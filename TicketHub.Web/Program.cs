@@ -91,6 +91,8 @@ builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<StatusState>();
 builder.Services.AddScoped<StatusFacade>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
+builder.Services.AddScoped<WorkflowStateContainer>();
+builder.Services.AddScoped<WorkflowFacade>();
 
 var app = builder.Build();
 
