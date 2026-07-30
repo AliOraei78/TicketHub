@@ -89,6 +89,7 @@ builder.Services.AddScoped<RoleFacade>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<StatusState>();
 builder.Services.AddScoped<StatusFacade>();
+builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 
 var app = builder.Build();
 

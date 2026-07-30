@@ -26,6 +26,24 @@ public class MapsterConfig : IRegister
                                                 ? src.UserRoles.Select(ur => ur.Role.Name).ToList()
                                                 : new List<string>());
 
+        // Transition Mapping
+        config.NewConfig<Transition, TransitionDto>()
+              .Map(dest => dest.AllowedRoleIds, src => src.AllowedRoles != null
+                                                        ? src.AllowedRoles.Select(r => r.RoleId).ToList()
+                                                        : new List<int>());
+
+        config.NewConfig<TransitionDto, Transition>()
+              .Ignore(dest => dest.AllowedRoles)
+              .Ignore(dest => dest.Workflow)
+              .Ignore(dest => dest.FromStatus)
+              .Ignore(dest => dest.ToStatus);
+
+        // Workflow Mapping
+        config.NewConfig<Workflow, WorkflowDto>()
+              .Map(dest => dest.Statuses, src => src.WorkflowStatuses != null
+                                                  ? src.WorkflowStatuses.Select(ws => ws.Status).ToList()
+                                                  : new List<Status>());
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }
