@@ -1,4 +1,5 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
+@using TicketHub.Application.Models
 @using TicketHub.Web.Components.Shared
 
 <ModalDialog IsOpen="IsOpen" Title="@(Model.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
@@ -31,7 +32,7 @@
                 <CustomCheckbox Label="کاربر فعال است؟" @bind-Value="Model.IsActive" />
             </div>
 
-            <MultiSelectDropdown TItem="Role" TValue="string"
+            <MultiSelectDropdown TItem="RoleDto" TValue="string"
                                  Label="نقش‌ها"
                                  Placeholder="جستجو و انتخاب نقش..."
                                  Items="AvailableRoles"
@@ -51,9 +52,9 @@
 
 @code {
     [Parameter] public bool IsOpen { get; set; }
-    [Parameter] public User Model { get; set; } = new();
+    [Parameter] public UserDto Model { get; set; } = new();
     [Parameter] public string PasswordInput { get; set; } = string.Empty;
-    [Parameter] public List<Role> AvailableRoles { get; set; } = new();
+    [Parameter] public List<RoleDto> AvailableRoles { get; set; } = new();
     [Parameter] public List<string> SelectedRoles { get; set; } = new();
     [Parameter] public EventCallback<UserFormSubmissionResult> OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }

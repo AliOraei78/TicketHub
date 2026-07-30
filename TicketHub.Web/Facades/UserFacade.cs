@@ -42,7 +42,7 @@ public class UserFacade
         return (userDtos, result.TotalCount);
     }
 
-    public async Task<List<string>> SaveUserAsync(User userModel, string passwordInput, List<string> selectedRoles, List<Role> availableRoles)
+    public async Task<List<string>> SaveUserAsync(UserDto userModel, string passwordInput, List<string> selectedRoles, List<Role> availableRoles)
     {
         var errors = new List<string>();
 
@@ -71,12 +71,15 @@ public class UserFacade
 
         var roleIdsToAssign = availableRoles.Where(r => selectedRoles.Contains(r.Name)).Select(r => r.Id).ToList();
 
+        // این بلوک را جایگزین کنید
         if (userModel.Id == 0)
         {
-            userModel.Password = BCrypt.Net.BCrypt.HashPassword(passwordInput);
-            userModel.CreatedAt = DateTime.UtcNow;
-            await _userRepository.AddAsync(userModel);
-            await _userRepository.UpdateUserRolesAsync(userModel.Id, roleIdsToAssign);
+            var newUser = userModel.Adapt<User>();
+            newUser.Password = BCrypt.Net.BCrypt.HashPassword(passwordInput);
+            newUser.CreatedAt = DateTime.UtcNow;
+
+            await _userRepository.AddAsync(newUser);
+            await _userRepository.UpdateUserRolesAsync(newUser.Id, roleIdsToAssign);
         }
         else
         {

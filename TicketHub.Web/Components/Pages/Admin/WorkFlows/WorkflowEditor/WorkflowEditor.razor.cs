@@ -5,7 +5,7 @@ using TicketHub.Core.Interfaces;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Common;
 
-namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
+namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 {
     public partial class WorkflowEditor : ComponentBase
     {

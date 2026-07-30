@@ -4,7 +4,6 @@ using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
 using TicketHub.Web.Facades;
 using TicketHub.Web.States;
-using UserEntity = TicketHub.Core.Entities.User;
 
 namespace TicketHub.Web.Components.Pages.Admin.Users;
 
@@ -21,7 +20,7 @@ public partial class Users : ComponentBase, IDisposable
     private int totalUsers = 0;
 
     private bool isUserModalOpen = false;
-    private UserEntity userModel = new();
+    private UserDto userModel = new();
     private string passwordInput = string.Empty;
     private List<string> selectedRoles = new();
     private string? formErrorMessage;
@@ -89,7 +88,7 @@ public partial class Users : ComponentBase, IDisposable
 
     private void OpenCreateModal()
     {
-        userModel = new UserEntity();
+        userModel = new UserDto();
         passwordInput = string.Empty;
         selectedRoles.Clear();
         formErrorMessage = null;
@@ -98,7 +97,7 @@ public partial class Users : ComponentBase, IDisposable
 
     private void OpenEditModal(UserDto user)
     {
-        userModel = new UserEntity
+        userModel = new UserDto
         {
             Id = user.Id,
             Name = user.Name,
@@ -109,7 +108,7 @@ public partial class Users : ComponentBase, IDisposable
             IsActive = user.IsActive
         };
         passwordInput = string.Empty;
-        selectedRoles = user.RoleNames;
+        selectedRoles = new List<string>(user.RoleNames);
         formErrorMessage = null;
         isUserModalOpen = true;
     }
@@ -118,7 +117,7 @@ public partial class Users : ComponentBase, IDisposable
 
     private async Task HandleSaveUser(dynamic payload)
     {
-        UserEntity user = (UserEntity)payload.User;
+        UserDto user = (UserDto)payload.User;
         string password = (string)payload.Password;
         List<string> roles = (List<string>)payload.SelectedRoles;
 
