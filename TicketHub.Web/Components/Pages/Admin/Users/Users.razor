@@ -37,26 +37,17 @@
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
 
-            <!-- فیلتر وضعیت به صورت کشویی (Sliding Segmented Control) -->
-            <div class="relative flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
-                <!-- پس‌زمینه متحرک (Slider) -->
-                <div class="absolute right-1 top-1 bottom-1 w-20 rounded-lg transition-all duration-300 ease-out shadow-sm
-                    @(selectedFilterStatus == null ? "translate-x-0 bg-gray-900" :
-                       selectedFilterStatus == true ? "-translate-x-full bg-emerald-600" :
-                       "-translate-x-[200%] bg-gray-400")">
-                </div>
-
-                <!-- دکمه‌ها -->
-                <button type="button" @onclick="() => FilterByStatus(null)" class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @(selectedFilterStatus == null ? "text-white" : "text-gray-600 hover:text-gray-900")">
-                    همه
-                </button>
-                <button type="button" @onclick="() => FilterByStatus(true)" class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @(selectedFilterStatus == true ? "text-white" : "text-emerald-600 hover:text-emerald-700")">
-                    فعال
-                </button>
-                <button type="button" @onclick="() => FilterByStatus(false)" class="relative z-10 w-20 py-1.5 text-sm font-medium transition-colors duration-300 @(selectedFilterStatus == false ? "text-white" : "text-gray-500 hover:text-gray-700")">
-                    غیرفعال
-                </button>
-            </div>
+<!-- فیلتر وضعیت (رفرکتور شده با GenericFilter) -->
+            <GenericStatusFilter TValue="bool?"
+                           Options="@(new bool?[] { null, true, false })"
+                           SelectedValue="selectedFilterStatus"
+                           OnValueChanged="FilterByStatus"
+                           BackgroundClassSelector="@(val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400")"
+                           ItemClassSelector="@((item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700")">
+                <ItemTemplate Context="status">
+                    @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
+                </ItemTemplate>
+            </GenericStatusFilter>
         </ListFilterToolbar>
     </div>
 
