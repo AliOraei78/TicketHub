@@ -17,6 +17,8 @@ public class MapsterConfig : IRegister
               .Map(dest => dest.RoleIds, src => src.RoleProjects != null
                                                 ? src.RoleProjects.Select(rp => rp.RoleId).ToList()
                                                 : new List<int>());
+        config.NewConfig<ProjectDto, Project>()
+              .Ignore(dest => dest.Workflow);
 
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);

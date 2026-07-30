@@ -23,7 +23,7 @@ public class ProjectService : IProjectService
 
     public async Task<IEnumerable<ProjectDto>> GetProjectsAsync()
     {
-        var projects = await _projectRepo.GetAllWithIncludesAsync(p => p.RoleProjects);
+        var projects = await _projectRepo.GetAllWithIncludesAsync(p => p.RoleProjects, p => p.Workflow);
         return projects.Adapt<IEnumerable<ProjectDto>>();
     }
 
