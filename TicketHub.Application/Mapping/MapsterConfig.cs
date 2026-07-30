@@ -20,6 +20,12 @@ public class MapsterConfig : IRegister
         config.NewConfig<ProjectDto, Project>()
               .Ignore(dest => dest.Workflow);
 
+        // اضافه کردن مپینگ کاربر به DTO
+        config.NewConfig<User, UserDto>()
+              .Map(dest => dest.RoleNames, src => src.UserRoles != null
+                                                ? src.UserRoles.Select(ur => ur.Role.Name).ToList()
+                                                : new List<string>());
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }

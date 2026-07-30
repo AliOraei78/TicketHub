@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Mapster;
+using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
-using TicketHub.Infrastructure.Data;
 using UserEntity = TicketHub.Core.Entities.User;
 
 namespace TicketHub.Web.Components.Pages.Admin.Users;
@@ -17,7 +13,7 @@ public partial class Users : ComponentBase
     [Inject] protected IRepository<Role> RoleRepository { get; set; } = default!;
     [Inject] protected IRepository<Project> ProjectRepository { get; set; } = default!;
 
-    private List<UserEntity> users = new();
+    private List<UserDto> users = new();
     private bool isLoading = true;
 
     private List<int> selectedFilterRoleIds = new();
@@ -32,7 +28,7 @@ public partial class Users : ComponentBase
     private List<string> selectedRoles = new();
 
     private bool showDeleteModal = false;
-    private UserEntity? userToDelete;
+    private UserDto? userToDelete;
     private string? deleteErrorMessage;
 
     private string _searchTerm = string.Empty;
@@ -86,16 +82,17 @@ public partial class Users : ComponentBase
         isLoading = true;
         var result = await UserRepository.GetFilteredUsersAsync(searchTerm, selectedFilterRoleIds, selectedFilterProjectIds, selectedFilterStatus, currentPage, pageSize);
         totalUsers = result.TotalCount;
-        users = result.Users;
+
+        // مپ کردن به DTO
+        users = result.Users.Adapt<List<UserDto>>();
 
         int maxPage = totalUsers == 0 ? 1 : (int)Math.Ceiling(totalUsers / (double)pageSize);
         if (currentPage > maxPage && maxPage > 0)
         {
             currentPage = maxPage;
 
-            // این دو خط اضافه شدند تا در صورت برگشت به صفحه قبل، دیتای آن صفحه واکشی شود
             result = await UserRepository.GetFilteredUsersAsync(searchTerm, selectedFilterRoleIds, selectedFilterProjectIds, selectedFilterStatus, currentPage, pageSize);
-            users = result.Users;
+            users = result.Users.Adapt<List<UserDto>>();
         }
 
         isLoading = false;
@@ -111,7 +108,7 @@ public partial class Users : ComponentBase
         isUserModalOpen = true;
     }
 
-    private void OpenEditModal(UserEntity user)
+    private void OpenEditModal(UserDto user)
     {
         userModel = new UserEntity
         {
@@ -124,14 +121,14 @@ public partial class Users : ComponentBase
             IsActive = user.IsActive
         };
         passwordInput = string.Empty;
-        selectedRoles = user.UserRoles.Select(ur => ur.Role?.Name ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
+        selectedRoles = user.RoleNames;
         formErrorMessage = null;
         isUserModalOpen = true;
     }
 
     private void CloseUserModal() => isUserModalOpen = false;
 
-    private async Task HandleSaveUser(UserFormSubmissionResult payload)
+    private async Task HandleSaveUser(dynamic payload) // با توجه به کامپوننت فرم، payload ممکن است ساختار مشخصی داشته باشد
     {
         var errors = new List<string>();
 
@@ -148,7 +145,6 @@ public partial class Users : ComponentBase
             errors.Add("• فرمت ایمیل معتبر نیست.");
         else
         {
-            // بررسی تکراری نبودن ایمیل با استفاده از متد پایه ریپازیتوری
             var allUsers = await UserRepository.GetAllAsync();
             if (allUsers.Any(u => u.Email == userModel.Email && u.Id != userModel.Id))
                 errors.Add("• این ایمیل قبلاً ثبت شده است.");
@@ -245,7 +241,7 @@ public partial class Users : ComponentBase
         if (currentPage > 1) { currentPage--; await LoadUsers(); }
     }
 
-    private void OpenDeleteModal(UserEntity user)
+    private void OpenDeleteModal(UserDto user)
     {
         userToDelete = user;
         isBulkDelete = false;

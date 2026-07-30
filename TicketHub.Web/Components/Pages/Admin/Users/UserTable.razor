@@ -1,7 +1,7 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
-<DataGrid TItem="User" TKey="int"
+<DataGrid TItem="UserDto" TKey="int"
           Items="Users"
           IsLoading="IsLoading"
           KeySelector="u => u.Id"
@@ -91,10 +91,10 @@
 </DataGrid>
 
 @code {
-    [Parameter] public List<User> Users { get; set; } = new();
+    [Parameter] public List<UserDto> Users { get; set; } = new();
     [Parameter] public bool IsLoading { get; set; }
-    [Parameter] public EventCallback<User> OnEdit { get; set; }
-    [Parameter] public EventCallback<User> OnDelete { get; set; }
+    [Parameter] public EventCallback<UserDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<UserDto> OnDelete { get; set; }
 
     [Parameter] public int CurrentPage { get; set; } = 1;
     [Parameter] public int PageSize { get; set; } = 10;
