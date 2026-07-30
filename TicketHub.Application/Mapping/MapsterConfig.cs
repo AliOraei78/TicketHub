@@ -40,9 +40,7 @@ public class MapsterConfig : IRegister
 
         // Workflow Mapping
         config.NewConfig<Workflow, WorkflowDto>()
-              .Map(dest => dest.Statuses, src => src.WorkflowStatuses != null
-                                                  ? src.WorkflowStatuses.Select(ws => ws.Status).ToList()
-                                                  : new List<Status>());
+                      .Map(dest => dest.WorkflowStatuses, src => src.WorkflowStatuses);
 
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);

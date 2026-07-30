@@ -9,5 +9,6 @@ public class WorkflowDto
     public DateTime CreatedAt { get; set; }
 
     public List<TransitionDto> Transitions { get; set; } = new();
-    public List<StatusDto> Statuses { get; set; } = new();
+    public List<WorkflowStatusDto> WorkflowStatuses { get; set; } = new();
+    public List<ProjectDto> Projects { get; set; } = new();
 }

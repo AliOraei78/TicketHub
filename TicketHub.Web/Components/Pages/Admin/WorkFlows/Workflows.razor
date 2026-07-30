@@ -2,10 +2,9 @@
 @namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
 @rendermode InteractiveServer
 
-@using TicketHub.Core.Entities
+@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Web.Components.Pages.Admin.WorkFlows
-@using TicketHub.Application.Interfaces
 
 <PageTitle>مدیریت جریان‌های کاری | سامانه تیکتینگ</PageTitle>
 
@@ -34,21 +33,13 @@
                            ItemName="جریان کار"
                            PageSizeOptions="myCustomOptions">
 
-            <MultiSelectDropdown TItem="Project" TValue="int"
+            <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                  Placeholder="پروژه..."
                                  Items="availableProjects"
                                  SelectedValues="selectedFilterProjectIds"
                                  SelectedValuesChanged="FilterProjectsChanged"
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
-
-            <MultiSelectDropdown TItem="Status" TValue="int"
-                                 Placeholder="وضعیت..."
-                                 Items="availableStatuses"
-                                 SelectedValues="selectedFilterStatusIds"
-                                 SelectedValuesChanged="FilterStatusesChanged"
-                                 ValueSelector="s => s.Id"
-                                 DisplaySelector="s => s.Name" />
         </ListFilterToolbar>
 
         @if (selectedWorkflowIds.Any())
@@ -79,4 +70,9 @@
                     OnNext="NextPage"
                     OnPrevious="PreviousPage" />
     </div>
+
+    <ConfirmDeleteModal IsOpen="isDeleteModalOpen" 
+                  Description="@deleteModalDescription" 
+                  OnConfirm="ConfirmDeleteAsync" 
+                  OnCancel="CancelDelete" />
 </div>

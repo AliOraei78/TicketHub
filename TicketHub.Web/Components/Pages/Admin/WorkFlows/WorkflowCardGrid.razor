@@ -1,4 +1,4 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
 @if (IsLoading)
@@ -86,11 +86,11 @@ else
 }
 
 @code {
-    [Parameter] public List<Workflow> Workflows { get; set; } = new();
+    [Parameter] public List<WorkflowDto> Workflows { get; set; } = new();
     [Parameter] public bool IsLoading { get; set; }
 
-    [Parameter] public EventCallback<Workflow> OnEdit { get; set; }
-    [Parameter] public EventCallback<Workflow> OnDelete { get; set; }
+    [Parameter] public EventCallback<WorkflowDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<WorkflowDto> OnDelete { get; set; }
 
     [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
