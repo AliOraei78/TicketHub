@@ -3,7 +3,7 @@
 @rendermode InteractiveServer
 @using TicketHub.Web.Components.Pages.Admin.Users
 @using TicketHub.Web.Components.Shared
-@using TicketHub.Core.Entities
+@using TicketHub.Application.DTOs
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
@@ -22,7 +22,7 @@
                            SearchPlaceholder="جستجوی نام یا ایمیل..."
                            ItemName="کاربر">
 
-            <MultiSelectDropdown TItem="Role" TValue="int"
+            <MultiSelectDropdown TItem="RoleDto" TValue="int"
                                  Placeholder="نقش..."
                                  Items="availableRoles"
                                  SelectedValues="State.SelectedFilterRoleIds"
@@ -30,7 +30,7 @@
                                  ValueSelector="r => r.Id"
                                  DisplaySelector="r => r.Name" />
 
-            <MultiSelectDropdown TItem="Project" TValue="int"
+            <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                  Placeholder="پروژه..."
                                  Items="availableProjects"
                                  SelectedValues="State.SelectedFilterProjectIds"

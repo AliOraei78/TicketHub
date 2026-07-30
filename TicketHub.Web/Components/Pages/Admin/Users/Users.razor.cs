@@ -1,7 +1,6 @@
 ﻿// Users.razor.cs
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Core.Entities;
 using TicketHub.Web.Facades;
 using TicketHub.Web.States;
 
@@ -13,8 +12,8 @@ public partial class Users : ComponentBase, IDisposable
     [Inject] protected UserState State { get; set; } = default!;
 
     private List<UserDto> users = new();
-    private List<Role> availableRoles = new();
-    private List<Project> availableProjects = new();
+    private List<RoleDto> availableRoles = new();
+    private List<ProjectDto> availableProjects = new();
 
     private bool isLoading = true;
     private int totalUsers = 0;

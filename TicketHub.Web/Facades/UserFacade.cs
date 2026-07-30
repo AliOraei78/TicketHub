@@ -21,10 +21,10 @@ public class UserFacade
 
     // منطق متدهای GetInitialDataAsync و GetUsersAsync (شامل Mapster) را اینجا قرار دهید...
 
-    public async Task<(List<Role> Roles, List<Project> Projects)> GetInitialDataAsync()
+    public async Task<(List<RoleDto> Roles, List<ProjectDto> Projects)> GetInitialDataAsync()
     {
-        var roles = (await _roleRepository.GetAllAsync()).ToList();
-        var projects = (await _projectRepository.GetAllAsync()).ToList();
+        var roles = (await _roleRepository.GetAllAsync()).Adapt<List<RoleDto>>();
+        var projects = (await _projectRepository.GetAllAsync()).Adapt<List<ProjectDto>>();
         return (roles, projects);
     }
 
@@ -42,7 +42,7 @@ public class UserFacade
         return (userDtos, result.TotalCount);
     }
 
-    public async Task<List<string>> SaveUserAsync(UserDto userModel, string passwordInput, List<string> selectedRoles, List<Role> availableRoles)
+    public async Task<List<string>> SaveUserAsync(UserDto userModel, string passwordInput, List<string> selectedRoles, List<RoleDto> availableRoles)
     {
         var errors = new List<string>();
 
