@@ -14,6 +14,7 @@ namespace TicketHub.Infrastructure.Repositories
         {
             var query = _context.Users
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RoleProjects).ThenInclude(rp => rp.Project)
+                .AsSplitQuery()
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -29,7 +30,8 @@ namespace TicketHub.Infrastructure.Repositories
                 query = query.Where(u => u.IsActive == status.Value);
 
             var total = await query.CountAsync();
-            var users = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            var users = await query.OrderBy(u => u.Id)
+                        .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return (users, total);
         }

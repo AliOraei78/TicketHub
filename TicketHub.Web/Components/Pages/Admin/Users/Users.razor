@@ -1,4 +1,5 @@
-﻿@page "/users"
+﻿<!-- Users.razor -->
+@page "/users"
 @rendermode InteractiveServer
 @using TicketHub.Web.Components.Pages.Admin.Users
 @using TicketHub.Web.Components.Shared
@@ -16,15 +17,15 @@
     </PageHeader>
 
     <div class="min-h-[56px] mb-2">
-        <ListFilterToolbar @bind-SearchTerm="searchTerm"
-                           @bind-PageSize="pageSize"
+        <ListFilterToolbar @bind-SearchTerm="SearchTerm"
+                           @bind-PageSize="PageSize"
                            SearchPlaceholder="جستجوی نام یا ایمیل..."
                            ItemName="کاربر">
 
             <MultiSelectDropdown TItem="Role" TValue="int"
                                  Placeholder="نقش..."
                                  Items="availableRoles"
-                                 SelectedValues="selectedFilterRoleIds"
+                                 SelectedValues="State.SelectedFilterRoleIds"
                                  SelectedValuesChanged="FilterRolesChanged"
                                  ValueSelector="r => r.Id"
                                  DisplaySelector="r => r.Name" />
@@ -32,18 +33,17 @@
             <MultiSelectDropdown TItem="Project" TValue="int"
                                  Placeholder="پروژه..."
                                  Items="availableProjects"
-                                 SelectedValues="selectedFilterProjectIds"
+                                 SelectedValues="State.SelectedFilterProjectIds"
                                  SelectedValuesChanged="FilterProjectsChanged"
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
 
-<!-- فیلتر وضعیت (رفرکتور شده با GenericFilter) -->
             <GenericStatusFilter TValue="bool?"
-                           Options="@(new bool?[] { null, true, false })"
-                           SelectedValue="selectedFilterStatus"
-                           OnValueChanged="FilterByStatus"
-                           BackgroundClassSelector="@(val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400")"
-                           ItemClassSelector="@((item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700")">
+                                 Options="@(new bool?[] { null, true, false })"
+                                 SelectedValue="State.SelectedFilterStatus"
+                                 OnValueChanged="FilterByStatus"
+                                 BackgroundClassSelector="@(val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400")"
+                                 ItemClassSelector="@((item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700")">
                 <ItemTemplate Context="status">
                     @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
                 </ItemTemplate>
@@ -51,7 +51,7 @@
         </ListFilterToolbar>
     </div>
 
-    <BulkActionToolbar SelectedCount="selectedUserIds.Count"
+    <BulkActionToolbar SelectedCount="State.SelectedUserIds.Count"
                        OnCancel="ClearSelection"
                        OnDelete="OpenBulkDeleteModal"
                        OnDeactivate="BulkDeactivateUsers"
@@ -60,13 +60,13 @@
     <UserTable Users="users" IsLoading="isLoading"
                OnEdit="OpenEditModal"
                OnDelete="OpenDeleteModal"
-               @bind-SelectedIds="selectedUserIds"
+               @bind-SelectedIds="State.SelectedUserIds"
                DeletingIds="deletingUserIds"
-               CurrentPage="currentPage"
-               PageSize="pageSize" />
+               CurrentPage="CurrentPage"
+               PageSize="PageSize" />
 
-    <Pagination CurrentPage="currentPage" PageSize="pageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
+    <Pagination CurrentPage="CurrentPage" PageSize="PageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
 </div>
 
 <UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" SelectedRoles="selectedRoles" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" ErrorMessage="@formErrorMessage" />
-<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@($"آیا از حذف کاربر {userToDelete?.Name} مطمئن هستید؟")" ErrorMessage="@deleteErrorMessage" OnConfirm="ConfirmDeleteUser" OnCancel="CloseDeleteModal" />
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@($"آیا از حذف کاربر {(isBulkDelete ? "های انتخاب شده" : userToDelete?.Name)} مطمئن هستید؟")" ErrorMessage="@deleteErrorMessage" OnConfirm="ConfirmDeleteUser" OnCancel="CloseDeleteModal" />

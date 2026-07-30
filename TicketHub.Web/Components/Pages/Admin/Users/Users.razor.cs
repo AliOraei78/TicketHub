@@ -1,102 +1,90 @@
-﻿using Microsoft.AspNetCore.Components;
-using Mapster;
+﻿// Users.razor.cs
+using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
-using TicketHub.Core.Interfaces;
+using TicketHub.Web.Facades;
+using TicketHub.Web.States;
 using UserEntity = TicketHub.Core.Entities.User;
 
 namespace TicketHub.Web.Components.Pages.Admin.Users;
 
-public partial class Users : ComponentBase
+public partial class Users : ComponentBase, IDisposable
 {
-    [Inject] protected IUserRepository UserRepository { get; set; } = default!;
-    [Inject] protected IRepository<Role> RoleRepository { get; set; } = default!;
-    [Inject] protected IRepository<Project> ProjectRepository { get; set; } = default!;
+    [Inject] protected UserFacade UserFacade { get; set; } = default!;
+    [Inject] protected UserState State { get; set; } = default!;
 
     private List<UserDto> users = new();
-    private bool isLoading = true;
-
-    private List<int> selectedFilterRoleIds = new();
-    private List<int> selectedFilterProjectIds = new();
-
     private List<Role> availableRoles = new();
     private List<Project> availableProjects = new();
+
+    private bool isLoading = true;
+    private int totalUsers = 0;
 
     private bool isUserModalOpen = false;
     private UserEntity userModel = new();
     private string passwordInput = string.Empty;
     private List<string> selectedRoles = new();
+    private string? formErrorMessage;
 
     private bool showDeleteModal = false;
     private UserDto? userToDelete;
     private string? deleteErrorMessage;
-
-    private string _searchTerm = string.Empty;
-    private string searchTerm
-    {
-        get => _searchTerm;
-        set { _searchTerm = value; currentPage = 1; _ = LoadUsers(); }
-    }
-
-    private int _pageSize = 10;
-    private int pageSize
-    {
-        get => _pageSize;
-        set { _pageSize = value; currentPage = 1; _ = LoadUsers(); }
-    }
-
-    private int currentPage = 1;
-    private int totalUsers = 0;
-
-    private HashSet<int> selectedUserIds = new();
     private HashSet<int> deletingUserIds = new();
     private bool isBulkDelete = false;
 
-    private string? formErrorMessage;
-
-    private bool? selectedFilterStatus = null;
-
-    private async Task FilterRolesChanged(List<int> v) { selectedFilterRoleIds = v; currentPage = 1; await LoadUsers(); }
-    private async Task FilterProjectsChanged(List<int> v) { selectedFilterProjectIds = v; currentPage = 1; await LoadUsers(); }
-    private async Task FilterByStatus(bool? status)
-    {
-        selectedFilterStatus = status;
-        currentPage = 1;
-        await LoadUsers();
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        await LoadAvailableData();
+        State.OnChange += StateHasChanged;
+        var data = await UserFacade.GetInitialDataAsync();
+        availableRoles = data.Roles;
+        availableProjects = data.Projects;
         await LoadUsers();
     }
 
-    private async Task LoadAvailableData()
+    public void Dispose()
     {
-        availableRoles = (await RoleRepository.GetAllAsync()).ToList();
-        availableProjects = (await ProjectRepository.GetAllAsync()).ToList();
+        State.OnChange -= StateHasChanged;
     }
+
+    private string SearchTerm
+    {
+        get => State.SearchTerm;
+        set { State.SearchTerm = value; State.CurrentPage = 1; _ = LoadUsers(); }
+    }
+
+    private int PageSize
+    {
+        get => State.PageSize;
+        set { State.PageSize = value; State.CurrentPage = 1; _ = LoadUsers(); }
+    }
+
+    private int CurrentPage
+    {
+        get => State.CurrentPage;
+        set { State.CurrentPage = value; _ = LoadUsers(); }
+    }
+
+    private async Task FilterRolesChanged(List<int> v) { State.SelectedFilterRoleIds = v; State.CurrentPage = 1; await LoadUsers(); }
+    private async Task FilterProjectsChanged(List<int> v) { State.SelectedFilterProjectIds = v; State.CurrentPage = 1; await LoadUsers(); }
+    private async Task FilterByStatus(bool? status) { State.SelectedFilterStatus = status; State.CurrentPage = 1; await LoadUsers(); }
 
     private async Task LoadUsers()
     {
         isLoading = true;
-        var result = await UserRepository.GetFilteredUsersAsync(searchTerm, selectedFilterRoleIds, selectedFilterProjectIds, selectedFilterStatus, currentPage, pageSize);
+        var result = await UserFacade.GetUsersAsync(State);
+        users = result.Users;
         totalUsers = result.TotalCount;
 
-        // مپ کردن به DTO
-        users = result.Users.Adapt<List<UserDto>>();
-
-        int maxPage = totalUsers == 0 ? 1 : (int)Math.Ceiling(totalUsers / (double)pageSize);
-        if (currentPage > maxPage && maxPage > 0)
+        int maxPage = totalUsers == 0 ? 1 : (int)Math.Ceiling(totalUsers / (double)State.PageSize);
+        if (State.CurrentPage > maxPage && maxPage > 0)
         {
-            currentPage = maxPage;
-
-            result = await UserRepository.GetFilteredUsersAsync(searchTerm, selectedFilterRoleIds, selectedFilterProjectIds, selectedFilterStatus, currentPage, pageSize);
-            users = result.Users.Adapt<List<UserDto>>();
+            State.CurrentPage = maxPage;
+            result = await UserFacade.GetUsersAsync(State);
+            users = result.Users;
         }
 
         isLoading = false;
-        await InvokeAsync(StateHasChanged);
+        State.NotifyStateChanged();
     }
 
     private void OpenCreateModal()
@@ -128,117 +116,22 @@ public partial class Users : ComponentBase
 
     private void CloseUserModal() => isUserModalOpen = false;
 
-    private async Task HandleSaveUser(dynamic payload) // با توجه به کامپوننت فرم، payload ممکن است ساختار مشخصی داشته باشد
+    private async Task HandleSaveUser(dynamic payload)
     {
-        var errors = new List<string>();
+        UserEntity user = (UserEntity)payload.User;
+        string password = (string)payload.Password;
+        List<string> roles = (List<string>)payload.SelectedRoles;
 
-        userModel = payload.User;
-        passwordInput = payload.Password;
-        selectedRoles = payload.SelectedRoles;
+        List<string> errors = await UserFacade.SaveUserAsync(user, password, roles, availableRoles);
 
-        if (string.IsNullOrWhiteSpace(userModel.Name))
-            errors.Add("• نام کاربر الزامی است.");
-
-        if (string.IsNullOrWhiteSpace(userModel.Email))
-            errors.Add("• ایمیل الزامی است.");
-        else if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(userModel.Email))
-            errors.Add("• فرمت ایمیل معتبر نیست.");
-        else
-        {
-            var allUsers = await UserRepository.GetAllAsync();
-            if (allUsers.Any(u => u.Email == userModel.Email && u.Id != userModel.Id))
-                errors.Add("• این ایمیل قبلاً ثبت شده است.");
-        }
-
-        if (string.IsNullOrWhiteSpace(userModel.PhoneNumber))
-            errors.Add("• شماره تلفن الزامی است.");
-
-        if (userModel.Id == 0 && string.IsNullOrWhiteSpace(passwordInput))
-        {
-            errors.Add("• رمز عبور الزامی است.");
-        }
-
-        if (errors.Any())
+        if (errors.Count > 0)
         {
             formErrorMessage = string.Join("\n", errors);
             return;
         }
 
-        formErrorMessage = null;
-        var roleIdsToAssign = availableRoles.Where(r => selectedRoles.Contains(r.Name)).Select(r => r.Id).ToList();
-
-        if (userModel.Id == 0)
-        {
-            userModel.Password = BCrypt.Net.BCrypt.HashPassword(passwordInput);
-            userModel.CreatedAt = DateTime.UtcNow;
-            await UserRepository.AddAsync(userModel);
-            await UserRepository.UpdateUserRolesAsync(userModel.Id, roleIdsToAssign);
-        }
-        else
-        {
-            var userInDb = await UserRepository.GetByIdAsync(userModel.Id);
-            if (userInDb == null) return;
-
-            userInDb.Name = userModel.Name;
-            userInDb.Email = userModel.Email;
-            userInDb.PhoneNumber = userModel.PhoneNumber;
-            userInDb.IsConfirmed = userModel.IsConfirmed;
-            userInDb.IsActive = userModel.IsActive;
-            if (!string.IsNullOrWhiteSpace(passwordInput))
-                userInDb.Password = BCrypt.Net.BCrypt.HashPassword(passwordInput);
-
-            await UserRepository.UpdateAsync(userInDb);
-            await UserRepository.UpdateUserRolesAsync(userInDb.Id, roleIdsToAssign);
-        }
-
         CloseUserModal();
         await LoadUsers();
-    }
-
-    private async Task ConfirmDeleteUser()
-    {
-        showDeleteModal = false;
-
-        try
-        {
-            if (isBulkDelete)
-            {
-                deletingUserIds = new HashSet<int>(selectedUserIds);
-                StateHasChanged();
-                await Task.Delay(400);
-
-                await UserRepository.BulkDeleteAsync(selectedUserIds);
-            }
-            else if (userToDelete != null)
-            {
-                deletingUserIds.Add(userToDelete.Id);
-                StateHasChanged();
-                await Task.Delay(400);
-
-                await UserRepository.DeleteAsync(userToDelete.Id);
-            }
-
-            selectedUserIds.Clear();
-            deletingUserIds.Clear();
-            await LoadUsers();
-        }
-        catch (Exception)
-        {
-            deleteErrorMessage = "امکان حذف کاربر(ان) وجود ندارد!";
-            deletingUserIds.Clear();
-            showDeleteModal = true;
-            _ = Task.Delay(4000).ContinueWith(_ => { deleteErrorMessage = null; InvokeAsync(StateHasChanged); });
-        }
-    }
-
-    private async Task NextPage()
-    {
-        if (currentPage < Math.Ceiling(totalUsers / (double)pageSize)) { currentPage++; await LoadUsers(); }
-    }
-
-    private async Task PreviousPage()
-    {
-        if (currentPage > 1) { currentPage--; await LoadUsers(); }
     }
 
     private void OpenDeleteModal(UserDto user)
@@ -258,22 +151,57 @@ public partial class Users : ComponentBase
 
     private void CloseDeleteModal() { showDeleteModal = false; userToDelete = null; isBulkDelete = false; }
 
-    private void ClearSelection()
+    private async Task ConfirmDeleteUser()
     {
-        selectedUserIds.Clear();
+        showDeleteModal = false;
+        try
+        {
+            if (isBulkDelete)
+            {
+                deletingUserIds = new HashSet<int>(State.SelectedUserIds);
+                await UserFacade.ExecuteBulkActionAsync(State.SelectedUserIds, "Delete");
+            }
+            else if (userToDelete != null)
+            {
+                deletingUserIds.Add(userToDelete.Id);
+                await UserFacade.ExecuteBulkActionAsync(new HashSet<int>(), "SingleDelete", userToDelete.Id);
+            }
+            State.SelectedUserIds.Clear();
+            deletingUserIds.Clear();
+            await LoadUsers();
+        }
+        catch (Exception)
+        {
+            deleteErrorMessage = "امکان حذف کاربر(ان) وجود ندارد!";
+            deletingUserIds.Clear();
+            showDeleteModal = true;
+            _ = Task.Delay(4000).ContinueWith(_ => { deleteErrorMessage = null; InvokeAsync(StateHasChanged); });
+        }
     }
+
+    private void ClearSelection() => State.SelectedUserIds.Clear();
 
     private async Task BulkDeactivateUsers()
     {
-        await UserRepository.BulkUpdateStatusAsync(selectedUserIds, false);
+        await UserFacade.ExecuteBulkActionAsync(State.SelectedUserIds, "Deactivate");
         ClearSelection();
         await LoadUsers();
     }
 
     private async Task BulkActivateUsers()
     {
-        await UserRepository.BulkUpdateStatusAsync(selectedUserIds, true);
+        await UserFacade.ExecuteBulkActionAsync(State.SelectedUserIds, "Activate");
         ClearSelection();
         await LoadUsers();
+    }
+
+    private async Task NextPage()
+    {
+        if (State.CurrentPage < Math.Ceiling(totalUsers / (double)State.PageSize)) { State.CurrentPage++; await LoadUsers(); }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (State.CurrentPage > 1) { State.CurrentPage--; await LoadUsers(); }
     }
 }

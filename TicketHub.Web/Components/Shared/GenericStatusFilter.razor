@@ -16,7 +16,7 @@
 
 @code {
     [Parameter, EditorRequired] public IEnumerable<TValue> Options { get; set; } = default!;
-    [Parameter] public TValue SelectedValue { get; set; }
+    [Parameter] public TValue SelectedValue { get; set; } = default!;
     [Parameter] public EventCallback<TValue> OnValueChanged { get; set; }
 
     [Parameter, EditorRequired] public RenderFragment<TValue> ItemTemplate { get; set; } = default!;

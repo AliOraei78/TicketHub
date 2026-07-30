@@ -72,6 +72,8 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<UserState>();
+builder.Services.AddScoped<UserFacade>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ProjectState>();
 builder.Services.AddScoped<ProjectFacade>();

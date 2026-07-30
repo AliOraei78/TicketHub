@@ -1,7 +1,6 @@
 ﻿using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Core.Entities;
 using TicketHub.Web.Facades;
 
 namespace TicketHub.Web.Components.Pages.Admin.Projects;
