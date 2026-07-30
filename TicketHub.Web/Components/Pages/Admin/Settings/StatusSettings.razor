@@ -1,10 +1,13 @@
 ﻿@page "/settings/statuses"
 @rendermode InteractiveServer
 @using TicketHub.Core.Entities
-@using TicketHub.Infrastructure.Data
+@using Mapster
 @using Microsoft.EntityFrameworkCore
 @using TicketHub.Web.Components.Shared
-@inject AppDbContext DbContext
+@using TicketHub.Application.DTOs
+@using TicketHub.Application.Interfaces
+@inject IStatusService StatusService
+
 
 <PageTitle>تنظیمات وضعیت‌ها | سامانه تیکتینگ</PageTitle>
 
@@ -77,7 +80,7 @@
                     </div>
                 </div>
                 <div class="p-0">
-                    <DataGrid TItem="Status" TKey="int"
+                    <DataGrid TItem="@StatusDto" TKey="int"
                               Items="FilteredStatuses"
                               IsLoading="statuses == null"
                               KeySelector="s => s.Id"
@@ -150,8 +153,8 @@
     private string deleteModalDescription = string.Empty;
 
     // Form and data variables
-    private Status statusModel = new() { ColorCode = "#3b82f6" }; // Default initial color
-    private List<Status>? statuses;
+    private StatusDto statusModel = new() { ColorCode = "#3b82f6" };
+    private List<StatusDto>? statuses;
     private string? successMessage;
     private bool isError = false;
 
@@ -164,13 +167,13 @@
 
     // Delete modal variables
     private bool showDeleteModal = false;
-    private Status? statusToDelete;
+    private StatusDto? statusToDelete;
 
     // Filter statuses based on search term
-    private IEnumerable<Status> FilteredStatuses =>
-        string.IsNullOrWhiteSpace(searchTerm)
-            ? (statuses ?? Enumerable.Empty<Status>())
-            : (statuses ?? Enumerable.Empty<Status>()).Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<StatusDto> FilteredStatuses =>
+            string.IsNullOrWhiteSpace(searchTerm)
+                ? (statuses ?? Enumerable.Empty<StatusDto>())
+                : (statuses ?? Enumerable.Empty<StatusDto>()).Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
@@ -179,58 +182,45 @@
 
     private async Task LoadStatuses()
     {
-        statuses = await DbContext.Statuses.ToListAsync();
+        statuses = await StatusService.GetAllAsync();
     }
 
     private async Task HandleSubmitStatus()
     {
         if (string.IsNullOrWhiteSpace(statusModel.Name)) return;
-
         isError = false;
 
         if (isEditing && editingStatusId.HasValue)
         {
-            var statusToUpdate = await DbContext.Statuses.FindAsync(editingStatusId.Value);
-            if (statusToUpdate != null)
-            {
-                statusToUpdate.Name = statusModel.Name;
-                statusToUpdate.ColorCode = statusModel.ColorCode ?? "#3b82f6";
-                statusToUpdate.NeedApproval = statusModel.NeedApproval; // update NeedApproval
-                successMessage = "وضعیت با موفقیت ویرایش شد.";
-            }
+            statusModel.Id = editingStatusId.Value;
+            await StatusService.UpdateAsync(statusModel);
+            successMessage = "وضعیت با موفقیت ویرایش شد.";
         }
         else
         {
-            if (string.IsNullOrEmpty(statusModel.ColorCode))
-            {
-                statusModel.ColorCode = "#3b82f6";
-            }
-
-            DbContext.Statuses.Add(statusModel);
+            statusModel.ColorCode = string.IsNullOrEmpty(statusModel.ColorCode) ? "#3b82f6" : statusModel.ColorCode;
+            await StatusService.AddAsync(statusModel);
             successMessage = "وضعیت با موفقیت ایجاد شد.";
         }
 
-        await DbContext.SaveChangesAsync();
         CancelEdit();
         await LoadStatuses();
-
         _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
     }
 
-    private void EditStatus(Status status)
+    private void EditStatus(StatusDto status)
     {
         isEditing = true;
         editingStatusId = status.Id;
-        statusModel.Name = status.Name;
-        statusModel.ColorCode = status.ColorCode ?? "#3b82f6";
-        statusModel.NeedApproval = status.NeedApproval; // set value for edit
+        // استفاده از Mapster برای کلون کردن آبجکت جهت جلوگیری از تغییر مستقیم رفرنس
+        statusModel = status.Adapt<StatusDto>();
     }
 
     private void CancelEdit()
     {
         isEditing = false;
         editingStatusId = null;
-        statusModel = new Status { ColorCode = "#3b82f6", NeedApproval = false }; // reset NeedApproval
+        statusModel = new StatusDto { ColorCode = "#3b82f6", NeedApproval = false };
         successMessage = null;
     }
 
@@ -257,7 +247,7 @@
     }
 
     // Open delete modal for a single item
-    private void OpenDeleteModal(Status status)
+    private void OpenDeleteModal(StatusDto status)
     {
         statusToDelete = status;
         isBulkDelete = false;
@@ -280,22 +270,16 @@
         {
             if (isBulkDelete)
             {
-                var statusesToRemove = await DbContext.Statuses.Where(s => selectedStatusIds.Contains(s.Id)).ToListAsync();
-                DbContext.Statuses.RemoveRange(statusesToRemove);
-                await DbContext.SaveChangesAsync();
-
-                // Set dynamic verb based on count
-                var verb = statusesToRemove.Count == 1 ? "شد" : "شدند";
-                successMessage = $"{statusesToRemove.Count} وضعیت با موفقیت حذف {verb}.";
-
+                await StatusService.DeleteRangeAsync(selectedStatusIds);
+                var verb = selectedStatusIds.Count == 1 ? "شد" : "شدند";
+                successMessage = $"{selectedStatusIds.Count} وضعیت با موفقیت حذف {verb}.";
                 ClearSelection();
             }
             else if (statusToDelete != null)
             {
-                DbContext.Statuses.Remove(statusToDelete);
-                await DbContext.SaveChangesAsync();
-
+                await StatusService.DeleteAsync(statusToDelete.Id);
                 successMessage = "وضعیت با موفقیت حذف شد.";
+                selectedStatusIds.Remove(statusToDelete.Id);
                 if (isEditing && editingStatusId == statusToDelete.Id) CancelEdit();
             }
 
@@ -309,9 +293,7 @@
         }
         finally
         {
-            CancelDelete(); // Always close the modal
-
-            // Clear message after 4 seconds
+            CancelDelete();
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
     }
