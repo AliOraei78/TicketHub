@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Core.Entities;
 using TicketHub.Web.Facades;
 using TicketHub.Web.State;
 
-namespace TicketHub.Web.Components.Pages.Admin.Settings;
+namespace TicketHub.Web.Components.Pages.Admin.Settings.Categories;
 
 public partial class CategoriesSettings : ComponentBase, IDisposable
 {

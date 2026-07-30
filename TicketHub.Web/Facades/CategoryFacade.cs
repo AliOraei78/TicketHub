@@ -1,7 +1,5 @@
-﻿using Mapster;
-using TicketHub.Application.DTOs;
+﻿using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
-using TicketHub.Core.Entities;
 using TicketHub.Web.State;
 
 namespace TicketHub.Web.Facades;

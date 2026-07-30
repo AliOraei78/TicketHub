@@ -4,7 +4,7 @@ using TicketHub.Application.DTOs;
 using TicketHub.Web.Facades;
 using TicketHub.Web.State;
 
-namespace TicketHub.Web.Components.Pages.Admin.Settings;
+namespace TicketHub.Web.Components.Pages.Admin.Settings.Roles;
 
 public partial class RolesSettings : ComponentBase, IDisposable
 {
