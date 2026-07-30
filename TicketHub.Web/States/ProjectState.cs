@@ -1,17 +1,24 @@
-﻿using TicketHub.Core.Entities;
+﻿using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
-using TicketHub.Application.DTOs;
+using TicketHub.Core.Entities;
 
 namespace TicketHub.Web.States;
 
 public class ProjectState
 {
     private readonly IProjectService _projectService;
+    private readonly IRoleService _roleService;
 
-    public ProjectState(IProjectService projectService) => _projectService = projectService;
+    public ProjectState(IProjectService projectService, IRoleService roleService)
+    {
+        _projectService = projectService;
+        _roleService = roleService;
+    }
 
     public IEnumerable<ProjectDto> Projects { get; private set; } = new List<ProjectDto>();
     public IEnumerable<WorkflowDto> Workflows { get; private set; } = new List<WorkflowDto>();
+    public IEnumerable<RoleDto> Roles { get; private set; } = new List<RoleDto>();
     public string SearchTerm { get; private set; } = string.Empty;
     public bool? SelectedFilterStatus { get; private set; }
 
@@ -25,6 +32,7 @@ public class ProjectState
     public async Task InitializeAsync()
     {
         Workflows = await _projectService.GetWorkflowsAsync();
+        Roles = await _roleService.GetAllRolesAsync();
         await ReloadProjectsAsync();
     }
 

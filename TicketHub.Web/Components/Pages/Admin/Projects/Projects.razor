@@ -62,6 +62,7 @@
              Model="projectModel"
              Title="@(projectModel.Id == 0 ? "ایجاد پروژه جدید" : "ویرایش پروژه")"
              Workflows="ProjectFacade.State.Workflows"
+             Roles="ProjectFacade.State.Roles"
              OnSave="HandleSaveProject"
              OnCancel="CloseFormModal" />
 

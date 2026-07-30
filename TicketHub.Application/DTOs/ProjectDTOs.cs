@@ -17,4 +17,5 @@ public class ProjectDto
     public int? WorkflowId { get; set; }
     public DateTime CreatedAt { get; set; }
     public WorkflowDto? Workflow { get; set; }
+    public List<int> RoleIds { get; set; } = new();
 }

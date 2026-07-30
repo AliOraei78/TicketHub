@@ -9,16 +9,21 @@ public class ProjectService : IProjectService
 {
     private readonly IRepository<Project> _projectRepo;
     private readonly IRepository<Workflow> _workflowRepo;
+    private readonly IRepository<RoleProject> _roleProjectRepo;
 
-    public ProjectService(IRepository<Project> projectRepo, IRepository<Workflow> workflowRepo)
+    public ProjectService(
+            IRepository<Project> projectRepo,
+            IRepository<Workflow> workflowRepo,
+            IRepository<RoleProject> roleProjectRepo)
     {
         _projectRepo = projectRepo;
         _workflowRepo = workflowRepo;
+        _roleProjectRepo = roleProjectRepo;
     }
 
     public async Task<IEnumerable<ProjectDto>> GetProjectsAsync()
     {
-        var projects = await _projectRepo.GetAllAsync();
+        var projects = await _projectRepo.GetAllWithIncludesAsync(p => p.RoleProjects);
         return projects.Adapt<IEnumerable<ProjectDto>>();
     }
 
@@ -32,13 +37,50 @@ public class ProjectService : IProjectService
     {
         var entity = dto.Adapt<Project>();
         entity.CreatedAt = DateTime.UtcNow;
+
         await _projectRepo.AddAsync(entity);
+
+        if (dto.RoleIds?.Any() == true)
+        {
+            foreach (var roleId in dto.RoleIds)
+            {
+                var roleProject = new RoleProject
+                {
+                    ProjectId = entity.Id,
+                    RoleId = roleId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _roleProjectRepo.AddAsync(roleProject);
+            }
+        }
     }
 
     public async Task UpdateProjectAsync(ProjectDto dto)
     {
         var entity = dto.Adapt<Project>();
         await _projectRepo.UpdateAsync(entity);
+
+        var allRoleProjects = await _roleProjectRepo.GetAllAsync();
+        var oldRoleProjects = allRoleProjects.Where(rp => rp.ProjectId == entity.Id).ToList();
+
+        if (oldRoleProjects.Any())
+        {
+            await _roleProjectRepo.DeleteRangeAsync(oldRoleProjects);
+        }
+
+        if (dto.RoleIds?.Any() == true)
+        {
+            foreach (var roleId in dto.RoleIds)
+            {
+                var roleProject = new RoleProject
+                {
+                    ProjectId = entity.Id,
+                    RoleId = roleId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _roleProjectRepo.AddAsync(roleProject);
+            }
+        }
     }
 
     public async Task DeleteProjectAsync(int id) => await _projectRepo.DeleteAsync(id);
