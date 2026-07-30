@@ -42,6 +42,9 @@ public class MapsterConfig : IRegister
         config.NewConfig<Workflow, WorkflowDto>()
                       .Map(dest => dest.WorkflowStatuses, src => src.WorkflowStatuses);
 
+        config.NewConfig<FieldTypeDto, FieldType>()
+              .Ignore(dest => dest.TransitionFields);
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }
