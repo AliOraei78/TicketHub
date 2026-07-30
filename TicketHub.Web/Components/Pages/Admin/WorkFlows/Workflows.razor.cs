@@ -52,21 +52,21 @@ public partial class Workflows : ComponentBase
         isLoading = true;
         try
         {
-            var allWorkflowsList = await WorkflowService.GetAllAsync();
+            var allWorkflows = (await WorkflowService.GetAllAsync()).AsEnumerable();
 
-            foreach (var workflow in allWorkflowsList)
-            {
-                workflow.Projects = availableProjects.Where(p => p.WorkflowId == workflow.Id).ToList();
-            }
+            // انتساب پروژه‌ها
+            foreach (var w in allWorkflows)
+                w.Projects = availableProjects.Where(p => p.WorkflowId == w.Id).ToList();
 
-            IEnumerable<WorkflowDto> allWorkflows = allWorkflowsList;
-
+            // فیلتر جستجو
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                allWorkflows = allWorkflows.Where(w => w.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                                                     (!string.IsNullOrEmpty(w.Description) && w.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+                allWorkflows = allWorkflows.Where(w =>
+                    w.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
+            // فیلتر پروژه‌ها
             if (selectedFilterProjectIds.Any())
             {
                 var targetWorkflowIds = availableProjects
@@ -77,23 +77,16 @@ public partial class Workflows : ComponentBase
                 allWorkflows = allWorkflows.Where(w => targetWorkflowIds.Contains(w.Id));
             }
 
+            // فیلتر وضعیت‌ها
             if (selectedFilterStatusIds.Any())
             {
                 allWorkflows = allWorkflows.Where(w =>
                     w.WorkflowStatuses.Any(ws => selectedFilterStatusIds.Contains(ws.StatusId)));
             }
 
+            // اعمال صفحه‌بندی بهینه
             totalWorkflows = allWorkflows.Count();
-
-            int maxPages = (int)Math.Ceiling((double)totalWorkflows / pageSize);
-            if (currentPage > maxPages && maxPages > 0)
-            {
-                currentPage = maxPages;
-            }
-            else if (totalWorkflows == 0)
-            {
-                currentPage = 1;
-            }
+            currentPage = totalWorkflows == 0 ? 1 : Math.Min(currentPage, (int)Math.Ceiling((double)totalWorkflows / pageSize));
 
             workflows = allWorkflows
                 .Skip((currentPage - 1) * pageSize)
