@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Pages\Admin\WorkFlows\WorkflowEditor\" />
     <Folder Include="Controllers\" />
     <Folder Include="Security\" />
   </ItemGroup>

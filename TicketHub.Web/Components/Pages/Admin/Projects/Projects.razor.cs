@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Web.Facades;
+using TicketHub.Web.States;
 
 namespace TicketHub.Web.Components.Pages.Admin.Projects;
 
 public partial class Projects : ComponentBase, IDisposable
 {
     [Inject] public ProjectFacade ProjectFacade { get; set; } = default!;
+    [Inject] public ProjectState State { get; set; } = default!;
 
     private ProjectDto projectModel = new();
     private bool isFormModalOpen;
@@ -18,13 +20,13 @@ public partial class Projects : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        ProjectFacade.OnChange += StateHasChanged;
+        State.OnChange += StateHasChanged;
         await ProjectFacade.InitializeAsync();
     }
 
     public void Dispose()
     {
-        ProjectFacade.OnChange -= StateHasChanged;
+        State.OnChange -= StateHasChanged;
     }
 
     private void FilterByStatus(bool? status) => ProjectFacade.SetFilter(status);
