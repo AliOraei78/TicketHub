@@ -1,0 +1,55 @@
+﻿@using TicketHub.Web.Components.Shared
+@typeparam TModel
+
+@if (IsSuccess)
+{
+    @SuccessTemplate
+}
+else
+{
+    @HeaderTemplate
+
+    <EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="@FormName">
+        <DataAnnotationsValidator />
+
+        <AlertMessage Message="@ErrorMessage" Type="AlertMessage.AlertType.Error" />
+        <AlertMessage Message="@SuccessMessage" Type="AlertMessage.AlertType.Success" />
+
+        <div class="mb-5">
+            @FormFields
+        </div>
+
+        <button type="submit" disabled="@IsProcessing" class="w-full flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg mb-4">
+            @if (IsProcessing)
+            {
+                <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                <span>در حال بررسی...</span>
+            }
+            else
+            {
+                <span>@SubmitButtonText</span>
+            }
+        </button>
+
+        <div class="flex flex-col items-center justify-center space-y-2 mt-4 border-t border-slate-700/50 pt-4">
+            @TimerSection
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public bool IsSuccess { get; set; }
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public string ErrorMessage { get; set; } = string.Empty;
+    [Parameter] public string SuccessMessage { get; set; } = string.Empty;
+    [Parameter] public string SubmitButtonText { get; set; } = "تایید";
+    [Parameter] public string FormName { get; set; } = "Form";
+
+    [Parameter, EditorRequired] public TModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback OnValidSubmit { get; set; }
+
+    [Parameter] public RenderFragment? SuccessTemplate { get; set; }
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? FormFields { get; set; }
+    [Parameter] public RenderFragment? TimerSection { get; set; }
+}

@@ -1,285 +1,59 @@
 ﻿@page "/confirm-email"
+@using TicketHub.Web.Components.Pages.Auth.Shared
 @layout TicketHub.Web.Components.Layout.AuthLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-@implements IDisposable
-@using System.ComponentModel.DataAnnotations
-@using System.Timers
-@using TicketHub.Infrastructure.Data
-@using Microsoft.EntityFrameworkCore
-@using TicketHub.Web.Components.Pages.Auth.Shared
-@using TicketHub.Web.Components.Shared
-@inject AppDbContext DbContext
-@inject NavigationManager Navigation
-@inject TicketHub.Core.Interfaces.IEmailService EmailService
 
 <AuthBackground ShowHeader="false">
-    @if (isSuccess)
-    {
-        <!-- Success State -->
-        <div class="text-center">
-            <div class="text-emerald-400 mb-4 bg-emerald-400/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
-                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+    <VerificationUI TModel="VerifyViewModel"
+                    Model="verifyModel"
+                    FormName="verifyForm"
+                    IsSuccess="isSuccess"
+                    IsProcessing="isProcessing"
+                    ErrorMessage="@errorMessage"
+                    SuccessMessage="@successMessage"
+                    SubmitButtonText="تایید حساب کاربری"
+                    OnValidSubmit="VerifyCode">
+        <SuccessTemplate>
+            <div class="text-center">
+                <div class="text-emerald-400 mb-4 bg-emerald-400/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                    <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">حساب کاربری تایید شد</h3>
+                <p class="text-slate-400 mb-6 leading-relaxed">
+                    ایمیل شما با موفقیت تایید شد.<br />
+                    تا <span class="font-bold text-blue-400 text-lg">@redirectCountdown ثانیه</span> دیگر به صفحه ورود منتقل می‌شوید...
+                </p>
+                <a href="/login" class="inline-flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg w-full">
+                    بازگشت به صفحه ورود
+                </a>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-2">حساب کاربری تایید شد</h3>
-            <p class="text-slate-400 mb-6 leading-relaxed">
-                ایمیل شما با موفقیت تایید شد.<br />
-                تا <span class="font-bold text-blue-400 text-lg">@redirectCountdown ثانیه</span> دیگر به صفحه ورود منتقل می‌شوید...
-            </p>
-            <a href="/login" class="inline-flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg w-full">
-                بازگشت به صفحه ورود
-            </a>
-        </div>
-    }
-    else
-    {
-        <!-- Verification Form State -->
-        <div class="text-center">
-            <h3 class="text-2xl font-bold text-white mb-2">تایید ایمیل</h3>
-            <p class="text-slate-400 mb-6">کد ۶ رقمی ارسال شده به <strong>@Email</strong> را وارد کنید.</p>
-        </div>
-
-        <EditForm Model="verifyModel" OnValidSubmit="VerifyCode" FormName="verifyForm">
-            <DataAnnotationsValidator />
-
-            <AlertMessage Message="@errorMessage" Type="AlertMessage.AlertType.Error" />
-            <AlertMessage Message="@successMessage" Type="AlertMessage.AlertType.Success" />
-
-            <div class="mb-5">
-                <CustomAuthInput @bind-Value="verifyModel.Code"
+        </SuccessTemplate>
+        <HeaderTemplate>
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-white mb-2">تایید ایمیل</h3>
+                <p class="text-slate-400 mb-6">کد ۶ رقمی ارسال شده به <strong>@Email</strong> را وارد کنید.</p>
+            </div>
+        </HeaderTemplate>
+        <FormFields>
+            <CustomAuthInput @bind-Value="verifyModel.Code"
                              Placeholder="------"
                              Dir="ltr"
                              ValidationFor="() => verifyModel.Code" />
-            </div>
-
-            <button type="submit" disabled="@isProcessing" class="w-full flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg mb-4">
-                @if (isProcessing)
-                {
-                    <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                    <span>در حال بررسی...</span>
-                }
-                else
-                {
-                    <span>تایید حساب کاربری</span>
-                }
-            </button>
-
-            <!-- Timer Section -->
-            <div class="flex flex-col items-center justify-center space-y-2 mt-4 border-t border-slate-700/50 pt-4">
-                @if (_remainingSeconds > 0)
-                {
-                    <p class="text-sm text-slate-400">
-                        زمان باقی‌مانده تا انقضای کد: <span class="text-blue-400 font-mono font-bold">@TimeSpan.FromSeconds(_remainingSeconds).ToString(@"mm\:ss")</span>
-                    </p>
-                }
-                else
-                {
-                    <p class="text-sm text-rose-400 mb-2">کد منقضی شده است.</p>
-                    <button type="button" @onclick="ResendCode" disabled="@isProcessing" class="text-sm text-blue-400 hover:text-blue-300 font-bold transition-colors">
-                        ارسال مجدد کد تایید
-                    </button>
-                }
-            </div>
-        </EditForm>
-    }
+        </FormFields>
+        <TimerSection>
+            @if (_remainingSeconds > 0)
+            {
+                <p class="text-sm text-slate-400">
+                    زمان باقی‌مانده تا انقضای کد: <span class="text-blue-400 font-mono font-bold">@TimeSpan.FromSeconds(_remainingSeconds).ToString(@"mm\:ss")</span>
+                </p>
+            }
+            else
+            {
+                <p class="text-sm text-rose-400 mb-2">کد منقضی شده است.</p>
+                <button type="button" @onclick="ResendCode" disabled="@isProcessing" class="text-sm text-blue-400 hover:text-blue-300 font-bold transition-colors">
+                    ارسال مجدد کد تایید
+                </button>
+            }
+        </TimerSection>
+    </VerificationUI>
 </AuthBackground>
-
-@code {
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "email")]
-    public string? Email { get; set; }
-
-    private VerifyViewModel verifyModel { get; set; } = new();
-
-    private int redirectCountdown = 5;
-
-    private bool isProcessing = false;
-    private bool isSuccess = false;
-    private string errorMessage = string.Empty;
-    private string successMessage = string.Empty;
-
-    private Timer? _timer;
-    private int _remainingSeconds = 120;
-
-    protected override void OnInitialized()
-    {
-        if (string.IsNullOrEmpty(Email))
-        {
-            // استفاده از forceLoad برای جلوگیری از مشکل HttpContext
-            Navigation.NavigateTo("/login", forceLoad: true);
-            return;
-        }
-
-        StartTimer();
-    }
-
-    private void StartTimer()
-    {
-        _remainingSeconds = 120;
-
-        if (_timer != null)
-        {
-            _timer.Stop();
-            _timer.Dispose();
-        }
-
-        _timer = new Timer(1000);
-        _timer.Elapsed += CountDownTimer;
-        _timer.Start();
-    }
-
-    private void CountDownTimer(Object? source, ElapsedEventArgs e)
-    {
-        if (_remainingSeconds > 0)
-        {
-            _remainingSeconds--;
-        }
-        else
-        {
-            _timer?.Stop();
-        }
-        InvokeAsync(StateHasChanged);
-    }
-
-    private async Task VerifyCode()
-    {
-        isProcessing = true;
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
-
-        try
-        {
-            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == Email);
-
-            if (user == null)
-            {
-                errorMessage = "کاربری با این ایمیل یافت نشد.";
-                isProcessing = false;
-                return;
-            }
-
-            if (user.IsConfirmed)
-            {
-                Navigation.NavigateTo("/login", forceLoad: true);
-                return;
-            }
-
-            if (user.TokenExpiration.HasValue && user.TokenExpiration.Value < DateTime.UtcNow)
-            {
-                errorMessage = "کد تایید منقضی شده است. لطفا مجددا درخواست کنید.";
-                isProcessing = false;
-                return;
-            }
-
-            if (string.IsNullOrEmpty(user.ConfirmationToken) ||
-                !BCrypt.Net.BCrypt.Verify(verifyModel.Code, user.ConfirmationToken))
-            {
-                errorMessage = "کد وارد شده نامعتبر است.";
-                isProcessing = false;
-                return;
-            }
-
-            // تایید موفقیت آمیز
-            user.IsConfirmed = true;
-            user.ConfirmationToken = null;
-            user.TokenExpiration = null;
-
-            await DbContext.SaveChangesAsync();
-
-            // متوقف کردن تایمر و نمایش صفحه موفقیت
-            _timer?.Stop();
-            isSuccess = true;
-            isProcessing = false;
-
-            // درخواست آپدیت UI برای نمایش پیام موفقیت
-            StateHasChanged();
-
-            while (redirectCountdown > 0)
-            {
-                await Task.Delay(1000);
-                redirectCountdown--;
-                StateHasChanged();
-            }
-
-            // انتقال کامل (رفرش) به صفحه لاگین تا مشکل HttpContext حل شود
-            Navigation.NavigateTo("/login", forceLoad: true);
-        }
-        catch (NavigationException)
-        {
-            // نادیده گرفتن استثنای ریدایرکت Blazor
-            throw;
-        }
-        catch (Exception)
-        {
-            errorMessage = "در پردازش اطلاعات مشکلی رخ داد. لطفاً مجدداً تلاش کنید.";
-            isProcessing = false;
-        }
-    }
-
-    private async Task ResendCode()
-    {
-        isProcessing = true;
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
-
-        try
-        {
-            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == Email);
-            if (user == null || user.IsConfirmed)
-            {
-                Navigation.NavigateTo("/login", forceLoad: true);
-                return;
-            }
-
-            string rawCode = new Random().Next(100000, 999999).ToString();
-            string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
-
-            user.ConfirmationToken = hashedCode;
-            user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
-
-            await DbContext.SaveChangesAsync();
-
-            string emailBody = $@"
-                <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
-                    <h2>کد تایید جدید</h2>
-                    <p>کد تایید حساب کاربری شما:</p>
-                    <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
-                    <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
-                </div>";
-
-            await EmailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
-
-            verifyModel.Code = string.Empty;
-            successMessage = "کد جدید با موفقیت به ایمیل شما ارسال شد.";
-
-            StartTimer();
-        }
-        catch (NavigationException)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            errorMessage = "در ارسال مجدد کد مشکلی رخ داد.";
-        }
-        finally
-        {
-            isProcessing = false;
-        }
-    }
-
-    public void Dispose()
-    {
-        if (_timer != null)
-        {
-            _timer.Stop();
-            _timer.Dispose();
-        }
-    }
-
-    public class VerifyViewModel
-    {
-        [Required(ErrorMessage = "وارد کردن کد الزامی است")]
-        [StringLength(6, MinimumLength = 6, ErrorMessage = "کد باید ۶ رقم باشد")]
-        public string Code { get; set; } = "";
-    }
-}
