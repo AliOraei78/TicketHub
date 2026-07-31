@@ -1,4 +1,5 @@
 ﻿using TicketHub.Application.DTOs;
+using TicketHub.Application.Models;
 
 namespace TicketHub.Application.Interfaces
 {
@@ -13,5 +14,6 @@ namespace TicketHub.Application.Interfaces
         Task ExecuteBulkActionAsync(HashSet<int> userIds, string actionType, int? singleId = null);
         Task RegisterUserAsync(UserDto dto, string plainPassword);
         Task<bool> ConfirmUserAsync(int userId, string token);
+        Task<AuthServiceResponse> LoginAsync(LoginViewModel model);
     }
 }

@@ -1,0 +1,34 @@
+﻿@using TicketHub.Web.Components.Shared
+@typeparam TModel
+
+<EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="@FormName" method="post" data-enhance="false">
+    <DataAnnotationsValidator />
+
+    <AlertMessage Message="@ErrorMessage" Type="AlertMessage.AlertType.Error" />
+
+    <div class="space-y-5">
+        @ChildContent
+
+        <div class="pt-2">
+            <LoadingButton IsLoading="IsLoading" LoadingText="@LoadingText">
+                @SubmitButtonText
+                @if (!IsLoading)
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                }
+            </LoadingButton>
+        </div>
+    </div>
+</EditForm>
+
+@code{
+    [Parameter, EditorRequired] public TModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback<EditContext> OnValidSubmit { get; set; }
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter] public string FormName { get; set; } = "AuthForm";
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string LoadingText { get; set; } = "در حال پردازش...";
+    [Parameter] public string SubmitButtonText { get; set; } = "تایید";
+}

@@ -153,7 +153,7 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
 
             user.ConfirmationToken = hashedCode;
             user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
-            await UserRepository.UpdateAsync(user);
+            await UserRepository.SaveChangesAsync();
 
             string emailBody = $@"
                 <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
