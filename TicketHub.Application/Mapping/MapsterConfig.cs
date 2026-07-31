@@ -1,5 +1,6 @@
 ﻿using Mapster;
 using TicketHub.Application.DTOs;
+using TicketHub.Core.Common;
 using TicketHub.Core.Entities;
 
 namespace TicketHub.Application.Mapping;
@@ -44,6 +45,10 @@ public class MapsterConfig : IRegister
 
         config.NewConfig<FieldTypeDto, FieldType>()
               .Ignore(dest => dest.TransitionFields);
+
+        config.NewConfig<CanvasNode, CanvasNodeDto>();
+        config.NewConfig<CanvasNodeDto, CanvasNode>()
+              .Ignore(dest => dest.Status); // جلوگیری از خطای EF Core هنگام آپدیت نود
 
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);

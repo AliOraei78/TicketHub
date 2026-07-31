@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
+namespace TicketHub.Application.Validations;
+
 public class ValidEmailAttribute : ValidationAttribute
 {
     // الگوی استاندارد برای بررسی صحت ایمیل

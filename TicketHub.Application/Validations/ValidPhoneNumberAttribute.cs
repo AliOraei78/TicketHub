@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
+namespace TicketHub.Application.Validations;
+
 public class ValidPhoneNumberAttribute : ValidationAttribute
 {
     public const string Pattern = @"^09\d{9}$";

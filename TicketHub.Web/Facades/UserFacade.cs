@@ -1,6 +1,7 @@
 ﻿using Mapster;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
+using TicketHub.Application.Validations;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Web.States;
