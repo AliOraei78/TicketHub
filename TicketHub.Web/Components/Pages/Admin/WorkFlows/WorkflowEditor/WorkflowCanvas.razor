@@ -1,0 +1,144 @@
+﻿@using TicketHub.Application.DTOs
+@using TicketHub.Core.Common
+<div class="flex-1 relative bg-slate-50 overflow-hidden canvas-pattern outline-none"
+tabindex="0"
+     @onkeydown="OnKeyDown"
+     @onpointerdown="OnPointerDown"
+     @onpointermove="OnPointerMove"
+     @onpointerup="OnPointerUp"
+     @onpointerleave="OnPointerUp"
+     @ondragenter="() => { }"
+     @ondragenter:preventDefault="true"
+     @ondragover="() => { }"
+     @ondragover:preventDefault="true"
+     @ondrop="OnDrop">
+
+    @if (IsBoxSelecting)
+    {
+        <div class="absolute border border-blue-500 bg-blue-500/20 z-50 pointer-events-none"
+             style="left: @(Math.Min(BoxStartX, BoxEndX))px; top: @(Math.Min(BoxStartY, BoxEndY))px; width: @(Math.Abs(BoxEndX - BoxStartX))px; height: @(Math.Abs(BoxEndY - BoxStartY))px;">
+        </div>
+    }
+
+    <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" /></marker>
+            <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" /></marker>
+            <marker id="arrowhead-inactive" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#e2e8f0" /></marker>
+        </defs>
+
+        @foreach (var conn in Connections)
+        {
+            var fromNode = Nodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+            var toNode = Nodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+            if (fromNode != null && toNode != null)
+            {
+                bool isSelected = SelectedConnections.Contains(conn);
+
+                string strokeColor = isSelected ? "#3b82f6" : (conn.IsActive ? "#94a3b8" : "#e2e8f0");
+                string marker = isSelected ? "url(#arrowhead-active)" : (conn.IsActive ? "url(#arrowhead)" : "url(#arrowhead-inactive)");
+
+                var sameNodeConnections = Connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                int index = sameNodeConnections.IndexOf(conn);
+
+                var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                <g @key="conn.Id" @onclick:stopPropagation="true">
+                    <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId)"
+                          stroke="transparent" stroke-width="15" fill="none" class="pointer-events-auto cursor-pointer"
+                          @onpointerdown="e => OnSelectConnection.InvokeAsync((e, conn))"
+                          @onpointerdown:stopPropagation="true" />
+
+                    <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId)"
+                          stroke="@strokeColor" stroke-width="2.5" fill="none" marker-end="@marker"
+                          class="transition-colors duration-200" stroke-dasharray="@(conn.IsAutomatic ? "5,5" : "none")" />
+                </g>
+            }
+        }
+
+        @if (IsConnecting && ConnectingFromNode != null)
+        {
+            var p1 = GetPortCoordinates(ConnectingFromNode, ActiveSourcePort);
+            <path d="@GetBezierPath(p1.X, p1.Y, MouseX, MouseY, 0, Guid.Empty, Guid.Empty)" stroke="#3b82f6" stroke-width="2.5" fill="none" stroke-dasharray="4,4" class="opacity-60" />
+        }
+    </svg>
+
+    @foreach (var conn in Connections)
+    {
+        var fromNode = Nodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+        var toNode = Nodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+        if (fromNode != null && toNode != null)
+        {
+            @if (SelectedConnections.Contains(conn))
+            {
+                var sameNodeConnections = Connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                int index = sameNodeConnections.IndexOf(conn);
+
+                var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
+                var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+
+                var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId);
+
+                <button @key="@($"del-conn-{conn.Id}")" @onpointerdown="() => OnDeleteItem.InvokeAsync(conn)" @onpointerdown:stopPropagation="true" class="absolute w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto" style="@($"left: {center.X - 12}px; top: {center.Y - 12}px;")" title="حذف مسیر">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            }
+        }
+    }
+
+    @foreach (var node in Nodes)
+    {
+        <CanvasNodeComponent @key="node.Id"
+                             Node="node"
+                             IsSelected="SelectedNodes.Contains(node)"
+                             IsConnecting="IsConnecting"
+                             ConnectingFromNode="ConnectingFromNode"
+                             CursorStyle="@(IsDragging && DraggedNode == node ? "grabbing" : "grab")"
+                             TextColor="@GetTextColor(node.Status.ColorCode)"
+                             OnPointerDown="args => OnNodeMouseDown.InvokeAsync(args)"
+                             OnClick="args => OnSelectNode.InvokeAsync(args)"
+                             OnDelete="n => OnDeleteItem.InvokeAsync(n)"
+                             OnPortPointerDown="args => OnPortPointerDown.InvokeAsync(args)"
+                             OnPortPointerUp="args => OnPortPointerUp.InvokeAsync(args)" />
+    }
+</div>
+
+@code{
+    [Parameter] public List<CanvasNodeDto> Nodes { get; set; } = new();
+    [Parameter] public List<CanvasConnection> Connections { get; set; } = new();
+    [Parameter] public HashSet<CanvasNodeDto> SelectedNodes { get; set; } = new();
+    [Parameter] public HashSet<CanvasConnection> SelectedConnections { get; set; } = new();
+
+    [Parameter] public bool IsBoxSelecting { get; set; }
+    [Parameter] public double BoxStartX { get; set; }
+    [Parameter] public double BoxStartY { get; set; }
+    [Parameter] public double BoxEndX { get; set; }
+    [Parameter] public double BoxEndY { get; set; }
+
+    [Parameter] public bool IsConnecting { get; set; }
+    [Parameter] public CanvasNodeDto? ConnectingFromNode { get; set; }
+    [Parameter] public string ActiveSourcePort { get; set; } = "";
+    [Parameter] public double MouseX { get; set; }
+    [Parameter] public double MouseY { get; set; }
+
+    [Parameter] public bool IsDragging { get; set; }
+    [Parameter] public CanvasNodeDto? DraggedNode { get; set; }
+
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+    [Parameter] public EventCallback<PointerEventArgs> OnPointerDown { get; set; }
+    [Parameter] public EventCallback<PointerEventArgs> OnPointerMove { get; set; }
+    [Parameter] public EventCallback<PointerEventArgs> OnPointerUp { get; set; }
+    [Parameter] public EventCallback<DragEventArgs> OnDrop { get; set; }
+
+    [Parameter] public EventCallback<(MouseEventArgs e, CanvasNodeDto node)> OnNodeMouseDown { get; set; }
+    [Parameter] public EventCallback<(MouseEventArgs e, CanvasNodeDto node)> OnSelectNode { get; set; }
+    [Parameter] public EventCallback<(MouseEventArgs e, CanvasConnection conn)> OnSelectConnection { get; set; }
+    [Parameter] public EventCallback<(PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerDown { get; set; }
+    [Parameter] public EventCallback<(PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerUp { get; set; }
+    [Parameter] public EventCallback<object> OnDeleteItem { get; set; }
+    [Parameter] public Func<string, string> GetTextColor { get; set; } = _ => "#1e293b";
+    [Parameter] public Func<double, double, double, double, int, Guid, Guid, string> GetBezierPath { get; set; } = null!;
+    [Parameter] public Func<double, double, double, double, int, Guid, Guid, (double X, double Y)> GetBezierCenter { get; set; } = null!;
+    [Parameter] public Func<CanvasNodeDto, string, (double X, double Y)> GetPortCoordinates { get; set; } = null!;
+}

@@ -20,7 +20,8 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
             .Include(w => w.Transitions)
                 .ThenInclude(t => t.AllowedRoles)
             .Include(w => w.Transitions)                                // <--- اضافه شود
-                .ThenInclude(t => t.TransitionFields)                   // <--- اضافه شود
+                .ThenInclude(t => t.TransitionFields)
+                .AsSplitQuery()// <--- اضافه شود
             .FirstOrDefaultAsync(w => w.Id == id);
     }
 

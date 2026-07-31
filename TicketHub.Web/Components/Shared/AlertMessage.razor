@@ -14,6 +14,14 @@
             </svg>
         }
         <span>@Message</span>
+
+        @if (OnClose.HasDelegate)
+        {
+            <button @onclick="OnClose" class="mr-auto opacity-70 hover:opacity-100 transition-opacity">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        }
+
     </div>
 }
 
@@ -23,6 +31,7 @@
     [Parameter] public string? Message { get; set; }
     [Parameter] public AlertType Type { get; set; } = AlertType.Error;
     [Parameter] public bool IsDark { get; set; } = true;
+    [Parameter] public EventCallback OnClose { get; set; }
 
     private string CssClass => (Type, IsDark) switch
     {

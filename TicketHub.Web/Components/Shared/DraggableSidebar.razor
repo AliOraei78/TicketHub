@@ -1,0 +1,43 @@
+﻿@typeparam TItem
+
+<div class="w-64 bg-white border-r border-slate-200 flex flex-col h-full z-10 shadow-sm">
+    <div class="p-4 border-b border-slate-100 flex flex-col gap-3">
+        <h2 class="text-sm font-bold text-slate-800">@Title</h2>
+        @HeaderContent
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-3 space-y-2">
+        @if (Items != null)
+        {
+            @foreach (var item in Items)
+            {
+                <div draggable="true"
+                     @ondragstart="() => OnDragStart.InvokeAsync(item)"
+                     class="group flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl cursor-grab active:cursor-grabbing hover:border-blue-300 transition-all">
+
+                    <div class="flex-1 truncate">
+                        @ItemTemplate(item)
+                    </div>
+
+                    @if (OnItemAdd.HasDelegate)
+                    {
+                        <button type="button"
+                                @onclick="() => OnItemAdd.InvokeAsync(item)"
+                                class="w-7 h-7 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-500 flex items-center justify-center transition-colors">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        </button>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code{
+    [Parameter] public string Title { get; set; } = "آیتم‌ها";
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = default!;
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+    [Parameter] public EventCallback<TItem> OnDragStart { get; set; }
+    [Parameter] public EventCallback<TItem> OnItemAdd { get; set; }
+}
