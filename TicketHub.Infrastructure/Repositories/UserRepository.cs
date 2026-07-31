@@ -59,5 +59,10 @@ namespace TicketHub.Infrastructure.Repositories
             _context.Users.RemoveRange(users);
             await SaveChangesAsync();
         }
+
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
     }
 }

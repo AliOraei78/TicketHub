@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Timers;
-using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
+using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
 using Timer = System.Timers.Timer;
 
@@ -10,9 +11,9 @@ namespace TicketHub.Web.Components.Pages.Auth;
 
 public partial class ConfirmEmail : ComponentBase, IDisposable
 {
-    [Inject] protected AppDbContext DbContext { get; set; } = default!;
+    [Inject] protected IUserRepository UserRepository { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
-    [Inject] protected TicketHub.Core.Interfaces.IEmailService EmailService { get; set; } = default!;
+    [Inject] protected IEmailService EmailService { get; set; } = default!;
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "email")]
@@ -73,7 +74,7 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
 
         try
         {
-            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == Email);
+            var user = await UserRepository.GetByEmailAsync(Email!);
 
             if (user == null)
             {
@@ -106,7 +107,7 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
             user.IsConfirmed = true;
             user.ConfirmationToken = null;
             user.TokenExpiration = null;
-            await DbContext.SaveChangesAsync();
+            await UserRepository.SaveChangesAsync();
 
             _timer?.Stop();
             isSuccess = true;
@@ -140,7 +141,7 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
 
         try
         {
-            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == Email);
+            var user = await UserRepository.GetByEmailAsync(Email!);
             if (user == null || user.IsConfirmed)
             {
                 Navigation.NavigateTo("/login", forceLoad: true);
@@ -152,7 +153,7 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
 
             user.ConfirmationToken = hashedCode;
             user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
-            await DbContext.SaveChangesAsync();
+            await UserRepository.UpdateAsync(user);
 
             string emailBody = $@"
                 <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>

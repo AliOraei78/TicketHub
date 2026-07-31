@@ -13,4 +13,5 @@ public interface IUserRepository : IRepository<User>
     Task UpdateUserRolesAsync(int userId, List<int> roleIds);
     Task BulkUpdateStatusAsync(HashSet<int> userIds, bool isActive);
     Task BulkDeleteAsync(HashSet<int> userIds);
+    Task<User?> GetByEmailAsync(string email);
 }
