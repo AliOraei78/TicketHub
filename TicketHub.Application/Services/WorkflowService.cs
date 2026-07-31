@@ -17,7 +17,7 @@ public class WorkflowService : IWorkflowService
 
     public async Task<List<WorkflowDto>> GetAllAsync()
     {
-        var workflows = await _workflowRepository.GetAllAsync();
+        var workflows = await _workflowRepository.GetAllWithDetailsAsync();
         return workflows.Adapt<List<WorkflowDto>>();
     }
 

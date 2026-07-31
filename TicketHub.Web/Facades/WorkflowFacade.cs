@@ -1,4 +1,5 @@
-﻿using TicketHub.Application.Interfaces;
+﻿using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
 using TicketHub.Web.States;
 
@@ -34,7 +35,7 @@ public class WorkflowFacade
 
         try
         {
-            var allWorkflows = (await _workflowService.GetAllAsync()).AsEnumerable();
+            IEnumerable<WorkflowDto> allWorkflows = (await _workflowService.GetAllAsync()).ToList();
 
             foreach (var w in allWorkflows)
                 w.Projects = State.AvailableProjects.Where(p => p.WorkflowId == w.Id).ToList();

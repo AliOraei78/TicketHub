@@ -88,4 +88,12 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<Workflow>> GetAllWithDetailsAsync()
+    {
+        return await _dbSet
+            .Include(w => w.WorkflowStatuses)
+            .Include(w => w.Transitions)
+            .ToListAsync();
+    }
 }
