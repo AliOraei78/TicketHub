@@ -59,6 +59,8 @@
                 <defs>
                     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" /></marker>
                     <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" /></marker>
+                    <!-- فلش کمرنگ برای مسیرهای غیرفعال -->
+                    <marker id="arrowhead-inactive" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#e2e8f0" /></marker>
                 </defs>
 
                 @foreach (var conn in connections)
@@ -68,8 +70,10 @@
                     if (fromNode != null && toNode != null)
                     {
                         bool isSelected = selectedConnections.Contains(conn);
-                        string strokeColor = isSelected ? "#3b82f6" : "#cbd5e1";
-                        string marker = isSelected ? "url(#arrowhead-active)" : "url(#arrowhead)";
+
+                        // تعیین رنگ مسیر و فلش بر اساس وضعیت (انتخاب‌شده، فعال، غیرفعال)
+                        string strokeColor = isSelected ? "#3b82f6" : (conn.IsActive ? "#94a3b8" : "#e2e8f0");
+                        string marker = isSelected ? "url(#arrowhead-active)" : (conn.IsActive ? "url(#arrowhead)" : "url(#arrowhead-inactive)");
 
                         var sameNodeConnections = connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
                         int index = sameNodeConnections.IndexOf(conn);
