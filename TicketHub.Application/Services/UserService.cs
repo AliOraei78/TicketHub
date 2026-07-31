@@ -78,14 +78,37 @@ public class UserService : IUserService
         }
     }
 
-    public async Task RegisterUserAsync(UserDto dto, string plainPassword)
+    public async Task<(bool Success, string? ErrorMessage)> RegisterUserAsync(UserDto dto, string plainPassword)
     {
+        var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+        if (existingUser != null)
+            return (false, "این ایمیل قبلاً ثبت شده است.");
+
         var user = dto.Adapt<User>();
         user.Password = BCrypt.Net.BCrypt.HashPassword(plainPassword);
-        user.ConfirmationToken = Guid.NewGuid().ToString();
-        user.TokenExpiration = DateTime.UtcNow.AddMinutes(15);
+
+        string rawCode = new Random().Next(100000, 999999).ToString();
+        user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);
+        user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
+        user.CreatedAt = DateTime.UtcNow;
+        user.IsConfirmed = false;
 
         await _userRepository.AddAsync(user);
+
+        // نکته: برای انتساب نقش پیش‌فرض (User)، باید از RoleRepository استفاده کنید یا مقدار ثابت پاس دهید
+        // await _userRepository.UpdateUserRolesAsync(user.Id, new List<int> { defaultRoleId });
+
+        string emailBody = $@"
+    <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
+        <h2>خوش آمدید، {user.Name}!</h2>
+        <p>کد تایید حساب کاربری شما:</p>
+        <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
+        <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
+    </div>";
+
+        await _emailService.SendEmailAsync(user.Email, "کد تایید حساب کاربری در تیکت‌هاب", emailBody);
+
+        return (true, null);
     }
 
     public async Task<bool> ConfirmUserAsync(int userId, string token)

@@ -12,7 +12,7 @@ namespace TicketHub.Application.Interfaces
         Task CreateAsync(UserDto dto, string password, List<int> roleIds);
         Task UpdateAsync(UserDto dto, string? password, List<int> roleIds);
         Task ExecuteBulkActionAsync(HashSet<int> userIds, string actionType, int? singleId = null);
-        Task RegisterUserAsync(UserDto dto, string plainPassword);
+        Task<(bool Success, string? ErrorMessage)> RegisterUserAsync(UserDto dto, string plainPassword);
         Task<bool> ConfirmUserAsync(int userId, string token);
         Task<AuthServiceResponse> LoginAsync(LoginViewModel model);
     }

@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.ComponentModel.DataAnnotations;
 using System.Timers;
+using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
-using TicketHub.Infrastructure.Data;
 using Timer = System.Timers.Timer;
 
 namespace TicketHub.Web.Components.Pages.Auth;
@@ -191,11 +188,4 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
             _timer.Dispose();
         }
     }
-}
-
-public class VerifyViewModel
-{
-    [Required(ErrorMessage = "وارد کردن کد الزامی است")]
-    [StringLength(6, MinimumLength = 6, ErrorMessage = "کد باید ۶ رقم باشد")]
-    public string Code { get; set; } = "";
 }

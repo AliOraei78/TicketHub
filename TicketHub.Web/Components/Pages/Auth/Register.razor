@@ -1,64 +1,33 @@
 ﻿@page "/register"
 @layout TicketHub.Web.Components.Layout.AuthLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-@using System.ComponentModel.DataAnnotations
-@using TicketHub.Core.Entities
-@using TicketHub.Infrastructure.Data
-@using Microsoft.EntityFrameworkCore
 @using TicketHub.Web.Components.Pages.Auth.Shared
-@using TicketHub.Application.Validations
 @using TicketHub.Web.Components.Shared
-@inject AppDbContext DbContext
-@inject NavigationManager Navigation
-@inject TicketHub.Core.Interfaces.IEmailService EmailService
 
 <AuthBackground Title="ایجاد حساب کاربری" Subtitle="به خانواده تیکت‌هاب بپیوندید">
-    <EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="registerForm" method="post">
-        <DataAnnotationsValidator />
 
-        <AlertMessage Message="@errorMessage" Type="AlertMessage.AlertType.Error" />
-        <AlertMessage Message="@(showSuccessMessage ? "ثبت‌نام با موفقیت انجام شد. لینک تایید به ایمیل شما ارسال گردید." : null)" Type="AlertMessage.AlertType.Success" />
+    @* پیام موفقیت چون در فرم جنریک نیست، اینجا اضافه می‌شود *@
+    @if (showSuccessMessage)
+    {
+        <AlertMessage Message="ثبت‌نام با موفقیت انجام شد. لینک تایید به ایمیل شما ارسال گردید." Type="AlertMessage.AlertType.Success" />
+    }
 
-        <div class="space-y-5">
-            <CustomAuthInput @bind-Value="registerModel.Name"
-                             Label="نام و نام خانوادگی"
-                             Placeholder="مثال: علی محمدی"
-                             ValidationFor="() => registerModel.Name" />
+    <GenericAuthForm TModel="RegisterViewModel"
+                     Model="registerModel"
+                     OnValidSubmit="HandleRegister"
+                     FormName="registerForm"
+                     ErrorMessage="@errorMessage"
+                     IsLoading="isLoading"
+                     LoadingText="در حال ثبت‌نام..."
+                     SubmitButtonText="ثبت‌نام در سامانه">
 
-            <CustomAuthInput @bind-Value="registerModel.Email"
-                             Label="آدرس ایمیل"
-                             Type="text"
-                             Placeholder="name@company.com"
-                             Dir="ltr"
-                             ValidationFor="() => registerModel.Email" />
+        <CustomAuthInput @bind-Value="registerModel.Name" Label="نام و نام خانوادگی" Placeholder="مثال: علی محمدی" ValidationFor="() => registerModel.Name" />
+        <CustomAuthInput @bind-Value="registerModel.Email" Label="آدرس ایمیل" Type="text" Placeholder="name@company.com" Dir="ltr" ValidationFor="() => registerModel.Email" />
+        <CustomAuthInput @bind-Value="registerModel.PhoneNumber" Label="شماره تماس" Type="tel" Placeholder="09123456789" Dir="ltr" ValidationFor="() => registerModel.PhoneNumber" />
+        <CustomAuthInput @bind-Value="registerModel.Password" Label="رمز عبور" Type="password" Placeholder="••••••••" Dir="ltr" ValidationFor="() => registerModel.Password" />
+        <CustomAuthInput @bind-Value="registerModel.ConfirmPassword" Label="تکرار رمز عبور" Type="password" Placeholder="••••••••" Dir="ltr" ValidationFor="() => registerModel.ConfirmPassword" />
 
-            <CustomAuthInput @bind-Value="registerModel.PhoneNumber"
-                             Label="شماره تماس"
-                             Type="tel"
-                             Placeholder="09123456789"
-                             Dir="ltr"
-                             ValidationFor="() => registerModel.PhoneNumber" />
-
-            <CustomAuthInput @bind-Value="registerModel.Password"
-                             Label="رمز عبور"
-                             Type="password"
-                             Placeholder="••••••••"
-                             Dir="ltr"
-                             ValidationFor="() => registerModel.Password" />
-            <CustomAuthInput @bind-Value="registerModel.ConfirmPassword"
-                             Label="تکرار رمز عبور"
-                             Type="password"
-                             Placeholder="••••••••"
-                             Dir="ltr"
-                             ValidationFor="() => registerModel.ConfirmPassword" />
-
-            <div class="pt-2">
-                <LoadingButton IsLoading="isLoading" LoadingText="در حال ثبت‌نام...">
-                    ثبت‌نام در سامانه
-                </LoadingButton>
-            </div>
-        </div>
-    </EditForm>
+    </GenericAuthForm>
 
     <div class="mt-6 text-center">
         <p class="text-sm text-slate-400">
@@ -67,102 +36,3 @@
         </p>
     </div>
 </AuthBackground>
-
-@code {
-    [SupplyParameterFromForm]
-    private RegisterViewModel registerModel { get; set; } = new();
-
-    private string? errorMessage;
-    private bool showSuccessMessage = false;
-    private bool isLoading = false; // این متغیر اضافه شود
-
-    // در متد HandleRegister داخل register.razor
-    private async Task HandleRegister()
-    {
-        isLoading = true;
-        StateHasChanged();
-        await Task.Delay(10);
-        try
-        {
-            if (await DbContext.Users.AnyAsync(u => u.Email == registerModel.Email))
-            {
-                errorMessage = "این ایمیل قبلاً ثبت شده است.";
-                return;
-            }
-
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerModel.Password);
-
-            // تولید کد ۶ رقمی تصادفی
-            string rawCode = new Random().Next(100000, 999999).ToString();
-            string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
-
-            var newUser = new User
-            {
-                Name = registerModel.Name,
-                Email = registerModel.Email,
-                PhoneNumber = registerModel.PhoneNumber,
-                Password = hashedPassword,
-                CreatedAt = DateTime.UtcNow,
-                IsConfirmed = false,
-                ConfirmationToken = hashedCode,
-                // تنظیم انقضا از همان ابتدا روی 2 دقیقه
-                TokenExpiration = DateTime.UtcNow.AddMinutes(2)
-            };
-
-            DbContext.Users.Add(newUser);
-            await DbContext.SaveChangesAsync();
-
-            var defaultRole = await DbContext.Roles.FirstOrDefaultAsync(r => r.Name == "User");
-            if (defaultRole != null)
-            {
-                DbContext.UserRoles.Add(new UserRole { UserId = newUser.Id, RoleId = defaultRole.Id });
-                await DbContext.SaveChangesAsync();
-            }
-
-            string emailBody = $@"
-            <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
-                <h2>خوش آمدید، {newUser.Name}!</h2>
-                <p>کد تایید حساب کاربری شما:</p>
-                <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
-                <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
-            </div>";
-
-            await EmailService.SendEmailAsync(newUser.Email, "کد تایید حساب کاربری در تیکت‌هاب", emailBody);
-
-            Navigation.NavigateTo($"/confirm-email?email={newUser.Email}");
-        }
-        catch (NavigationException)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            errorMessage = "خطایی در پردازش اطلاعات رخ داد.";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-    public class RegisterViewModel
-    {
-        [Required(ErrorMessage = "وارد کردن نام الزامی است.")]
-        public string Name { get; set; } = "";
-
-        [Required(ErrorMessage = "وارد کردن ایمیل الزامی است.")]
-        [ValidEmail] // این خط جایگزین صفت پیش‌فرض EmailAddress می‌شود
-        public string Email { get; set; } = "";
-
-        [Required(ErrorMessage = "وارد کردن شماره تماس الزامی است.")]
-        [ValidPhoneNumber]
-        public string PhoneNumber { get; set; } = "";
-
-        [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است.")]
-        [StrongPassword]
-        public string Password { get; set; } = "";
-
-        [Required(ErrorMessage = "تکرار رمز عبور الزامی است.")]
-        [Compare(nameof(Password), ErrorMessage = "رمز عبور و تکرار آن مطابقت ندارند.")]
-        public string ConfirmPassword { get; set; } = "";
-    }
-}
