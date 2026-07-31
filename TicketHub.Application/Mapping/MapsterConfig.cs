@@ -34,7 +34,9 @@ public class MapsterConfig : IRegister
                                                         : new List<int>());
 
         config.NewConfig<TransitionDto, Transition>()
-              .Ignore(dest => dest.AllowedRoles)
+              .Map(dest => dest.AllowedRoles, src => src.AllowedRoleIds != null
+                                                    ? src.AllowedRoleIds.Select(id => new TransitionRole { RoleId = id, TransitionId = src.Id }).ToList()
+                                                    : new List<TransitionRole>())
               .Ignore(dest => dest.Workflow)
               .Ignore(dest => dest.FromStatus)
               .Ignore(dest => dest.ToStatus);
@@ -49,6 +51,19 @@ public class MapsterConfig : IRegister
         config.NewConfig<CanvasNode, CanvasNodeDto>();
         config.NewConfig<CanvasNodeDto, CanvasNode>()
               .Ignore(dest => dest.Status); // جلوگیری از خطای EF Core هنگام آپدیت نود
+
+        // مپینگ برای WorkflowStatus (که روی بوم رسم می‌شود)
+        config.NewConfig<WorkflowStatus, WorkflowStatusDto>();
+        config.NewConfig<WorkflowStatusDto, WorkflowStatus>()
+              .Ignore(dest => dest.Status)
+              .Ignore(dest => dest.Workflow);
+
+        // مپینگ برای فیلدهای کاستوم (TransitionField)
+        config.NewConfig<TransitionField, TransitionFieldDto>();
+        config.NewConfig<TransitionFieldDto, TransitionField>()
+              .Ignore(dest => dest.Transition)
+              .Ignore(dest => dest.FieldType)
+              .Ignore(dest => dest.Attachments);
 
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);

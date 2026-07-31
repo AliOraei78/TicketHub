@@ -1,4 +1,6 @@
-﻿namespace TicketHub.Application.DTOs;
+﻿using TicketHub.Core.Entities;
+
+namespace TicketHub.Application.DTOs;
 
 public class TransitionDto
 {
@@ -20,4 +22,6 @@ public class TransitionDto
     public Guid ToNodeId { get; set; }
 
     public List<int> AllowedRoleIds { get; set; } = new();
+    public List<TransitionFieldDto> TransitionFields { get; set; } = new();
+
 }

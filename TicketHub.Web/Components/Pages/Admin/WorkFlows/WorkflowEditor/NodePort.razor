@@ -1,5 +1,6 @@
 ﻿<!-- NodePort.razor -->
 @using TicketHub.Core.Common
+@using TicketHub.Application.DTOs
 
 <div class="absolute w-6 h-6 rounded-full bg-white border flex items-center justify-center cursor-crosshair transition-all z-30 pointer-events-auto shadow-sm @ClassName @BorderClass"
      title="@PortName"
@@ -12,12 +13,12 @@
 @code {
     [Parameter] public string PortName { get; set; } = "";
     [Parameter] public string ClassName { get; set; } = "";
-    [Parameter] public CanvasNode Node { get; set; } = null!;
+    [Parameter] public CanvasNodeDto Node { get; set; } = null!;
     [Parameter] public bool IsConnecting { get; set; }
-    [Parameter] public CanvasNode? ConnectingFromNode { get; set; }
+    [Parameter] public CanvasNodeDto? ConnectingFromNode { get; set; }
 
-    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node, string port)> OnPortPointerDown { get; set; }
-    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node, string port)> OnPortPointerUp { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerDown { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerUp { get; set; }
 
     private bool IsActiveTarget => IsConnecting && ConnectingFromNode != Node;
     private string BorderClass => IsActiveTarget ? "border-blue-500 scale-125 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse" : "border-slate-300 hover:border-blue-500 hover:bg-blue-50";

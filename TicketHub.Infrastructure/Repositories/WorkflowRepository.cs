@@ -63,4 +63,29 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
     {
         return await _context.Set<WorkflowStatus>().ToListAsync();
     }
+
+    public void RemoveTransitionRoles(IEnumerable<TransitionRole> roles)
+    {
+        _context.Set<TransitionRole>().RemoveRange(roles);
+    }
+
+    public void RemoveTransitionFields(IEnumerable<TransitionField> fields)
+    {
+        _context.Set<TransitionField>().RemoveRange(fields);
+    }
+
+    public void RemoveWorkflowStatuses(IEnumerable<WorkflowStatus> statuses)
+    {
+        _context.Set<WorkflowStatus>().RemoveRange(statuses);
+    }
+
+    public void RemoveTransitions(IEnumerable<Transition> transitions)
+    {
+        _context.Set<Transition>().RemoveRange(transitions);
+    }
+
+    public async Task CommitChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }

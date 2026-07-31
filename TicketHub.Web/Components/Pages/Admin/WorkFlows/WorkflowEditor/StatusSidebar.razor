@@ -1,4 +1,4 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 
 <div class="w-72 bg-white border-l border-slate-200 flex flex-col z-30 shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] flex-shrink-0">
     <div class="p-5 border-b border-slate-100">
@@ -24,10 +24,10 @@
 </div>
 
 @code {
-    [Parameter] public IEnumerable<Status> Statuses { get; set; } = new List<Status>();
-    [Parameter] public EventCallback<Status> OnDragStart { get; set; }
-    [Parameter] public EventCallback<Status> OnStatusAdd { get; set; }
+    [Parameter] public IEnumerable<StatusDto> Statuses { get; set; } = new List<StatusDto>();
+    [Parameter] public EventCallback<StatusDto> OnDragStart { get; set; }
+    [Parameter] public EventCallback<StatusDto> OnStatusAdd { get; set; }
 
     private string SearchTerm { get; set; } = "";
-    private IEnumerable<Status> FilteredStatuses => string.IsNullOrEmpty(SearchTerm) ? Statuses : Statuses.Where(s => s.Name.Contains(SearchTerm));
+    private IEnumerable<StatusDto> FilteredStatuses => string.IsNullOrEmpty(SearchTerm) ? Statuses : Statuses.Where(s => s.Name.Contains(SearchTerm));
 }

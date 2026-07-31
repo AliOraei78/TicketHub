@@ -8,7 +8,7 @@ namespace TicketHub.Application.DTOs;
 
 public class CanvasNodeDto
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     public StatusDto Status { get; set; } = null!;
     public double X { get; set; }
     public double Y { get; set; }

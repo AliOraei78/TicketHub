@@ -4,6 +4,7 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Common;
+using TicketHub.Application.DTOs;
 
 namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 {
@@ -11,58 +12,57 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
     {
         [Parameter] public int? Id { get; set; }
 
-        [Inject] private IWorkflowRepository WorkflowRepository { get; set; } = default!;
-        [Inject] private IRepository<Status> StatusRepository { get; set; } = default!;
-        [Inject] private IRepository<Role> RoleRepository { get; set; } = default!;
-        [Inject] private IRepository<FieldType> FieldTypeRepository { get; set; } = default!;
+        [Inject] private IWorkflowService WorkflowService { get; set; } = default!;
+        [Inject] private IStatusService StatusService { get; set; } = default!;
+        [Inject] private IRoleService RoleService { get; set; } = default!;
+        [Inject] private IFieldTypeService FieldTypeService { get; set; } = default!;
         [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-        private List<Status> availableStatuses = new();
-        private List<Role> AvailableRoles = new();
+        private List<StatusDto> availableStatuses = new();
+        private List<RoleDto> AvailableRoles = new();
 
         private string workflowName = "";
         private string workflowDescription = "";
         private string activeSourcePort = "";
 
         private string errorMessage = "";
-        private Workflow? currentWorkflow;
+        private WorkflowDto? currentWorkflow;
 
         private bool isBoxSelecting = false;
         private double boxStartX, boxStartY, boxEndX, boxEndY;
 
         private string statusSearchTerm = "";
-        private IEnumerable<Status> FilteredStatuses =>
+        private IEnumerable<StatusDto> FilteredStatuses =>
             string.IsNullOrEmpty(statusSearchTerm) ? availableStatuses : availableStatuses.Where(s => s.Name.Contains(statusSearchTerm));
 
-        private List<CanvasNode> canvasNodes = new();
+        private List<CanvasNodeDto> canvasNodes = new();
         private List<CanvasConnection> connections = new();
 
         private bool isDragging = false;
-        private CanvasNode? draggedNode;
+        private CanvasNodeDto? draggedNode;
         private double startMouseX, startMouseY;
         private double initialNodeX, initialNodeY;
 
-        private List<FieldType> availableFieldTypes = new();
+        private List<FieldTypeDto> availableFieldTypes = new();
 
         private bool isConnecting = false;
-        private CanvasNode? connectingFromNode;
+        private CanvasNodeDto? connectingFromNode;
         private double mouseX, mouseY;
 
-        private HashSet<CanvasNode> selectedNodes = new();
+        private HashSet<CanvasNodeDto> selectedNodes = new();
         private HashSet<CanvasConnection> selectedConnections = new();
 
-        private Status? draggingStatusFromSidebar;
+        private StatusDto? draggingStatusFromSidebar;
 
         protected override async Task OnInitializedAsync()
         {
-            var statusesFromDb = await StatusRepository.GetAllAsync();
+            var statusesFromDb = await StatusService.GetAllAsync();
             availableStatuses = statusesFromDb.ToList();
 
-            var rolesFromDb = await RoleRepository.GetAllAsync();
+            var rolesFromDb = await RoleService.GetAllRolesAsync();
             AvailableRoles = rolesFromDb.ToList();
 
-            // دریافت انواع فیلد از دیتابیس
-            var fieldTypesFromDb = await FieldTypeRepository.GetAllAsync();
+            var fieldTypesFromDb = await FieldTypeService.GetAllAsync();
             availableFieldTypes = fieldTypesFromDb.ToList();
 
             if (Id.HasValue)
@@ -73,56 +73,52 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private async Task LoadWorkflowAsync(int workflowId)
         {
-            currentWorkflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
+            currentWorkflow = await WorkflowService.GetByIdWithDetailsAsync(workflowId);
             if (currentWorkflow == null) return;
 
             workflowName = currentWorkflow.Name ?? "";
             workflowDescription = currentWorkflow.Description ?? "";
 
-            // استفاده از NodeId که در دیتابیس ذخیره شده است
-            canvasNodes = currentWorkflow.WorkflowStatuses.Select(ws => new CanvasNode
+            canvasNodes = currentWorkflow.WorkflowStatuses.Select(ws => new CanvasNodeDto
             {
-                Id = ws.NodeId != Guid.Empty ? ws.NodeId : Guid.NewGuid(), // سازگاری با دیتای قبلی
-                Status = ws.Status,
+                Id = ws.NodeId != Guid.Empty ? ws.NodeId : Guid.NewGuid(),
+                Status = ws.Status!,
                 X = ws.PositionX,
                 Y = ws.PositionY
             }).ToList();
 
             connections = currentWorkflow.Transitions
-                    .Where(t => t.IsActive)
                     .Select(t => new CanvasConnection
                     {
                         Id = Guid.NewGuid(),
-                        DbId = t.Id, // <--- این خط اضافه شود
+                        DbId = t.Id,
                         FromNodeId = t.FromNodeId != Guid.Empty ? t.FromNodeId : canvasNodes.FirstOrDefault(n => n.Status.Id == t.FromState)?.Id ?? Guid.Empty,
-                ToNodeId = t.ToNodeId != Guid.Empty ? t.ToNodeId : canvasNodes.FirstOrDefault(n => n.Status.Id == t.ToState)?.Id ?? Guid.Empty,
-
-                        // 👇 این دو خط باید اضافه شوند تا پورت‌های رسم شده بازخوانی شوند
-                SourcePort = string.IsNullOrEmpty(t.SourcePort) ? "Right" : t.SourcePort,
-                TargetPort = string.IsNullOrEmpty(t.TargetPort) ? "Left" : t.TargetPort,
-
-                Name = t.Name,
-                IsAutomatic = t.IsAutomated == 1,
-                IsActive = t.IsActive,
-                ActivateAt = t.ActivateAt,
-                AllowedRoleIds = t.AllowedRoles.Select(r => r.RoleId).ToHashSet(),
-                CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
-                {
-                    Id = tf.Id,
-                    FieldTypeId = tf.FieldTypeId,
-                    FieldName = tf.FieldName,
-                    IsRequired = tf.IsRequired,
-                    SortOrder = tf.SortOrder,
-                    Options = tf.Options,
-                    Placeholder = tf.Placeholder,
-                    DefaultValue = tf.DefaultValue,
-                    IsActive = tf.IsActive
-                }).ToList()
-            }).Where(c => c.FromNodeId != Guid.Empty && c.ToNodeId != Guid.Empty).ToList();
+                        ToNodeId = t.ToNodeId != Guid.Empty ? t.ToNodeId : canvasNodes.FirstOrDefault(n => n.Status.Id == t.ToState)?.Id ?? Guid.Empty,
+                        SourcePort = string.IsNullOrEmpty(t.SourcePort) ? "Right" : t.SourcePort,
+                        TargetPort = string.IsNullOrEmpty(t.TargetPort) ? "Left" : t.TargetPort,
+                        Name = t.Name,
+                        IsAutomatic = t.IsAutomated == 1,
+                        IsActive = t.IsActive,
+                        ActivateAt = t.ActivateAt,
+                        AllowedRoleIds = t.AllowedRoleIds.ToHashSet(),
+                        CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
+                        {
+                            Id = tf.Id,
+                            FieldTypeId = tf.FieldTypeId,
+                            FieldName = tf.FieldName,
+                            IsRequired = tf.IsRequired,
+                            SortOrder = tf.SortOrder,
+                            Options = tf.Options,
+                            Placeholder = tf.Placeholder,
+                            DefaultValue = tf.DefaultValue,
+                            IsActive = tf.IsActive
+                        }).ToList()
+                    }).Where(c => c.FromNodeId != Guid.Empty && c.ToNodeId != Guid.Empty).ToList();
         }
-        private void AddStatusToCanvas(Status status)
+
+        private void AddStatusToCanvas(StatusDto status)
         {
-            canvasNodes.Add(new CanvasNode
+            canvasNodes.Add(new CanvasNodeDto
             {
                 Status = status,
                 X = 250 + (canvasNodes.Count * 20),
@@ -130,7 +126,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             });
         }
 
-        private void RemoveNode(CanvasNode node)
+        private void RemoveNode(CanvasNodeDto node)
         {
             connections.RemoveAll(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
             canvasNodes.Remove(node);
@@ -155,7 +151,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 selectedConnection.AllowedRoleIds.Add(roleId);
         }
 
-        private void NodeMouseDown(MouseEventArgs e, CanvasNode node)
+        private void NodeMouseDown(MouseEventArgs e, CanvasNodeDto node)
         {
             if (isConnecting) return;
             isDragging = true;
@@ -201,15 +197,6 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 double dx = e.ClientX - startMouseX;
                 double dy = e.ClientY - startMouseY;
 
-                if (selectedNodes.Contains(draggedNode))
-                {
-                    foreach (var node in selectedNodes)
-                    {
-                        // در اینجا جابجایی گروهی نیاز به ذخیره آفست‌های اولیه همه نودها دارد
-                        // فعلاً فقط نود درگ‌شده حرکت می‌کند
-                    }
-                }
-
                 draggedNode.X = initialNodeX + dx;
                 draggedNode.Y = initialNodeY + dy;
             }
@@ -243,7 +230,6 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             double right = Math.Max(boxStartX, boxEndX);
             double bottom = Math.Max(boxStartY, boxEndY);
 
-            // ۱. انتخاب وضعیت‌ها
             foreach (var node in canvasNodes)
             {
                 if (node.X + 150 > left && node.X < right && node.Y + 72 > top && node.Y < bottom)
@@ -252,7 +238,6 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 }
             }
 
-            // ۲. انتخاب مسیرها (Transitions)
             foreach (var conn in connections)
             {
                 var fromNode = canvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
@@ -268,7 +253,6 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
                     var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index, fromNode.Id, toNode.Id);
 
-                    // بررسی اینکه آیا نقطه مرکزی مسیر داخل کادر قرار گرفته است یا خیر
                     if (center.X >= left && center.X <= right && center.Y >= top && center.Y <= bottom)
                     {
                         selectedConnections.Add(conn);
@@ -276,7 +260,8 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 }
             }
         }
-        private void SelectNode(MouseEventArgs e, CanvasNode node)
+
+        private void SelectNode(MouseEventArgs e, CanvasNodeDto node)
         {
             if (!e.CtrlKey && !e.ShiftKey)
             {
@@ -300,20 +285,15 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
         {
             if (e.Key == "Delete")
             {
-                foreach (var node in selectedNodes.ToList())
-                {
-                    RemoveNode(node);
-                }
-                foreach (var conn in selectedConnections.ToList())
-                {
-                    DeleteConnection(conn);
-                }
+                foreach (var node in selectedNodes.ToList()) RemoveNode(node);
+                foreach (var conn in selectedConnections.ToList()) DeleteConnection(conn);
+
                 selectedNodes.Clear();
                 selectedConnections.Clear();
             }
         }
 
-        private void OnPortPointerDown(PointerEventArgs e, CanvasNode node, string port)
+        private void OnPortPointerDown(PointerEventArgs e, CanvasNodeDto node, string port)
         {
             if (!isConnecting)
             {
@@ -325,7 +305,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             }
         }
 
-        private void OnPortPointerUp(PointerEventArgs e, CanvasNode node, string port)
+        private void OnPortPointerUp(PointerEventArgs e, CanvasNodeDto node, string port)
         {
             if (isConnecting && connectingFromNode != null && connectingFromNode != node)
             {
@@ -333,7 +313,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             }
         }
 
-        private void CompleteConnection(CanvasNode targetNode, string targetPort)
+        private void CompleteConnection(CanvasNodeDto targetNode, string targetPort)
         {
             if (connectingFromNode == null) return;
 
@@ -344,9 +324,9 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 ToNodeId = targetNode.Id,
                 SourcePort = activeSourcePort,
                 TargetPort = targetPort,
-                Name = "", // مقداردهی اولیه برای جلوگیری از خطای بایندینگ در Sidebar
-                AllowedRoleIds = new HashSet<int>(), // مقداردهی برای جلوگیری از خطای Null
-                CustomFields = new List<CanvasTransitionField>() // مقداردهی برای جلوگیری از خطای Null
+                Name = "",
+                AllowedRoleIds = new HashSet<int>(),
+                CustomFields = new List<CanvasTransitionField>()
             };
             connections.Add(newConn);
 
@@ -363,21 +343,17 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private bool CheckCollision(double x1, double y1, double cx, double cy, double x2, double y2, Guid fromNodeId, Guid toNodeId)
         {
-            // تست نقاط روی منحنی بزیه برای بررسی تداخل
             double[] tValues = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 };
 
             foreach (var node in canvasNodes)
             {
-                // نادیده گرفتن گره‌های مبدا و مقصد خودِ مسیر
                 if (node.Id == fromNodeId || node.Id == toNodeId) continue;
 
-                // مرکز تقریبی گره روی بوم
                 double nodeCenterX = node.X + 75;
                 double nodeCenterY = node.Y + 36;
 
                 foreach (var t in tValues)
                 {
-                    // فرمول منحنی بزیه درجه دو (Quadratic Bezier)
                     double u = 1 - t;
                     double px = u * u * x1 + 2 * u * t * cx + t * t * x2;
                     double py = u * u * y1 + 2 * u * t * cy + t * t * y2;
@@ -385,9 +361,6 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                     double dx = px - nodeCenterX;
                     double dy = py - nodeCenterY;
 
-                    // بررسی تداخل با یک بیضی فرضی دور گره به عنوان حریم امن
-                    // شعاع افقی (نصف عرض 150 + حریم) = 95
-                    // شعاع عمودی (نصف ارتفاع 72 + حریم) = 60
                     if ((dx * dx) / (95 * 95) + (dy * dy) / (60 * 60) <= 1)
                     {
                         return true;
@@ -408,28 +381,24 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
             if (length == 0) return (midX, midY);
 
-            // بردار عمود بر خط مستقیم
             double nx = -dy / length;
             double ny = dx / length;
 
-            // آفست پایه برای زمانی که دو وضعیت، چندین ارتباط با هم دارند
             int multiplier = (lineIndex % 2 == 0) ? (lineIndex / 2) : -(lineIndex / 2 + 1);
             double baseOffset = multiplier * 40;
 
             double cx = midX + nx * baseOffset;
             double cy = midY + ny * baseOffset;
 
-            // اگر در حال رسم خط با ماوس هستیم، از محاسبه برخورد صرف‌نظر کن
             if (fromNodeId == Guid.Empty || toNodeId == Guid.Empty)
             {
                 if (lineIndex == 0) return (midX, midY);
                 return (cx, cy);
             }
 
-            int maxIterations = 20; // حداکثر تلاش برای پیدا کردن مسیر باز
-            double step = 35; // پرش 35 پیکسلی به بیرون در هر قوس برای فرار از گره
+            int maxIterations = 20;
+            double step = 35;
 
-            // آرایه‌ای از آفست‌های پینگ‌پونگی: +35, -35, +70, -70 و ...
             double[] offsetsToTry = new double[maxIterations];
             for (int i = 0; i < maxIterations; i++)
             {
@@ -438,14 +407,12 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 offsetsToTry[i] = sign * magnitude * step;
             }
 
-            // چک کردن اینکه آیا خط در حالت عادی برخوردی دارد یا نه
             if (!CheckCollision(x1, y1, cx, cy, x2, y2, fromNodeId, toNodeId))
             {
-                if (lineIndex == 0 && baseOffset == 0) return (midX, midY); // ترجیح خط مستقیم
+                if (lineIndex == 0 && baseOffset == 0) return (midX, midY);
                 return (cx, cy);
             }
 
-            // در صورت برخورد، تلاش برای پیدا کردن اولین آفستی که با هیچ وضعیتی تداخل ندارد
             foreach (var testOffset in offsetsToTry)
             {
                 double testCx = midX + nx * (baseOffset + testOffset);
@@ -457,7 +424,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 }
             }
 
-            return (cx, cy); // در صورت تراکم شدید، همان منحنی پیش‌فرض را برمی‌گرداند
+            return (cx, cy);
         }
 
         private string GetBezierPath(double x1, double y1, double x2, double y2, int lineIndex = 0, Guid fromNodeId = default, Guid toNodeId = default)
@@ -469,19 +436,18 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
         private (double X, double Y) GetBezierCenter(double x1, double y1, double x2, double y2, int lineIndex = 0, Guid fromNodeId = default, Guid toNodeId = default)
         {
             var cp = CalculateControlPoint(x1, y1, x2, y2, lineIndex, fromNodeId, toNodeId);
-            // محاسبه دقیق مرکز روی منحنی بزیه برای قرارگیری دکمه حذف
             double curveMidX = 0.25 * x1 + 0.5 * cp.cx + 0.25 * x2;
             double curveMidY = 0.25 * y1 + 0.5 * cp.cy + 0.25 * y2;
             return (curveMidX, curveMidY);
         }
 
-        private void OnStatusDragStart(Status status) => draggingStatusFromSidebar = status;
+        private void OnStatusDragStart(StatusDto status) => draggingStatusFromSidebar = status;
 
         private void CanvasOnDrop(DragEventArgs e)
         {
             if (draggingStatusFromSidebar != null)
             {
-                canvasNodes.Add(new CanvasNode
+                canvasNodes.Add(new CanvasNodeDto
                 {
                     Status = draggingStatusFromSidebar,
                     X = Math.Max(0, e.ClientX - 75),
@@ -491,7 +457,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             }
         }
 
-        private (double X, double Y) GetPortCoordinates(CanvasNode node, string port)
+        private (double X, double Y) GetPortCoordinates(CanvasNodeDto node, string port)
         {
             return port switch
             {
@@ -505,11 +471,10 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private async Task SaveWorkflowAsync()
         {
-            errorMessage = ""; // پاک کردن خطاهای قبلی
+            errorMessage = "";
 
             if (string.IsNullOrWhiteSpace(workflowName))
             {
-                // نمایش ارور شیک در صورت خالی بودن نام
                 errorMessage = "لطفاً عنوان جریان کاری را وارد کنید. این فیلد الزامی است.";
                 return;
             }
@@ -518,36 +483,30 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             {
                 if (Id.HasValue && Id.Value > 0)
                 {
-                    // --- حالت ویرایش ---
-                    // به جای ساخت شیء جدید، شیء قبلی را ویرایش می‌کنیم تا EF Core دچار تداخل نشود
                     if (currentWorkflow == null)
-                        currentWorkflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(Id.Value);
+                        currentWorkflow = await WorkflowService.GetByIdWithDetailsAsync(Id.Value);
 
                     if (currentWorkflow != null)
                     {
                         currentWorkflow.Name = workflowName;
                         currentWorkflow.Description = workflowDescription;
 
-                        // ۱. مدیریت وضعیت‌ها (WorkflowStatuses) روی بوم
                         var activeNodeIds = canvasNodes.Select(n => n.Id).ToList();
-
                         var statusesToRemove = currentWorkflow.WorkflowStatuses.Where(ws => !activeNodeIds.Contains(ws.NodeId)).ToList();
                         foreach (var st in statusesToRemove) currentWorkflow.WorkflowStatuses.Remove(st);
 
                         foreach (var n in canvasNodes)
                         {
-                            // بررسی بر اساس NodeId به جای StatusId
                             var existingWs = currentWorkflow.WorkflowStatuses.FirstOrDefault(ws => ws.NodeId == n.Id);
                             if (existingWs != null)
                             {
                                 existingWs.PositionX = n.X;
                                 existingWs.PositionY = n.Y;
-                                // در صورتی که شناسه وضعیت تغییر کرده باشد
                                 existingWs.StatusId = n.Status.Id;
                             }
                             else
                             {
-                                currentWorkflow.WorkflowStatuses.Add(new WorkflowStatus
+                                currentWorkflow.WorkflowStatuses.Add(new WorkflowStatusDto
                                 {
                                     NodeId = n.Id,
                                     StatusId = n.Status.Id,
@@ -557,19 +516,17 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                             }
                         }
 
-                        // ۲. مدیریت انتقال‌ها بر اساس شناسه دیتابیس (DbId)
                         var activeUiConnectionDbIds = connections.Where(c => c.DbId > 0).Select(c => c.DbId).ToList();
 
-                        // غیرفعال کردن انتقال‌هایی که روی بوم حذف شده‌اند (Soft Delete)
-                        foreach (var dbTransition in currentWorkflow.Transitions)
+                        var transitionsToRemoveFromDto = currentWorkflow.Transitions
+                            .Where(t => !activeUiConnectionDbIds.Contains(t.Id))
+                            .ToList();
+
+                        foreach (var t in transitionsToRemoveFromDto)
                         {
-                            if (!activeUiConnectionDbIds.Contains(dbTransition.Id))
-                            {
-                                dbTransition.IsActive = false;
-                            }
+                            currentWorkflow.Transitions.Remove(t);
                         }
 
-                        // بروزرسانی یا افزودن مسیرهای روی بوم
                         foreach (var conn in connections)
                         {
                             var fromStatusId = canvasNodes.First(n => n.Id == conn.FromNodeId).Status.Id;
@@ -577,7 +534,6 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
                             if (conn.DbId > 0)
                             {
-                                // مسیر از قبل در دیتابیس وجود دارد -> آپدیت
                                 var existingDbTransition = currentWorkflow.Transitions.FirstOrDefault(t => t.Id == conn.DbId);
 
                                 if (existingDbTransition != null)
@@ -590,60 +546,29 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                                     existingDbTransition.FromState = fromStatusId;
                                     existingDbTransition.ToState = toStatusId;
                                     existingDbTransition.IsAutomated = conn.IsAutomatic ? 1 : 0;
-                                    existingDbTransition.IsActive = true;
+                                    existingDbTransition.IsActive = conn.IsActive;
 
-                                    // آپدیت نقش‌ها به صورت ایمن
-                                    var rolesToRemove = existingDbTransition.AllowedRoles.Where(r => !conn.AllowedRoleIds.Contains(r.RoleId)).ToList();
-                                    foreach (var r in rolesToRemove) existingDbTransition.AllowedRoles.Remove(r);
+                                    existingDbTransition.AllowedRoleIds = conn.AllowedRoleIds.ToList();
 
-                                    var newRoles = conn.AllowedRoleIds.Where(id => !existingDbTransition.AllowedRoles.Any(r => r.RoleId == id));
-                                    foreach (var id in newRoles) existingDbTransition.AllowedRoles.Add(new TransitionRole { RoleId = id });
-
-                                    // مدیریت فیلدهای کاستوم
-                                    var currentFieldIds = conn.CustomFields.Where(f => f.Id > 0).Select(f => f.Id).ToList();
-                                    var fieldsToRemove = existingDbTransition.TransitionFields.Where(f => !currentFieldIds.Contains(f.Id)).ToList();
-                                    foreach (var f in fieldsToRemove) existingDbTransition.TransitionFields.Remove(f);
-
-                                    foreach (var f in conn.CustomFields)
-                                    {
-                                        if (f.FieldTypeId <= 0) continue;
-
-                                        if (f.Id > 0)
+                                    existingDbTransition.TransitionFields = conn.CustomFields
+                                        .Where(f => f.FieldTypeId > 0)
+                                        .Select(f => new TransitionFieldDto
                                         {
-                                            var existingField = existingDbTransition.TransitionFields.FirstOrDefault(tf => tf.Id == f.Id);
-                                            if (existingField != null)
-                                            {
-                                                existingField.FieldName = f.FieldName;
-                                                existingField.FieldTypeId = f.FieldTypeId;
-                                                existingField.IsRequired = f.IsRequired;
-                                                existingField.SortOrder = f.SortOrder;
-                                                existingField.Options = f.Options;
-                                                existingField.Placeholder = f.Placeholder;
-                                                existingField.DefaultValue = f.DefaultValue;
-                                                existingField.IsActive = f.IsActive;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            existingDbTransition.TransitionFields.Add(new TransitionField
-                                            {
-                                                FieldTypeId = f.FieldTypeId,
-                                                FieldName = f.FieldName,
-                                                IsRequired = f.IsRequired,
-                                                SortOrder = f.SortOrder,
-                                                Options = f.Options,
-                                                Placeholder = f.Placeholder,
-                                                DefaultValue = f.DefaultValue,
-                                                IsActive = f.IsActive
-                                            });
-                                        }
-                                    }
+                                            Id = f.Id,
+                                            FieldTypeId = f.FieldTypeId,
+                                            FieldName = f.FieldName,
+                                            IsRequired = f.IsRequired,
+                                            SortOrder = f.SortOrder,
+                                            Options = f.Options,
+                                            Placeholder = f.Placeholder,
+                                            DefaultValue = f.DefaultValue,
+                                            IsActive = f.IsActive
+                                        }).ToList();
                                 }
                             }
                             else
                             {
-                                // مسیر جدید است -> درج رکورد جدید در دیتابیس
-                                currentWorkflow.Transitions.Add(new Transition
+                                currentWorkflow.Transitions.Add(new TransitionDto
                                 {
                                     Name = string.IsNullOrWhiteSpace(conn.Name) ? "انتقال" : conn.Name,
                                     FromState = fromStatusId,
@@ -654,10 +579,10 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                                     TargetPort = conn.TargetPort,
                                     IsAutomated = conn.IsAutomatic ? 1 : 0,
                                     IsActive = conn.IsActive,
-                                    AllowedRoles = conn.AllowedRoleIds.Select(roleId => new TransitionRole { RoleId = roleId }).ToList(),
+                                    AllowedRoleIds = conn.AllowedRoleIds.ToList(),
                                     TransitionFields = conn.CustomFields
                                                         .Where(f => f.FieldTypeId > 0)
-                                                        .Select(f => new TransitionField
+                                                        .Select(f => new TransitionFieldDto
                                                         {
                                                             FieldTypeId = f.FieldTypeId,
                                                             FieldName = f.FieldName,
@@ -672,20 +597,18 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                             }
                         }
 
-                        await WorkflowRepository.UpdateAsync(currentWorkflow);
+                        await WorkflowService.UpdateAsync(currentWorkflow);
                     }
                 }
-
                 else
                 {
-                    // --- حالت ساخت جریان کاری جدید ---
-                    var workflow = new Workflow
+                    var workflow = new WorkflowDto
                     {
                         Name = workflowName,
                         Description = workflowDescription,
-                        WorkflowStatuses = canvasNodes.Select(n => new WorkflowStatus
+                        WorkflowStatuses = canvasNodes.Select(n => new WorkflowStatusDto
                         {
-                            NodeId = n.Id, // <--- این خط اضافه شد تا خطای دیتابیس رفع شود
+                            NodeId = n.Id,
                             StatusId = n.Status.Id,
                             PositionX = n.X,
                             PositionY = n.Y
@@ -695,21 +618,21 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                             var fromStatusId = canvasNodes.First(n => n.Id == c.FromNodeId).Status.Id;
                             var toStatusId = canvasNodes.First(n => n.Id == c.ToNodeId).Status.Id;
 
-                            return new Transition
+                            return new TransitionDto
                             {
                                 Name = string.IsNullOrWhiteSpace(c.Name) ? "انتقال" : c.Name,
                                 FromState = fromStatusId,
                                 ToState = toStatusId,
-                                FromNodeId = c.FromNodeId, // <--- اضافه شد برای بارگذاری صحیح در آینده
-                                ToNodeId = c.ToNodeId,     // <--- اضافه شد برای بارگذاری صحیح در آینده
+                                FromNodeId = c.FromNodeId,
+                                ToNodeId = c.ToNodeId,
                                 SourcePort = c.SourcePort,
                                 TargetPort = c.TargetPort,
                                 IsAutomated = c.IsAutomatic ? 1 : 0,
                                 IsActive = c.IsActive,
-                                AllowedRoles = c.AllowedRoleIds.Select(roleId => new TransitionRole { RoleId = roleId }).ToList(),
+                                AllowedRoleIds = c.AllowedRoleIds.ToList(),
                                 TransitionFields = c.CustomFields
                                                     .Where(f => f.FieldTypeId > 0)
-                                                    .Select(f => new TransitionField
+                                                    .Select(f => new TransitionFieldDto
                                                     {
                                                         FieldTypeId = f.FieldTypeId,
                                                         FieldName = f.FieldName,
@@ -724,14 +647,13 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                         }).ToList()
                     };
 
-                    await WorkflowRepository.AddAsync(workflow);
+                    await WorkflowService.CreateAsync(workflow);
                 }
-                // در صورت موفقیت آمیز بودن، به صفحه لیست برمی‌گردیم
+
                 Navigation.NavigateTo("/workflows");
             }
             catch (Exception ex)
             {
-                // اگر خطای دیتابیس یا EF Core رخ دهد، ارور قرمز رنگ بالای صفحه نمایش داده می‌شود
                 errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
             }
         }
@@ -757,15 +679,13 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private void DeleteSelectedItems(object clickedItem)
         {
-            // بررسی اینکه آیا آیتم کلیک شده در لیست انتخاب‌ها هست یا خیر
             bool isGroupDelete = false;
 
-            if (clickedItem is CanvasNode node && selectedNodes.Contains(node)) isGroupDelete = true;
+            if (clickedItem is CanvasNodeDto node && selectedNodes.Contains(node)) isGroupDelete = true;
             if (clickedItem is CanvasConnection conn && selectedConnections.Contains(conn)) isGroupDelete = true;
 
             if (isGroupDelete)
             {
-                // حذف همه موارد انتخاب شده (گروهی)
                 foreach (var n in selectedNodes.ToList()) RemoveNode(n);
                 foreach (var c in selectedConnections.ToList()) DeleteConnection(c);
 
@@ -774,8 +694,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             }
             else
             {
-                // حذف انفرادی (اگر فقط یک آیتم کلیک شده بود)
-                if (clickedItem is CanvasNode n) RemoveNode(n);
+                if (clickedItem is CanvasNodeDto n) RemoveNode(n);
                 if (clickedItem is CanvasConnection c) DeleteConnection(c);
             }
         }

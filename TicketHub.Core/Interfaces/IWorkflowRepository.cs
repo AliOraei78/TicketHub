@@ -11,4 +11,10 @@ public interface IWorkflowRepository : IRepository<Workflow>
     Task<Workflow?> GetWorkflowWithDetailsAsync(int id);
     Task<List<Project>> GetProjectsAsync();
     Task<List<Status>> GetAllStatusesAsync();
+
+    void RemoveTransitionRoles(IEnumerable<TransitionRole> roles);
+    void RemoveTransitionFields(IEnumerable<TransitionField> fields);
+    void RemoveWorkflowStatuses(IEnumerable<WorkflowStatus> statuses);
+    void RemoveTransitions(IEnumerable<Transition> transitions);
+    Task CommitChangesAsync();
 }

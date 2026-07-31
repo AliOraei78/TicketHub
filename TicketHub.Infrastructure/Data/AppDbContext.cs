@@ -111,7 +111,7 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(t => t.Workflow)
                 .WithMany(w => w.Transitions)
                 .HasForeignKey(t => t.WorkflowId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<WorkflowStatus>()
                 .HasOne(ws => ws.Workflow)

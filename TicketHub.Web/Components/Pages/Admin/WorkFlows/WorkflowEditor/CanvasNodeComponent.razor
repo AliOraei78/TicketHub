@@ -1,5 +1,6 @@
 ﻿<!-- CanvasNodeComponent.razor -->
 @using TicketHub.Core.Common
+@using TicketHub.Application.DTOs
 
 <div draggable="false" class="absolute w-[150px] rounded-xl shadow-lg border-2 flex flex-col items-center justify-center p-3 select-none z-10 transition-shadow @(IsSelected ? "border-slate-800 shadow-xl ring-4 ring-slate-800/20 scale-105" : "border-black/10 hover:shadow-xl") @(IsConnecting ? "pointer-events-none" : "pointer-events-auto")"
      style="@($"left: {Node.X}px; top: {Node.Y}px; background-color: {Node.Status.ColorCode}; cursor: {CursorStyle};")"
@@ -24,18 +25,18 @@
 </div>
 
 @code {
-    [Parameter] public CanvasNode Node { get; set; } = null!;
+    [Parameter] public CanvasNodeDto Node { get; set; } = null!;
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public bool IsConnecting { get; set; }
-    [Parameter] public CanvasNode? ConnectingFromNode { get; set; }
+    [Parameter] public CanvasNodeDto? ConnectingFromNode { get; set; }
     [Parameter] public string CursorStyle { get; set; } = "grab";
     [Parameter] public string TextColor { get; set; } = "#1e293b";
 
-    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node)> OnPointerDown { get; set; }
-    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, CanvasNode node)> OnClick { get; set; }
-    [Parameter] public EventCallback<CanvasNode> OnDelete { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNodeDto node)> OnPointerDown { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, CanvasNodeDto node)> OnClick { get; set; }
+    [Parameter] public EventCallback<CanvasNodeDto> OnDelete { get; set; }
     
     // رویدادهای مربوط به پورت‌ها که به والد پاس داده می‌شوند
-    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node, string port)> OnPortPointerDown { get; set; }
-    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNode node, string port)> OnPortPointerUp { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerDown { get; set; }
+    [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerUp { get; set; }
 }
