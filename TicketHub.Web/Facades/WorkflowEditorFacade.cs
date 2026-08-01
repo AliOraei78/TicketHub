@@ -29,6 +29,15 @@ namespace TicketHub.Web.Facades
 
         public async Task InitializeAsync(int? workflowId)
         {
+
+            // --- کدهای اضافه‌شده برای پاکسازی استیت‌های قبلی ---
+            _state.SelectedConnections.Clear(); 
+            _state.SelectedNodes.Clear();       
+            _state.IsConnecting = false;       
+            _state.ConnectingFromNode = null;  
+            _state.DraggedNode = null;          
+            _state.IsDragging = false;          
+
             _state.AvailableStatuses = (await _statusService.GetAllAsync()).ToList();
             _state.AvailableRoles = (await _roleService.GetAllRolesAsync()).ToList();
             _state.AvailableFieldTypes = (await _fieldTypeService.GetAllAsync()).ToList();
