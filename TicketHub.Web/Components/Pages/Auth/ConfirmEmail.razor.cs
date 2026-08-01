@@ -3,6 +3,7 @@ using System.Timers;
 using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
 using Timer = System.Timers.Timer;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace TicketHub.Web.Components.Pages.Auth;
 
@@ -11,11 +12,9 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
     [Inject] protected IUserRepository UserRepository { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected IEmailService EmailService { get; set; } = default!;
+    [Inject] protected ProtectedSessionStorage ProtectedSessionStore { get; set; } = default!;
 
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "email")]
     public string? Email { get; set; }
-
     protected VerifyViewModel verifyModel { get; set; } = new();
 
     protected int redirectCountdown = 5;
@@ -27,14 +26,22 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
 
     private Timer? _timer;
 
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (string.IsNullOrEmpty(Email))
+        if (firstRender)
         {
-            Navigation.NavigateTo("/login", forceLoad: true);
-            return;
+            var result = await ProtectedSessionStore.GetAsync<string>("TempEmail");
+            Email = result.Success ? result.Value : null;
+
+            if (string.IsNullOrEmpty(Email))
+            {
+                Navigation.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+
+            StartTimer();
+            StateHasChanged();
         }
-        StartTimer();
     }
 
     private void StartTimer()

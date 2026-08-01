@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace TicketHub.Web.Components.Pages.Auth;
 
@@ -10,6 +11,7 @@ public partial class Register : ComponentBase
 {
     [Inject] protected IUserService UserService { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
+    [Inject] protected ProtectedSessionStorage ProtectedSessionStore { get; set; } = default!;
 
     [SupplyParameterFromForm]
     protected RegisterViewModel registerModel { get; set; } = new();
@@ -36,7 +38,12 @@ public partial class Register : ComponentBase
             }
 
             showSuccessMessage = true;
-            Navigation.NavigateTo($"/confirm-email?email={registerModel.Email}");
+            await ProtectedSessionStore.SetAsync("TempEmail", registerModel.Email);
+            Navigation.NavigateTo("/confirm-email");
+        }
+        catch (NavigationException)
+        {
+            throw;
         }
         catch (Exception)
         {

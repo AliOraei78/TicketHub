@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace TicketHub.Web.Components.Pages.Auth;
 
@@ -13,6 +14,7 @@ public partial class Login : ComponentBase
     [Inject] protected IUserService UserService { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected IEmailService EmailService { get; set; } = default!;
+    [Inject] protected ProtectedSessionStorage ProtectedSessionStore { get; set; } = default!;
 
     [SupplyParameterFromForm]
     public LoginViewModel loginModel { get; set; } = new();
@@ -43,7 +45,8 @@ public partial class Login : ComponentBase
             {
                 if (result.RequiresConfirmation)
                 {
-                    Navigation.NavigateTo($"/confirm-email?email={result.Email}");
+                    await ProtectedSessionStore.SetAsync("TempEmail", result.Email!);
+                    Navigation.NavigateTo("/confirm-email"); // حذف پارامتر از URL
                     return;
                 }
                 errorMessage = result.ErrorMessage;
@@ -68,7 +71,7 @@ public partial class Login : ComponentBase
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
             {
                 IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
             });
 
             Navigation.NavigateTo("/", true);

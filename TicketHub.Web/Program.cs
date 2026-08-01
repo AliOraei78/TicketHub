@@ -52,8 +52,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Strict; // جلوگیری از ارسال درخواست‌های جعلی از سایت‌های دیگر (حملات CSRF)
 
         // --- تنظیمات انقضا ---
-        options.ExpireTimeSpan = TimeSpan.FromDays(7); // کوکی بعد از ۷ روز منقضی می‌شود
-        options.SlidingExpiration = true; // اگر کاربر در روز ششم به سایت سر زد، انقضای کوکی خودکار ۷ روز دیگر تمدید می‌شود
+        options.ExpireTimeSpan = TimeSpan.FromHours(1); // تغییر از ۷ روز به ۱ ساعت
+        options.SlidingExpiration = false; // اگر کاربر در روز ششم به سایت سر زد، انقضای کوکی خودکار ۷ روز دیگر تمدید می‌شود
     });
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();

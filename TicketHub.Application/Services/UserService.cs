@@ -11,11 +11,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
+    private readonly IRoleService _roleService;
 
-    public UserService(IUserRepository userRepository, IEmailService emailService)
+    public UserService(IUserRepository userRepository, IEmailService emailService, IRoleService roleService)
     {
         _userRepository = userRepository;
         _emailService = emailService;
+        _roleService = roleService;
     }
 
     public async Task<List<UserDto>> GetAllAsync()
@@ -95,8 +97,13 @@ public class UserService : IUserService
 
         await _userRepository.AddAsync(user);
 
-        // نکته: برای انتساب نقش پیش‌فرض (User)، باید از RoleRepository استفاده کنید یا مقدار ثابت پاس دهید
-        // await _userRepository.UpdateUserRolesAsync(user.Id, new List<int> { defaultRoleId });
+        var roles = await _roleService.GetAllRolesAsync();
+        var defaultRole = roles.FirstOrDefault(r => r.Name == "کاربر");
+
+        if (defaultRole != null)
+        {
+            await _userRepository.UpdateUserRolesAsync(user.Id, new List<int> { defaultRole.Id });
+        }
 
         string emailBody = $@"
     <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
