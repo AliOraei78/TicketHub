@@ -27,33 +27,3 @@
            autocomplete="off"
            required />
 </div>
-
-<script>
-    window.loadDntCaptcha = function() {
-        var img = document.getElementById('dntCaptchaImg');
-        if (!img) return;
-
-        fetch('/api/captcha')
-            .then(response => response.json())
-            .then(data => {
-                img.src = data.dntCaptchaImgUrl;
-                document.getElementById('DNTCaptchaText').value = data.dntCaptchaTextValue;
-                document.getElementById('DNTCaptchaToken').value = data.dntCaptchaTokenValue;
-                var input = document.getElementById('CaptchaInputText');
-                if (input) input.value = '';
-            })
-            .catch(error => console.error('خطا در دریافت کپچا:', error));
-    };
-
-    // اجرا در لود اولیه (Refresh کامل)
-    document.addEventListener('DOMContentLoaded', function () {
-        if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
-    });
-
-    // اجرا پس از جابه‌جایی بین صفحات (Enhanced Navigation)
-    if (window.Blazor) {
-        Blazor.addEventListener('enhancedload', function () {
-            if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
-        });
-    }
-</script>
