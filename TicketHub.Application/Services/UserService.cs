@@ -142,21 +142,26 @@ public class UserService : IUserService
 
         if (!user.IsConfirmed)
         {
-            string rawCode = new Random().Next(100000, 999999).ToString();
-            user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);
-            user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
+            // بررسی وجود کد معتبر: فقط در صورتی ایمیل ارسال شود که کدی نباشد یا منقضی شده باشد
+            if (!user.TokenExpiration.HasValue || user.TokenExpiration.Value <= DateTime.UtcNow)
+            {
+                string rawCode = new Random().Next(100000, 999999).ToString();
+                user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);
+                user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
 
-            await _userRepository.UpdateAsync(user);
+                await _userRepository.UpdateAsync(user);
 
-            string emailBody = $@"
-        <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
-            <h2>کد تایید حساب کاربری</h2>
-            <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
-            <p>این کد تا ۲ دقیقه معتبر است.</p>
-        </div>";
+                string emailBody = $@"
+            <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
+                <h2>کد تایید حساب کاربری</h2>
+                <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
+                <p>این کد تا ۲ دقیقه معتبر است.</p>
+            </div>";
 
-            await _emailService.SendEmailAsync(user.Email, "کد تایید جدید", emailBody);
+                await _emailService.SendEmailAsync(user.Email, "کد تایید جدید", emailBody);
+            }
 
+            // چه کد جدید ارسال شده باشد و چه کد قبلی زمان داشته باشد، باید به تایید ارجاع شود
             return new AuthServiceResponse { Success = false, RequiresConfirmation = true, Email = user.Email };
         }
 

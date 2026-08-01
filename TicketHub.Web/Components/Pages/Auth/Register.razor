@@ -27,7 +27,7 @@
         <CustomAuthInput @bind-Value="registerModel.PhoneNumber" Label="شماره تماس" Type="tel" Placeholder="09123456789" Dir="ltr" ValidationFor="() => registerModel.PhoneNumber" />
         <CustomAuthInput @bind-Value="registerModel.Password" Label="رمز عبور" Type="password" Placeholder="••••••••" Dir="ltr" ValidationFor="() => registerModel.Password" />
         <CustomAuthInput @bind-Value="registerModel.ConfirmPassword" Label="تکرار رمز عبور" Type="password" Placeholder="••••••••" Dir="ltr" ValidationFor="() => registerModel.ConfirmPassword" />
-
+        <CaptchaView />
     </GenericAuthForm>
 
     <div class="mt-6 text-center">

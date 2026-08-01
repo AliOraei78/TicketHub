@@ -5,7 +5,7 @@ using System.Security.Claims;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using DNTCaptcha.Core;
 
 namespace TicketHub.Web.Components.Pages.Auth;
 
@@ -14,7 +14,8 @@ public partial class Login : ComponentBase
     [Inject] protected IUserService UserService { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected IEmailService EmailService { get; set; } = default!;
-    [Inject] protected ProtectedSessionStorage ProtectedSessionStore { get; set; } = default!;
+    [Inject] protected ILogger<Login> Logger { get; set; } = default!;
+    [Inject] protected IDNTCaptchaValidatorService CaptchaValidator { get; set; } = default!;
 
     [SupplyParameterFromForm]
     public LoginViewModel loginModel { get; set; } = new();
@@ -39,26 +40,42 @@ public partial class Login : ComponentBase
                 return;
             }
 
+            // --- اعتبارسنجی کپچا ---
+            bool isValidCaptcha = CaptchaValidator.HasRequestValidCaptchaEntry();
+            if (!isValidCaptcha)
+            {
+                errorMessage = "کد امنیتی نامعتبر است یا منقضی شده است.";
+                isLoading = false;
+                return;
+            }
+            // -----------------------
+
             var result = await UserService.LoginAsync(loginModel);
 
             if (!result.Success)
             {
                 if (result.RequiresConfirmation)
                 {
-                    await ProtectedSessionStore.SetAsync("TempEmail", result.Email!);
-                    Navigation.NavigateTo("/confirm-email"); // حذف پارامتر از URL
+                    Logger.LogInformation("ورود {Email} نیازمند تایید ایمیل است. انتقال به صفحه تایید.", loginModel.Email);
+
+                    HttpContext.Response.Cookies.Append("TempEmail", result.Email!, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.UtcNow.AddMinutes(15) });
+
+                    Navigation.NavigateTo("/confirm-email");
                     return;
                 }
+                Logger.LogWarning("ورود ناموفق {Email} - علت: {ErrorMessage}", loginModel.Email, result.ErrorMessage);
                 errorMessage = result.ErrorMessage;
                 return;
             }
 
+            Logger.LogInformation("کاربر {Email} با موفقیت وارد سیستم شد.", loginModel.Email);
+
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, result.UserId.ToString()),
-            new Claim(ClaimTypes.Name, result.Name),
-            new Claim(ClaimTypes.Email, result.Email!)
-        };
+            {
+                new Claim(ClaimTypes.NameIdentifier, result.UserId.ToString()),
+                new Claim(ClaimTypes.Name, result.Name),
+                new Claim(ClaimTypes.Email, result.Email!)
+            };
 
             foreach (var role in result.Roles)
             {
@@ -75,6 +92,15 @@ public partial class Login : ComponentBase
             });
 
             Navigation.NavigateTo("/", true);
+        }
+        catch (NavigationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "خطای سرور هنگام ورود کاربر {Email}", loginModel.Email);
+            errorMessage = "خطای ارتباط با سرور رخ داد.";
         }
         finally
         {

@@ -1,3 +1,4 @@
+using DNTCaptcha.Core;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
@@ -24,6 +25,8 @@ builder.Host.UseSerilog((context, configuration) =>
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddControllers();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -96,6 +99,24 @@ builder.Services.AddScoped<WorkflowFacade>();
 builder.Services.AddScoped<WorkflowEditorState>();
 builder.Services.AddScoped<WorkflowEditorFacade>();
 
+// --------- تنظیمات DNTCaptcha ---------
+builder.Services.AddDNTCaptcha(options =>
+{
+    // استفاده از حافظه رم سرور برای نگهداری توکن‌ها
+    options.UseMemoryCacheStorageProvider()
+           .ShowThousandsSeparators(false) // عدم نمایش جداکننده هزارگان
+           .AbsoluteExpiration(minutes: 1) // انقضای دقیق بعد از 60 ثانیه
+           .WithEncryptionKey("TicketHub_Secret_Captcha_Key_2026!@#") // کلید رمزنگاری
+           .InputNames(new DNTCaptchaComponent
+           {
+               CaptchaHiddenInputName = "DNTCaptchaText",
+               CaptchaHiddenTokenName = "DNTCaptchaToken",
+               CaptchaInputName = "CaptchaInputText"
+           })
+           .Identifier("TicketHubAuth");
+});
+// --------------------------------------
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -135,10 +156,25 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+app.MapControllers();
+
 app.MapPost("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
     return TypedResults.LocalRedirect("/login");
 });
+
+// --------- API کپچای داینامیک ---------
+app.MapGet("/api/captcha", (IDNTCaptchaApiProvider apiProvider) =>
+{
+    var result = apiProvider.CreateDNTCaptcha(new DNTCaptchaTagHelperHtmlAttributes
+    {
+        Language = Language.Persian,
+        DisplayMode = DisplayMode.ShowDigits,
+    });
+
+    return Results.Ok(result);
+});
+// --------------------------------------
 
 app.Run();

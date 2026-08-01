@@ -9,7 +9,7 @@ else
 {
     @HeaderTemplate
 
-    <EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="@FormName">
+    <EditForm Model="Model" OnSubmit="HandleSubmit" FormName="@FormName" method="post">
         <DataAnnotationsValidator />
 
         <AlertMessage Message="@ErrorMessage" Type="AlertMessage.AlertType.Error" />
@@ -19,7 +19,7 @@ else
             @FormFields
         </div>
 
-        <button type="submit" disabled="@IsProcessing" class="w-full flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg mb-4">
+        <button type="submit" name="Action" value="Verify" disabled="@IsProcessing" class="w-full flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg mb-4">
             @if (IsProcessing)
             {
                 <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
@@ -46,10 +46,28 @@ else
     [Parameter] public string FormName { get; set; } = "Form";
 
     [Parameter, EditorRequired] public TModel Model { get; set; } = default!;
-    [Parameter, EditorRequired] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback<EditContext> OnSubmit { get; set; }
 
     [Parameter] public RenderFragment? SuccessTemplate { get; set; }
     [Parameter] public RenderFragment? HeaderTemplate { get; set; }
     [Parameter] public RenderFragment? FormFields { get; set; }
     [Parameter] public RenderFragment? TimerSection { get; set; }
+
+    private async Task HandleSubmit(EditContext context)
+    {
+        if (OnSubmit.HasDelegate)
+        {
+            // اگر فرم (مثل تایید ایمیل) می‌خواهد خودش دستی تصمیم بگیرد
+            await OnSubmit.InvokeAsync(context);
+        }
+        else
+        {
+            // رفتار پیش‌فرض برای سایر فرم‌های پروژه که دست‌نخورده باقی می‌مانند
+            if (context.Validate())
+            {
+                await OnValidSubmit.InvokeAsync();
+            }
+        }
+    }
 }

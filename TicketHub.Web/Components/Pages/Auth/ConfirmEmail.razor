@@ -13,7 +13,7 @@
                     ErrorMessage="@errorMessage"
                     SuccessMessage="@successMessage"
                     SubmitButtonText="تایید حساب کاربری"
-                    OnValidSubmit="VerifyCode">
+                    OnSubmit="HandleFormSubmit" >
         <SuccessTemplate>
             <div class="text-center">
                 <div class="text-emerald-400 mb-4 bg-emerald-400/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
@@ -42,19 +42,25 @@
                              ValidationFor="() => verifyModel.Code" />
         </FormFields>
         <TimerSection>
-            @if (_remainingSeconds > 0)
-            {
-                <p class="text-sm text-slate-400">
-                    زمان باقی‌مانده تا انقضای کد: <span class="text-blue-400 font-mono font-bold">@TimeSpan.FromSeconds(_remainingSeconds).ToString(@"mm\:ss")</span>
-                </p>
-            }
-            else
-            {
-                <p class="text-sm text-rose-400 mb-2">کد منقضی شده است.</p>
-                <button type="button" @onclick="ResendCode" disabled="@isProcessing" class="text-sm text-blue-400 hover:text-blue-300 font-bold transition-colors">
-                    ارسال مجدد کد تایید
-                </button>
-            }
+            <!-- مدیریت وضعیت با Alpine.js -->
+            <div x-data="{ seconds: @_remainingSeconds }" x-init="setInterval(() => { if (seconds > 0) seconds--; }, 1000)">
+
+                <div x-show="seconds > 0" style="@(_remainingSeconds <= 0 ? "display: none;" : null)">
+                    <p class="text-sm text-slate-400">
+                        زمان باقی‌مانده تا انقضای کد:
+                        <span class="text-blue-400 font-mono font-bold" x-text="String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')"></span>
+                    </p>
+                </div>
+
+                <div x-show="seconds <= 0" style="@(_remainingSeconds > 0 ? "display: none;" : null)">
+                    <p class="text-sm text-rose-400 mb-2">کد منقضی شده است.</p>
+                    <!-- این دکمه حالا به عنوان بخشی از EditForm اصلی ارسال می‌شود -->
+                    <button type="submit" name="Action" value="Resend" disabled="@isProcessing" class="text-sm text-blue-400 hover:text-blue-300 font-bold transition-colors form-control-btn">
+                        ارسال مجدد کد تایید
+                    </button>
+                </div>
+
+            </div>
         </TimerSection>
     </VerificationUI>
 </AuthBackground>

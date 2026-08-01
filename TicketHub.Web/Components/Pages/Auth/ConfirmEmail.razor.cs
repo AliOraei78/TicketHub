@@ -1,21 +1,26 @@
 ﻿using Microsoft.AspNetCore.Components;
-using System.Timers;
 using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
-using Timer = System.Timers.Timer;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace TicketHub.Web.Components.Pages.Auth;
 
-public partial class ConfirmEmail : ComponentBase, IDisposable
+public partial class ConfirmEmail : ComponentBase
 {
     [Inject] protected IUserRepository UserRepository { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected IEmailService EmailService { get; set; } = default!;
-    [Inject] protected ProtectedSessionStorage ProtectedSessionStore { get; set; } = default!;
+    [Inject] protected ILogger<ConfirmEmail> Logger { get; set; } = default!;
+
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
     public string? Email { get; set; }
+
+    [SupplyParameterFromForm(FormName = "verifyForm")]
     protected VerifyViewModel verifyModel { get; set; } = new();
+
+    [SupplyParameterFromForm(FormName = "verifyForm", Name = "Action")]
+    public string? Action { get; set; }
 
     protected int redirectCountdown = 5;
     protected bool isProcessing = false;
@@ -24,50 +29,52 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
     protected string successMessage = string.Empty;
     protected int _remainingSeconds = 120;
 
-    private Timer? _timer;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            var result = await ProtectedSessionStore.GetAsync<string>("TempEmail");
-            Email = result.Success ? result.Value : null;
+        Email = HttpContext?.Request.Cookies["TempEmail"];
 
-            if (string.IsNullOrEmpty(Email))
+        if (string.IsNullOrEmpty(Email))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        var user = await UserRepository.GetByEmailAsync(Email);
+        if (user == null || user.IsConfirmed)
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        // جلوگیری از اجرای منطق لود اولیه در زمان سابمیت فرم
+        if (HttpContext?.Request.Method == "POST")
+        {
+            if (user.TokenExpiration.HasValue && user.TokenExpiration.Value > DateTime.UtcNow)
             {
-                Navigation.NavigateTo("/login", forceLoad: true);
-                return;
+                var remaining = (int)Math.Ceiling((user.TokenExpiration.Value - DateTime.UtcNow).TotalSeconds);
+                StartTimer(remaining);
             }
-
-            StartTimer();
-            StateHasChanged();
+            else
+            {
+                StartTimer(0);
+            }
+            return;
         }
-    }
 
-    private void StartTimer()
-    {
-        _remainingSeconds = 120;
-        if (_timer != null)
+        if (!user.TokenExpiration.HasValue || user.TokenExpiration.Value <= DateTime.UtcNow)
         {
-            _timer.Stop();
-            _timer.Dispose();
-        }
-        _timer = new Timer(1000);
-        _timer.Elapsed += CountDownTimer;
-        _timer.Start();
-    }
-
-    private void CountDownTimer(Object? source, ElapsedEventArgs e)
-    {
-        if (_remainingSeconds > 0)
-        {
-            _remainingSeconds--;
+            await ResendCode();
         }
         else
         {
-            _timer?.Stop();
+            var remaining = (int)Math.Ceiling((user.TokenExpiration.Value - DateTime.UtcNow).TotalSeconds);
+            StartTimer(remaining);
         }
-        InvokeAsync(StateHasChanged);
+    }
+
+    private void StartTimer(int seconds = 120)
+    {
+        _remainingSeconds = seconds;
     }
 
     protected async Task VerifyCode()
@@ -103,6 +110,7 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
             if (string.IsNullOrEmpty(user.ConfirmationToken) ||
                 !BCrypt.Net.BCrypt.Verify(verifyModel.Code, user.ConfirmationToken))
             {
+                Logger.LogWarning("کد تایید نامعتبر برای ایمیل {Email} وارد شد.", Email);
                 errorMessage = "کد وارد شده نامعتبر است.";
                 isProcessing = false;
                 return;
@@ -113,7 +121,10 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
             user.TokenExpiration = null;
             await UserRepository.SaveChangesAsync();
 
-            _timer?.Stop();
+            Logger.LogInformation("حساب کاربری {Email} با موفقیت تایید و فعال شد.", Email);
+
+            HttpContext?.Response.Cookies.Delete("TempEmail");
+
             isSuccess = true;
             isProcessing = false;
             StateHasChanged();
@@ -130,8 +141,9 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "خطا در اعتبارسنجی کد تایید برای ایمیل {Email}", Email);
             errorMessage = "در پردازش اطلاعات مشکلی رخ داد. لطفاً مجدداً تلاش کنید.";
             isProcessing = false;
         }
@@ -168,17 +180,21 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
                 </div>";
 
             await EmailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
+            Logger.LogInformation("کد تایید جدید برای ایمیل {Email} ارسال شد.", Email);
 
             verifyModel.Code = string.Empty;
             successMessage = "کد جدید با موفقیت به ایمیل شما ارسال شد.";
-            StartTimer();
+
+            // شروع دقیق از 120 ثانیه
+            StartTimer(120);
         }
         catch (NavigationException)
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "خطا در ارسال مجدد کد تایید برای ایمیل {Email}", Email);
             errorMessage = "در ارسال مجدد کد مشکلی رخ داد.";
         }
         finally
@@ -187,12 +203,18 @@ public partial class ConfirmEmail : ComponentBase, IDisposable
         }
     }
 
-    public void Dispose()
+    protected async Task HandleFormSubmit(EditContext context)
     {
-        if (_timer != null)
+        if (Action == "Resend")
         {
-            _timer.Stop();
-            _timer.Dispose();
+            await ResendCode();
+        }
+        else
+        {
+            if (context.Validate())
+            {
+                await VerifyCode();
+            }
         }
     }
 }

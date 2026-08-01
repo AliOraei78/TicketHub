@@ -15,6 +15,7 @@
 <body>
     <Routes @rendermode="PageRenderMode" />
     <script src="_framework/blazor.web.js"></script>
+    <script defer src="js/alpine.min.js"></script>
 </body>
 </html>
 
@@ -24,7 +25,10 @@
 
     // این بخش به صورت هوشمند رندرمود را بر اساس آدرس صفحه تعیین می‌کند
     private Microsoft.AspNetCore.Components.IComponentRenderMode? PageRenderMode =>
-        HttpContext != null && (HttpContext.Request.Path.StartsWithSegments("/login") || HttpContext.Request.Path.StartsWithSegments("/register"))
-            ? null
-            : new InteractiveServerRenderMode(prerender: false); // <--- تغییر مهم در این خط
+            HttpContext != null && (
+                HttpContext.Request.Path.StartsWithSegments("/login") ||
+                HttpContext.Request.Path.StartsWithSegments("/register") ||
+                HttpContext.Request.Path.StartsWithSegments("/confirm-email")) // این خط اضافه شد
+                ? null
+                : new InteractiveServerRenderMode(prerender: false);
 }
