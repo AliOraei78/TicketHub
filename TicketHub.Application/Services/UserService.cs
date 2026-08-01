@@ -93,6 +93,7 @@ public class UserService : IUserService
         user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);
         user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
         user.CreatedAt = DateTime.UtcNow;
+        user.IsActive = true;
         user.IsConfirmed = false;
 
         await _userRepository.AddAsync(user);
@@ -164,6 +165,9 @@ public class UserService : IUserService
             // چه کد جدید ارسال شده باشد و چه کد قبلی زمان داشته باشد، باید به تایید ارجاع شود
             return new AuthServiceResponse { Success = false, RequiresConfirmation = true, Email = user.Email };
         }
+
+        if (!user.IsActive) 
+            return new AuthServiceResponse { Success = false, ErrorMessage = "حساب کاربری شما غیرفعال می‌باشد." };
 
         return new AuthServiceResponse
         {
