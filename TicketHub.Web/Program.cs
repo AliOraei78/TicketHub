@@ -1,4 +1,5 @@
 using DNTCaptcha.Core;
+using Fluxor;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
@@ -13,10 +14,7 @@ using TicketHub.Infrastructure.Data;
 using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
-using TicketHub.Web.Facades;
 using TicketHub.Web.Middlewares;
-using TicketHub.Web.State;
-using TicketHub.Web.States;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -76,28 +74,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFieldTypeService, FieldTypeService>();
-builder.Services.AddScoped<UserState>();
-builder.Services.AddScoped<UserFacade>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<ProjectState>();
-builder.Services.AddScoped<ProjectFacade>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<CategoryState>();
-builder.Services.AddScoped<CategoryFacade>();
 builder.Services.AddScoped<IPriorityService, PriorityService>();
-builder.Services.AddScoped<PriorityState>();
-builder.Services.AddScoped<PriorityFacade>();
 builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<RoleState>();
-builder.Services.AddScoped<RoleFacade>();
 builder.Services.AddScoped<IStatusService, StatusService>();
-builder.Services.AddScoped<StatusState>();
-builder.Services.AddScoped<StatusFacade>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
-builder.Services.AddScoped<WorkflowStateContainer>();
-builder.Services.AddScoped<WorkflowFacade>();
-builder.Services.AddScoped<WorkflowEditorState>();
-builder.Services.AddScoped<WorkflowEditorFacade>();
+builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
 
 // --------- تنظیمات DNTCaptcha ---------
 builder.Services.AddDNTCaptcha(options =>

@@ -2,6 +2,9 @@
 @using TicketHub.Web.Components.Pages.Main
 
 <CascadingAuthenticationState>
+
+    <Fluxor.Blazor.Web.StoreInitializer />
+
     <Router AppAssembly="typeof(Program).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">

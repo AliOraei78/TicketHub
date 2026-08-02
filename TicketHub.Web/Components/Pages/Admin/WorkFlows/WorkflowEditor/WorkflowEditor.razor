@@ -3,14 +3,15 @@
 @rendermode InteractiveServer
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Application.DTOs
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
-@if (!string.IsNullOrEmpty(State.ErrorMessage))
+@if (!string.IsNullOrEmpty(EdState.Value.ErrorMessage))
 {
     <div class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 min-w-[350px]">
-        <AlertMessage Message="@State.ErrorMessage"
+        <AlertMessage Message="@EdState.Value.ErrorMessage"
                       Type="AlertMessage.AlertType.Error"
                       IsDark="false"
-                      OnClose="() => State.ErrorMessage = string.Empty" />
+                      OnClose="ClearError" />
     </div>
 }
 
@@ -23,7 +24,7 @@
                       OnItemAdd="AddStatusToCanvas">
         <HeaderContent>
             <input type="text"
-                   @bind="State.StatusSearchTerm"
+                   @bind="StatusSearchTerm"
                    @bind:event="oninput"
                    placeholder="جستجو..."
                    class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors" />
@@ -38,26 +39,26 @@
 
     <div class="flex-1 flex flex-col relative overflow-hidden">
 
-        <WorkflowToolbar @bind-Name="State.WorkflowName"
-                         @bind-Description="State.WorkflowDescription"
+        <WorkflowToolbar @bind-Name="WorkflowName"
+                         @bind-Description="WorkflowDescription"
                          OnSave="SaveWorkflowAsync" />
 
-        <WorkflowCanvas Nodes="State.CanvasNodes"
-                        Connections="State.Connections"
-                        SelectedNodes="State.SelectedNodes"
-                        SelectedConnections="State.SelectedConnections"
-                        IsBoxSelecting="State.IsBoxSelecting"
-                        BoxStartX="State.BoxStartX"
-                        BoxStartY="State.BoxStartY"
-                        BoxEndX="State.BoxEndX"
-                        BoxEndY="State.BoxEndY"
-                        IsConnecting="State.IsConnecting"
-                        ConnectingFromNode="State.ConnectingFromNode"
-                        ActiveSourcePort="@State.ActiveSourcePort"
-                        MouseX="State.MouseX"
-                        MouseY="State.MouseY"
-                        IsDragging="State.IsDragging"
-                        DraggedNode="State.DraggedNode"
+        <WorkflowCanvas Nodes="CanvasNodes"
+                        Connections="Connections"
+                        SelectedNodes="SelectedNodes"
+                        SelectedConnections="SelectedConnections"
+                        IsBoxSelecting="IsBoxSelecting"
+                        BoxStartX="BoxStartX"
+                        BoxStartY="BoxStartY"
+                        BoxEndX="BoxEndX"
+                        BoxEndY="BoxEndY"
+                        IsConnecting="IsConnecting"
+                        ConnectingFromNode="ConnectingFromNode"
+                        ActiveSourcePort="@ActiveSourcePort"
+                        MouseX="MouseX"
+                        MouseY="MouseY"
+                        IsDragging="IsDragging"
+                        DraggedNode="DraggedNode"
                         OnKeyDown="HandleKeyDown"
                         OnPointerDown="CanvasPointerDown"
                         OnPointerMove="CanvasMouseMove"
@@ -74,11 +75,11 @@
                         GetBezierCenter="GetBezierCenter"
                         GetPortCoordinates="GetPortCoordinates" />
 
-        <TransitionSidebar Connection="State.SelectedConnections.FirstOrDefault()"
-                           AvailableRoles="State.AvailableRoles"
-                           AvailableFieldTypes="State.AvailableFieldTypes"
+        <TransitionSidebar Connection="SelectedConnections.FirstOrDefault()"
+                           AvailableRoles="EdState.Value.AvailableRoles"
+                           AvailableFieldTypes="EdState.Value.AvailableFieldTypes"
                            GetNodeName="GetNodeName"
-                           OnClose="() => State.SelectedConnections.Clear()"
+                           OnClose="() => SelectedConnections.Clear()"
                            OnRoleToggle="ToggleRole"
                            OnDelete="DeleteConnection" />
     </div>

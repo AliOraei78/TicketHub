@@ -1,7 +1,8 @@
 ﻿@page "/settings/priorities"
-@rendermode InteractiveServer
-@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
+@using TicketHub.Application.DTOs
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
 
 <PageTitle>تنظیمات اولویت‌ها | سامانه تیکتینگ</PageTitle>
 
@@ -23,10 +24,10 @@
                               OnValidSubmit="HandleSubmit"
                               OnCancel="CancelEdit" />
 
-                @if (!string.IsNullOrEmpty(State.StatusMessage))
+                @if (!string.IsNullOrEmpty(PriState.Value.StatusMessage))
                 {
-                    <div class="mt-4 p-3 @(State.IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">
-                        @State.StatusMessage
+                    <div class="mt-4 p-3 @(PriState.Value.IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">
+                        @PriState.Value.StatusMessage
                     </div>
                 }
             </div>
@@ -38,15 +39,14 @@
                     <h3 class="font-bold text-gray-800 text-lg whitespace-nowrap">لیست اولویت‌ها</h3>
 
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
-
                         <div class="w-full sm:w-45">
-                            <SearchBox Placeholder="جستجوی اولویت..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                            <SearchBox Placeholder="جستجوی اولویت..." SearchTerm="@PriState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
                         </div>
-                        <!-- اضافه شدن فیلتر وضعیت -->
+
                         <div class="w-full sm:w-45">
                             <GenericStatusFilter TValue="bool?"
                                                  Options="new bool?[] { null, true, false }"
-                                                 SelectedValue="selectedFilterStatus"
+                                                 SelectedValue="PriState.Value.SelectedFilterStatus"
                                                  OnValueChanged="FilterByStatus"
                                                  BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
                                                  ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
@@ -58,7 +58,7 @@
                     </div>
                 </div>
                 <div class="p-0">
-                    <DataGrid TItem="PriorityDto" TKey="int" Items="FilteredPriorities" IsLoading="State.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="اولویتی">
+                    <DataGrid TItem="PriorityDto" TKey="int" Items="FilteredPriorities" IsLoading="PriState.Value.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="اولویتی">
                         <HeaderTemplate>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[65%]">عنوان، رنگ و سطح</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">وضعیت</th>
@@ -115,10 +115,10 @@
     </div>
 </div>
 
-<BulkActionToolbar SelectedCount="selectedIds.Count" 
-                    OnCancel="ClearSelection" 
-                    OnDelete="OpenBulkDeleteModal" 
-                    OnActivate="BulkActivatePriorities"
-                    OnDeactivate="BulkDeactivatePriorities" />
+<BulkActionToolbar SelectedCount="selectedIds.Count"
+                   OnCancel="ClearSelection"
+                   OnDelete="OpenBulkDeleteModal"
+                   OnActivate="BulkActivatePriorities"
+                   OnDeactivate="BulkDeactivatePriorities" />
 
-<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(State.IsError ? State.StatusMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(PriState.Value.IsError ? PriState.Value.StatusMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />

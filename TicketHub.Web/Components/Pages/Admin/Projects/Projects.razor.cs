@@ -1,37 +1,36 @@
-﻿using Mapster;
+﻿using Fluxor;
+using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Web.Facades;
-using TicketHub.Web.States;
+using TicketHub.Web.Store; // فرض بر این است که فایل State جدید در این مسیر است
 
 namespace TicketHub.Web.Components.Pages.Admin.Projects;
 
-public partial class Projects : ComponentBase, IDisposable
+public partial class Projects
 {
-    [Inject] public ProjectFacade ProjectFacade { get; set; } = default!;
-    [Inject] public ProjectState State { get; set; } = default!;
+    [Inject] public IState<ProjectState> State { get; set; } = default!;
+    [Inject] public IDispatcher Dispatcher { get; set; } = default!;
 
     private ProjectDto projectModel = new();
     private bool isFormModalOpen;
     private int? deletingProjectId;
-
     private ProjectDto? projectToDelete;
     private bool isDeleteModalOpen;
 
-    protected override async Task OnInitializedAsync()
+    // اعمال فیلتر به صورت داینامیک در UI بدون نیاز به ذخیره لیست جداگانه در State
+    private IEnumerable<ProjectDto> FilteredProjects =>
+        State.Value.Projects
+        .Where(p => string.IsNullOrWhiteSpace(State.Value.SearchTerm) || p.Name.Contains(State.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(p => State.Value.SelectedFilterStatus == null || p.IsActive == State.Value.SelectedFilterStatus);
+
+    protected override void OnInitialized()
     {
-        State.OnChange += StateHasChanged;
-        await ProjectFacade.InitializeAsync();
+        base.OnInitialized();
+        Dispatcher.Dispatch(new LoadProjectsAction());
     }
 
-    public void Dispose()
-    {
-        State.OnChange -= StateHasChanged;
-    }
-
-    private void FilterByStatus(bool? status) => ProjectFacade.SetFilter(status);
-
-    private void HandleSearch(string term) => ProjectFacade.SetSearchTerm(term);
+    private void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetProjectFilterAction(status));
+    private void HandleSearch(string term) => Dispatcher.Dispatch(new SetProjectSearchAction(term));
 
     private void OpenCreateModal()
     {
@@ -47,9 +46,9 @@ public partial class Projects : ComponentBase, IDisposable
 
     private void CloseFormModal() => isFormModalOpen = false;
 
-    private async Task HandleSaveProject()
+    private void HandleSaveProject()
     {
-        await ProjectFacade.SaveProjectAsync(projectModel);
+        Dispatcher.Dispatch(new SaveProjectAction(projectModel));
         isFormModalOpen = false;
     }
 
@@ -73,10 +72,9 @@ public partial class Projects : ComponentBase, IDisposable
             deletingProjectId = idToDelete;
             CloseDeleteModal();
 
-            StateHasChanged();
-            await Task.Delay(400);
+            await Task.Delay(400); // تاخیر برای انیمیشن
 
-            await ProjectFacade.DeleteProjectAsync(idToDelete);
+            Dispatcher.Dispatch(new DeleteProjectAction(idToDelete));
             deletingProjectId = null;
         }
         else

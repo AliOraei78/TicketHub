@@ -1,10 +1,9 @@
 ﻿@page "/workflows"
-@namespace TicketHub.Web.Components.Pages.Admin.WorkFlows
-@rendermode InteractiveServer
-
 @using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Web.Components.Pages.Admin.WorkFlows
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
 
 <PageTitle>مدیریت جریان‌های کاری | سامانه تیکتینگ</PageTitle>
 
@@ -26,27 +25,27 @@
     </HeaderTemplate>
 
     <ToolbarTemplate>
-        <ListFilterToolbar SearchTerm="@Facade.State.SearchTerm"
+        <ListFilterToolbar SearchTerm="@WfState.Value.SearchTerm"
                            SearchTermChanged="OnSearchTermChanged"
-                           PageSize="@Facade.State.PageSize"
+                           PageSize="@WfState.Value.PageSize"
                            PageSizeChanged="OnPageSizeChanged"
                            SearchPlaceholder="جستجوی جریان کاری..."
                            ItemName="جریان کار"
-                           PageSizeOptions="Facade.State.MyCustomOptions">
+                           PageSizeOptions="WfState.Value.MyCustomOptions">
 
             <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                  Placeholder="پروژه..."
-                                 Items="Facade.State.AvailableProjects"
-                                 SelectedValues="Facade.State.SelectedFilterProjectIds"
+                                 Items="WfState.Value.AvailableProjects.ToList()"
+                                 SelectedValues="WfState.Value.SelectedFilterProjectIds"
                                  SelectedValuesChanged="FilterProjectsChanged"
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
         </ListFilterToolbar>
 
-        @if (Facade.State.SelectedWorkflowIds.Any())
+        @if (selectedWorkflowIds.Any())
         {
             <div class="w-full flex justify-end animate-[fadeIn_0.2s_ease-out]">
-                <BulkActionToolbar SelectedCount="Facade.State.SelectedWorkflowIds.Count"
+                <BulkActionToolbar SelectedCount="selectedWorkflowIds.Count"
                                    OnCancel="ClearSelection"
                                    OnDelete="OpenBulkDeleteModal" />
             </div>
@@ -54,26 +53,26 @@
     </ToolbarTemplate>
 
     <ListTemplate>
-        <WorkflowCardGrid Workflows="Facade.State.Workflows"
-                          IsLoading="Facade.State.IsLoading"
-                          @bind-SelectedIds="Facade.State.SelectedWorkflowIds"
-                          DeletingIds="Facade.State.DeletingWorkflowIds"
+        <WorkflowCardGrid Workflows="WfState.Value.Workflows.ToList()"
+                          IsLoading="WfState.Value.IsLoading"
+                          @bind-SelectedIds="selectedWorkflowIds"
+                          DeletingIds="deletingWorkflowIds"
                           OnEdit="OpenEditWorkflow"
                           OnDelete="DeleteWorkflow" />
     </ListTemplate>
 
     <PaginationTemplate>
-        <Pagination CurrentPage="Facade.State.CurrentPage"
-                    PageSize="Facade.State.PageSize"
+        <Pagination CurrentPage="WfState.Value.CurrentPage"
+                    PageSize="WfState.Value.PageSize"
                     ItemName="جریان کار"
-                    TotalItems="Facade.State.TotalWorkflows"
+                    TotalItems="WfState.Value.TotalWorkflows"
                     OnNext="NextPage"
                     OnPrevious="PreviousPage" />
     </PaginationTemplate>
 
     <ModalTemplate>
-        <ConfirmDeleteModal IsOpen="Facade.State.IsDeleteModalOpen"
-                            Description="@Facade.State.DeleteModalDescription"
+        <ConfirmDeleteModal IsOpen="isDeleteModalOpen"
+                            Description="@deleteModalDescription"
                             OnConfirm="ConfirmDeleteAsync"
                             OnCancel="CancelDelete" />
     </ModalTemplate>

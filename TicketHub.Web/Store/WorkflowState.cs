@@ -1,0 +1,143 @@
+﻿using Fluxor;
+using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
+using TicketHub.Application.Services;
+
+namespace TicketHub.Web.Store;
+
+// 1. State
+[FeatureState]
+public record WorkflowState(
+    bool IsLoading,
+    IEnumerable<WorkflowDto> Workflows,
+    int TotalWorkflows,
+    IEnumerable<ProjectDto> AvailableProjects,
+    IEnumerable<StatusDto> AvailableStatuses,
+    string SearchTerm,
+    int PageSize,
+    int CurrentPage,
+    List<int> SelectedFilterProjectIds,
+    List<int> SelectedFilterStatusIds,
+    List<int> MyCustomOptions)
+{
+    private WorkflowState() : this(true, Array.Empty<WorkflowDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), string.Empty, 8, 1, new(), new(), new() { 8, 16, 24, 32 }) { }
+}
+
+// 2. Actions
+public record LoadWorkflowInitialDataAction();
+public record WorkflowInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses);
+public record LoadWorkflowsAction();
+public record WorkflowsLoadedAction(IEnumerable<WorkflowDto> Workflows, int TotalCount, int ValidatedPage);
+public record SetWorkflowFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds);
+public record DeleteWorkflowAction(int Id);
+public record DeleteMultipleWorkflowsAction(IEnumerable<int> Ids);
+
+// 3. Reducers
+public static class WorkflowReducers
+{
+    [ReducerMethod]
+    public static WorkflowState ReduceLoadWorkflows(WorkflowState state, LoadWorkflowsAction action) => state with { IsLoading = true };
+
+    [ReducerMethod]
+    public static WorkflowState ReduceInitialDataLoaded(WorkflowState state, WorkflowInitialDataLoadedAction action) =>
+        state with { AvailableProjects = action.Projects, AvailableStatuses = action.Statuses };
+
+    [ReducerMethod]
+    public static WorkflowState ReduceWorkflowsLoaded(WorkflowState state, WorkflowsLoadedAction action) =>
+        state with { IsLoading = false, Workflows = action.Workflows, TotalWorkflows = action.TotalCount, CurrentPage = action.ValidatedPage };
+
+    [ReducerMethod]
+    public static WorkflowState ReduceSetFilters(WorkflowState state, SetWorkflowFiltersAction action) =>
+        state with
+        {
+            SearchTerm = action.SearchTerm ?? state.SearchTerm,
+            PageSize = action.PageSize ?? state.PageSize,
+            CurrentPage = action.CurrentPage ?? state.CurrentPage,
+            SelectedFilterProjectIds = action.ProjectIds ?? state.SelectedFilterProjectIds,
+            SelectedFilterStatusIds = action.StatusIds ?? state.SelectedFilterStatusIds
+        };
+}
+
+// 4. Effects
+public class WorkflowEffects
+{
+    private readonly IWorkflowService _workflowService;
+    private readonly IProjectService _projectService;
+    private readonly IState<WorkflowState> _state;
+
+    public WorkflowEffects(IWorkflowService workflowService, IProjectService projectService, IState<WorkflowState> state)
+    {
+        _workflowService = workflowService;
+        _projectService = projectService;
+        _state = state;
+    }
+
+    [EffectMethod(typeof(LoadWorkflowInitialDataAction))]
+    public async Task HandleLoadInitialData(IDispatcher dispatcher)
+    {
+        var projects = await _projectService.GetProjectsAsync();
+        var statuses = await _workflowService.GetAllStatusesAsync();
+        dispatcher.Dispatch(new WorkflowInitialDataLoadedAction(projects, statuses));
+        dispatcher.Dispatch(new LoadWorkflowsAction());
+    }
+
+    [EffectMethod(typeof(LoadWorkflowsAction))]
+    public async Task HandleLoadWorkflows(IDispatcher dispatcher)
+    {
+        var st = _state.Value;
+        var allWorkflows = (await _workflowService.GetAllAsync()).ToList();
+
+        foreach (var w in allWorkflows)
+            w.Projects = st.AvailableProjects.Where(p => p.WorkflowId == w.Id).ToList();
+
+        if (!string.IsNullOrWhiteSpace(st.SearchTerm))
+        {
+            allWorkflows = allWorkflows.Where(w =>
+                w.Name.Contains(st.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (w.Description?.Contains(st.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+        }
+
+        if (st.SelectedFilterProjectIds.Any())
+        {
+            var targetWorkflowIds = st.AvailableProjects
+                .Where(p => st.SelectedFilterProjectIds.Contains(p.Id) && p.WorkflowId.HasValue)
+                .Select(p => p.WorkflowId!.Value)
+                .ToHashSet();
+            allWorkflows = allWorkflows.Where(w => targetWorkflowIds.Contains(w.Id)).ToList();
+        }
+
+        if (st.SelectedFilterStatusIds.Any())
+        {
+            allWorkflows = allWorkflows.Where(w =>
+                w.WorkflowStatuses.Any(ws => st.SelectedFilterStatusIds.Contains(ws.StatusId))).ToList();
+        }
+
+        int totalCount = allWorkflows.Count;
+        int maxPage = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / st.PageSize);
+        int validPage = st.CurrentPage > maxPage && maxPage > 0 ? maxPage : st.CurrentPage;
+
+        var pagedWorkflows = allWorkflows
+            .Skip((validPage - 1) * st.PageSize)
+            .Take(st.PageSize)
+            .ToList();
+
+        dispatcher.Dispatch(new WorkflowsLoadedAction(pagedWorkflows, totalCount, validPage));
+    }
+
+    [EffectMethod]
+    public async Task HandleDeleteWorkflow(DeleteWorkflowAction action, IDispatcher dispatcher)
+    {
+        await _workflowService.DeleteAsync(action.Id);
+        dispatcher.Dispatch(new LoadWorkflowsAction());
+    }
+
+    [EffectMethod]
+    public async Task HandleDeleteMultipleWorkflows(DeleteMultipleWorkflowsAction action, IDispatcher dispatcher)
+    {
+        foreach (var id in action.Ids)
+        {
+            await _workflowService.DeleteAsync(id);
+        }
+        dispatcher.Dispatch(new LoadWorkflowsAction());
+    }
+}

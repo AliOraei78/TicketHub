@@ -1,65 +1,122 @@
-﻿using Mapster;
+﻿using Fluxor;
+using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Web.Facades;
-using TicketHub.Web.State;
+using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings.Roles;
 
-public partial class RolesSettings : ComponentBase, IDisposable
+public partial class RolesSettings
 {
-    [Inject] protected RoleFacade Facade { get; set; } = default!;
-    [Inject] protected RoleState State { get; set; } = default!;
+    [Inject] public IState<RoleState> RolState { get; set; } = default!;
+    [Inject] public IDispatcher Dispatcher { get; set; } = default!;
+
+    // UI Variables
+    protected RoleDto roleModel = new();
+    protected bool isEditing = false;
+    protected int? editingRoleId = null;
+
+    protected HashSet<int> selectedRoleIds = new();
+    protected bool isBulkDelete = false;
+    protected string deleteModalDescription = string.Empty;
+    protected bool showDeleteModal = false;
+    protected RoleDto? roleToDelete;
 
     protected IEnumerable<RoleDto> FilteredRoles =>
-        (State.Roles ?? Enumerable.Empty<RoleDto>())
-        .Where(r => string.IsNullOrWhiteSpace(State.SearchTerm) || r.Name.Contains(State.SearchTerm, StringComparison.OrdinalIgnoreCase))
-        .Where(r => State.SelectedFilterStatus == null || r.IsActive == State.SelectedFilterStatus);
+        RolState.Value.Roles
+        .Where(r => string.IsNullOrWhiteSpace(RolState.Value.SearchTerm) || r.Name.Contains(RolState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(r => RolState.Value.SelectedFilterStatus == null || r.IsActive == RolState.Value.SelectedFilterStatus);
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        State.OnChange += StateHasChanged;
-        await Facade.LoadRolesAsync();
+        base.OnInitialized();
+        Dispatcher.Dispatch(new LoadRolesAction());
     }
 
-    public void Dispose() => State.OnChange -= StateHasChanged;
-
-    protected async Task HandleSubmitRole()
+    protected void HandleSubmitRole()
     {
-        await Facade.SubmitRoleAsync();
-        ClearMessageAfterDelay(3000);
+        if (string.IsNullOrWhiteSpace(roleModel.Name)) return;
+
+        Dispatcher.Dispatch(new SaveRoleAction(roleModel, isEditing, editingRoleId));
+        CancelEdit();
+        ClearMessageAfterDelay();
     }
 
-    protected async Task ConfirmDelete()
+    protected void EditRole(RoleDto role)
     {
-        await Facade.ConfirmDeleteAsync();
-        ClearMessageAfterDelay(4000);
+        isEditing = true;
+        editingRoleId = role.Id;
+        roleModel = role.Adapt<RoleDto>();
     }
 
-    protected async Task BulkDeactivateRoles()
+    protected void CancelEdit()
     {
-        await Facade.BulkDeactivateAsync();
-        ClearMessageAfterDelay(4000);
+        isEditing = false;
+        editingRoleId = null;
+        roleModel = new RoleDto();
     }
 
-    protected async Task BulkActivateRoles()
+    protected void HandleSearch(string term) => Dispatcher.Dispatch(new SetRoleSearchAction(term));
+    protected void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetRoleFilterStatusAction(status));
+
+    protected void OnSelectionChanged(HashSet<int> newKeys) => selectedRoleIds = newKeys;
+    protected void ClearSelection() => selectedRoleIds.Clear();
+
+    protected void OpenBulkDeleteModal()
     {
-        await Facade.BulkActivateAsync();
-        ClearMessageAfterDelay(4000);
+        isBulkDelete = true;
+        deleteModalDescription = $"آیا از حذف {selectedRoleIds.Count} نقش انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        showDeleteModal = true;
     }
 
-    private void ClearMessageAfterDelay(int delay)
+    protected void OpenDeleteModal(RoleDto role)
     {
-        _ = Task.Delay(delay).ContinueWith(_ => { State.SuccessMessage = null; State.IsError = false; InvokeAsync(StateHasChanged); });
+        roleToDelete = role;
+        isBulkDelete = false;
+        deleteModalDescription = $"آیا از حذف نقش «{role.Name}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        showDeleteModal = true;
     }
 
-    protected void FilterByStatus(bool? status) { State.SelectedFilterStatus = status; State.NotifyStateChanged(); }
-    protected void HandleSearch(string term) { State.SearchTerm = term; State.NotifyStateChanged(); }
-    protected void OnSelectionChanged(HashSet<int> newKeys) { State.SelectedRoleIds = newKeys; State.NotifyStateChanged(); }
-    protected void ClearSelection() { State.SelectedRoleIds.Clear(); State.NotifyStateChanged(); }
-    protected void EditRole(RoleDto role) { State.IsEditing = true; State.EditingRoleId = role.Id; State.RoleModel = role.Adapt<RoleDto>(); State.NotifyStateChanged(); }
-    protected void CancelEdit() => State.ClearForm();
-    protected void OpenBulkDeleteModal() { State.IsBulkDelete = true; State.DeleteModalDescription = $"آیا از حذف {State.SelectedRoleIds.Count} نقش انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است."; State.ShowDeleteModal = true; State.NotifyStateChanged(); }
-    protected void OpenDeleteModal(RoleDto role) { State.RoleToDelete = role; State.IsBulkDelete = false; State.DeleteModalDescription = $"آیا از حذف نقش «{role.Name}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است."; State.ShowDeleteModal = true; State.NotifyStateChanged(); }
-    protected void CancelDelete() => State.ClearDeleteModal();
+    protected void CancelDelete()
+    {
+        showDeleteModal = false;
+        roleToDelete = null;
+        isBulkDelete = false;
+    }
+
+    protected void ConfirmDelete()
+    {
+        if (isBulkDelete)
+        {
+            Dispatcher.Dispatch(new DeleteMultipleRolesAction(selectedRoleIds));
+            ClearSelection();
+        }
+        else if (roleToDelete != null)
+        {
+            Dispatcher.Dispatch(new DeleteRoleAction(roleToDelete.Id));
+            selectedRoleIds.Remove(roleToDelete.Id);
+            if (isEditing && editingRoleId == roleToDelete.Id) CancelEdit();
+        }
+
+        CancelDelete();
+        ClearMessageAfterDelay();
+    }
+
+    protected void BulkDeactivateRoles() => UpdateRolesStatus(false);
+    protected void BulkActivateRoles() => UpdateRolesStatus(true);
+
+    private void UpdateRolesStatus(bool isActive)
+    {
+        Dispatcher.Dispatch(new UpdateRoleStatusAction(selectedRoleIds, isActive));
+        ClearSelection();
+        ClearMessageAfterDelay();
+    }
+
+    private void ClearMessageAfterDelay()
+    {
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            Dispatcher.Dispatch(new ClearRoleMessageAction());
+        });
+    }
 }

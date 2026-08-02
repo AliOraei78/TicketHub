@@ -1,7 +1,8 @@
 ﻿@page "/settings/statuses"
-@rendermode InteractiveServer
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Application.DTOs
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
 
 <PageTitle>تنظیمات وضعیت‌ها | سامانه تیکتینگ</PageTitle>
 
@@ -26,9 +27,11 @@
                             OnSubmit="HandleSubmitStatus"
                             OnCancel="CancelEdit" />
 
-                @if (!string.IsNullOrEmpty(successMessage))
+                @if (!string.IsNullOrEmpty(StatState.Value.StatusMessage))
                 {
-                    <div class="mt-4 p-3 @(isError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@successMessage</div>
+                    <div class="mt-4 p-3 @(StatState.Value.IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">
+                        @StatState.Value.StatusMessage
+                    </div>
                 }
             </div>
         </div>
@@ -43,14 +46,14 @@
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
 
                         <div class="w-full sm:w-45">
-                            <SearchBox Placeholder="جستجوی وضعیت..." SearchTerm="@Facade.State.SearchTerm" OnSearchChanged="HandleSearch" />
+                            <SearchBox Placeholder="جستجوی وضعیت..." SearchTerm="@StatState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
                         </div>
 
                         <!-- فیلتر وضعیت با عرض ثابت -->
                         <div class="w-full sm:w-45">
                             <GenericStatusFilter TValue="bool?"
                                                  Options="new bool?[] { null, true, false }"
-                                                 SelectedValue="selectedFilterStatus"
+                                                 SelectedValue="StatState.Value.SelectedFilterStatus"
                                                  OnValueChanged="FilterByStatus"
                                                  BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
                                                  ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
@@ -63,11 +66,11 @@
                 </div>
 
                 <div class="p-0">
-                    <DataGrid TItem="@StatusDto" TKey="int"
+                    <DataGrid TItem="StatusDto" TKey="int"
                               Items="FilteredStatuses"
-                              IsLoading="Facade.State.Statuses == null"
+                              IsLoading="StatState.Value.IsLoading"
                               KeySelector="s => s.Id"
-                              SelectedKeys="Facade.State.SelectedStatusIds"
+                              SelectedKeys="selectedStatusIds"
                               SelectedKeysChanged="OnSelectionChanged"
                               ShowRowIndex="false"
                               EmptyStateValue="وضعیتی">
@@ -133,16 +136,14 @@
     </div>
 </div>
 
-<!-- Toolbar for Bulk Actions -->
-<BulkActionToolbar SelectedCount="Facade.State.SelectedStatusIds.Count"
+<BulkActionToolbar SelectedCount="selectedStatusIds.Count"
                    OnCancel="ClearSelection"
                    OnDelete="OpenBulkDeleteModal"
                    OnActivate="BulkActivateStatuses"
                    OnDeactivate="BulkDeactivateStatuses" />
 
-<!-- Animated Delete Modal -->
 <ConfirmDeleteModal IsOpen="showDeleteModal"
                     Description="@deleteModalDescription"
-                    ErrorMessage="@(isError ? successMessage : null)"
+                    ErrorMessage="@(StatState.Value.IsError ? StatState.Value.StatusMessage : null)"
                     OnConfirm="ConfirmDelete"
                     OnCancel="CancelDelete" />

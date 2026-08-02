@@ -1,73 +1,119 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Fluxor;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using TicketHub.Application.DTOs;
 using TicketHub.Core.Common;
-using TicketHub.Web.Facades;
-using TicketHub.Web.States;
+using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 {
-    public partial class WorkflowEditor : ComponentBase, IDisposable
+    public partial class WorkflowEditor : IDisposable
     {
         [Parameter] public int? Id { get; set; }
 
-        [Inject] private WorkflowEditorFacade Facade { get; set; } = default!;
-        [Inject] private WorkflowEditorState State { get; set; } = default!;
+        [Inject] private IState<WorkflowEditorState> EdState { get; set; } = default!;
+        [Inject] private IDispatcher Dispatcher { get; set; } = default!;
+        [Inject] private IActionSubscriber ActionSubscriber { get; set; } = default!;
         [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-        private IEnumerable<StatusDto> FilteredStatuses =>
-            string.IsNullOrEmpty(State.StatusSearchTerm)
-                ? State.AvailableStatuses
-                : State.AvailableStatuses.Where(s => s.Name.Contains(State.StatusSearchTerm));
+        // Form & DB Data (Local Copies for high-performance editing)
+        private WorkflowDto? CurrentWorkflow;
+        private string WorkflowName = "";
+        private string WorkflowDescription = "";
+        private string StatusSearchTerm = "";
 
-        protected override async Task OnInitializedAsync()
+        // Canvas UI State (High Frequency Updates)
+        private List<CanvasNodeDto> CanvasNodes = new();
+        private List<CanvasConnection> Connections = new();
+        private HashSet<CanvasNodeDto> SelectedNodes = new();
+        private HashSet<CanvasConnection> SelectedConnections = new();
+
+        private bool IsDragging;
+        private CanvasNodeDto? DraggedNode;
+        private double StartMouseX, StartMouseY, InitialNodeX, InitialNodeY;
+        private StatusDto? DraggingStatusFromSidebar;
+
+        private bool IsConnecting;
+        private CanvasNodeDto? ConnectingFromNode;
+        private string ActiveSourcePort = "";
+
+        private bool IsBoxSelecting;
+        private double BoxStartX, BoxStartY, BoxEndX, BoxEndY, MouseX, MouseY;
+
+        private IEnumerable<StatusDto> FilteredStatuses =>
+            string.IsNullOrEmpty(StatusSearchTerm)
+                ? EdState.Value.AvailableStatuses
+                : EdState.Value.AvailableStatuses.Where(s => s.Name.Contains(StatusSearchTerm, StringComparison.OrdinalIgnoreCase));
+
+        protected override void OnInitialized()
         {
-            State.OnStateChanged += StateHasChanged;
-            await Facade.InitializeAsync(Id);
+            base.OnInitialized();
+
+            // دریافت اطلاعات واکشی شده از دیتابیس و قرار دادن در استیت‌های گرافیکی
+            ActionSubscriber.SubscribeToAction<EditorDataLoadedAction>(this, action =>
+            {
+                CurrentWorkflow = action.CurrentWorkflow;
+                WorkflowName = action.Name;
+                WorkflowDescription = action.Description;
+                CanvasNodes = action.Nodes;
+                Connections = action.Connections;
+                InvokeAsync(StateHasChanged);
+            });
+
+            // در صورت ذخیره موفق، به لیست برگرد
+            ActionSubscriber.SubscribeToAction<SaveWorkflowEditorSuccessAction>(this, action =>
+            {
+                Navigation.NavigateTo("/workflows");
+            });
+
+            Dispatcher.Dispatch(new LoadEditorDataAction(Id));
         }
 
         public void Dispose()
         {
-            State.OnStateChanged -= StateHasChanged;
+            ActionSubscriber.UnsubscribeFromAllActions(this);
         }
 
-        private async Task SaveWorkflowAsync()
+        private void SaveWorkflowAsync()
         {
-            bool isSuccess = await Facade.SaveWorkflowAsync(Id);
-            if (isSuccess)
+            if (string.IsNullOrWhiteSpace(WorkflowName))
             {
-                Navigation.NavigateTo("/workflows");
+                Dispatcher.Dispatch(new SaveWorkflowEditorFailedAction("لطفاً عنوان جریان کاری را وارد کنید. این فیلد الزامی است."));
+                return;
             }
+
+            Dispatcher.Dispatch(new SaveWorkflowEditorAction(Id, CurrentWorkflow, WorkflowName, WorkflowDescription, CanvasNodes, Connections));
         }
+
+        private void ClearError() => Dispatcher.Dispatch(new ClearEditorErrorAction());
 
         private void AddStatusToCanvas(StatusDto status)
         {
-            State.CanvasNodes.Add(new CanvasNodeDto
+            CanvasNodes.Add(new CanvasNodeDto
             {
                 Status = status,
-                X = 250 + (State.CanvasNodes.Count * 20),
-                Y = 150 + (State.CanvasNodes.Count * 20)
+                X = 250 + (CanvasNodes.Count * 20),
+                Y = 150 + (CanvasNodes.Count * 20)
             });
-            State.NotifyStateChanged();
         }
 
         private void RemoveNode(CanvasNodeDto node)
         {
-            State.Connections.RemoveAll(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
-            State.CanvasNodes.Remove(node);
-            State.SelectedNodes.Remove(node);
-            State.SelectedConnections.RemoveWhere(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
+            Connections.RemoveAll(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
+            CanvasNodes.Remove(node);
+            SelectedNodes.Remove(node);
+            SelectedConnections.RemoveWhere(c => c.FromNodeId == node.Id || c.ToNodeId == node.Id);
         }
 
         private void DeleteConnection(CanvasConnection conn)
         {
-            State.Connections.Remove(conn);
-            State.SelectedConnections.Remove(conn);
+            Connections.Remove(conn);
+            SelectedConnections.Remove(conn);
         }
 
         private void ToggleRole(int roleId)
         {
-            var selectedConnection = State.SelectedConnections.FirstOrDefault();
+            var selectedConnection = SelectedConnections.FirstOrDefault();
             if (selectedConnection == null) return;
 
             if (selectedConnection.AllowedRoleIds.Contains(roleId))
@@ -78,110 +124,101 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private void NodeMouseDown(MouseEventArgs e, CanvasNodeDto node)
         {
-            if (State.IsConnecting) return;
-            State.IsDragging = true;
-            State.DraggedNode = node;
+            if (IsConnecting) return;
+            IsDragging = true;
+            DraggedNode = node;
 
-            if (!State.SelectedNodes.Contains(node) && !e.CtrlKey && !e.ShiftKey)
-            {
+            if (!SelectedNodes.Contains(node) && !e.CtrlKey && !e.ShiftKey)
                 SelectNode(e, node);
-            }
             else if (e.CtrlKey || e.ShiftKey)
-            {
                 SelectNode(e, node);
-            }
 
-            State.StartMouseX = e.ClientX;
-            State.StartMouseY = e.ClientY;
-            State.InitialNodeX = node.X;
-            State.InitialNodeY = node.Y;
+            StartMouseX = e.ClientX;
+            StartMouseY = e.ClientY;
+            InitialNodeX = node.X;
+            InitialNodeY = node.Y;
         }
 
         private void CanvasPointerDown(PointerEventArgs e)
         {
             if (!e.CtrlKey && !e.ShiftKey)
             {
-                State.SelectedNodes.Clear();
-                State.SelectedConnections.Clear();
+                SelectedNodes.Clear();
+                SelectedConnections.Clear();
             }
 
-            State.IsBoxSelecting = true;
-            State.BoxStartX = e.ClientX;
-            State.BoxStartY = e.ClientY - 90;
-            State.BoxEndX = State.BoxStartX;
-            State.BoxEndY = State.BoxStartY;
+            IsBoxSelecting = true;
+            BoxStartX = e.ClientX;
+            BoxStartY = e.ClientY - 90;
+            BoxEndX = BoxStartX;
+            BoxEndY = BoxStartY;
         }
 
         private void CanvasMouseMove(MouseEventArgs e)
         {
-            State.MouseX = e.ClientX;
-            State.MouseY = e.ClientY - 90;
+            MouseX = e.ClientX;
+            MouseY = e.ClientY - 90;
 
-            if (State.IsDragging && State.DraggedNode != null)
+            if (IsDragging && DraggedNode != null)
             {
-                double dx = e.ClientX - State.StartMouseX;
-                double dy = e.ClientY - State.StartMouseY;
-
-                State.DraggedNode.X = State.InitialNodeX + dx;
-                State.DraggedNode.Y = State.InitialNodeY + dy;
+                double dx = e.ClientX - StartMouseX;
+                double dy = e.ClientY - StartMouseY;
+                DraggedNode.X = InitialNodeX + dx;
+                DraggedNode.Y = InitialNodeY + dy;
             }
-            else if (State.IsBoxSelecting)
+            else if (IsBoxSelecting)
             {
-                State.BoxEndX = State.MouseX;
-                State.BoxEndY = State.MouseY;
+                BoxEndX = MouseX;
+                BoxEndY = MouseY;
             }
         }
 
         private void CanvasMouseUp(MouseEventArgs e)
         {
-            if (State.IsBoxSelecting)
+            if (IsBoxSelecting)
             {
                 ApplyBoxSelection();
-                State.IsBoxSelecting = false;
+                IsBoxSelecting = false;
             }
-            State.IsDragging = false;
-            State.DraggedNode = null;
-            if (State.IsConnecting)
+            IsDragging = false;
+            DraggedNode = null;
+
+            if (IsConnecting)
             {
-                State.IsConnecting = false;
-                State.ConnectingFromNode = null;
+                IsConnecting = false;
+                ConnectingFromNode = null;
             }
         }
 
         private void ApplyBoxSelection()
         {
-            double left = Math.Min(State.BoxStartX, State.BoxEndX);
-            double top = Math.Min(State.BoxStartY, State.BoxEndY);
-            double right = Math.Max(State.BoxStartX, State.BoxEndX);
-            double bottom = Math.Max(State.BoxStartY, State.BoxEndY);
+            double left = Math.Min(BoxStartX, BoxEndX);
+            double top = Math.Min(BoxStartY, BoxEndY);
+            double right = Math.Max(BoxStartX, BoxEndX);
+            double bottom = Math.Max(BoxStartY, BoxEndY);
 
-            foreach (var node in State.CanvasNodes)
+            foreach (var node in CanvasNodes)
             {
                 if (node.X + 150 > left && node.X < right && node.Y + 72 > top && node.Y < bottom)
-                {
-                    State.SelectedNodes.Add(node);
-                }
+                    SelectedNodes.Add(node);
             }
 
-            foreach (var conn in State.Connections)
+            foreach (var conn in Connections)
             {
-                var fromNode = State.CanvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
-                var toNode = State.CanvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
+                var fromNode = CanvasNodes.FirstOrDefault(n => n.Id == conn.FromNodeId);
+                var toNode = CanvasNodes.FirstOrDefault(n => n.Id == conn.ToNodeId);
 
                 if (fromNode != null && toNode != null)
                 {
-                    var sameNodeConnections = State.Connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
+                    var sameNodeConnections = Connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
                     int index = sameNodeConnections.IndexOf(conn);
 
                     var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
                     var p2 = GetPortCoordinates(toNode, conn.TargetPort);
-
                     var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index, fromNode.Id, toNode.Id);
 
                     if (center.X >= left && center.X <= right && center.Y >= top && center.Y <= bottom)
-                    {
-                        State.SelectedConnections.Add(conn);
-                    }
+                        SelectedConnections.Add(conn);
                 }
             }
         }
@@ -190,49 +227,49 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
         {
             if (!e.CtrlKey && !e.ShiftKey)
             {
-                State.SelectedNodes.Clear();
-                State.SelectedConnections.Clear();
+                SelectedNodes.Clear();
+                SelectedConnections.Clear();
             }
-            State.SelectedNodes.Add(node);
+            SelectedNodes.Add(node);
         }
 
         private void SelectConnection(MouseEventArgs e, CanvasConnection conn)
         {
             if (!e.CtrlKey && !e.ShiftKey)
             {
-                State.SelectedNodes.Clear();
-                State.SelectedConnections.Clear();
+                SelectedNodes.Clear();
+                SelectedConnections.Clear();
             }
-            State.SelectedConnections.Add(conn);
+            SelectedConnections.Add(conn);
         }
 
         private void HandleKeyDown(KeyboardEventArgs e)
         {
             if (e.Key == "Delete")
             {
-                foreach (var node in State.SelectedNodes.ToList()) RemoveNode(node);
-                foreach (var conn in State.SelectedConnections.ToList()) DeleteConnection(conn);
+                foreach (var node in SelectedNodes.ToList()) RemoveNode(node);
+                foreach (var conn in SelectedConnections.ToList()) DeleteConnection(conn);
 
-                State.SelectedNodes.Clear();
-                State.SelectedConnections.Clear();
+                SelectedNodes.Clear();
+                SelectedConnections.Clear();
             }
         }
 
         private void OnPortPointerDown(PointerEventArgs e, CanvasNodeDto node, string port)
         {
-            if (!State.IsConnecting)
+            if (!IsConnecting)
             {
-                State.IsConnecting = true;
-                State.ConnectingFromNode = node;
-                State.ActiveSourcePort = port;
-                State.SelectedNodes.Clear();
-                State.SelectedConnections.Clear();
+                IsConnecting = true;
+                ConnectingFromNode = node;
+                ActiveSourcePort = port;
+                SelectedNodes.Clear();
+                SelectedConnections.Clear();
             }
         }
 
         private void OnPortPointerUp(PointerEventArgs e, CanvasNodeDto node, string port)
         {
-            if (State.IsConnecting && State.ConnectingFromNode != null && State.ConnectingFromNode != node)
+            if (IsConnecting && ConnectingFromNode != null && ConnectingFromNode != node)
             {
                 CompleteConnection(node, port);
             }
@@ -240,37 +277,37 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private void CompleteConnection(CanvasNodeDto targetNode, string targetPort)
         {
-            if (State.ConnectingFromNode == null) return;
+            if (ConnectingFromNode == null) return;
 
             var newConn = new CanvasConnection
             {
                 Id = Guid.NewGuid(),
-                FromNodeId = State.ConnectingFromNode.Id,
+                FromNodeId = ConnectingFromNode.Id,
                 ToNodeId = targetNode.Id,
-                SourcePort = State.ActiveSourcePort,
+                SourcePort = ActiveSourcePort,
                 TargetPort = targetPort,
                 Name = "",
                 AllowedRoleIds = new HashSet<int>(),
                 CustomFields = new List<CanvasTransitionField>()
             };
-            State.Connections.Add(newConn);
+            Connections.Add(newConn);
 
-            State.SelectedNodes.Clear();
-            State.SelectedConnections.Clear();
-            State.SelectedConnections.Add(newConn);
+            SelectedNodes.Clear();
+            SelectedConnections.Clear();
+            SelectedConnections.Add(newConn);
 
-            State.IsConnecting = false;
-            State.ConnectingFromNode = null;
-            State.ActiveSourcePort = "";
+            IsConnecting = false;
+            ConnectingFromNode = null;
+            ActiveSourcePort = "";
         }
 
-        private string GetNodeName(Guid id) => State.CanvasNodes.FirstOrDefault(n => n.Id == id)?.Status.Name ?? "Unknown";
+        private string GetNodeName(Guid id) => CanvasNodes.FirstOrDefault(n => n.Id == id)?.Status.Name ?? "Unknown";
 
         private bool CheckCollision(double x1, double y1, double cx, double cy, double x2, double y2, Guid fromNodeId, Guid toNodeId)
         {
             double[] tValues = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 };
 
-            foreach (var node in State.CanvasNodes)
+            foreach (var node in CanvasNodes)
             {
                 if (node.Id == fromNodeId || node.Id == toNodeId) continue;
 
@@ -286,10 +323,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                     double dx = px - nodeCenterX;
                     double dy = py - nodeCenterY;
 
-                    if ((dx * dx) / (95 * 95) + (dy * dy) / (60 * 60) <= 1)
-                    {
-                        return true;
-                    }
+                    if ((dx * dx) / (95 * 95) + (dy * dy) / (60 * 60) <= 1) return true;
                 }
             }
             return false;
@@ -323,8 +357,8 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
             int maxIterations = 20;
             double step = 35;
-
             double[] offsetsToTry = new double[maxIterations];
+
             for (int i = 0; i < maxIterations; i++)
             {
                 int sign = (i % 2 == 0) ? 1 : -1;
@@ -344,11 +378,8 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 double testCy = midY + ny * (baseOffset + testOffset);
 
                 if (!CheckCollision(x1, y1, testCx, testCy, x2, y2, fromNodeId, toNodeId))
-                {
                     return (testCx, testCy);
-                }
             }
-
             return (cx, cy);
         }
 
@@ -366,19 +397,19 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             return (curveMidX, curveMidY);
         }
 
-        private void OnStatusDragStart(StatusDto status) => State.DraggingStatusFromSidebar = status;
+        private void OnStatusDragStart(StatusDto status) => DraggingStatusFromSidebar = status;
 
         private void CanvasOnDrop(DragEventArgs e)
         {
-            if (State.DraggingStatusFromSidebar != null)
+            if (DraggingStatusFromSidebar != null)
             {
-                State.CanvasNodes.Add(new CanvasNodeDto
+                CanvasNodes.Add(new CanvasNodeDto
                 {
-                    Status = State.DraggingStatusFromSidebar,
+                    Status = DraggingStatusFromSidebar,
                     X = Math.Max(0, e.ClientX - 75),
                     Y = Math.Max(0, e.ClientY - 94)
                 });
-                State.DraggingStatusFromSidebar = null;
+                DraggingStatusFromSidebar = null;
             }
         }
 
@@ -407,26 +438,22 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 return luminance > 0.6 ? "#1e293b" : "#ffffff";
             }
-            catch
-            {
-                return "#1e293b";
-            }
+            catch { return "#1e293b"; }
         }
 
         private void DeleteSelectedItems(object clickedItem)
         {
             bool isGroupDelete = false;
 
-            if (clickedItem is CanvasNodeDto node && State.SelectedNodes.Contains(node)) isGroupDelete = true;
-            if (clickedItem is CanvasConnection conn && State.SelectedConnections.Contains(conn)) isGroupDelete = true;
+            if (clickedItem is CanvasNodeDto node && SelectedNodes.Contains(node)) isGroupDelete = true;
+            if (clickedItem is CanvasConnection conn && SelectedConnections.Contains(conn)) isGroupDelete = true;
 
             if (isGroupDelete)
             {
-                foreach (var n in State.SelectedNodes.ToList()) RemoveNode(n);
-                foreach (var c in State.SelectedConnections.ToList()) DeleteConnection(c);
-
-                State.SelectedNodes.Clear();
-                State.SelectedConnections.Clear();
+                foreach (var n in SelectedNodes.ToList()) RemoveNode(n);
+                foreach (var c in SelectedConnections.ToList()) DeleteConnection(c);
+                SelectedNodes.Clear();
+                SelectedConnections.Clear();
             }
             else
             {

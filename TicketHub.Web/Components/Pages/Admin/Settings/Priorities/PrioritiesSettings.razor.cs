@@ -1,17 +1,15 @@
-﻿// Priorities.razor.cs
+﻿using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Core.Entities;
-using TicketHub.Web.Facades;
-using TicketHub.Web.States;
+using TicketHub.Web.Store; // مسیر استیت‌های Fluxor
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings.Priorities;
 
-public partial class PrioritiesSettings : ComponentBase, IDisposable
+public partial class PrioritiesSettings
 {
-    [Inject] public PriorityFacade Facade { get; set; } = default!;
-    [Inject] public PriorityState State { get; set; } = default!;
+    [Inject] public IState<PriorityState> PriState { get; set; } = default!;
+    [Inject] public IDispatcher Dispatcher { get; set; } = default!;
 
     protected HashSet<int> selectedIds = new();
     protected bool isBulkDelete = false;
@@ -19,42 +17,33 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
 
     protected PriorityDto priorityModel = new() { ColorCode = "#6B7280", Level = 1 };
 
-    protected string searchTerm = string.Empty;
     protected bool isEditing = false;
     protected int? editingId = null;
-
-    protected bool? selectedFilterStatus = null;
 
     protected bool showDeleteModal = false;
     protected PriorityDto? itemToDelete;
 
-    // خواندن داده‌ها از State
     protected IEnumerable<PriorityDto> FilteredPriorities =>
-        (State.Priorities ?? Enumerable.Empty<PriorityDto>())
-        .Where(p => string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-        .Where(p => selectedFilterStatus == null || p.IsActive == selectedFilterStatus);
+        PriState.Value.Priorities
+        .Where(p => string.IsNullOrWhiteSpace(PriState.Value.SearchTerm) || p.Name.Contains(PriState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(p => PriState.Value.SelectedFilterStatus == null || p.IsActive == PriState.Value.SelectedFilterStatus);
 
     protected override void OnInitialized()
     {
-        State.OnChange += StateHasChanged; // متصل کردن تغییرات State به رندر صفحه
+        base.OnInitialized();
+        Dispatcher.Dispatch(new LoadPrioritiesAction());
     }
 
-    public void Dispose()
-    {
-        State.OnChange -= StateHasChanged; // پاکسازی
-    }
-
-    protected override async Task OnInitializedAsync() => await Facade.LoadPrioritiesAsync();
-
-    protected async Task HandleSubmit()
+    protected void HandleSubmit()
     {
         if (string.IsNullOrWhiteSpace(priorityModel.Name)) return;
 
         if (!isEditing && string.IsNullOrEmpty(priorityModel.ColorCode))
             priorityModel.ColorCode = "#6B7280";
 
-        await Facade.SavePriorityAsync(priorityModel, isEditing);
+        Dispatcher.Dispatch(new SavePriorityAction(priorityModel, isEditing));
         CancelEdit();
+        ClearMessageAfterDelay();
     }
 
     protected void EditPriority(PriorityDto item)
@@ -71,7 +60,9 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
         priorityModel = new PriorityDto { ColorCode = "#6B7280", Level = 1 };
     }
 
-    protected void HandleSearch(string term) => searchTerm = term;
+    protected void HandleSearch(string term) => Dispatcher.Dispatch(new SetPrioritySearchAction(term));
+    protected void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetPriorityFilterStatusAction(status));
+
     protected void OnSelectionChanged(HashSet<int> newKeys) => selectedIds = newKeys;
     protected void ClearSelection() => selectedIds.Clear();
 
@@ -97,42 +88,38 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
         isBulkDelete = false;
     }
 
-    protected async Task ConfirmDelete()
+    protected void ConfirmDelete()
     {
         if (isBulkDelete)
         {
-            await Facade.DeleteBulkAsync(selectedIds);
+            Dispatcher.Dispatch(new DeleteMultiplePrioritiesAction(selectedIds));
             ClearSelection();
         }
         else if (itemToDelete != null)
         {
-            await Facade.DeletePriorityAsync(itemToDelete);
+            Dispatcher.Dispatch(new DeletePriorityAction(itemToDelete.Id));
             selectedIds.Remove(itemToDelete.Id);
             if (isEditing && editingId == itemToDelete.Id) CancelEdit();
         }
         CancelDelete();
+        ClearMessageAfterDelay();
     }
 
-    protected async Task BulkActivatePriorities() => await UpdatePrioritiesStatus(true);
-    protected async Task BulkDeactivatePriorities() => await UpdatePrioritiesStatus(false);
+    protected void BulkActivatePriorities() => UpdatePrioritiesStatus(true);
+    protected void BulkDeactivatePriorities() => UpdatePrioritiesStatus(false);
 
-    private async Task UpdatePrioritiesStatus(bool isActive)
+    private void UpdatePrioritiesStatus(bool isActive)
     {
-        try
-        {
-            await Facade.UpdateStatusRangeAsync(selectedIds, isActive);
-            ClearSelection();
-        }
-        catch (Exception)
-        {
-            State.SetMessage("عملیات با خطا مواجه شد!", true);
-            _ = Task.Delay(4000).ContinueWith(_ => State.SetMessage(null));
-        }
+        Dispatcher.Dispatch(new UpdatePriorityStatusAction(selectedIds, isActive));
+        ClearSelection();
+        ClearMessageAfterDelay();
     }
 
-    protected void FilterByStatus(bool? status)
+    private void ClearMessageAfterDelay()
     {
-        selectedFilterStatus = status;
-        // NotifyStateChanged در State معمولا صدا زده می‌شود
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            Dispatcher.Dispatch(new ClearPriorityMessageAction());
+        });
     }
 }

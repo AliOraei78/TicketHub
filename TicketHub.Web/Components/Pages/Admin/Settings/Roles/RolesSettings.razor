@@ -1,7 +1,8 @@
 ﻿@page "/settings/roles"
-@rendermode InteractiveServer
-@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
+@using TicketHub.Application.DTOs
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
 
 <PageTitle>تنظیمات نقش‌ها | سامانه تیکتینگ</PageTitle>
 
@@ -18,10 +19,10 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Add/Edit Role Form -->
         <div class="md:col-span-1">
-            <RoleForm Model="@State.RoleModel"
-                      IsEditing="@State.IsEditing"
-                      SuccessMessage="@State.SuccessMessage"
-                      IsError="@State.IsError"
+            <RoleForm Model="roleModel"
+                      IsEditing="isEditing"
+                      SuccessMessage="@RolState.Value.StatusMessage"
+                      IsError="RolState.Value.IsError"
                       OnValidSubmit="HandleSubmitRole"
                       OnCancel="CancelEdit" />
         </div>
@@ -35,14 +36,13 @@
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
 
                         <div class="w-full sm:w-45">
-                            <SearchBox Placeholder="جستجوی نقش..." SearchTerm="@State.SearchTerm" OnSearchChanged="HandleSearch" />
+                            <SearchBox Placeholder="جستجوی نقش..." SearchTerm="@RolState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
                         </div>
 
-                        <!-- اضافه شدن نگهدارنده با عرض ثابت sm:w-48 برای کوچک کردن فیلتر -->
                         <div class="w-full sm:w-45">
                             <GenericStatusFilter TValue="bool?"
                                                  Options="new bool?[] { null, true, false }"
-                                                 SelectedValue="State.SelectedFilterStatus"
+                                                 SelectedValue="RolState.Value.SelectedFilterStatus"
                                                  OnValueChanged="FilterByStatus"
                                                  BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
                                                  ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
@@ -57,9 +57,9 @@
                 <div class="p-0">
                     <DataGrid TItem="RoleDto" TKey="int"
                               Items="FilteredRoles"
-                              IsLoading="State.Roles == null"
+                              IsLoading="RolState.Value.IsLoading"
                               KeySelector="r => r.Id"
-                              SelectedKeys="State.SelectedRoleIds"
+                              SelectedKeys="selectedRoleIds"
                               SelectedKeysChanged="OnSelectionChanged"
                               ShowRowIndex="false"
                               EmptyStateValue="نقشی">
@@ -115,16 +115,14 @@
     </div>
 </div>
 
-<!-- Toolbar for Bulk Actions -->
-<BulkActionToolbar SelectedCount="State.SelectedRoleIds.Count"
+<BulkActionToolbar SelectedCount="selectedRoleIds.Count"
                    OnCancel="ClearSelection"
                    OnDelete="OpenBulkDeleteModal"
                    OnDeactivate="BulkDeactivateRoles"
                    OnActivate="BulkActivateRoles" />
 
-<!-- Animated Delete Modal -->
-<ConfirmDeleteModal IsOpen="State.ShowDeleteModal"
-                    Description="@State.DeleteModalDescription"
-                    ErrorMessage="@(State.IsError ? State.SuccessMessage : null)"
+<ConfirmDeleteModal IsOpen="showDeleteModal"
+                    Description="@deleteModalDescription"
+                    ErrorMessage="@(RolState.Value.IsError ? RolState.Value.StatusMessage : null)"
                     OnConfirm="ConfirmDelete"
                     OnCancel="CancelDelete" />

@@ -1,93 +1,57 @@
-﻿using Mapster;
+﻿using Fluxor;
+using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Web.Facades;
-using TicketHub.Web.State;
+using TicketHub.Web.Store; // مسیر استیت‌های Fluxor
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings.Categories;
 
-public partial class CategoriesSettings : ComponentBase, IDisposable
+public partial class CategoriesSettings
 {
-    // اینجکت کردن Facade و State به جای سرویس مستقیم
-    [Inject] public CategoryFacade CategoryFacade { get; set; } = default!;
-    [Inject] public CategoryState categoryState { get; set; } = default!;
-    [Inject] public ProjectFacade ProjectFacade { get; set; } = default!;
-    [Inject] public RoleFacade RoleFacade { get; set; } = default!;
-    [Inject] public RoleState RoleState { get; set; } = default!;
+    [Inject] public IState<CategoryState> CatState { get; set; } = default!;
+    [Inject] public IState<ProjectState> ProjState { get; set; } = default!;
+    [Inject] public IDispatcher Dispatcher { get; set; } = default!;
 
     private HashSet<int> selectedCategoryIds = new();
     private bool isBulkDelete = false;
     private string deleteModalDescription = string.Empty;
-    private bool? selectedFilterStatus = null;
-    private List<int> selectedFilterProjectIds = new();
-    private List<int> selectedFilterRoleIds = new();
 
     private CategoryDto categoryModel = new();
-    private string? successMessage;
-    private bool isError = false;
-    private string searchTerm = string.Empty;
-
     private bool isEditing = false;
-    // دیگر نیازی به نگه‌داری ID به صورت جداگانه نیست چون مدل خودش ID دارد
-    // اما برای کنترل لاجیک فرم بد نیست نگهش داریم
     private int? editingCategoryId = null;
 
     private bool showDeleteModal = false;
     private CategoryDto? categoryToDelete;
 
-    // به‌روزرسانی پراپرتی FilteredCategories برای اعمال فیلتر وضعیت
     private IEnumerable<CategoryDto> FilteredCategories =>
-        categoryState.Categories
-            .Where(c => string.IsNullOrWhiteSpace(searchTerm) || c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-            .Where(c => selectedFilterStatus == null || c.IsActive == selectedFilterStatus)
-            .Where(c => !selectedFilterProjectIds.Any() || (c.ProjectIds != null && c.ProjectIds.Any(p => selectedFilterProjectIds.Contains(p))))
-            .Where(c => !selectedFilterRoleIds.Any() || (c.RoleIds != null && c.RoleIds.Any(r => selectedFilterRoleIds.Contains(r))));
+        CatState.Value.Categories
+            .Where(c => string.IsNullOrWhiteSpace(CatState.Value.SearchTerm) || c.Name.Contains(CatState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
+            .Where(c => CatState.Value.SelectedFilterStatus == null || c.IsActive == CatState.Value.SelectedFilterStatus)
+            .Where(c => !CatState.Value.SelectedFilterProjectIds.Any() || (c.ProjectIds != null && c.ProjectIds.Any(p => CatState.Value.SelectedFilterProjectIds.Contains(p))))
+            .Where(c => !CatState.Value.SelectedFilterRoleIds.Any() || (c.RoleIds != null && c.RoleIds.Any(r => CatState.Value.SelectedFilterRoleIds.Contains(r))));
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        // ساب‌اسکرایب به تغییرات State
-        categoryState.OnChange += StateHasChanged;
-        ProjectFacade.State.OnChange += StateHasChanged;
-        RoleState.OnChange += StateHasChanged;
-
-        await CategoryFacade.LoadCategoriesAsync();
-        await ProjectFacade.InitializeAsync();
-        await RoleFacade.LoadRolesAsync();
+        base.OnInitialized();
+        Dispatcher.Dispatch(new LoadCategoryInitialDataAction());
     }
 
-    private async Task HandleSubmitCategory()
+    private void HandleSubmitCategory()
     {
         if (string.IsNullOrWhiteSpace(categoryModel.Name)) return;
 
-        isError = false;
-
-        // اگر در حال ویرایش هستیم، مطمئن شویم آیدی درست ست شده
         if (isEditing && editingCategoryId.HasValue)
-        {
             categoryModel.Id = editingCategoryId.Value;
-        }
 
-        try
-        {
-            await CategoryFacade.AddOrUpdateAsync(categoryModel, isEditing);
-            successMessage = isEditing ? "نوع تیکت با موفقیت ویرایش شد." : "نوع تیکت با موفقیت ایجاد شد.";
-            CancelEdit();
-        }
-        catch (Exception)
-        {
-            isError = true;
-            successMessage = "خطایی در ذخیره اطلاعات رخ داد.";
-        }
-
-        _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
+        Dispatcher.Dispatch(new SaveCategoryAction(categoryModel, isEditing));
+        CancelEdit();
+        ClearMessageAfterDelay();
     }
 
     private void EditCategory(CategoryDto category)
     {
         isEditing = true;
         editingCategoryId = category.Id;
-
-        // ایجاد یک کپی جدید به همراه لیست پروژه‌ها و نقش‌ها
         categoryModel = category.Adapt<CategoryDto>();
     }
 
@@ -96,24 +60,15 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         isEditing = false;
         editingCategoryId = null;
         categoryModel = new CategoryDto();
-        successMessage = null;
-        isError = false;
     }
 
-    private void HandleSearch(string term)
-    {
-        searchTerm = term;
-    }
+    private void HandleSearch(string term) => Dispatcher.Dispatch(new SetCategorySearchAction(term));
+    private void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetCategoryFilterStatusAction(status));
+    private void FilterByProjects(List<int> projectIds) => Dispatcher.Dispatch(new SetCategoryProjectFilterAction(projectIds));
+    private void FilterByRoles(List<int> roleIds) => Dispatcher.Dispatch(new SetCategoryRoleFilterAction(roleIds));
 
-    private void OnSelectionChanged(HashSet<int> newKeys)
-    {
-        selectedCategoryIds = newKeys;
-    }
-
-    private void ClearSelection()
-    {
-        selectedCategoryIds.Clear();
-    }
+    private void OnSelectionChanged(HashSet<int> newKeys) => selectedCategoryIds = newKeys;
+    private void ClearSelection() => selectedCategoryIds.Clear();
 
     private void OpenBulkDeleteModal()
     {
@@ -137,82 +92,39 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         isBulkDelete = false;
     }
 
-    private async Task ConfirmDelete()
+    private void ConfirmDelete()
     {
-        try
+        if (isBulkDelete)
         {
-            if (isBulkDelete)
-            {
-                await CategoryFacade.DeleteRangeAsync(selectedCategoryIds);
-                successMessage = $"{selectedCategoryIds.Count} آیتم با موفقیت حذف {(selectedCategoryIds.Count == 1 ? "شد" : "شدند")}.";
-                ClearSelection();
-            }
-            else if (categoryToDelete != null)
-            {
-                await CategoryFacade.DeleteAsync(categoryToDelete);
-                successMessage = "نوع تیکت با موفقیت حذف شد.";
-                selectedCategoryIds.Remove(categoryToDelete.Id);
-                if (isEditing && editingCategoryId == categoryToDelete.Id) CancelEdit();
-            }
-
-            isError = false;
-        }
-        catch (Exception)
-        {
-            isError = true;
-            successMessage = "امکان حذف وجود ندارد! تیکت‌های مرتبط را بررسی کنید.";
-        }
-        finally
-        {
-            CancelDelete();
-            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
-        }
-    }
-
-    private async Task BulkActivateCategories() => await UpdateCategoriesStatus(true, "فعال");
-
-    private async Task BulkDeactivateCategories() => await UpdateCategoriesStatus(false, "غیرفعال");
-
-    private async Task UpdateCategoriesStatus(bool isActive, string actionName)
-    {
-        try
-        {
-            await CategoryFacade.UpdateStatusRangeAsync(selectedCategoryIds, isActive);
-            successMessage = $"{selectedCategoryIds.Count} نوع تیکت با موفقیت {actionName} {(selectedCategoryIds.Count == 1 ? "شد" : "شدند")}.";
+            Dispatcher.Dispatch(new DeleteMultipleCategoriesAction(selectedCategoryIds));
             ClearSelection();
         }
-        catch (Exception)
+        else if (categoryToDelete != null)
         {
-            isError = true;
-            successMessage = "عملیات با خطا مواجه شد!";
+            Dispatcher.Dispatch(new DeleteCategoryAction(categoryToDelete.Id));
+            selectedCategoryIds.Remove(categoryToDelete.Id);
+            if (isEditing && editingCategoryId == categoryToDelete.Id) CancelEdit();
         }
-        finally
+
+        CancelDelete();
+        ClearMessageAfterDelay();
+    }
+
+    private void BulkActivateCategories() => UpdateCategoriesStatus(true);
+    private void BulkDeactivateCategories() => UpdateCategoriesStatus(false);
+
+    private void UpdateCategoriesStatus(bool isActive)
+    {
+        Dispatcher.Dispatch(new UpdateCategoryStatusAction(selectedCategoryIds, isActive));
+        ClearSelection();
+        ClearMessageAfterDelay();
+    }
+
+    private void ClearMessageAfterDelay()
+    {
+        _ = Task.Delay(4000).ContinueWith(_ =>
         {
-            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
-        }
-    }
-
-    public void Dispose()
-    {
-        // آنساب‌اسکرایب برای جلوگیری از مموری لیک
-        categoryState.OnChange -= StateHasChanged;
-        ProjectFacade.State.OnChange -= StateHasChanged;
-        RoleState.OnChange -= StateHasChanged;
-    }
-
-    // اضافه کردن متد تغییر وضعیت فیلتر
-    private void FilterByStatus(bool? status)
-    {
-        selectedFilterStatus = status;
-    }
-
-    private void FilterByProjects(List<int> projectIds)
-    {
-        selectedFilterProjectIds = projectIds;
-    }
-
-    private void FilterByRoles(List<int> roleIds)
-    {
-        selectedFilterRoleIds = roleIds;
+            Dispatcher.Dispatch(new ClearCategoryMessageAction());
+        });
     }
 }

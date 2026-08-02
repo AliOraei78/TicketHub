@@ -1,9 +1,9 @@
-﻿<!-- Users.razor -->
-@page "/users"
-@rendermode InteractiveServer
+﻿@page "/users"
 @using TicketHub.Web.Components.Pages.Admin.Users
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Application.DTOs
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
 
 <PageTitle>مدیریت کاربران | سامانه تیکتینگ</PageTitle>
 
@@ -17,32 +17,33 @@
     </PageHeader>
 
     <div class="min-h-[56px] mb-2">
-        <ListFilterToolbar @bind-SearchTerm="SearchTerm"
-                           @bind-PageSize="PageSize"
+        <ListFilterToolbar SearchTerm="@UsrState.Value.SearchTerm"
+                           SearchTermChanged="SearchTermChanged"
+                           PageSize="@UsrState.Value.PageSize"
+                           PageSizeChanged="PageSizeChanged"
                            SearchPlaceholder="جستجوی نام یا ایمیل..."
                            ItemName="کاربر">
 
             <MultiSelectDropdown TItem="RoleDto" TValue="int"
                                  Placeholder="نقش..."
-                                 Items="availableRoles"
-                                 SelectedValues="State.SelectedFilterRoleIds"
+                                 Items="UsrState.Value.AvailableRoles.ToList()"
+                                 SelectedValues="UsrState.Value.SelectedFilterRoleIds"
                                  SelectedValuesChanged="FilterRolesChanged"
                                  ValueSelector="r => r.Id"
                                  DisplaySelector="r => r.Name" />
 
             <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                  Placeholder="پروژه..."
-                                 Items="availableProjects"
-                                 SelectedValues="State.SelectedFilterProjectIds"
+                                 Items="UsrState.Value.AvailableProjects.ToList()"
+                                 SelectedValues="UsrState.Value.SelectedFilterProjectIds"
                                  SelectedValuesChanged="FilterProjectsChanged"
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
 
-            <!-- قرار دادن فیلتر وضعیت در یک نگهدارنده با عرض محدود -->
             <div class="w-full sm:w-48">
                 <GenericStatusFilter TValue="bool?"
                                      Options="@(new bool?[] { null, true, false })"
-                                     SelectedValue="State.SelectedFilterStatus"
+                                     SelectedValue="UsrState.Value.SelectedFilterStatus"
                                      OnValueChanged="FilterByStatus"
                                      BackgroundClassSelector="@(val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400")"
                                      ItemClassSelector="@((item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700")">
@@ -54,22 +55,35 @@
         </ListFilterToolbar>
     </div>
 
-    <BulkActionToolbar SelectedCount="State.SelectedUserIds.Count"
+    <BulkActionToolbar SelectedCount="selectedUserIds.Count"
                        OnCancel="ClearSelection"
                        OnDelete="OpenBulkDeleteModal"
                        OnDeactivate="BulkDeactivateUsers"
                        OnActivate="BulkActivateUsers" />
 
-    <UserTable Users="users" IsLoading="isLoading"
+    <UserTable Users="UsrState.Value.Users.ToList()"
+               IsLoading="UsrState.Value.IsLoading"
                OnEdit="OpenEditModal"
                OnDelete="OpenDeleteModal"
-               @bind-SelectedIds="State.SelectedUserIds"
+               @bind-SelectedIds="selectedUserIds"
                DeletingIds="deletingUserIds"
-               CurrentPage="CurrentPage"
-               PageSize="PageSize" />
+               CurrentPage="UsrState.Value.CurrentPage"
+               PageSize="UsrState.Value.PageSize" />
 
-    <Pagination CurrentPage="CurrentPage" PageSize="PageSize" ItemName="کاربر" TotalItems="totalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
+    <Pagination CurrentPage="UsrState.Value.CurrentPage" PageSize="UsrState.Value.PageSize" ItemName="کاربر" TotalItems="UsrState.Value.TotalUsers" OnNext="NextPage" OnPrevious="PreviousPage" />
 </div>
 
-<UserFormModal IsOpen="isUserModalOpen" Model="userModel" PasswordInput="@passwordInput" AvailableRoles="availableRoles" SelectedRoles="selectedRoles" OnSubmit="HandleSaveUser" OnCancel="CloseUserModal" ErrorMessage="@formErrorMessage" />
-<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@($"آیا از حذف کاربر {(isBulkDelete ? "های انتخاب شده" : userToDelete?.Name)} مطمئن هستید؟")" ErrorMessage="@deleteErrorMessage" OnConfirm="ConfirmDeleteUser" OnCancel="CloseDeleteModal" />
+<UserFormModal IsOpen="isUserModalOpen"
+               Model="userModel"
+               PasswordInput="@passwordInput"
+               AvailableRoles="UsrState.Value.AvailableRoles.ToList()"
+               SelectedRoles="selectedRoles"
+               OnSubmit="HandleSaveUser"
+               OnCancel="CloseUserModal"
+               ErrorMessage="@UsrState.Value.FormErrorMessage" />
+
+<ConfirmDeleteModal IsOpen="showDeleteModal"
+                    Description="@($"آیا از حذف کاربر {(isBulkDelete ? "های انتخاب شده" : userToDelete?.Name)} مطمئن هستید؟")"
+                    ErrorMessage="@UsrState.Value.DeleteErrorMessage"
+                    OnConfirm="ConfirmDeleteUser"
+                    OnCancel="CloseDeleteModal" />

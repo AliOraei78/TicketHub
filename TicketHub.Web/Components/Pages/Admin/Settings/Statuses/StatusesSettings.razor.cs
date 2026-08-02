@@ -1,112 +1,80 @@
-﻿using Microsoft.AspNetCore.Components;
-using TicketHub.Application.DTOs;
-using TicketHub.Web.Facades;
+﻿using Fluxor;
 using Mapster;
+using Microsoft.AspNetCore.Components;
+using TicketHub.Application.DTOs;
+using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings.Statuses;
 
-public partial class StatusesSettings : ComponentBase, IDisposable
+public partial class StatusesSettings
 {
-    [Inject]
-    private StatusFacade Facade { get; set; } = default!;
+    [Inject] public IState<StatusState> StatState { get; set; } = default!;
+    [Inject] public IDispatcher Dispatcher { get; set; } = default!;
 
-    // Bulk action variables
-    private bool isBulkDelete = false;
-    private string deleteModalDescription = string.Empty;
+    // UI Variables
+    protected StatusDto statusModel = new() { ColorCode = "#3b82f6" };
+    protected bool isEditing = false;
+    protected int? editingStatusId = null;
 
-    // Form and data variables
-    private StatusDto statusModel = new() { ColorCode = "#3b82f6" };
-    private string? successMessage;
-    private bool isError = false;
+    protected HashSet<int> selectedStatusIds = new();
+    protected bool isBulkDelete = false;
+    protected string deleteModalDescription = string.Empty;
+    protected bool showDeleteModal = false;
+    protected StatusDto? statusToDelete;
 
-    // Edit mode variables
-    private bool isEditing = false;
-    private int? editingStatusId = null;
+    protected IEnumerable<StatusDto> FilteredStatuses =>
+        StatState.Value.Statuses
+        .Where(s => string.IsNullOrWhiteSpace(StatState.Value.SearchTerm) || s.Name.Contains(StatState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(s => StatState.Value.SelectedFilterStatus == null || s.IsActive == StatState.Value.SelectedFilterStatus);
 
-    // Delete modal variables
-    private bool showDeleteModal = false;
-    private StatusDto? statusToDelete;
-
-    protected bool? selectedFilterStatus = null;
-
-    // Filter statuses based on search term
-    private IEnumerable<StatusDto> FilteredStatuses =>
-        (Facade.State.Statuses ?? Enumerable.Empty<StatusDto>())
-        .Where(s => string.IsNullOrWhiteSpace(Facade.State.SearchTerm) || s.Name.Contains(Facade.State.SearchTerm, StringComparison.OrdinalIgnoreCase))
-        .Where(s => selectedFilterStatus == null || s.IsActive == selectedFilterStatus);
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        Facade.State.OnStateChange += StateHasChanged;
-        await Facade.LoadStatusesAsync();
+        base.OnInitialized();
+        Dispatcher.Dispatch(new LoadStatusesAction());
     }
 
-    public void Dispose()
-    {
-        Facade.State.OnStateChange -= StateHasChanged;
-    }
-
-    private async Task HandleSubmitStatus()
+    protected void HandleSubmitStatus()
     {
         if (string.IsNullOrWhiteSpace(statusModel.Name)) return;
-        isError = false;
 
         if (isEditing && editingStatusId.HasValue)
-        {
             statusModel.Id = editingStatusId.Value;
-            await Facade.UpdateAsync(statusModel);
-            successMessage = "وضعیت با موفقیت ویرایش شد.";
-        }
         else
-        {
             statusModel.ColorCode = string.IsNullOrEmpty(statusModel.ColorCode) ? "#3b82f6" : statusModel.ColorCode;
-            await Facade.AddAsync(statusModel);
-            successMessage = "وضعیت با موفقیت ایجاد شد.";
-        }
 
+        Dispatcher.Dispatch(new SaveStatusAction(statusModel, isEditing));
         CancelEdit();
-        await Facade.LoadStatusesAsync();
-        _ = Task.Delay(3000).ContinueWith(_ => { successMessage = null; InvokeAsync(StateHasChanged); });
+        ClearMessageAfterDelay();
     }
 
-    private void EditStatus(StatusDto status)
+    protected void EditStatus(StatusDto status)
     {
         isEditing = true;
         editingStatusId = status.Id;
         statusModel = status.Adapt<StatusDto>();
     }
 
-    private void CancelEdit()
+    protected void CancelEdit()
     {
         isEditing = false;
         editingStatusId = null;
         statusModel = new StatusDto { ColorCode = "#3b82f6", NeedApproval = false };
-        successMessage = null;
     }
 
-    private void HandleSearch(string term)
-    {
-        Facade.State.SearchTerm = term;
-    }
+    protected void HandleSearch(string term) => Dispatcher.Dispatch(new SetStatusSearchAction(term));
+    protected void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetStatusFilterStatusAction(status));
 
-    private void OnSelectionChanged(HashSet<int> newKeys)
-    {
-        Facade.State.SelectedStatusIds = newKeys;
-    }
+    protected void OnSelectionChanged(HashSet<int> newKeys) => selectedStatusIds = newKeys;
+    protected void ClearSelection() => selectedStatusIds.Clear();
 
-    private void ClearSelection()
-    {
-        Facade.State.SelectedStatusIds.Clear();
-    }
-
-    private void OpenBulkDeleteModal()
+    protected void OpenBulkDeleteModal()
     {
         isBulkDelete = true;
-        deleteModalDescription = $"آیا از حذف {Facade.State.SelectedStatusIds.Count} وضعیت انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
+        deleteModalDescription = $"آیا از حذف {selectedStatusIds.Count} وضعیت انتخاب شده مطمئن هستید؟ این عملیات غیرقابل بازگشت است.";
         showDeleteModal = true;
     }
 
-    private void OpenDeleteModal(StatusDto status)
+    protected void OpenDeleteModal(StatusDto status)
     {
         statusToDelete = status;
         isBulkDelete = false;
@@ -114,72 +82,46 @@ public partial class StatusesSettings : ComponentBase, IDisposable
         showDeleteModal = true;
     }
 
-    private void CancelDelete()
+    protected void CancelDelete()
     {
         showDeleteModal = false;
         statusToDelete = null;
         isBulkDelete = false;
     }
 
-    private async Task ConfirmDelete()
+    protected void ConfirmDelete()
     {
-        try
+        if (isBulkDelete)
         {
-            if (isBulkDelete)
-            {
-                await Facade.DeleteRangeAsync(Facade.State.SelectedStatusIds);
-                var verb = Facade.State.SelectedStatusIds.Count == 1 ? "شد" : "شدند";
-                successMessage = $"{Facade.State.SelectedStatusIds.Count} وضعیت با موفقیت حذف {verb}.";
-                ClearSelection();
-            }
-            else if (statusToDelete != null)
-            {
-                await Facade.DeleteAsync(statusToDelete.Id);
-                successMessage = "وضعیت با موفقیت حذف شد.";
-                Facade.State.SelectedStatusIds.Remove(statusToDelete.Id);
-                if (isEditing && editingStatusId == statusToDelete.Id) CancelEdit();
-            }
-
-            isError = false;
-            await Facade.LoadStatusesAsync();
-        }
-        catch (Exception)
-        {
-            isError = true;
-            successMessage = "امکان حذف وجود ندارد! ابتدا باید تیکت‌هایی که در این وضعیت هستند را ویرایش کنید.";
-        }
-        finally
-        {
-            CancelDelete();
-            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
-        }
-    }
-
-    private async Task BulkActivateStatuses() => await UpdateStatusesStatus(true, "فعال");
-    private async Task BulkDeactivateStatuses() => await UpdateStatusesStatus(false, "غیرفعال");
-
-    private async Task UpdateStatusesStatus(bool isActive, string actionName)
-    {
-        try
-        {
-            await Facade.UpdateStatusRangeAsync(Facade.State.SelectedStatusIds, isActive);
-            var count = Facade.State.SelectedStatusIds.Count;
-            successMessage = $"{count} وضعیت با موفقیت {actionName} {(count == 1 ? "شد" : "شدند")}.";
+            Dispatcher.Dispatch(new DeleteMultipleStatusesAction(selectedStatusIds));
             ClearSelection();
         }
-        catch (Exception)
+        else if (statusToDelete != null)
         {
-            isError = true;
-            successMessage = "عملیات با خطا مواجه شد!";
+            Dispatcher.Dispatch(new DeleteStatusAction(statusToDelete.Id));
+            selectedStatusIds.Remove(statusToDelete.Id);
+            if (isEditing && editingStatusId == statusToDelete.Id) CancelEdit();
         }
-        finally
-        {
-            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
-        }
+
+        CancelDelete();
+        ClearMessageAfterDelay();
     }
 
-    private void FilterByStatus(bool? status)
+    protected void BulkActivateStatuses() => UpdateStatusesStatus(true);
+    protected void BulkDeactivateStatuses() => UpdateStatusesStatus(false);
+
+    private void UpdateStatusesStatus(bool isActive)
     {
-        selectedFilterStatus = status;
+        Dispatcher.Dispatch(new UpdateStatusesStatusAction(selectedStatusIds, isActive));
+        ClearSelection();
+        ClearMessageAfterDelay();
+    }
+
+    private void ClearMessageAfterDelay()
+    {
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            Dispatcher.Dispatch(new ClearStatusMessageAction());
+        });
     }
 }

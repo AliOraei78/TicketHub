@@ -1,7 +1,7 @@
 ﻿@page "/settings/categories"
-@rendermode InteractiveServer
-@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
 
 <PageTitle>تنظیمات نوع تیکت | سامانه تیکتینگ</PageTitle>
 
@@ -20,35 +20,32 @@
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
                 <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش نوع تیکت" : "ایجاد نوع جدید")</h3>
 
-                <!-- استفاده از کامپوننت Dumb برای فرم -->
                 <CategoryForm Model="categoryModel"
                               IsEditing="isEditing"
-                              AvailableProjects="ProjectFacade.State.Projects"
-                              AvailableRoles="RoleState.Roles ?? Enumerable.Empty<RoleDto>()"
+                              AvailableProjects="ProjState.Value.Projects"
+                              AvailableRoles="ProjState.Value.Roles"
                               OnValidSubmit="HandleSubmitCategory"
                               OnCancel="CancelEdit"
-                              SuccessMessage="@successMessage"
-                              IsError="isError" />
+                              SuccessMessage="@CatState.Value.StatusMessage"
+                              IsError="CatState.Value.IsError" />
             </div>
         </div>
 
         <!-- Data Grid -->
         <div class="md:col-span-2">
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-
                 <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-start gap-4">
                     <h3 class="font-bold text-gray-800 text-lg whitespace-nowrap">لیست انواع تیکت</h3>
 
                     <div class="flex flex-wrap gap-3 w-full items-center">
                         <div class="w-full sm:w-45">
-                            <SearchBox Placeholder="جستجو..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                            <SearchBox Placeholder="جستجو..." SearchTerm="@CatState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
                         </div>
 
-                        <!-- فیلتر وضعیت -->
                         <div class="w-full sm:w-45">
                             <GenericStatusFilter TValue="bool?"
                                                  Options="new bool?[] { null, true, false }"
-                                                 SelectedValue="selectedFilterStatus"
+                                                 SelectedValue="CatState.Value.SelectedFilterStatus"
                                                  OnValueChanged="FilterByStatus"
                                                  BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
                                                  ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
@@ -58,13 +55,12 @@
                             </GenericStatusFilter>
                         </div>
 
-                        <!-- فیلتر پروژه‌ها -->
                         <div class="w-full sm:w-45 z-10">
-                            <MultiSelectDropdown TItem="ProjectDto"
+                            <MultiSelectDropdown TItem="TicketHub.Application.DTOs.ProjectDto"
                                                  TValue="int"
                                                  Placeholder="فیلتر پروژه..."
-                                                 Items="ProjectFacade.State.Projects"
-                                                 SelectedValues="selectedFilterProjectIds"
+                                                 Items="ProjState.Value.Projects"
+                                                 SelectedValues="CatState.Value.SelectedFilterProjectIds"
                                                  SelectedValuesChanged="FilterByProjects"
                                                  ValueSelector="p => p.Id"
                                                  DisplaySelector="p => p.Name"
@@ -73,23 +69,21 @@
                                                  BadgeButtonClass="text-emerald-500 hover:text-emerald-900" />
                         </div>
 
-                        <!-- فیلتر نقش‌ها -->
                         <div class="w-full sm:w-45 z-10">
-                            <MultiSelectDropdown TItem="RoleDto"
+                            <MultiSelectDropdown TItem="TicketHub.Application.DTOs.RoleDto"
                                                  TValue="int"
                                                  Placeholder="فیلتر نقش..."
-                                                 Items="RoleState.Roles ?? Enumerable.Empty<RoleDto>()"
-                                                 SelectedValues="selectedFilterRoleIds"
+                                                 Items="ProjState.Value.Roles"
+                                                 SelectedValues="CatState.Value.SelectedFilterRoleIds"
                                                  SelectedValuesChanged="FilterByRoles"
                                                  ValueSelector="r => r.Id"
                                                  DisplaySelector="r => r.Name" />
                         </div>
                     </div>
-
                 </div>
 
                 <div class="p-0">
-                    <DataGrid TItem="CategoryDto" TKey="int" Items="FilteredCategories" IsLoading="categoryState.IsLoading" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
+                    <DataGrid TItem="TicketHub.Application.DTOs.CategoryDto" TKey="int" Items="FilteredCategories" IsLoading="CatState.Value.IsLoading" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
                         <HeaderTemplate>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[25%]">عنوان نوع تیکت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">پروژه‌ها</th>
@@ -113,14 +107,13 @@
                                 </div>
                             </td>
 
-                            <!-- ستون پروژه ها (سبز رنگ) -->
                             <td class="px-6 py-4 w-[20%]">
                                 <div class="flex flex-wrap gap-1">
-                                    @if (category.ProjectIds != null && category.ProjectIds.Any() && ProjectFacade.State.Projects != null)
+                                    @if (category.ProjectIds != null && category.ProjectIds.Any() && ProjState.Value.Projects != null)
                                     {
                                         @foreach (var projectId in category.ProjectIds)
                                         {
-                                            var project = ProjectFacade.State.Projects.FirstOrDefault(p => p.Id == projectId);
+                                            var project = ProjState.Value.Projects.FirstOrDefault(p => p.Id == projectId);
                                             if (project != null)
                                             {
                                                 <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 truncate max-w-[120px] align-middle" title="@project.Name">
@@ -136,14 +129,13 @@
                                 </div>
                             </td>
 
-                            <!-- ستون نقش ها (آبی رنگ با Badge) -->
                             <td class="px-6 py-4 w-[20%]">
                                 <div class="flex flex-wrap gap-1">
-                                    @if (category.RoleIds != null && category.RoleIds.Any() && RoleState.Roles != null)
+                                    @if (category.RoleIds != null && category.RoleIds.Any() && ProjState.Value.Roles != null)
                                     {
                                         @foreach (var roleId in category.RoleIds)
                                         {
-                                            var role = RoleState.Roles.FirstOrDefault(r => r.Id == roleId);
+                                            var role = ProjState.Value.Roles.FirstOrDefault(r => r.Id == roleId);
                                             if (role != null)
                                             {
                                                 <Badge>
@@ -199,4 +191,8 @@
                    OnActivate="BulkActivateCategories"
                    OnDeactivate="BulkDeactivateCategories" />
 
-<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(isError ? successMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
+<ConfirmDeleteModal IsOpen="showDeleteModal"
+                    Description="@deleteModalDescription"
+                    ErrorMessage="@(CatState.Value.IsError ? CatState.Value.StatusMessage : null)"
+                    OnConfirm="ConfirmDelete"
+                    OnCancel="CancelDelete" />
