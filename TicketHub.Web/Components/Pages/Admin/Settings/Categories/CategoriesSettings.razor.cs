@@ -18,6 +18,7 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private HashSet<int> selectedCategoryIds = new();
     private bool isBulkDelete = false;
     private string deleteModalDescription = string.Empty;
+    private bool? selectedFilterStatus = null;
 
     private CategoryDto categoryModel = new();
     private string? successMessage;
@@ -32,11 +33,11 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private bool showDeleteModal = false;
     private CategoryDto? categoryToDelete;
 
-    // فیلتر کردن از State خوانده می‌شود
+    // به‌روزرسانی پراپرتی FilteredCategories برای اعمال فیلتر وضعیت
     private IEnumerable<CategoryDto> FilteredCategories =>
-        string.IsNullOrWhiteSpace(searchTerm)
-            ? categoryState.Categories
-            : categoryState.Categories.Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        categoryState.Categories
+            .Where(c => string.IsNullOrWhiteSpace(searchTerm) || c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Where(c => selectedFilterStatus == null || c.IsActive == selectedFilterStatus);
 
     protected override async Task OnInitializedAsync()
     {
@@ -193,5 +194,12 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         categoryState.OnChange -= StateHasChanged;
         ProjectFacade.State.OnChange -= StateHasChanged;
         RoleState.OnChange -= StateHasChanged;
+    }
+
+    // اضافه کردن متد تغییر وضعیت فیلتر
+    private void FilterByStatus(bool? status)
+    {
+        selectedFilterStatus = status;
+        // از آنجا که از متغیرهای لوکال استفاده می‌شود و StateHasChanged از طریق OnValueChanged صدا زده می‌شود، نیاز به کار اضافه‌ای نیست
     }
 }

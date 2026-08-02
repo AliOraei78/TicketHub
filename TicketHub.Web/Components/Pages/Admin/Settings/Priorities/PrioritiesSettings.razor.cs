@@ -23,14 +23,16 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
     protected bool isEditing = false;
     protected int? editingId = null;
 
+    protected bool? selectedFilterStatus = null;
+
     protected bool showDeleteModal = false;
     protected PriorityDto? itemToDelete;
 
     // خواندن داده‌ها از State
     protected IEnumerable<PriorityDto> FilteredPriorities =>
-        string.IsNullOrWhiteSpace(searchTerm)
-            ? (State.Priorities ?? Enumerable.Empty<PriorityDto>())
-            : (State.Priorities ?? Enumerable.Empty<PriorityDto>()).Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        (State.Priorities ?? Enumerable.Empty<PriorityDto>())
+        .Where(p => string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(p => selectedFilterStatus == null || p.IsActive == selectedFilterStatus);
 
     protected override void OnInitialized()
     {
@@ -126,5 +128,11 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
             State.SetMessage("عملیات با خطا مواجه شد!", true);
             _ = Task.Delay(4000).ContinueWith(_ => State.SetMessage(null));
         }
+    }
+
+    protected void FilterByStatus(bool? status)
+    {
+        selectedFilterStatus = status;
+        // NotifyStateChanged در State معمولا صدا زده می‌شود
     }
 }

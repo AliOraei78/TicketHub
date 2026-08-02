@@ -17,8 +17,13 @@
     </PageHeader>
 
     <div class="flex flex-col sm:flex-row gap-3 items-center mb-2">
-        <!-- فیلتر وضعیت به صورت کشویی (Sliding Segmented Control) -->
-        <div class="relative flex rounded-xl bg-gray-100 p-1 shrink-0 h-[46px] items-center">
+
+        <div class="w-full sm:w-72">
+            <SearchBox Placeholder="جست و جوی عنوان..." OnSearchChanged="HandleSearch" />
+        </div>
+
+        <!-- استفاده از نگهدارنده با عرض ثابت به جای کانتینر استایل‌دار قبلی -->
+        <div class="w-full sm:w-48">
             <GenericStatusFilter TValue="bool?"
                                  Options="new bool?[] { null, true, false }"
                                  SelectedValue="State.SelectedFilterStatus"
@@ -29,10 +34,6 @@
                     @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
                 </ItemTemplate>
             </GenericStatusFilter>
-        </div>
-
-        <div class="w-full sm:w-72">
-            <SearchBox Placeholder="جست و جوی عنوان..." OnSearchChanged="HandleSearch" />
         </div>
     </div>
 

@@ -38,16 +38,19 @@
                                  ValueSelector="p => p.Id"
                                  DisplaySelector="p => p.Name" />
 
-            <GenericStatusFilter TValue="bool?"
-                                 Options="@(new bool?[] { null, true, false })"
-                                 SelectedValue="State.SelectedFilterStatus"
-                                 OnValueChanged="FilterByStatus"
-                                 BackgroundClassSelector="@(val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400")"
-                                 ItemClassSelector="@((item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700")">
-                <ItemTemplate Context="status">
-                    @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
-                </ItemTemplate>
-            </GenericStatusFilter>
+            <!-- قرار دادن فیلتر وضعیت در یک نگهدارنده با عرض محدود -->
+            <div class="w-full sm:w-48">
+                <GenericStatusFilter TValue="bool?"
+                                     Options="@(new bool?[] { null, true, false })"
+                                     SelectedValue="State.SelectedFilterStatus"
+                                     OnValueChanged="FilterByStatus"
+                                     BackgroundClassSelector="@(val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400")"
+                                     ItemClassSelector="@((item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700")">
+                    <ItemTemplate Context="status">
+                        @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
+                    </ItemTemplate>
+                </GenericStatusFilter>
+            </div>
         </ListFilterToolbar>
     </div>
 

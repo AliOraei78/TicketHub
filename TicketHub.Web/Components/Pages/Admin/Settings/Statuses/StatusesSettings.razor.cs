@@ -27,11 +27,13 @@ public partial class StatusesSettings : ComponentBase, IDisposable
     private bool showDeleteModal = false;
     private StatusDto? statusToDelete;
 
+    protected bool? selectedFilterStatus = null;
+
     // Filter statuses based on search term
     private IEnumerable<StatusDto> FilteredStatuses =>
-            string.IsNullOrWhiteSpace(Facade.State.SearchTerm)
-                ? (Facade.State.Statuses ?? Enumerable.Empty<StatusDto>())
-                : (Facade.State.Statuses ?? Enumerable.Empty<StatusDto>()).Where(s => s.Name.Contains(Facade.State.SearchTerm, StringComparison.OrdinalIgnoreCase));
+        (Facade.State.Statuses ?? Enumerable.Empty<StatusDto>())
+        .Where(s => string.IsNullOrWhiteSpace(Facade.State.SearchTerm) || s.Name.Contains(Facade.State.SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(s => selectedFilterStatus == null || s.IsActive == selectedFilterStatus);
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,5 +176,10 @@ public partial class StatusesSettings : ComponentBase, IDisposable
         {
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
+    }
+
+    private void FilterByStatus(bool? status)
+    {
+        selectedFilterStatus = status;
     }
 }

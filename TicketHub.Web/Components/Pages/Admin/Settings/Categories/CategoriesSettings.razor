@@ -35,12 +35,31 @@
         <!-- Data Grid -->
         <div class="md:col-span-2">
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h3 class="font-bold text-gray-800 text-lg">لیست انواع تیکت</h3>
-                    <div class="w-full sm:w-72">
-                        <SearchBox Placeholder="جستجو..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-start gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg whitespace-nowrap">لیست انواع تیکت</h3>
+
+                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">  
+                        <div class="w-full sm:w-45">
+                            <SearchBox Placeholder="جستجو..." SearchTerm="@searchTerm" OnSearchChanged="HandleSearch" />
+                        </div>
+
+                        <!-- اضافه شدن فیلتر وضعیت با عرض ثابت -->
+                        <div class="w-full sm:w-45">
+                            <GenericStatusFilter TValue="bool?"
+                                                 Options="new bool?[] { null, true, false }"
+                                                 SelectedValue="selectedFilterStatus"
+                                                 OnValueChanged="FilterByStatus"
+                                                 BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
+                                                 ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
+                                <ItemTemplate Context="status">
+                                    @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
+                                </ItemTemplate>
+                            </GenericStatusFilter>
+                        </div>
                     </div>
                 </div>
+
                 <div class="p-0">
                     <DataGrid TItem="CategoryDto" TKey="int" Items="FilteredCategories" IsLoading="categoryState.IsLoading" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
                         <HeaderTemplate>
