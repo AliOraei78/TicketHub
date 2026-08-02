@@ -37,4 +37,16 @@ public class StatusService : IStatusService
         }
         await _repository.DeleteRangeAsync(entities);
     }
+
+    public async Task UpdateStatesStatusAsync(IEnumerable<int> ids, bool isActive)
+    {
+        var roles = await _repository.GetAllAsync();
+        var rolesToUpdate = roles.Where(r => ids.Contains(r.Id)).ToList();
+
+        foreach (var role in rolesToUpdate)
+        {
+            role.IsActive = isActive;
+            await _repository.UpdateAsync(role);
+        }
+    }
 }

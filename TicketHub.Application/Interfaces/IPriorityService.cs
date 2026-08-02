@@ -9,4 +9,5 @@ public interface IPriorityService
     Task UpdateAsync(PriorityDto priorityDto);
     Task DeleteAsync(int id);
     Task DeleteRangeAsync(IEnumerable<int> ids);
+    Task UpdatePrioritiesStatusAsync(IEnumerable<int> ids, bool isActive);
 }

@@ -174,4 +174,16 @@ public class CategoryService : ICategoryService
             await _categoryRepo.DeleteRangeAsync(toDelete);
         }
     }
+
+    public async Task UpdateCategoriesStatusAsync(IEnumerable<int> ids, bool isActive)
+    {
+        var roles = await _categoryRepo.GetAllAsync();
+        var rolesToUpdate = roles.Where(r => ids.Contains(r.Id)).ToList();
+
+        foreach (var role in rolesToUpdate)
+        {
+            role.IsActive = isActive;
+            await _categoryRepo.UpdateAsync(role);
+        }
+    }
 }

@@ -16,4 +16,5 @@ public interface ICategoryService
     Task UpdateAsync(CategoryDto category);
     Task DeleteAsync(CategoryDto category);
     Task DeleteRangeAsync(IEnumerable<int> ids);
+    Task UpdateCategoriesStatusAsync(IEnumerable<int> ids, bool isActive);
 }

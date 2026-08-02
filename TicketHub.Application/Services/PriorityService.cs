@@ -34,4 +34,16 @@ public class PriorityService : IPriorityService
         var items = (await _repository.GetAllAsync()).Where(p => ids.Contains(p.Id)).ToList();
         await _repository.DeleteRangeAsync(items);
     }
+
+    public async Task UpdatePrioritiesStatusAsync(IEnumerable<int> ids, bool isActive)
+    {
+        var roles = await _repository.GetAllAsync();
+        var rolesToUpdate = roles.Where(r => ids.Contains(r.Id)).ToList();
+
+        foreach (var role in rolesToUpdate)
+        {
+            role.IsActive = isActive;
+            await _repository.UpdateAsync(role);
+        }
+    }
 }

@@ -12,4 +12,5 @@ public class StatusDto
     public string Name { get; set; } = string.Empty;
     public string ColorCode { get; set; } = "#3B82F6";
     public bool NeedApproval { get; set; }
+    public bool IsActive { get; set; } = true;
 }

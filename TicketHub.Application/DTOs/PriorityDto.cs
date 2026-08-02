@@ -12,4 +12,5 @@ public class PriorityDto
     public string Name { get; set; } = string.Empty;
     public string ColorCode { get; set; } = string.Empty;
     public int Level { get; set; }
+    public bool IsActive { get; set; } = true;
 }

@@ -9,4 +9,6 @@ public interface IStatusService
     Task UpdateAsync(StatusDto dto);
     Task DeleteAsync(int id);
     Task DeleteRangeAsync(IEnumerable<int> ids);
+    Task UpdateStatesStatusAsync(IEnumerable<int> ids, bool isActive);
+
 }
