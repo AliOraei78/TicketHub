@@ -37,7 +37,7 @@ namespace TicketHub.Infrastructure.Repositories
             }
 
             // Using AsNoTracking for read-only performance optimization
-            return await query.AsNoTracking().ToListAsync();
+            return await query.AsNoTracking().AsSplitQuery().ToListAsync();
         }
 
         public async Task AddAsync(T entity)

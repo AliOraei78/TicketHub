@@ -28,6 +28,8 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<WorkflowStatus> WorkflowStatuses { get; set; }
         public DbSet<FieldType> FieldTypes { get; set; }
         public DbSet<TransitionField> TransitionFields { get; set; }
+        public DbSet<CategoryProject> CategoryProjects { get; set; }
+        public DbSet<CategoryRole> CategoryRoles { get; set; }
 
         // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
         // کل متد OnModelCreating را با این کد جایگزین کن:
@@ -144,6 +146,42 @@ namespace TicketHub.Infrastructure.Data
             modelBuilder.Entity<RoleProject>()
                 .HasIndex(rp => new { rp.RoleId, rp.ProjectId })
                 .IsUnique();
+
+            // تنظیمات CategoryProject
+            modelBuilder.Entity<CategoryProject>().HasKey(cp => cp.Id);
+            modelBuilder.Entity<CategoryProject>()
+                .HasIndex(cp => new { cp.CategoryId, cp.ProjectId })
+                .IsUnique();
+
+            modelBuilder.Entity<CategoryProject>()
+                .HasOne(cp => cp.Category)
+                .WithMany(c => c.CategoryProjects)
+                .HasForeignKey(cp => cp.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CategoryProject>()
+                .HasOne(cp => cp.Project)
+                .WithMany(p => p.CategoryProjects)
+                .HasForeignKey(cp => cp.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // تنظیمات CategoryRole
+            modelBuilder.Entity<CategoryRole>().HasKey(cr => cr.Id);
+            modelBuilder.Entity<CategoryRole>()
+                .HasIndex(cr => new { cr.CategoryId, cr.RoleId })
+                .IsUnique();
+
+            modelBuilder.Entity<CategoryRole>()
+                .HasOne(cr => cr.Category)
+                .WithMany(c => c.CategoryRoles)
+                .HasForeignKey(cr => cr.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CategoryRole>()
+                .HasOne(cr => cr.Role)
+                .WithMany(r => r.CategoryRoles)
+                .HasForeignKey(cr => cr.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

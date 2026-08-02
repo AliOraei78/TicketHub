@@ -9,10 +9,6 @@ public class MapsterConfig : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        // تنظیمات صریح برای مواردی که نام‌گذاری تطابق دقیق ندارد
-        config.NewConfig<Ticket, TicketListDto>()
-              .Map(dest => dest.StatusColorCode, src => src.Status.ColorCode);
-
         // مپ کردن شناسه‌ی نقش‌ها از موجودیت واسط به لیست اعداد در DTO
         config.NewConfig<Project, ProjectDto>()
               .Map(dest => dest.RoleIds, src => src.RoleProjects != null
@@ -64,6 +60,14 @@ public class MapsterConfig : IRegister
               .Ignore(dest => dest.Transition)
               .Ignore(dest => dest.FieldType)
               .Ignore(dest => dest.Attachments);
+
+        config.NewConfig<Category, CategoryDto>()
+      .Map(dest => dest.ProjectIds, src => src.CategoryProjects != null
+                                        ? src.CategoryProjects.Select(cp => cp.ProjectId).ToList()
+                                        : new List<int>())
+      .Map(dest => dest.RoleIds, src => src.CategoryRoles != null
+                                        ? src.CategoryRoles.Select(cr => cr.RoleId).ToList()
+                                        : new List<int>());
 
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);

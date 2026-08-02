@@ -30,6 +30,7 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         var entity = await _dbSet
             .Include(w => w.Transitions)
             .Include(w => w.WorkflowStatuses)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(w => w.Id == id);
 
         if (entity != null)
@@ -95,6 +96,7 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         return await _dbSet
             .Include(w => w.WorkflowStatuses)
             .Include(w => w.Transitions)
+            .AsSplitQuery()
             .ToListAsync();
     }
 }

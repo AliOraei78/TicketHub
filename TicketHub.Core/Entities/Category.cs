@@ -7,4 +7,6 @@ public class Category
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+    public ICollection<CategoryProject> CategoryProjects { get; set; } = new List<CategoryProject>();
+    public ICollection<CategoryRole> CategoryRoles { get; set; } = new List<CategoryRole>();
 }
