@@ -10,4 +10,6 @@ public class Category
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     public ICollection<CategoryProject> CategoryProjects { get; set; } = new List<CategoryProject>();
     public ICollection<CategoryRole> CategoryRoles { get; set; } = new List<CategoryRole>();
+    public ICollection<FieldCategory> FieldCategories { get; set; } = new List<FieldCategory>();
+
 }

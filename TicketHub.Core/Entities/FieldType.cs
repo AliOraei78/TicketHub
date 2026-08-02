@@ -7,4 +7,5 @@ public class FieldType
     public bool IsActive { get; set; } = true;
 
     public ICollection<TransitionField> TransitionFields { get; set; } = new List<TransitionField>();
+    public ICollection<TicketField> TicketFields { get; set; } = new List<TicketField>();
 }
