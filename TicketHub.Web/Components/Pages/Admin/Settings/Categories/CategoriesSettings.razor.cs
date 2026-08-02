@@ -19,6 +19,8 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private bool isBulkDelete = false;
     private string deleteModalDescription = string.Empty;
     private bool? selectedFilterStatus = null;
+    private List<int> selectedFilterProjectIds = new();
+    private List<int> selectedFilterRoleIds = new();
 
     private CategoryDto categoryModel = new();
     private string? successMessage;
@@ -37,7 +39,9 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private IEnumerable<CategoryDto> FilteredCategories =>
         categoryState.Categories
             .Where(c => string.IsNullOrWhiteSpace(searchTerm) || c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-            .Where(c => selectedFilterStatus == null || c.IsActive == selectedFilterStatus);
+            .Where(c => selectedFilterStatus == null || c.IsActive == selectedFilterStatus)
+            .Where(c => !selectedFilterProjectIds.Any() || (c.ProjectIds != null && c.ProjectIds.Any(p => selectedFilterProjectIds.Contains(p))))
+            .Where(c => !selectedFilterRoleIds.Any() || (c.RoleIds != null && c.RoleIds.Any(r => selectedFilterRoleIds.Contains(r))));
 
     protected override async Task OnInitializedAsync()
     {
@@ -200,6 +204,15 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     private void FilterByStatus(bool? status)
     {
         selectedFilterStatus = status;
-        // از آنجا که از متغیرهای لوکال استفاده می‌شود و StateHasChanged از طریق OnValueChanged صدا زده می‌شود، نیاز به کار اضافه‌ای نیست
+    }
+
+    private void FilterByProjects(List<int> projectIds)
+    {
+        selectedFilterProjectIds = projectIds;
+    }
+
+    private void FilterByRoles(List<int> roleIds)
+    {
+        selectedFilterRoleIds = roleIds;
     }
 }
