@@ -55,6 +55,18 @@ public class PriorityFacade
         ClearMessage();
     }
 
+    public async Task UpdateStatusRangeAsync(IEnumerable<int> ids, bool isActive)
+    {
+        await _service.UpdatePrioritiesStatusAsync(ids, isActive);
+
+        var count = ids.Count();
+        var action = isActive ? "فعال" : "غیرفعال";
+        _state.SetMessage($"{count} اولویت با موفقیت {action} {(count == 1 ? "شد" : "شدند")}.");
+
+        await LoadPrioritiesAsync();
+        ClearMessage();
+    }
+
     private void ClearMessage() =>
         _ = Task.Delay(4000).ContinueWith(_ => _state.SetMessage(null));
 }

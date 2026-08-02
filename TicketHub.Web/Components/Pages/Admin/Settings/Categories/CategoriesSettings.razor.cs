@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Mapster;
+using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Web.Facades;
 using TicketHub.Web.State;
@@ -82,13 +83,7 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         editingCategoryId = category.Id;
 
         // ایجاد یک کپی جدید به همراه لیست پروژه‌ها و نقش‌ها
-        categoryModel = new CategoryDto
-        {
-            Id = category.Id,
-            Name = category.Name,
-            ProjectIds = category.ProjectIds?.ToList() ?? new List<int>(),
-            RoleIds = category.RoleIds?.ToList() ?? new List<int>()
-        };
+        categoryModel = category.Adapt<CategoryDto>();
     }
 
     private void CancelEdit()
@@ -165,6 +160,29 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         finally
         {
             CancelDelete();
+            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
+        }
+    }
+
+    private async Task BulkActivateCategories() => await UpdateCategoriesStatus(true, "فعال");
+
+    private async Task BulkDeactivateCategories() => await UpdateCategoriesStatus(false, "غیرفعال");
+
+    private async Task UpdateCategoriesStatus(bool isActive, string actionName)
+    {
+        try
+        {
+            await CategoryFacade.UpdateStatusRangeAsync(selectedCategoryIds, isActive);
+            successMessage = $"{selectedCategoryIds.Count} نوع تیکت با موفقیت {actionName} {(selectedCategoryIds.Count == 1 ? "شد" : "شدند")}.";
+            ClearSelection();
+        }
+        catch (Exception)
+        {
+            isError = true;
+            successMessage = "عملیات با خطا مواجه شد!";
+        }
+        finally
+        {
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
     }

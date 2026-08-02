@@ -10,7 +10,7 @@ public class CategoryDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<int> ProjectIds { get; set; } = new();
     public List<int> RoleIds { get; set; } = new();

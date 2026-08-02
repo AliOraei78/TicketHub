@@ -43,11 +43,12 @@
                 <div class="p-0">
                     <DataGrid TItem="PriorityDto" TKey="int" Items="FilteredPriorities" IsLoading="State.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="اولویتی">
                         <HeaderTemplate>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان، رنگ و سطح</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[65%]">عنوان، رنگ و سطح</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">وضعیت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
                         </HeaderTemplate>
                         <RowTemplate Context="priority">
-                            <td class="px-6 py-4 w-[80%]">
+                            <td class="px-6 py-4 w-[65%]">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5" style="background-color: @(priority.ColorCode ?? "#ccc");">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,6 +64,22 @@
                                     </div>
                                 </div>
                             </td>
+                            <td class="px-6 py-4 w-[15%]">
+                                @if (priority.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-medium">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]"></span>
+                                        فعال
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 text-xs font-medium">
+                                        غیرفعال
+                                    </span>
+                                }
+                            </td>
+
                             <td class="px-6 py-4 text-center w-[15%]">
                                 <div class="flex items-center justify-center gap-2">
                                     <button type="button" @onclick="() => EditPriority(priority)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg" title="ویرایش">
@@ -81,5 +98,10 @@
     </div>
 </div>
 
-<BulkActionToolbar SelectedCount="selectedIds.Count" OnCancel="ClearSelection" OnDelete="OpenBulkDeleteModal" />
+<BulkActionToolbar SelectedCount="selectedIds.Count" 
+                    OnCancel="ClearSelection" 
+                    OnDelete="OpenBulkDeleteModal" 
+                    OnActivate="BulkActivatePriorities"
+                    OnDeactivate="BulkDeactivatePriorities" />
+
 <ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(State.IsError ? State.StatusMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />

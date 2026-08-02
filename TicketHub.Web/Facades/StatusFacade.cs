@@ -25,4 +25,10 @@ public class StatusFacade
     public async Task UpdateAsync(StatusDto dto) => await _statusService.UpdateAsync(dto);
     public async Task DeleteAsync(int id) => await _statusService.DeleteAsync(id);
     public async Task DeleteRangeAsync(IEnumerable<int> ids) => await _statusService.DeleteRangeAsync(ids);
+
+    public async Task UpdateStatusRangeAsync(IEnumerable<int> ids, bool isActive)
+    {
+        await _statusService.UpdateStatesStatusAsync(ids, isActive);
+        await LoadStatusesAsync();
+    }
 }

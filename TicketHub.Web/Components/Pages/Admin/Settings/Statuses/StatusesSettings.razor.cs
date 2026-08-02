@@ -152,4 +152,27 @@ public partial class StatusesSettings : ComponentBase, IDisposable
             _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
         }
     }
+
+    private async Task BulkActivateStatuses() => await UpdateStatusesStatus(true, "فعال");
+    private async Task BulkDeactivateStatuses() => await UpdateStatusesStatus(false, "غیرفعال");
+
+    private async Task UpdateStatusesStatus(bool isActive, string actionName)
+    {
+        try
+        {
+            await Facade.UpdateStatusRangeAsync(Facade.State.SelectedStatusIds, isActive);
+            var count = Facade.State.SelectedStatusIds.Count;
+            successMessage = $"{count} وضعیت با موفقیت {actionName} {(count == 1 ? "شد" : "شدند")}.";
+            ClearSelection();
+        }
+        catch (Exception)
+        {
+            isError = true;
+            successMessage = "عملیات با خطا مواجه شد!";
+        }
+        finally
+        {
+            _ = Task.Delay(4000).ContinueWith(_ => { successMessage = null; isError = false; InvokeAsync(StateHasChanged); });
+        }
+    }
 }

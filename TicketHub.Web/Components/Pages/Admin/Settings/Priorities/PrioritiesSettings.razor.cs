@@ -1,4 +1,5 @@
 ﻿// Priorities.razor.cs
+using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Core.Entities;
@@ -58,10 +59,7 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
     {
         isEditing = true;
         editingId = item.Id;
-        priorityModel.Name = item.Name;
-        priorityModel.Id = item.Id;
-        priorityModel.ColorCode = item.ColorCode ?? "#6B7280";
-        priorityModel.Level = item.Level;
+        priorityModel = item.Adapt<PriorityDto>();
     }
 
     protected void CancelEdit()
@@ -111,5 +109,22 @@ public partial class PrioritiesSettings : ComponentBase, IDisposable
             if (isEditing && editingId == itemToDelete.Id) CancelEdit();
         }
         CancelDelete();
+    }
+
+    protected async Task BulkActivatePriorities() => await UpdatePrioritiesStatus(true);
+    protected async Task BulkDeactivatePriorities() => await UpdatePrioritiesStatus(false);
+
+    private async Task UpdatePrioritiesStatus(bool isActive)
+    {
+        try
+        {
+            await Facade.UpdateStatusRangeAsync(selectedIds, isActive);
+            ClearSelection();
+        }
+        catch (Exception)
+        {
+            State.SetMessage("عملیات با خطا مواجه شد!", true);
+            _ = Task.Delay(4000).ContinueWith(_ => State.SetMessage(null));
+        }
     }
 }

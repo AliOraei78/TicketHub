@@ -19,6 +19,11 @@
             <label for="needApproval" class="text-sm font-medium text-gray-700 cursor-pointer select-none">نیاز به تایید دارد؟</label>
         </div>
 
+        <div class="flex items-center mt-3">
+            <InputCheckbox @bind-Value="Model.IsActive" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" id="stateIsActive" />
+            <label for="statusIsActive" class="mr-2 block text-sm font-medium text-gray-700">وضعیت فعال است؟</label>
+        </div>
+
         <div class="flex gap-2 pt-2">
             <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
                 @(IsEditing ? "ذخیره تغییرات" : "ثبت وضعیت")

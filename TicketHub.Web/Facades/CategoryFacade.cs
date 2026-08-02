@@ -48,4 +48,10 @@ public class CategoryFacade
         await _categoryService.DeleteRangeAsync(ids);
         await LoadCategoriesAsync();
     }
+
+    public async Task UpdateStatusRangeAsync(IEnumerable<int> ids, bool isActive)
+    {
+        await _categoryService.UpdateCategoriesStatusAsync(ids, isActive);
+        await LoadCategoriesAsync();
+    }
 }
