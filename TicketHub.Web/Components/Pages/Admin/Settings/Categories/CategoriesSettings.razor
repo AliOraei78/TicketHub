@@ -23,6 +23,8 @@
                 <!-- استفاده از کامپوننت Dumb برای فرم -->
                 <CategoryForm Model="categoryModel"
                               IsEditing="isEditing"
+                              AvailableProjects="ProjectFacade.State.Projects"
+                              AvailableRoles="RoleState.Roles ?? Enumerable.Empty<RoleDto>()"
                               OnValidSubmit="HandleSubmitCategory"
                               OnCancel="CancelEdit"
                               SuccessMessage="@successMessage"
@@ -42,12 +44,14 @@
                 <div class="p-0">
                     <DataGrid TItem="CategoryDto" TKey="int" Items="FilteredCategories" IsLoading="categoryState.IsLoading" KeySelector="c => c.Id" SelectedKeys="selectedCategoryIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="نوع تیکتی">
                         <HeaderTemplate>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[80%]">عنوان نوع تیکت</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[40%]">عنوان نوع تیکت</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">پروژه‌ها</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[25%]">نقش‌ها</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
                         </HeaderTemplate>
 
                         <RowTemplate Context="category">
-                            <td class="px-6 py-4 w-[80%]">
+                            <td class="px-6 py-4 w-[40%]">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5 bg-gray-100">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
@@ -60,6 +64,53 @@
                                     </div>
                                 </div>
                             </td>
+
+                            <!-- ستون پروژه ها (سبز رنگ) -->
+                            <td class="px-6 py-4 w-[20%]">
+                                <div class="flex flex-wrap gap-1">
+                                    @if (category.ProjectIds != null && category.ProjectIds.Any() && ProjectFacade.State.Projects != null)
+                                    {
+                                        @foreach (var projectId in category.ProjectIds)
+                                        {
+                                            var project = ProjectFacade.State.Projects.FirstOrDefault(p => p.Id == projectId);
+                                            if (project != null)
+                                            {
+                                                <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 truncate max-w-[120px] align-middle" title="@project.Name">
+                                                    @project.Name
+                                                </span>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs">بدون پروژه</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <!-- ستون نقش ها (آبی رنگ با Badge) -->
+                            <td class="px-6 py-4 w-[25%]">
+                                <div class="flex flex-wrap gap-1">
+                                    @if (category.RoleIds != null && category.RoleIds.Any() && RoleState.Roles != null)
+                                    {
+                                        @foreach (var roleId in category.RoleIds)
+                                        {
+                                            var role = RoleState.Roles.FirstOrDefault(r => r.Id == roleId);
+                                            if (role != null)
+                                            {
+                                                <Badge>
+                                                    <span class="block truncate max-w-[100px]" title="@role.Name">@role.Name</span>
+                                                </Badge>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs">بدون نقش</span>
+                                    }
+                                </div>
+                            </td>
+
                             <td class="px-6 py-4 text-center w-[15%]">
                                 <div class="flex items-center justify-center gap-2">
                                     <button type="button" @onclick="() => EditCategory(category)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition" title="ویرایش">

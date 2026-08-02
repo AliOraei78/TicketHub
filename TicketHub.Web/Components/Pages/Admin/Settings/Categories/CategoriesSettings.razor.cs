@@ -10,6 +10,9 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     // اینجکت کردن Facade و State به جای سرویس مستقیم
     [Inject] public CategoryFacade CategoryFacade { get; set; } = default!;
     [Inject] public CategoryState categoryState { get; set; } = default!;
+    [Inject] public ProjectFacade ProjectFacade { get; set; } = default!;
+    [Inject] public RoleFacade RoleFacade { get; set; } = default!;
+    [Inject] public RoleState RoleState { get; set; } = default!;
 
     private HashSet<int> selectedCategoryIds = new();
     private bool isBulkDelete = false;
@@ -38,8 +41,12 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     {
         // ساب‌اسکرایب به تغییرات State
         categoryState.OnChange += StateHasChanged;
+        ProjectFacade.State.OnChange += StateHasChanged;
+        RoleState.OnChange += StateHasChanged;
 
         await CategoryFacade.LoadCategoriesAsync();
+        await ProjectFacade.InitializeAsync();
+        await RoleFacade.LoadRolesAsync();
     }
 
     private async Task HandleSubmitCategory()
@@ -74,8 +81,14 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
         isEditing = true;
         editingCategoryId = category.Id;
 
-        // ایجاد یک کپی جدید تا تغییرات موقت مستقیما روی استیت اعمال نشود
-        categoryModel = new CategoryDto { Id = category.Id, Name = category.Name };
+        // ایجاد یک کپی جدید به همراه لیست پروژه‌ها و نقش‌ها
+        categoryModel = new CategoryDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            ProjectIds = category.ProjectIds?.ToList() ?? new List<int>(),
+            RoleIds = category.RoleIds?.ToList() ?? new List<int>()
+        };
     }
 
     private void CancelEdit()
@@ -160,5 +173,7 @@ public partial class CategoriesSettings : ComponentBase, IDisposable
     {
         // آنساب‌اسکرایب برای جلوگیری از مموری لیک
         categoryState.OnChange -= StateHasChanged;
+        ProjectFacade.State.OnChange -= StateHasChanged;
+        RoleState.OnChange -= StateHasChanged;
     }
 }

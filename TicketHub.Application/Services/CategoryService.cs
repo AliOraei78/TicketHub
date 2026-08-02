@@ -125,11 +125,47 @@ public class CategoryService : ICategoryService
         }
     }
 
-    public async Task DeleteAsync(CategoryDto categoryDto) =>
+    public async Task DeleteAsync(CategoryDto categoryDto)
+    {
+        // حذف پروژه‌های مرتبط
+        var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
+        var projectsToDelete = allCategoryProjects.Where(cp => cp.CategoryId == categoryDto.Id).ToList();
+        if (projectsToDelete.Any())
+        {
+            await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
+        }
+
+        // حذف نقش‌های مرتبط
+        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
+        var rolesToDelete = allCategoryRoles.Where(cr => cr.CategoryId == categoryDto.Id).ToList();
+        if (rolesToDelete.Any())
+        {
+            await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
+        }
+
+        // در نهایت حذف خود کتگوری
         await _categoryRepo.DeleteAsync(categoryDto.Id);
+    }
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
+        // حذف پروژه‌های مرتبط با این دسته‌ها
+        var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
+        var projectsToDelete = allCategoryProjects.Where(cp => ids.Contains(cp.CategoryId)).ToList();
+        if (projectsToDelete.Any())
+        {
+            await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
+        }
+
+        // حذف نقش‌های مرتبط با این دسته‌ها
+        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
+        var rolesToDelete = allCategoryRoles.Where(cr => ids.Contains(cr.CategoryId)).ToList();
+        if (rolesToDelete.Any())
+        {
+            await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
+        }
+
+        // در نهایت حذف خود دسته‌ها
         var allCategories = await _categoryRepo.GetAllAsync();
         var toDelete = allCategories.Where(c => ids.Contains(c.Id)).ToList();
 
