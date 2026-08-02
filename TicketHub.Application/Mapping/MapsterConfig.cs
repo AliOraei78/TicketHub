@@ -62,12 +62,19 @@ public class MapsterConfig : IRegister
               .Ignore(dest => dest.Attachments);
 
         config.NewConfig<Category, CategoryDto>()
-      .Map(dest => dest.ProjectIds, src => src.CategoryProjects != null
-                                        ? src.CategoryProjects.Select(cp => cp.ProjectId).ToList()
-                                        : new List<int>())
-      .Map(dest => dest.RoleIds, src => src.CategoryRoles != null
-                                        ? src.CategoryRoles.Select(cr => cr.RoleId).ToList()
-                                        : new List<int>());
+              .Map(dest => dest.ProjectIds, src => src.CategoryProjects != null
+                                                ? src.CategoryProjects.Select(cp => cp.ProjectId).ToList()
+                                                : new List<int>())
+              .Map(dest => dest.RoleIds, src => src.CategoryRoles != null
+                                                ? src.CategoryRoles.Select(cr => cr.RoleId).ToList()
+                                                : new List<int>());
+
+        config.NewConfig<TicketField, TicketFieldDto>()
+              .Map(dest => dest.CategoryIds, src => src.FieldCategories != null
+                                                ? src.FieldCategories.Select(rp => rp.CategoryId).ToList()
+                                                : new List<int>());
+        config.NewConfig<TicketFieldDto, TicketField>()
+              .Ignore(dest => dest.FieldType);
 
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
