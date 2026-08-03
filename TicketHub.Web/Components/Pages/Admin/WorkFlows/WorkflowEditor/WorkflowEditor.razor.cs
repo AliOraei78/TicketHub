@@ -76,9 +76,41 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private void SaveWorkflowAsync()
         {
+            var errors = new List<string>();
+
+            // اعتبارسنجی جریان کاری
             if (string.IsNullOrWhiteSpace(WorkflowName))
+                errors.Add("عنوان جریان کاری وارد نشده است");
+
+            // اعتبارسنجی مسیرها و فیلدهای سفارشی
+            foreach (var conn in Connections)
             {
-                Dispatcher.Dispatch(new SaveWorkflowEditorFailedAction("لطفاً عنوان جریان کاری را وارد کنید. این فیلد الزامی است."));
+                if (string.IsNullOrWhiteSpace(conn.Name))
+                    errors.Add("عنوان انتقال در یکی از مسیرها وارد نشده است");
+
+                foreach (var field in conn.CustomFields)
+                {
+                    if (string.IsNullOrWhiteSpace(field.FieldName))
+                        errors.Add($"عنوان فیلد در مسیر '{conn.Name ?? "بدون نام"}' خالی است");
+
+                    if (field.FieldTypeId == 0)
+                        errors.Add($"نوع فیلد برای '{field.FieldName ?? "بدون نام"}' انتخاب نشده است");
+
+                    var fieldType = EdState.Value.AvailableFieldTypes.FirstOrDefault(t => t.Id == field.FieldTypeId);
+                    // بررسی فیلدهای DropDown و MultipleDropDown
+                    if (fieldType != null && fieldType.Type.Contains("DropDown", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (string.IsNullOrWhiteSpace(field.Options))
+                            errors.Add($"گزینه‌های فیلد '{field.FieldName ?? "بدون نام"}' (از نوع لیست) وارد نشده است");
+                    }
+                }
+            }
+
+            // نمایش گروهی خطاها
+            if (errors.Any())
+            {
+                var errorMessage = string.Join("\n", errors.Select(e => $". {e}"));
+                Dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(errorMessage));
                 return;
             }
 
