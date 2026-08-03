@@ -80,6 +80,7 @@ builder.Services.AddScoped<IPriorityService, PriorityService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
+builder.Services.AddScoped<ITicketFieldService, TicketFieldService>();
 builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
 
 // --------- تنظیمات DNTCaptcha ---------

@@ -1,0 +1,69 @@
+﻿@using TicketHub.Application.DTOs
+@using TicketHub.Web.Components.Shared
+
+<EditForm Model="Model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-rose-600 text-sm mb-4 list-disc list-inside" />
+
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان فیلد</label>
+            <InputText @bind-Value="Model.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: شماره موبایل" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">توضیحات</label>
+            <InputText @bind-Value="Model.Description" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="توضیحات فیلد..." />
+        </div>
+
+        <div>
+            <SlideSelect TItem="FieldTypeDto" TValue="int"
+                                  Label="نوع فیلد" Placeholder="انتخاب نوع فیلد..."
+                                  Items="AvailableFieldTypes" 
+                                  @bind-Value="Model.FieldTypeId"
+                                  ValueSelector="t => t.Id" 
+                                  TextSelector="t => t.Type" 
+                                  AllowClear="true" ClearText="بدون انتخاب" />
+        </div>
+
+        <div>
+            <MultiSelectDropdown TItem="CategoryDto" TValue="int"
+                                 Label="انواع تیکت مرتبط (دسته‌بندی‌ها)" Placeholder="انتخاب نوع تیکت..."
+                                 Items="AvailableCategories" @bind-SelectedValues="Model.CategoryIds"
+                                 ValueSelector="c => c.Id" DisplaySelector="c => c.Name"
+                                 BadgeBgClass="bg-blue-100" BadgeTextClass="text-blue-700" BadgeButtonClass="text-blue-500" />
+        </div>
+
+        <div class="flex items-center mt-3">
+            <InputCheckbox @bind-Value="Model.IsActive" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" id="fieldIsActive" />
+            <label for="fieldIsActive" class="mr-2 block text-sm font-medium text-gray-700">فیلد فعال است؟</label>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+                @(IsEditing ? "ذخیره تغییرات" : "ثبت فیلد")
+            </button>
+            @if (IsEditing)
+            {
+                <button type="button" @onclick="OnCancel" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">انصراف</button>
+            }
+        </div>
+    </div>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="mt-4 p-3 @(IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@SuccessMessage</div>
+}
+
+@code {
+    [Parameter] public TicketFieldDto Model { get; set; } = new();
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string? SuccessMessage { get; set; }
+    [Parameter] public bool IsError { get; set; }
+
+    [Parameter] public IEnumerable<CategoryDto> AvailableCategories { get; set; } = new List<CategoryDto>();
+    [Parameter] public IEnumerable<FieldTypeDto> AvailableFieldTypes { get; set; } = new List<FieldTypeDto>();
+}

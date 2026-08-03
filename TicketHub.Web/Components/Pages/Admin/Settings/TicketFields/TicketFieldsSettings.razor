@@ -1,0 +1,202 @@
+﻿@page "/settings/ticket-fields"
+@using TicketHub.Web.Components.Shared
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
+
+<PageTitle>تنظیمات فیلدها | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8 flex flex-col gap-3 flex-1" dir="rtl">
+    <PageHeader Title="مدیریت فیلدهای تیکت" Description="در این بخش می‌توانید فیلدهای اختصاصی و انواع آن‌ها را مدیریت کنید.">
+        <Icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+        </Icon>
+    </PageHeader>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Add/Edit Form -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش فیلد" : "ایجاد فیلد جدید")</h3>
+
+                <TicketFieldForm Model="fieldModel"
+                                 IsEditing="isEditing"
+                                 AvailableCategories="CatState.Value.Categories"
+                                 AvailableFieldTypes="TypeState.Value.FieldTypes"
+                                 OnValidSubmit="HandleSubmitField"
+                                 OnCancel="CancelEdit"
+                                 SuccessMessage="@FieldState.Value.StatusMessage"
+                                 IsError="FieldState.Value.IsError" />
+            </div>
+        </div>
+
+        <!-- Data Grid -->
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-start gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg whitespace-nowrap">لیست فیلدها</h3>
+
+                    <!-- تغییر به items-start برای تراز شدن از بالا -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 w-full items-start">
+
+                        <!-- اضافه شدن mt-4 برای هم‌ترازی با SlideSelect -->
+                        <div class="w-full mt-4">
+                            <SearchBox Placeholder="جستجو..." SearchTerm="@FieldState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
+                        </div>
+
+                        <div class="w-full mt-4">
+                            <GenericStatusFilter TValue="bool?"
+                                                 Options="new bool?[] { null, true, false }"
+                                                 SelectedValue="FieldState.Value.SelectedFilterStatus"
+                                                 OnValueChanged="FilterByStatus"
+                                                 BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
+                                                 ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
+                                <ItemTemplate Context="status">
+                                    @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
+                                </ItemTemplate>
+                            </GenericStatusFilter>
+                        </div>
+
+                        <!-- مخفی کردن لیبل خالی با [label_&]:hidden و اضافه کردن mt-4 برای تراز شدن -->
+                        <div class="w-full z-20 mt-4 [&_label]:hidden">
+                            <MultiSelectDropdown TItem="TicketHub.Application.DTOs.FieldTypeDto"
+                                                 TValue="int"
+                                                 Placeholder="فیلتر نوع فیلد..."
+                                                 Items="TypeState.Value.FieldTypes"
+                                                 SelectedValues="FieldState.Value.SelectedFilterFieldTypeIds"
+                                                 SelectedValuesChanged="FilterByType"
+                                                 ValueSelector="t => t.Id"
+                                                 DisplaySelector="t => t.Type"
+                                                 BadgeBgClass="bg-purple-100"
+                                                 BadgeTextClass="text-purple-700"
+                                                 BadgeButtonClass="text-purple-500 hover:text-purple-900" />
+                        </div>
+
+                        <!-- مخفی کردن لیبل خالی با [label_&]:hidden و اضافه کردن mt-4 -->
+                        <div class="w-full z-10 mt-4 [&_label]:hidden">
+                            <MultiSelectDropdown TItem="TicketHub.Application.DTOs.CategoryDto"
+                                                 TValue="int"
+                                                 Placeholder="فیلتر نوع تیکت..."
+                                                 Items="CatState.Value.Categories"
+                                                 SelectedValues="FieldState.Value.SelectedFilterCategoryIds"
+                                                 SelectedValuesChanged="FilterByCategories"
+                                                 ValueSelector="c => c.Id"
+                                                 DisplaySelector="c => c.Name"
+                                                 BadgeBgClass="bg-blue-100"
+                                                 BadgeTextClass="text-blue-700"
+                                                 BadgeButtonClass="text-blue-500 hover:text-blue-900" />
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="p-0">
+                    <DataGrid TItem="TicketHub.Application.DTOs.TicketFieldDto" TKey="int" Items="FilteredFields" IsLoading="FieldState.Value.IsLoading" KeySelector="f => f.Id" SelectedKeys="selectedFieldIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="فیلدی">
+                        <HeaderTemplate>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[25%]">عنوان فیلد</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">نوع فیلد</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">انواع تیکت</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">وضعیت</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
+                        </HeaderTemplate>
+
+                        <RowTemplate Context="field">
+                            <td class="px-6 py-4 w-[25%]">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5 bg-gray-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-gray-800 block truncate max-w-[200px]" title="@field.Name">@field.Name</span>
+                                        </div>
+                                        <span class="text-xs text-gray-400 block truncate max-w-[200px]" title="@field.Description">@field.Description</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 w-[20%]">
+                                @{
+                                    var fType = TypeState.Value.FieldTypes?.FirstOrDefault(t => t.Id == field.FieldTypeId);
+                                    if (fType != null)
+                                    {
+                                        <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 truncate max-w-[120px]" title="@fType.Type">
+                                            @fType.Type
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    }
+                                }
+                            </td>
+
+                            <td class="px-6 py-4 w-[20%]">
+                                <div class="flex flex-wrap gap-1">
+                                    @if (field.CategoryIds != null && field.CategoryIds.Any() && CatState.Value.Categories != null)
+                                    {
+                                        @foreach (var catId in field.CategoryIds)
+                                        {
+                                            var category = CatState.Value.Categories.FirstOrDefault(c => c.Id == catId);
+                                            if (category != null)
+                                            {
+                                                <Badge>
+                                                    <span class="block truncate max-w-[100px]" title="@category.Name">@category.Name</span>
+                                                </Badge>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs">عمومی (همه)</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 w-[15%]">
+                                @if (field.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-medium">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]"></span>
+                                        فعال
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 text-xs font-medium">
+                                        غیرفعال
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="px-6 py-4 text-center w-[15%]">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @onclick="() => EditField(field)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition" title="ویرایش">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button type="button" @onclick="() => OpenDeleteModal(field)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition" title="حذف">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </RowTemplate>
+                    </DataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<BulkActionToolbar SelectedCount="selectedFieldIds.Count"
+                   OnCancel="ClearSelection"
+                   OnDelete="OpenBulkDeleteModal"
+                   OnActivate="BulkActivateFields"
+                   OnDeactivate="BulkDeactivateFields" />
+
+<ConfirmDeleteModal IsOpen="showDeleteModal"
+                    Description="@deleteModalDescription"
+                    ErrorMessage="@(FieldState.Value.IsError ? FieldState.Value.StatusMessage : null)"
+                    OnConfirm="ConfirmDelete"
+                    OnCancel="CancelDelete" />
