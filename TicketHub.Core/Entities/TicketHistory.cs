@@ -30,10 +30,6 @@ public class TicketHistory
     public int? ParentHistoryId { get; set; }
     public TicketHistory? ParentHistory { get; set; }
 
-    public int? CommentId { get; set; }
-    public Comment? Comment { get; set; }
-    public string? CommentText { get; set; }
-
     public int? WorkFlowId { get; set; }
     public Workflow? WorkFlow { get; set; }
     public string WorkFlowName { get; set; } = string.Empty;

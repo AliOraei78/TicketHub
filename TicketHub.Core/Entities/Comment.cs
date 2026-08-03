@@ -12,7 +12,4 @@ public class Comment
 
     public int UserId { get; set; }
     public User User { get; set; } = null!;
-
-    public int? TicketHistoryId { get; set; }
-    public TicketHistory? TicketHistory { get; set; }
 }

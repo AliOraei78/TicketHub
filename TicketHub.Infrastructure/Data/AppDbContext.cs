@@ -94,13 +94,6 @@ namespace TicketHub.Infrastructure.Data
             modelBuilder.Entity<TicketHistory>()
                 .HasOne(th => th.ToStatus).WithMany(s => s.ToHistories).HasForeignKey(th => th.ToStatusId).OnDelete(DeleteBehavior.Restrict);
 
-            // 5. تنظیم رابطه Comment در تاریخچه
-            modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.Comment).WithMany().HasForeignKey(th => th.CommentId).OnDelete(DeleteBehavior.Restrict);
-
-            // 6. رفع تداخل Comment و تنظیم دقیق ارتباط 1-به-1
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.TicketHistory).WithOne(th => th.Comment).HasForeignKey<Comment>(c => c.TicketHistoryId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.User).WithMany(u => u.Comments).HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Comment>()

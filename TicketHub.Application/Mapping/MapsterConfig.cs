@@ -88,6 +88,11 @@ public class MapsterConfig : IRegister
               .Ignore(dest => dest.Ticket)
               .Ignore(dest => dest.TicketField);
 
+        config.NewConfig<Comment, CommentDto>();
+        config.NewConfig<CommentDto, Comment>()
+              .Ignore(dest => dest.Ticket)
+              .Ignore(dest => dest.User);
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }
