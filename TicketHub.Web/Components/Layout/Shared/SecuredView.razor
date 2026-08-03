@@ -1,0 +1,23 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using TicketHub.Application.Interfaces
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionService PermissionService
+
+@if (_hasAccess)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter, EditorRequired] public string ResourceKey { get; set; } = default!;
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+    private bool _hasAccess;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        // این متد را در مرحله ۳ داخل IPermissionService پیاده‌سازی خواهیم کرد
+        _hasAccess = await PermissionService.HasAccessAsync(authState.User, ResourceKey);
+    }
+}

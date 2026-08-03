@@ -69,7 +69,7 @@
                     <DataGrid TItem="TicketHub.Application.DTOs.PermissionDto" TKey="int" Items="FilteredPermissions" IsLoading="PermState.Value.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="دسترسی">
                         <HeaderTemplate>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">عنوان</th>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">کلید / سطح</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">کلید</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">نقش‌ها</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">وضعیت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center">عملیات</th>
@@ -78,8 +78,7 @@
                         <RowTemplate Context="perm">
                             <td class="px-6 py-4 font-bold text-gray-800">@perm.Title</td>
                             <td class="px-6 py-4">
-                                <span class="block text-sm text-gray-600">@perm.ResourceKey</span>
-                                <span class="block text-xs text-gray-400">سطح: @perm.AccessLevel</span>
+                                <span class="block text-sm text-gray-600">@perm.ResourceKey</span>                       
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1">

@@ -4,6 +4,7 @@ using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace TicketHub.Application.Services;
 
@@ -11,13 +12,17 @@ public class PermissionService : IPermissionService
 {
     private readonly IRepository<Permission> _permissionRepo;
     private readonly IRepository<RolePermission> _rolePermissionRepo;
+    private readonly IMemoryCache _cache;
+    private const string CacheKey = "PermissionsCache";
 
     public PermissionService(
         IRepository<Permission> permissionRepo,
-        IRepository<RolePermission> rolePermissionRepo)
+        IRepository<RolePermission> rolePermissionRepo,
+        IMemoryCache cache)
     {
         _permissionRepo = permissionRepo;
         _rolePermissionRepo = rolePermissionRepo;
+        _cache = cache;
     }
 
     public async Task<IEnumerable<PermissionDto>> GetAllAsync()
@@ -161,5 +166,53 @@ public class PermissionService : IPermissionService
             await _permissionRepo.UpdateAsync(permission);
         }
         return true;
+    }
+
+    public async Task<bool> HasAccessAsync(System.Security.Claims.ClaimsPrincipal user, string resourceKey)
+    {
+        if (string.IsNullOrWhiteSpace(resourceKey)) return true;
+
+        var permissions = await GetPermissionsFromCacheAsync();
+        var targetPermission = permissions.FirstOrDefault(p =>
+            p.ResourceKey.Equals(resourceKey, StringComparison.OrdinalIgnoreCase));
+
+        if (targetPermission == null) return true;
+
+        var userRoles = user.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+        return targetPermission.AllowedRoles.Any(r => userRoles.Contains(r));
+    }
+
+    public void ClearCache()
+    {
+        _cache.Remove(CacheKey);
+    }
+
+    private async Task<List<PermissionCacheDto>> GetPermissionsFromCacheAsync()
+    {
+        return await _cache.GetOrCreateAsync(CacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12);
+
+            // استفاده از ریپازیتوری‌های موجود به جای _context
+            var permissions = await _permissionRepo.GetAllAsync();
+            var rolePermissions = await _rolePermissionRepo.GetAllWithIncludesAsync(rp => rp.Role);
+
+            return permissions
+                .Where(p => p.IsActive)
+                .Select(p => new PermissionCacheDto
+                {
+                    ResourceKey = p.ResourceKey,
+                    // استخراج نام نقش‌ها از روی جدول واسط
+                    AllowedRoles = rolePermissions
+                        .Where(rp => rp.PermissionId == p.Id && rp.Role != null)
+                        .Select(rp => rp.Role.Name)
+                        .ToList()
+                })
+                .ToList();
+        }) ?? new List<PermissionCacheDto>();
     }
 }

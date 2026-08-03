@@ -12,4 +12,6 @@ public interface IPermissionService
     Task<bool> AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds);
     Task<bool> DeleteRangeAsync(IEnumerable<int> ids);
     Task<bool> UpdateStatusAsync(IEnumerable<int> ids, bool isActive);
+    Task<bool> HasAccessAsync(System.Security.Claims.ClaimsPrincipal user, string resourceKey);
+    void ClearCache();
 }

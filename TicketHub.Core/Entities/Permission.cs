@@ -8,7 +8,6 @@ public class Permission
     public string Title { get; set; } = string.Empty;
     public string? ResourceKey { get; set; } // لینک منو یا نام منحصر‌به‌فرد بخش
     public PermissionType Type { get; set; }
-    public int AccessLevel { get; set; } // ستون عددی برای کنترل سطح دسترسی
     public bool IsActive { get; set; } = true;
 
     public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();

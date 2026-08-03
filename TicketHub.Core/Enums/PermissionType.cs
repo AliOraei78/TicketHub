@@ -9,5 +9,6 @@ namespace TicketHub.Application.Enums;
 public enum PermissionType
 {
     Menu = 1,
-    SystemSection = 2
+    SystemSection = 2,
+    Full = 3
 }
