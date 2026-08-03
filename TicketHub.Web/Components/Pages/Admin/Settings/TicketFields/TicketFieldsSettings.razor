@@ -95,7 +95,8 @@
                 <div class="p-0">
                     <DataGrid TItem="TicketHub.Application.DTOs.TicketFieldDto" TKey="int" Items="FilteredFields" IsLoading="FieldState.Value.IsLoading" KeySelector="f => f.Id" SelectedKeys="selectedFieldIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="فیلدی">
                         <HeaderTemplate>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[25%]">عنوان فیلد</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">عنوان فیلد</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[10%]">ترتیب</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">نوع فیلد</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">انواع تیکت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">وضعیت</th>
@@ -103,7 +104,7 @@
                         </HeaderTemplate>
 
                         <RowTemplate Context="field">
-                            <td class="px-6 py-4 w-[25%]">
+                            <td class="px-6 py-4 w-[20%]">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5 bg-gray-100">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
@@ -115,6 +116,12 @@
                                         <span class="text-xs text-gray-400 block truncate max-w-[200px]" title="@field.Placeholder">@field.Placeholder</span>
                                     </div>
                                 </div>
+                            </td>
+
+                            <td class="px-6 py-4 text-center w-[10%]">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-700 rounded-lg text-sm font-bold shadow-sm">
+                                    @field.SortOrder
+                                </span>
                             </td>
 
                             <td class="px-6 py-4 w-[20%]">

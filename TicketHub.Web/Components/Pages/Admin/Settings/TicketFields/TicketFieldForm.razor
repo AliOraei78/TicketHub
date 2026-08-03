@@ -1,5 +1,6 @@
 ﻿@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
+@using TicketHub.Application.Enums
 
 <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator />
@@ -15,6 +16,24 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">متن جایگیر</label>
             <InputText @bind-Value="Model.Placeholder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="متن جایگیر..." />
         </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">مقدار پیش‌فرض</label>
+            <InputText @bind-Value="Model.DefaultValue" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">شماره ترتیب</label>
+            <InputNumber @bind-Value="Model.SortOrder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" />
+        </div>
+
+        @if (Model.FieldTypeId == (int)FieldTypeEnum.Dropdown || Model.FieldTypeId == (int)FieldTypeEnum.MultipleDropdown)
+        {
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">گزینه‌ها (با کاما از هم جدا کنید)</label>
+                <InputText @bind-Value="Model.Options" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="گزینه ۱، گزینه ۲، گزینه ۳" />
+            </div>
+        }
 
         <div>
             <SlideSelect TItem="FieldTypeDto" TValue="int"
