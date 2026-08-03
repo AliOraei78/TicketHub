@@ -2,6 +2,7 @@
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TicketHub.Web.Store;
 
@@ -61,22 +62,25 @@ public static class WorkflowReducers
 // 4. Effects
 public class WorkflowEffects
 {
-    private readonly IWorkflowService _workflowService;
-    private readonly IProjectService _projectService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IState<WorkflowState> _state;
 
-    public WorkflowEffects(IWorkflowService workflowService, IProjectService projectService, IState<WorkflowState> state)
+    public WorkflowEffects(IServiceScopeFactory scopeFactory, IState<WorkflowState> state)
     {
-        _workflowService = workflowService;
-        _projectService = projectService;
+        _scopeFactory = scopeFactory;
         _state = state;
     }
 
     [EffectMethod(typeof(LoadWorkflowInitialDataAction))]
     public async Task HandleLoadInitialData(IDispatcher dispatcher)
     {
-        var projects = await _projectService.GetProjectsAsync();
-        var statuses = await _workflowService.GetAllStatusesAsync();
+        using var scope = _scopeFactory.CreateScope();
+        var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
+        var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+
+        var projects = await projectService.GetProjectsAsync();
+        var statuses = await workflowService.GetAllStatusesAsync();
+
         dispatcher.Dispatch(new WorkflowInitialDataLoadedAction(projects, statuses));
         dispatcher.Dispatch(new LoadWorkflowsAction());
     }
@@ -84,8 +88,11 @@ public class WorkflowEffects
     [EffectMethod(typeof(LoadWorkflowsAction))]
     public async Task HandleLoadWorkflows(IDispatcher dispatcher)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+
         var st = _state.Value;
-        var allWorkflows = (await _workflowService.GetAllAsync()).ToList();
+        var allWorkflows = (await workflowService.GetAllAsync()).ToList();
 
         foreach (var w in allWorkflows)
             w.Projects = st.AvailableProjects.Where(p => p.WorkflowId == w.Id).ToList();
@@ -127,16 +134,22 @@ public class WorkflowEffects
     [EffectMethod]
     public async Task HandleDeleteWorkflow(DeleteWorkflowAction action, IDispatcher dispatcher)
     {
-        await _workflowService.DeleteAsync(action.Id);
+        using var scope = _scopeFactory.CreateScope();
+        var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+
+        await workflowService.DeleteAsync(action.Id);
         dispatcher.Dispatch(new LoadWorkflowsAction());
     }
 
     [EffectMethod]
     public async Task HandleDeleteMultipleWorkflows(DeleteMultipleWorkflowsAction action, IDispatcher dispatcher)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+
         foreach (var id in action.Ids)
         {
-            await _workflowService.DeleteAsync(id);
+            await workflowService.DeleteAsync(id);
         }
         dispatcher.Dispatch(new LoadWorkflowsAction());
     }

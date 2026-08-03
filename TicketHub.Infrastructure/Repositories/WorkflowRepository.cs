@@ -17,6 +17,7 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
     {
         return await _dbSet
             .Include(w => w.WorkflowStatuses)
+                .ThenInclude(ws => ws.Status)
             .Include(w => w.Transitions)
                 .ThenInclude(t => t.AllowedRoles)
             .Include(w => w.Transitions)                                // <--- اضافه شود

@@ -1,0 +1,101 @@
+﻿@using TicketHub.Application.DTOs
+@using TicketHub.Application.Enums
+
+<div class="mb-4">
+    @switch ((FieldTypeEnum)Field.FieldTypeId)
+    {
+        case FieldTypeEnum.Text:
+            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="text" />
+            break;
+
+        case FieldTypeEnum.Number:
+            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="number" />
+            break;
+
+        case FieldTypeEnum.Checkbox:
+            <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" />
+            break;
+
+        case FieldTypeEnum.ColorPicker:
+            <div class="mb-1">
+                <label class="block text-sm font-medium text-gray-700">@Field.Name</label>
+            </div>
+            <ColorPicker @bind-Value="FieldValue.Value" />
+            break;
+
+        case FieldTypeEnum.TextArea:
+            <CustomTextArea Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" />
+            break;
+
+        case FieldTypeEnum.Dropdown:
+            <SlideSelect TItem="string" TValue="string"
+                         Label="@Field.Name"
+                         Items="GetOptions()"
+                         TextSelector="x => x"
+                         ValueSelector="x => x"
+                         @bind-Value="FieldValue.Value" />
+            break;
+
+        case FieldTypeEnum.MultipleDropdown:
+            <MultiSelectDropdown TItem="string" TValue="string"
+                                 Label="@Field.Name"
+                                 Items="GetOptions()"
+                                 DisplaySelector="x => x"
+                                 ValueSelector="x => x"
+                                 @bind-SelectedValues="SelectedMultipleValues" />
+            break;
+
+        case FieldTypeEnum.List:
+            <!-- این بخش در قدم بعدی با SlideSelect و MultiSelectDropdown جایگزین می‌شود -->
+            <div class="text-sm text-amber-600">در حال توسعه: @Field.Name</div>
+            break;
+
+        case FieldTypeEnum.File:
+            <CustomFileUpload Label="@Field.Name" @bind-SelectedFiles="PendingFiles" />
+            break;
+
+        default:
+            <div class="text-sm text-gray-400">نوع فیلد پشتیبانی نمی‌شود</div>
+            break;
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public TicketFieldDto Field { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public TicketFieldValueDto FieldValue { get; set; } = default!;
+    // این پارامتر فایل‌های آپلودی را به فرم اصلی (پدر) پاس می‌دهد تا در زمان Submit به سرور ارسال شوند
+    [Parameter]
+    public List<IBrowserFile> PendingFiles { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<IBrowserFile>> PendingFilesChanged { get; set; }
+
+    // یک پراپرتی کمکی برای تبدیل رشته به بولین جهت استفاده در چک‌باکس
+    private bool CheckboxValue
+    {
+        get => bool.TryParse(FieldValue.Value, out var val) && val;
+        set => FieldValue.Value = value.ToString().ToLower();
+    }
+
+    // این متد مقادیر رشته‌ای دیتابیس را به لیست تبدیل می‌کند
+    private List<string> GetOptions()
+    {
+        return string.IsNullOrWhiteSpace(Field.Options)
+            ? new List<string>()
+            : Field.Options.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                           .Select(o => o.Trim())
+                           .ToList();
+    }
+
+    // این پراپرتی برای مدیریت دیتای MultiSelect است (تبدیل لیست انتخابی به رشته با کاما و برعکس)
+    private List<string> SelectedMultipleValues
+    {
+        get => string.IsNullOrWhiteSpace(FieldValue.Value)
+            ? new List<string>()
+            : FieldValue.Value.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+        set => FieldValue.Value = string.Join(",", value);
+    }
+}

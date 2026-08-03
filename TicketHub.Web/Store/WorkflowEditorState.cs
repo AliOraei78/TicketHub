@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.DependencyInjection;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Common;
@@ -66,22 +67,22 @@ public static class WorkflowEditorReducers
 // 4. Effects
 public class WorkflowEditorEffects
 {
-    private readonly IWorkflowService _workflowService;
-    private readonly IStatusService _statusService;
-    private readonly IRoleService _roleService;
-    private readonly IFieldTypeService _fieldTypeService;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public WorkflowEditorEffects(IWorkflowService workflowService, IStatusService statusService, IRoleService roleService, IFieldTypeService fieldTypeService)
+    public WorkflowEditorEffects(IServiceScopeFactory scopeFactory)
     {
-        _workflowService = workflowService;
-        _statusService = statusService;
-        _roleService = roleService;
-        _fieldTypeService = fieldTypeService;
+        _scopeFactory = scopeFactory;
     }
 
     [EffectMethod]
     public async Task HandleLoadData(LoadEditorDataAction action, IDispatcher dispatcher)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+        var _statusService = scope.ServiceProvider.GetRequiredService<IStatusService>();
+        var _roleService = scope.ServiceProvider.GetRequiredService<IRoleService>();
+        var _fieldTypeService = scope.ServiceProvider.GetRequiredService<IFieldTypeService>();
+
         var statuses = (await _statusService.GetAllAsync()).ToList();
         var roles = (await _roleService.GetAllRolesAsync()).ToList();
         var fields = (await _fieldTypeService.GetAllAsync()).ToList();
@@ -143,6 +144,9 @@ public class WorkflowEditorEffects
     {
         try
         {
+            using var scope = _scopeFactory.CreateScope();
+            var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+
             if (action.WorkflowId.HasValue && action.WorkflowId.Value > 0)
             {
                 var wf = action.CurrentWorkflow ?? await _workflowService.GetByIdWithDetailsAsync(action.WorkflowId.Value);
