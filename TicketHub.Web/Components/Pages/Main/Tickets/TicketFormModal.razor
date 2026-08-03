@@ -1,4 +1,4 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
 <ModalDialog IsOpen="@IsOpen"
@@ -24,7 +24,7 @@
             </div>
 
             <div>
-                <SlideSelect TItem="Project" TValue="int"
+                <SlideSelect TItem="ProjectDto" TValue="int"
                              Label="پروژه مربوطه"
                              Placeholder="انتخاب پروژه..."
                              Items="Projects"
@@ -50,8 +50,8 @@
 
 @code {
     [Parameter] public bool IsOpen { get; set; }
-    [Parameter, EditorRequired] public Ticket Model { get; set; } = default!;
-    [Parameter, EditorRequired] public IEnumerable<Project> Projects { get; set; } = default!;
+    [Parameter, EditorRequired] public TicketDto Model { get; set; } = default!;
+    [Parameter, EditorRequired] public IEnumerable<ProjectDto> Projects { get; set; } = default!;
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 

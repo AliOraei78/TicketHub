@@ -1,4 +1,4 @@
-﻿@using TicketHub.Core.Entities
+﻿@using TicketHub.Application.DTOs
 
 <div @onclick="HandleClick" class="cursor-pointer smooth-transition bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group">
     <div class="flex items-start gap-4 w-full">
@@ -27,7 +27,7 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired] public Ticket Ticket { get; set; } = default!;
+    [Parameter, EditorRequired] public TicketDto Ticket { get; set; } = default!;
     [Parameter] public EventCallback<int> OnClick { get; set; }
 
     private async Task HandleClick()

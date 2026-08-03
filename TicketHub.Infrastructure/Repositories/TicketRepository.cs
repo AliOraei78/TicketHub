@@ -15,6 +15,10 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
         var query = _context.Set<Ticket>()
             .Include(t => t.Attachments)
             .Include(t => t.TicketHistories)
+            .Include(t => t.Project)   // اضافه شد
+            .Include(t => t.Status)    // اضافه شد
+            .Include(t => t.Priority)  // اضافه شد
+            .Include(t => t.User)      // اضافه شد
             .AsSplitQuery()
             .AsQueryable();
 

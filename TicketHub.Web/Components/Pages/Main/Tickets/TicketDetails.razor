@@ -1,10 +1,10 @@
 ﻿@page "/tickets/{TicketId:int}"
 @rendermode InteractiveServer
-@using TicketHub.Core.Entities
-@using TicketHub.Core.Interfaces
-@inject IRepository<Ticket> TicketRepository
+@using TicketHub.Application.DTOs
+@using TicketHub.Application.Interfaces
+@inject ITicketService TicketService
+@inject IStatusService StatusService
 @inject NavigationManager Navigation
-@inject IRepository<Status> StatusRepository
 
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
     <!-- Back to List Button -->
@@ -94,16 +94,13 @@
     [Parameter]
     public int TicketId { get; set; }
 
-    private Ticket? ticket;
-    private IEnumerable<Status> statuses = new List<Status>();
+    private TicketDto? ticket;
+    private IEnumerable<StatusDto> statuses = new List<StatusDto>();
 
     protected override async Task OnInitializedAsync()
     {
-        // فراخوانی با Include برای دسترسی به Navigation Property ها
-        var tickets = await TicketRepository.GetAllWithIncludesAsync(t => t.Project, t => t.User, t => t.Priority, t => t.Status);
-        ticket = tickets.FirstOrDefault(t => t.Id == TicketId);
-
-        statuses = await StatusRepository.GetAllAsync();
+        ticket = await TicketService.GetByIdAsync(TicketId);
+        statuses = await StatusService.GetAllAsync();
 
         if (ticket == null)
         {
@@ -118,9 +115,11 @@
         if (int.TryParse(e.Value.ToString(), out int statusId))
         {
             ticket.StatusId = statusId;
-            ticket.Status = statuses.FirstOrDefault(s => s.Id == statusId)!;
+            // با توجه به MapsterConfig، نیازی به ست کردن دستی آبجکت Status نیست
+            await TicketService.UpdateAsync(ticket);
 
-            await TicketRepository.UpdateAsync(ticket);
+            // بروزرسانی UI با دیتای جدید
+            ticket = await TicketService.GetByIdAsync(TicketId);
         }
     }
 
