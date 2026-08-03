@@ -18,4 +18,5 @@ public interface IWorkflowRepository : IRepository<Workflow>
     void RemoveTransitions(IEnumerable<Transition> transitions);
     Task CommitChangesAsync();
     Task<List<Workflow>> GetAllWithDetailsAsync();
+    Task DeleteRangeAsync(IEnumerable<int> ids);
 }

@@ -100,4 +100,11 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
             .AsSplitQuery()
             .ToListAsync();
     }
+
+    public async Task DeleteRangeAsync(IEnumerable<int> ids)
+    {
+        await _dbSet
+            .Where(w => ids.Contains(w.Id))
+            .ExecuteDeleteAsync();
+    }
 }

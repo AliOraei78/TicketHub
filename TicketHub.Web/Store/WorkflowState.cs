@@ -147,10 +147,8 @@ public class WorkflowEffects
         using var scope = _scopeFactory.CreateScope();
         var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
 
-        foreach (var id in action.Ids)
-        {
-            await workflowService.DeleteAsync(id);
-        }
+        // استفاده از متد DeleteRangeAsync به‌جای حلقه foreach
+        await workflowService.DeleteRangeAsync(action.Ids);
         dispatcher.Dispatch(new LoadWorkflowsAction());
     }
 }

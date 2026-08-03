@@ -178,4 +178,9 @@ public class WorkflowService : IWorkflowService
         var statuses = await _workflowRepository.GetAllStatusesAsync();
         return statuses.Adapt<List<StatusDto>>();
     }
+
+    public async Task DeleteRangeAsync(IEnumerable<int> ids)
+    {
+        await _workflowRepository.DeleteRangeAsync(ids);
+    }
 }

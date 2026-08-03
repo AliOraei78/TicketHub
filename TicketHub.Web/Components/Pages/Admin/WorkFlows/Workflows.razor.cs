@@ -67,7 +67,8 @@ public partial class Workflows : IDisposable
 
         if (isBulkDelete)
         {
-            Dispatcher.Dispatch(new DeleteMultipleWorkflowsAction(selectedWorkflowIds));
+            // ایجاد نسخه کپی با ToList() برای جلوگیری از پاک شدن داده‌ها قبل از اجرای اکشن
+            Dispatcher.Dispatch(new DeleteMultipleWorkflowsAction(selectedWorkflowIds.ToList()));
             selectedWorkflowIds.Clear();
         }
         else if (workflowToDelete != null)
@@ -75,7 +76,6 @@ public partial class Workflows : IDisposable
             deletingWorkflowIds.Add(workflowToDelete.Id);
             Dispatcher.Dispatch(new DeleteWorkflowAction(workflowToDelete.Id));
 
-            // شبیه‌سازی تاخیر کوچک برای انیمیشن خروج یا به روز رسانی لیست
             _ = Task.Delay(400).ContinueWith(_ => InvokeAsync(() => deletingWorkflowIds.Clear()));
         }
     }

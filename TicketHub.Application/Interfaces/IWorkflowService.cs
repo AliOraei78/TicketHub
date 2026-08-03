@@ -10,4 +10,5 @@ public interface IWorkflowService
     Task UpdateAsync(WorkflowDto dto);
     Task DeleteAsync(int id);
     Task<List<StatusDto>> GetAllStatusesAsync();
+    Task DeleteRangeAsync(IEnumerable<int> ids);
 }
