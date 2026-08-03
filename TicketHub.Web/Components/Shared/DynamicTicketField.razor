@@ -45,11 +45,6 @@
                                  @bind-SelectedValues="SelectedMultipleValues" />
             break;
 
-        case FieldTypeEnum.List:
-            <!-- این بخش در قدم بعدی با SlideSelect و MultiSelectDropdown جایگزین می‌شود -->
-            <div class="text-sm text-amber-600">در حال توسعه: @Field.Name</div>
-            break;
-
         case FieldTypeEnum.File:
             <CustomFileUpload Label="@Field.Name" @bind-SelectedFiles="PendingFiles" />
             break;

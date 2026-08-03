@@ -10,6 +10,5 @@ public enum FieldTypeEnum
     MultipleDropdown = 6,
     Checkbox = 7,
     File = 8,
-    ColorPicker = 9,
-    List = 10
+    ColorPicker = 9
 }
