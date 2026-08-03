@@ -27,5 +27,6 @@ namespace TicketHub.Core.Entities
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
         public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+        public ICollection<TicketFieldValue> FieldValues { get; set; } = new List<TicketFieldValue>();
     }
 }

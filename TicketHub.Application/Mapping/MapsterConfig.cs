@@ -76,6 +76,13 @@ public class MapsterConfig : IRegister
         config.NewConfig<TicketFieldDto, TicketField>()
               .Ignore(dest => dest.FieldType);
 
+        config.NewConfig<Attachment, AttachmentDto>();
+        config.NewConfig<AttachmentDto, Attachment>()
+              .Ignore(dest => dest.Ticket)
+              .Ignore(dest => dest.TicketHistory)
+              .Ignore(dest => dest.TransitionField)
+              .Ignore(dest => dest.TicketFieldValue);
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }

@@ -21,4 +21,6 @@ public class Attachment
     // به Attachment.cs اضافه شود
     public int? TransitionFieldId { get; set; }
     public TransitionField? TransitionField { get; set; }
+    public int? TicketFieldValueId { get; set; }
+    public TicketFieldValue? TicketFieldValue { get; set; }
 }

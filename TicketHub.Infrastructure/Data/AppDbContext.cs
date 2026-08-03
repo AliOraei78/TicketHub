@@ -32,6 +32,7 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<CategoryRole> CategoryRoles { get; set; }
         public DbSet<TicketField> TicketFields { get; set; }
         public DbSet<FieldCategory> FieldCategories { get; set; }
+        public DbSet<TicketFieldValue> TicketFieldValues { get; set; }
 
         // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
         // کل متد OnModelCreating را با این کد جایگزین کن:
@@ -208,6 +209,32 @@ namespace TicketHub.Infrastructure.Data
                         .WithMany(w => w.TicketFields)
                         .HasForeignKey(t => t.FieldTypeId)
                         .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TicketFieldValue>().HasKey(tfv => tfv.Id);
+
+            // جلوگیری از ثبت دو مقدار برای یک فیلد در یک تیکت واحد
+            modelBuilder.Entity<TicketFieldValue>()
+                .HasIndex(tfv => new { tfv.TicketId, tfv.TicketFieldId })
+                .IsUnique();
+
+            modelBuilder.Entity<TicketFieldValue>()
+                .HasOne(tfv => tfv.Ticket)
+                .WithMany(t => t.FieldValues)
+                .HasForeignKey(tfv => tfv.TicketId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TicketFieldValue>()
+                .HasOne(tfv => tfv.TicketField)
+                .WithMany(tf => tf.TicketFieldValues)
+                .HasForeignKey(tfv => tfv.TicketFieldId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // به انتهای متد OnModelCreating اضافه شود
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.TicketFieldValue)
+                .WithMany(tfv => tfv.Attachments)
+                .HasForeignKey(a => a.TicketFieldValueId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

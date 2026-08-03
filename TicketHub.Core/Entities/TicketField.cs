@@ -17,4 +17,5 @@ public class TicketField
     public int FieldTypeId { get; set; }
     public FieldType FieldType { get; set; } = null!;
     public ICollection<FieldCategory> FieldCategories { get; set; } = new List<FieldCategory>();
+    public ICollection<TicketFieldValue> TicketFieldValues { get; set; } = new List<TicketFieldValue>();
 }
