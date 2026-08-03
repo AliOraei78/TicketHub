@@ -86,6 +86,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<ITicketFieldService, TicketFieldService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddHttpContextAccessor();
 

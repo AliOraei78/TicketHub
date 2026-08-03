@@ -93,6 +93,28 @@ public class MapsterConfig : IRegister
               .Ignore(dest => dest.Ticket)
               .Ignore(dest => dest.User);
 
+        config.NewConfig<Ticket, TicketDto>()
+              .Map(dest => dest.AttachmentIds, src => src.Attachments != null
+                                                ? src.Attachments.Select(a => a.Id).ToList()
+                                                : new List<int>())
+              .Map(dest => dest.TicketHistoryIds, src => src.TicketHistories != null
+                                                ? src.TicketHistories.Select(th => th.Id).ToList()
+                                                : new List<int>())
+              .Map(dest => dest.CommentIds, src => src.Comments != null
+                                                ? src.Comments.Select(c => c.Id).ToList()
+                                                : new List<int>())
+              .Map(dest => dest.FieldValueIds, src => src.FieldValues != null
+                                                ? src.FieldValues.Select(fv => fv.Id).ToList()
+                                                : new List<int>());
+
+        config.NewConfig<TicketDto, Ticket>()
+              .Ignore(dest => dest.User)
+              .Ignore(dest => dest.Project)
+              .Ignore(dest => dest.Status)
+              .Ignore(dest => dest.Category)
+              .Ignore(dest => dest.Priority)
+              .Ignore(dest => dest.WorkflowStatus);
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }
