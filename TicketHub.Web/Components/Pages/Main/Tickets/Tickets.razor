@@ -84,6 +84,7 @@
 <TicketFormModal IsOpen="isCreateModalOpen"
                  Model="newTicket"
                  Projects="TicketState.Value.AvailableProjects"
+                 Priorities="TicketState.Value.AvailablePriorities"
                  OnSubmit="HandleCreateTicket"
-                 OnCancel="CloseCreateModal" 
+                 OnCancel="CloseCreateModal"
                  ErrorMessage="@TicketState.Value.FormErrorMessage" />

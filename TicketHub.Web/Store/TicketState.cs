@@ -13,6 +13,7 @@ public record TicketState(
     int TotalTickets,
     IEnumerable<ProjectDto> AvailableProjects,
     IEnumerable<StatusDto> AvailableStatuses,
+    IEnumerable<PriorityDto> AvailablePriorities,
     string SearchTerm,
     int PageSize,
     int CurrentPage,
@@ -20,12 +21,12 @@ public record TicketState(
     List<int> SelectedFilterStatusIds,
     string? FormErrorMessage)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), string.Empty, 10, 1, new(), new(), null) { }
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), string.Empty, 10, 1, new(), new(), null) { }
 }
 
 // 2. Actions
 public record LoadTicketInitialDataAction();
-public record TicketInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses);
+public record TicketInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses, IEnumerable<PriorityDto> Priorities);
 public record LoadTicketsAction();
 public record TicketsLoadedAction(IEnumerable<TicketDto> Tickets, int TotalCount, int ValidatedPage);
 public record SetTicketFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds);
@@ -42,7 +43,7 @@ public static class TicketReducers
 
     [ReducerMethod]
     public static TicketState ReduceInitialDataLoaded(TicketState state, TicketInitialDataLoadedAction action) =>
-        state with { AvailableProjects = action.Projects, AvailableStatuses = action.Statuses };
+            state with { AvailableProjects = action.Projects, AvailableStatuses = action.Statuses, AvailablePriorities = action.Priorities };
 
     [ReducerMethod]
     public static TicketState ReduceTicketsLoaded(TicketState state, TicketsLoadedAction action) =>
@@ -75,13 +76,15 @@ public class TicketEffects
     private readonly ITicketService _ticketService;
     private readonly IProjectService _projectService;
     private readonly IStatusService _statusService;
+    private readonly IPriorityService _priorityService;
     private readonly IState<TicketState> _state;
 
-    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IState<TicketState> state)
+    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IPriorityService priorityService, IState<TicketState> state)
     {
         _ticketService = ticketService;
         _projectService = projectService;
         _statusService = statusService;
+        _priorityService = priorityService;
         _state = state;
     }
 
@@ -90,8 +93,9 @@ public class TicketEffects
     {
         var projects = await _projectService.GetProjectsAsync();
         var statuses = await _statusService.GetAllAsync();
+        var priorities = await _priorityService.GetAllAsync();
 
-        dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses));
+        dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses, priorities));
         dispatcher.Dispatch(new LoadTicketsAction());
     }
 

@@ -20,13 +20,14 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
-                <InputSelect @bind-Value="Model.PriorityId" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition">
-                    <option value="1">Low (کم)</option>
-                    <option value="2">Medium (متوسط)</option>
-                    <option value="3">High (زیاد)</option>
-                    <option value="4">Critical (بحرانی)</option>
-                </InputSelect>
+                <SlideSelect TItem="PriorityDto" TValue="int?"
+                             Label="اولویت"
+                             Placeholder="انتخاب اولویت..."
+                             Items="Priorities"
+                             @bind-Value="Model.PriorityId"
+                             ValueSelector="p => (int?)p.Id"
+                             TextSelector="p => p.Name"
+                             AllowClear="false" />
             </div>
 
             <div>
@@ -61,6 +62,7 @@
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter, EditorRequired] public IEnumerable<PriorityDto> Priorities { get; set; } = default!;
 
     private async Task HandleValidSubmit()
     {
