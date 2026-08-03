@@ -20,6 +20,8 @@ using TicketHub.Web.Components;
 using TicketHub.Web.Middlewares;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -78,6 +80,7 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IFieldTypeService, FieldTypeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -108,6 +111,11 @@ builder.Services.AddDNTCaptcha(options =>
 });
 // --------------------------------------
 
+var jsonOptions = new System.Text.Json.JsonSerializerOptions
+{
+    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+};
+
 Audit.Core.Configuration.Setup()
     .UseEntityFramework(ef => ef
         .AuditTypeExplicitMapper(m => m
@@ -136,32 +144,34 @@ Audit.Core.Configuration.Setup()
             .Map<TicketField, AuditLog>()
 
             .AuditEntityAction<AuditLog>((ev, entry, auditLog) =>
-                        {
-                            auditLog.Id = 0;
-                            auditLog.EntityName = entry.EntityType.Name;
-                            auditLog.PrimaryKey = entry.PrimaryKey.Values.FirstOrDefault()?.ToString() ?? "";
+            {
+                auditLog.Id = 0;
+                auditLog.EntityName = entry.EntityType.Name;
+                auditLog.PrimaryKey = entry.PrimaryKey.Values.FirstOrDefault()?.ToString() ?? "";
 
-                            auditLog.OldValues = entry.Changes == null ? "" :
-                                System.Text.Json.JsonSerializer.Serialize(entry.Changes.ToDictionary(c => c.ColumnName, c => c.OriginalValue));
-                            auditLog.NewValues = entry.Changes == null ? "" :
-                                System.Text.Json.JsonSerializer.Serialize(entry.Changes.ToDictionary(c => c.ColumnName, c => c.NewValue));
+                // اعمال jsonOptions در زمان تبدیل مقادیر به رشته JSON
+                auditLog.OldValues = entry.Changes == null ? "" :
+                    System.Text.Json.JsonSerializer.Serialize(entry.Changes.ToDictionary(c => c.ColumnName, c => c.OriginalValue), jsonOptions);
 
-                            auditLog.ChangedAt = DateTime.UtcNow;
+                auditLog.NewValues = entry.Changes == null ? "" :
+                    System.Text.Json.JsonSerializer.Serialize(entry.Changes.ToDictionary(c => c.ColumnName, c => c.NewValue), jsonOptions);
 
-                            // دریافت شناسه کاربر از HttpContext جاری
-                            var httpContextAccessor = ev.GetEntityFrameworkEvent().GetDbContext().GetService<IHttpContextAccessor>();
+                auditLog.ChangedAt = DateTime.UtcNow;
 
-                            var userClaim = httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+                // دریافت شناسه کاربر از HttpContext جاری
+                var httpContextAccessor = ev.GetEntityFrameworkEvent().GetDbContext().GetService<IHttpContextAccessor>();
 
-                            if (userClaim != null && int.TryParse(userClaim.Value, out int currentUserId))
-                            {
-                                auditLog.UserId = currentUserId;
-                            }
-                            else
-                            {
-                                auditLog.UserId = 0; // در صورتی که کاربری لاگین نکرده باشد (مثل تغییرات توسط سیستم)
-                            }
-                        })));
+                var userClaim = httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+
+                if (userClaim != null && int.TryParse(userClaim.Value, out int currentUserId))
+                {
+                    auditLog.UserId = currentUserId;
+                }
+                else
+                {
+                    auditLog.UserId = 0; // در صورتی که کاربری لاگین نکرده باشد (مثل تغییرات توسط سیستم)
+                }
+            })));
 
 var app = builder.Build();
 
