@@ -5,6 +5,12 @@
              Title="ایجاد تیکت پشتیبانی جدید"
              OnClose="HandleCancel"
              MaxWidthClass="max-w-lg">
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 whitespace-pre-line leading-relaxed font-medium">
+            @ErrorMessage
+        </div>
+    }
 
     <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" class="p-6 space-y-4">
         <div>
@@ -54,6 +60,7 @@
     [Parameter, EditorRequired] public IEnumerable<ProjectDto> Projects { get; set; } = default!;
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
 
     private async Task HandleValidSubmit()
     {

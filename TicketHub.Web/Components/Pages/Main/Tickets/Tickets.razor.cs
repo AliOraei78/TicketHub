@@ -1,16 +1,19 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Fluxor;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using TicketHub.Application.DTOs;
-using TicketHub.Application.Interfaces;
-using TicketHub.Application.Services;
+using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Main.Tickets;
 
-public partial class Tickets : ComponentBase
+// الان فقط از IDisposable ارث‌بری می‌کند
+public partial class Tickets : IDisposable
 {
-    [Inject] private ITicketService TicketService { get; set; } = default!;
-    [Inject] private IProjectService ProjectService { get; set; } = default!;
-    [Inject] private IStatusService StatusService { get; set; } = default!;
+    [Inject] private IState<TicketState> TicketState { get; set; } = default!;
+    [Inject] private IDispatcher Dispatcher { get; set; } = default!;
+
+    // اضافه شدن سابسکرایبر برای گوش دادن به رویدادها
+    [Inject] public IActionSubscriber ActionSubscriber { get; set; } = default!;
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
@@ -18,36 +21,61 @@ public partial class Tickets : ComponentBase
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-    private int pageSize = 10;
-    private IEnumerable<TicketDto> tickets = new List<TicketDto>();
-    private IEnumerable<ProjectDto> projects = new List<ProjectDto>();
-    private IEnumerable<StatusDto> statuses = new List<StatusDto>();
-
-    private string searchQuery = string.Empty;
     private bool isCreateModalOpen = false;
     private TicketDto newTicket = new TicketDto();
 
-    private List<int> selectedProjectIds = new();
-    private List<int> selectedStatusIds = new();
-
-    private IEnumerable<TicketDto> filteredTickets => tickets
-        .Where(t => !selectedStatusIds.Any() || selectedStatusIds.Contains(t.StatusId))
-        .Where(t => !selectedProjectIds.Any() || selectedProjectIds.Contains(t.ProjectId))
-        .Where(t => string.IsNullOrEmpty(searchQuery) ||
-                    t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                    t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
-
-    protected override async Task OnInitializedAsync()
+    private string SearchQuery
     {
-        await LoadTickets();
-        projects = await ProjectService.GetProjectsAsync();
-        statuses = await StatusService.GetAllAsync();
+        get => TicketState.Value.SearchTerm;
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(value, null, null, null, null));
     }
 
-    private async Task LoadTickets()
+    private int PageSize
     {
-        var result = await TicketService.GetFilteredTicketsAsync(string.Empty, null, null, null, 1, 1000);
-        tickets = result.Tickets;
+        get => TicketState.Value.PageSize;
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, value, null, null, null));
+    }
+
+    private List<int> SelectedProjectIds
+    {
+        get => TicketState.Value.SelectedFilterProjectIds;
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, value, null));
+    }
+
+    private List<int> SelectedStatusIds
+    {
+        get => TicketState.Value.SelectedFilterStatusIds;
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, null, value));
+    }
+
+    private IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets
+        .Where(t => !TicketState.Value.SelectedFilterStatusIds.Any() || TicketState.Value.SelectedFilterStatusIds.Contains(t.StatusId))
+        .Where(t => !TicketState.Value.SelectedFilterProjectIds.Any() || TicketState.Value.SelectedFilterProjectIds.Contains(t.ProjectId))
+        .Where(t => string.IsNullOrEmpty(TicketState.Value.SearchTerm) ||
+                    t.Title.Contains(TicketState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    t.Description.Contains(TicketState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // گوش دادن به اکشن موفقیت برای بستن خودکار مودال تیکت
+        ActionSubscriber.SubscribeToAction<SaveTicketSuccessAction>(this, action =>
+        {
+            isCreateModalOpen = false;
+            InvokeAsync(StateHasChanged);
+        });
+
+        if (!TicketState.Value.AvailableProjects.Any())
+        {
+            Dispatcher.Dispatch(new LoadTicketInitialDataAction());
+        }
+    }
+
+    // متد مربوط به پاکسازی حافظه هنگام خروج از صفحه
+    public void Dispose()
+    {
+        ActionSubscriber.UnsubscribeFromAllActions(this);
     }
 
     private async Task OpenCreateModal()
@@ -65,6 +93,7 @@ public partial class Tickets : ComponentBase
             ProjectId = 0
         };
 
+        Dispatcher.Dispatch(new ClearTicketMessagesAction());
         isCreateModalOpen = true;
     }
 
@@ -73,13 +102,12 @@ public partial class Tickets : ComponentBase
         isCreateModalOpen = false;
     }
 
-    private async Task HandleCreateTicket()
+    private void HandleCreateTicket()
     {
         if (newTicket.ProjectId == 0) return;
 
-        await TicketService.CreateAsync(newTicket);
-        await LoadTickets();
-        isCreateModalOpen = false;
+        Dispatcher.Dispatch(new SaveTicketAction(newTicket));
+        // خط بستن مودال از اینجا حذف شد چون به صورت خودکار در OnInitialized مدیریت می‌شود
     }
 
     private void NavigateToDetails(int id)
