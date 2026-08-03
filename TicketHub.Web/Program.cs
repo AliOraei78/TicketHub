@@ -1,3 +1,5 @@
+using Audit.Core;
+using Audit.EntityFramework;
 using DNTCaptcha.Core;
 using Fluxor;
 using Mapster;
@@ -9,12 +11,15 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
+using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
 using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
 using TicketHub.Web.Middlewares;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -82,6 +87,7 @@ builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<ITicketFieldService, TicketFieldService>();
 builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
+builder.Services.AddHttpContextAccessor();
 
 // --------- تنظیمات DNTCaptcha ---------
 builder.Services.AddDNTCaptcha(options =>
@@ -100,6 +106,61 @@ builder.Services.AddDNTCaptcha(options =>
            .Identifier("TicketHubAuth");
 });
 // --------------------------------------
+
+Audit.Core.Configuration.Setup()
+    .UseEntityFramework(ef => ef
+        .AuditTypeExplicitMapper(m => m
+            // --- موجودیت‌های اصلی تیکت ---
+            .Map<Ticket, AuditLog>()
+            .Map<TicketFieldValue, AuditLog>()
+
+            // --- موجودیت‌های پایه و تنظیمات سیستم ---
+            .Map<Project, AuditLog>()
+            .Map<Category, AuditLog>()
+            .Map<Priority, AuditLog>()
+            .Map<Role, AuditLog>()
+
+            // --- موجودیت‌های کاربری، امنیتی و دسترسی ---
+            .Map<User, AuditLog>()
+            .Map<UserRole, AuditLog>()
+            .Map<RoleProject, AuditLog>()
+            .Map<TransitionRole, AuditLog>()
+
+            // --- موجودیت‌های جریان کار (Workflow) و فرم‌های پویا ---
+            .Map<Workflow, AuditLog>()
+            .Map<WorkflowStatus, AuditLog>()
+            .Map<Status, AuditLog>()
+            .Map<Transition, AuditLog>()
+            .Map<TransitionField, AuditLog>()
+            .Map<TicketField, AuditLog>()
+
+            .AuditEntityAction<AuditLog>((ev, entry, auditLog) =>
+                        {
+                            auditLog.Id = 0;
+                            auditLog.EntityName = entry.EntityType.Name;
+                            auditLog.PrimaryKey = entry.PrimaryKey.Values.FirstOrDefault()?.ToString() ?? "";
+
+                            auditLog.OldValues = entry.Changes == null ? "" :
+                                System.Text.Json.JsonSerializer.Serialize(entry.Changes.ToDictionary(c => c.ColumnName, c => c.OriginalValue));
+                            auditLog.NewValues = entry.Changes == null ? "" :
+                                System.Text.Json.JsonSerializer.Serialize(entry.Changes.ToDictionary(c => c.ColumnName, c => c.NewValue));
+
+                            auditLog.ChangedAt = DateTime.UtcNow;
+
+                            // دریافت شناسه کاربر از HttpContext جاری
+                            var httpContextAccessor = ev.GetEntityFrameworkEvent().GetDbContext().GetService<IHttpContextAccessor>();
+
+                            var userClaim = httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+
+                            if (userClaim != null && int.TryParse(userClaim.Value, out int currentUserId))
+                            {
+                                auditLog.UserId = currentUserId;
+                            }
+                            else
+                            {
+                                auditLog.UserId = 0; // در صورتی که کاربری لاگین نکرده باشد (مثل تغییرات توسط سیستم)
+                            }
+                        })));
 
 var app = builder.Build();
 
