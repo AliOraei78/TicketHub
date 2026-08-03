@@ -5,6 +5,7 @@ using TicketHub.Application.Interfaces;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TicketHub.Application.Services;
 
@@ -14,15 +15,19 @@ public class PermissionService : IPermissionService
     private readonly IRepository<RolePermission> _rolePermissionRepo;
     private readonly IMemoryCache _cache;
     private const string CacheKey = "PermissionsCache";
+    private static readonly System.Threading.SemaphoreSlim _semaphore = new(1, 1);
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public PermissionService(
-        IRepository<Permission> permissionRepo,
-        IRepository<RolePermission> rolePermissionRepo,
-        IMemoryCache cache)
+            IRepository<Permission> permissionRepo,
+            IRepository<RolePermission> rolePermissionRepo,
+            IMemoryCache cache,
+            IServiceScopeFactory scopeFactory) // <--- این خط اضافه شد
     {
         _permissionRepo = permissionRepo;
         _rolePermissionRepo = rolePermissionRepo;
         _cache = cache;
+        _scopeFactory = scopeFactory; // <--- این خط اضافه شد
     }
 
     public async Task<IEnumerable<PermissionDto>> GetAllAsync()
@@ -193,26 +198,44 @@ public class PermissionService : IPermissionService
 
     private async Task<List<PermissionCacheDto>> GetPermissionsFromCacheAsync()
     {
-        return await _cache.GetOrCreateAsync(CacheKey, async entry =>
+        if (_cache.TryGetValue(CacheKey, out List<PermissionCacheDto>? cached) && cached != null)
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12);
+            return cached;
+        }
 
-            // استفاده از ریپازیتوری‌های موجود به جای _context
-            var permissions = await _permissionRepo.GetAllAsync();
-            var rolePermissions = await _rolePermissionRepo.GetAllWithIncludesAsync(rp => rp.Role);
+        await _semaphore.WaitAsync();
+        try
+        {
+            return await _cache.GetOrCreateAsync(CacheKey, async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12);
 
-            return permissions
-                .Where(p => p.IsActive)
-                .Select(p => new PermissionCacheDto
-                {
-                    ResourceKey = p.ResourceKey,
-                    // استخراج نام نقش‌ها از روی جدول واسط
-                    AllowedRoles = rolePermissions
-                        .Where(rp => rp.PermissionId == p.Id && rp.Role != null)
-                        .Select(rp => rp.Role.Name)
-                        .ToList()
-                })
-                .ToList();
-        }) ?? new List<PermissionCacheDto>();
+                // ایجاد یک ناحیه (Scope) جدید برای جلوگیری از تداخل DbContext با سایر کامپوننت‌ها (مثل Home.razor)
+                using var scope = _scopeFactory.CreateScope();
+
+                // دریافت نمونه‌های کاملاً جدید و مستقل از دیتابیس
+                var localPermRepo = scope.ServiceProvider.GetRequiredService<IRepository<Permission>>();
+                var localRolePermRepo = scope.ServiceProvider.GetRequiredService<IRepository<RolePermission>>();
+
+                var permissions = await localPermRepo.GetAllAsync();
+                var rolePermissions = await localRolePermRepo.GetAllWithIncludesAsync(rp => rp.Role);
+
+                return permissions
+                    .Where(p => p.IsActive)
+                    .Select(p => new PermissionCacheDto
+                    {
+                        ResourceKey = p.ResourceKey ?? string.Empty,
+                        AllowedRoles = rolePermissions
+                            .Where(rp => rp.PermissionId == p.Id && rp.Role != null)
+                            .Select(rp => rp.Role.Name)
+                            .ToList()
+                    })
+                    .ToList();
+            }) ?? new List<PermissionCacheDto>();
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 }

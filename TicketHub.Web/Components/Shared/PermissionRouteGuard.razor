@@ -6,7 +6,7 @@
 
 @if (_isChecking)
 {
-    @* می‌توانید یک لودر ساده اینجا بگذارید یا خالی رها کنید *@
+    <LoadingSpinner />
 }
 else if (_hasAccess)
 {
@@ -16,7 +16,7 @@ else
 {
     <PageTitle>یافت نشد</PageTitle>
     <LayoutView Layout="typeof(TicketHub.Web.Components.Layout.MainLayout)">
-        <p role="alert">صفحه مورد نظر پیدا نشد.</p>
+        <NotFoundView Message="ممکن است آدرس را اشتباه وارد کرده باشید یا دسترسی لازم به این بخش را نداشته باشید." />
     </LayoutView>
 }
 
@@ -32,10 +32,8 @@ else
         _isChecking = true;
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
 
-        // استخراج مسیر فعلی و حذف کوئری استرینگ‌ها
         var relativePath = "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0];
 
-        // هماهنگی با دیتابیس (داشبورد)
         if (relativePath == "/") relativePath = "";
 
         _hasAccess = await PermissionService.HasAccessAsync(authState.User, relativePath);
