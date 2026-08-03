@@ -83,6 +83,11 @@ public class MapsterConfig : IRegister
               .Ignore(dest => dest.TransitionField)
               .Ignore(dest => dest.TicketFieldValue);
 
+        config.NewConfig<TicketFieldValue, TicketFieldValueDto>();
+        config.NewConfig<TicketFieldValueDto, TicketFieldValue>()
+              .Ignore(dest => dest.Ticket)
+              .Ignore(dest => dest.TicketField);
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }

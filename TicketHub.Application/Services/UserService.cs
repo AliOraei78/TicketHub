@@ -11,13 +11,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
-    private readonly IRoleService _roleService;
+    private readonly IRepository<Role> _roleRepository;
 
-    public UserService(IUserRepository userRepository, IEmailService emailService, IRoleService roleService)
+    public UserService(IUserRepository userRepository, IEmailService emailService, IRepository<Role> roleRepository)
     {
         _userRepository = userRepository;
         _emailService = emailService;
-        _roleService = roleService;
+        _roleRepository = roleRepository;
     }
 
     public async Task<List<UserDto>> GetAllAsync()
@@ -98,7 +98,7 @@ public class UserService : IUserService
 
         await _userRepository.AddAsync(user);
 
-        var roles = await _roleService.GetAllRolesAsync();
+        var roles = await _roleRepository.GetAllAsync();
         var defaultRole = roles.FirstOrDefault(r => r.Name == "کاربر");
 
         if (defaultRole != null)

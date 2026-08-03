@@ -24,6 +24,9 @@ namespace TicketHub.Core.Entities
         public int? PriorityId { get; set; }
         public Priority? Priority { get; set; } = null!;
 
+        public int? WorkflowStatusId { get; set; }
+        public WorkflowStatus? WorkflowStatus { get; set; }
+
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
         public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();

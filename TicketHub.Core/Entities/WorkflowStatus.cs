@@ -13,4 +13,5 @@ public class WorkflowStatus
 
     public double PositionX { get; set; }
     public double PositionY { get; set; }
+    public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 }

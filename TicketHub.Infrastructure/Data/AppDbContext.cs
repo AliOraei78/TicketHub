@@ -235,6 +235,13 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany(tfv => tfv.Attachments)
                 .HasForeignKey(a => a.TicketFieldValueId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ارتباط جدید بین Ticket و WorkflowStatus
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.WorkflowStatus)
+                .WithMany(ws => ws.Tickets)
+                .HasForeignKey(t => t.WorkflowStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
