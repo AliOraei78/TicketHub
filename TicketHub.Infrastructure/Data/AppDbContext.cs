@@ -33,6 +33,8 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<TicketField> TicketFields { get; set; }
         public DbSet<FieldCategory> FieldCategories { get; set; }
         public DbSet<TicketFieldValue> TicketFieldValues { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
         // کل متد OnModelCreating را با این کد جایگزین کن:
@@ -234,6 +236,23 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(t => t.WorkflowStatus)
                 .WithMany(ws => ws.Tickets)
                 .HasForeignKey(t => t.WorkflowStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RolePermission>().HasKey(rp => rp.Id);
+            modelBuilder.Entity<RolePermission>()
+                .HasIndex(rp => new { rp.RoleId, rp.PermissionId })
+                .IsUnique();
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Role)
+                .WithMany(r => r.RolePermissions)
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(rp => rp.PermissionId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

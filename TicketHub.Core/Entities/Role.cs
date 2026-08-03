@@ -13,5 +13,6 @@ namespace TicketHub.Core.Entities
         public ICollection<RoleProject> RoleProjects { get; set; } = new List<RoleProject>();
         public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
         public ICollection<CategoryRole> CategoryRoles { get; set; } = new List<CategoryRole>();
+        public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
     }
 }

@@ -115,6 +115,15 @@ public class MapsterConfig : IRegister
               .Ignore(dest => dest.Priority)
               .Ignore(dest => dest.WorkflowStatus);
 
+        // Permission Mapping
+        config.NewConfig<Permission, PermissionDto>()
+              .Map(dest => dest.RoleIds, src => src.RolePermissions != null
+                                                ? src.RolePermissions.Select(rp => rp.RoleId).ToList()
+                                                : new List<int>());
+
+        config.NewConfig<PermissionDto, Permission>()
+              .Ignore(dest => dest.RolePermissions);
+
         // جلوگیری از افتادن در حلقه بی‌نهایت برای Navigation Propertyهای دوطرفه
         config.Default.PreserveReference(true);
     }

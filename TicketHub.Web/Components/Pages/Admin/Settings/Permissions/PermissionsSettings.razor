@@ -1,0 +1,133 @@
+﻿@page "/settings/permissions"
+@using TicketHub.Web.Components.Shared
+@using TicketHub.Application.DTOs
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@rendermode InteractiveServer
+
+<PageTitle>مدیریت دسترسی‌ها | سامانه تیکتینگ</PageTitle>
+
+<div class="container mx-auto p-4 md:p-8 flex flex-col gap-3 flex-1" dir="rtl">
+    <PageHeader Title="مدیریت دسترسی‌ها" Description="در این بخش می‌توانید سطوح دسترسی و نقش‌های مرتبط را مدیریت کنید.">
+        <Icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+        </Icon>
+    </PageHeader>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">@(isEditing ? "ویرایش دسترسی" : "ایجاد دسترسی جدید")</h3>
+
+                <PermissionForm Model="permModel"
+                                IsEditing="isEditing"
+                                AvailableRoles="PermState.Value.AvailableRoles"
+                                OnValidSubmit="HandleSubmit"
+                                OnCancel="CancelEdit"
+                                SuccessMessage="@PermState.Value.StatusMessage"
+                                IsError="PermState.Value.IsError" />
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-start gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg whitespace-nowrap">لیست دسترسی‌ها</h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full items-start">
+                        <div class="w-full mt-4">
+                            <SearchBox Placeholder="جستجو..." SearchTerm="@PermState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
+                        </div>
+
+                        <div class="w-full mt-4">
+                            <GenericStatusFilter TValue="bool?"
+                                                 Options="new bool?[] { null, true, false }"
+                                                 SelectedValue="PermState.Value.SelectedFilterStatus"
+                                                 OnValueChanged="FilterByStatus"
+                                                 BackgroundClassSelector='val => val == null ? "translate-x-0 bg-gray-900" : val == true ? "-translate-x-full bg-emerald-600" : "-translate-x-[200%] bg-gray-400"'
+                                                 ItemClassSelector='(item, selected) => item == selected ? "text-white" : item == null ? "text-gray-600 hover:text-gray-900" : item == true ? "text-emerald-600 hover:text-emerald-700" : "text-gray-500 hover:text-gray-700"'>
+                                <ItemTemplate Context="status">
+                                    @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
+                                </ItemTemplate>
+                            </GenericStatusFilter>
+                        </div>
+
+                        <div class="w-full z-10 mt-4 [&_label]:hidden">
+                            <MultiSelectDropdown TItem="RoleDto" TValue="int"
+                                                 Placeholder="فیلتر نقش..."
+                                                 Items="PermState.Value.AvailableRoles"
+                                                 SelectedValues="PermState.Value.SelectedFilterRoleIds"
+                                                 SelectedValuesChanged="FilterByRoles"
+                                                 ValueSelector="r => r.Id" DisplaySelector="r => r.Name"
+                                                 BadgeBgClass="bg-purple-100" BadgeTextClass="text-purple-700" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-0">
+                    <DataGrid TItem="TicketHub.Application.DTOs.PermissionDto" TKey="int" Items="FilteredPermissions" IsLoading="PermState.Value.IsLoading" KeySelector="p => p.Id" SelectedKeys="selectedIds" SelectedKeysChanged="OnSelectionChanged" ShowRowIndex="false" EmptyStateValue="دسترسی">
+                        <HeaderTemplate>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">عنوان</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">کلید / سطح</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">نقش‌ها</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right">وضعیت</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center">عملیات</th>
+                        </HeaderTemplate>
+
+                        <RowTemplate Context="perm">
+                            <td class="px-6 py-4 font-bold text-gray-800">@perm.Title</td>
+                            <td class="px-6 py-4">
+                                <span class="block text-sm text-gray-600">@perm.ResourceKey</span>
+                                <span class="block text-xs text-gray-400">سطح: @perm.AccessLevel</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-wrap gap-1">
+                                    @if (perm.RoleIds.Any() && PermState.Value.AvailableRoles != null)
+                                    {
+                                        @foreach (var roleId in perm.RoleIds)
+                                        {
+                                            var role = PermState.Value.AvailableRoles.FirstOrDefault(r => r.Id == roleId);
+                                            if (role != null)
+                                            {
+                                                <Badge><span class="block truncate max-w-[100px]">@role.Name</span></Badge>
+                                            }
+                                        }
+                                    }
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (perm.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-medium">فعال</span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 text-xs font-medium">غیرفعال</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @onclick="() => Edit(perm)" class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg smooth-transition" title="ویرایش">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" @onclick="() => OpenDeleteModal(perm)" class="p-2 text-rose-500 hover:bg-rose-100 rounded-lg smooth-transition" title="حذف">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </RowTemplate>
+                    </DataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<BulkActionToolbar SelectedCount="selectedIds.Count" OnCancel="ClearSelection" OnDelete="OpenBulkDeleteModal" OnActivate="() => BulkUpdateStatus(true)" OnDeactivate="() => BulkUpdateStatus(false)" />
+
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDesc" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
