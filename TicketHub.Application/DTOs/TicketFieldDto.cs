@@ -12,6 +12,7 @@ public class TicketFieldDto
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+    public bool IsRequired { get; set; }
     public DateTime CreatedAt { get; set; }
     public int FieldTypeId { get; set; }
     public FieldTypeDto? FieldType { get; set; }
