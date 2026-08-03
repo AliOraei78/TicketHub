@@ -40,139 +40,39 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
-
-        <div class="relative w-full md:w-80 shrink-0">
-            <input @bind="searchQuery" @bind:event="oninput" type="text" placeholder="جستجو در عنوان تیکت‌ها..." class="w-full pr-10 pl-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm bg-gray-50 hover:bg-white focus:bg-white smooth-transition" />
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute right-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+    <ListFilterToolbar @bind-SearchTerm="searchQuery"
+                       SearchPlaceholder="جستجو در عنوان تیکت‌ها..."
+                       ItemName="تیکت"
+                       @bind-PageSize="pageSize">
+        <div class="w-full sm:w-56">
+            <MultiSelectDropdown TItem="Project" TValue="int"
+                                 Placeholder="پروژه..."
+                                 Items="projects"
+                                 @bind-SelectedValues="selectedProjectIds"
+                                 ValueSelector="p => p.Id"
+                                 DisplaySelector="p => p.Name" />
         </div>
-
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-start sm:items-center">
-            <div class="w-full sm:w-56">
-                <MultiSelectDropdown TItem="Project" TValue="int"
-                                     Placeholder="پروژه..."
-                                     Items="projects"
-                                     SelectedValues="selectedProjectIds"
-                                     SelectedValuesChanged="FilterProjectsChanged"
-                                     ValueSelector="p => p.Id"
-                                     DisplaySelector="p => p.Name" />
-            </div>
-
-            <div class="w-full sm:w-56">
-                <MultiSelectDropdown TItem="Status" TValue="int"
-                                     Placeholder="وضعیت..."
-                                     Items="statuses"
-                                     SelectedValues="selectedStatusIds"
-                                     SelectedValuesChanged="FilterStatusesChanged"
-                                     ValueSelector="s => s.Id"
-                                     DisplaySelector="s => s.Name" />
-            </div>
+        <div class="w-full sm:w-56">
+            <MultiSelectDropdown TItem="Status" TValue="int"
+                                 Placeholder="وضعیت..."
+                                 Items="statuses"
+                                 @bind-SelectedValues="selectedStatusIds"
+                                 ValueSelector="s => s.Id"
+                                 DisplaySelector="s => s.Name" />
         </div>
-
-    </div>
+    </ListFilterToolbar>
 
     <!-- Tickets Main Grid/List -->
     <DataList Items="filteredTickets" EmptyMessage="هیچ تیکتی یافت نشد.">
         <ItemTemplate Context="ticket">
-            <div @onclick="() => NavigateToDetails(ticket.Id)" class="cursor-pointer smooth-transition bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group">
-
-                <div class="flex items-start gap-4 w-full">
-                    <div class="p-3 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600 smooth-transition flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                    </div>
-                    <div class="flex-grow">
-                        <h4 class="font-bold text-gray-800 text-lg group-hover:text-blue-600 smooth-transition">@ticket.Title</h4>
-                        <p class="text-sm text-gray-500 mt-1 line-clamp-1 max-w-xl">@ticket.Description</p>
-                        <div class="flex flex-wrap gap-4 mt-2 text-xs text-gray-400">
-                            <span>تاریخ: @ticket.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</span>
-                            <span class="text-indigo-600 font-medium">پروژه: @(ticket.Project?.Name ?? "عمومی")</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50 flex-shrink-0">
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold @GetPriorityClass(ticket.Priority?.Name ?? "")">
-                        @(ticket.Priority?.Name ?? "نامشخص")
-                    </span>
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold"
-                          style="background-color: @(ticket.Status?.ColorCode ?? "#6B7280")20; color: @(ticket.Status?.ColorCode ?? "#6B7280");">
-                        @(ticket.Status?.Name ?? "نامشخص")
-                    </span>
-                </div>
-            </div>
+            <TicketCard Ticket="ticket" OnClick="NavigateToDetails" />
         </ItemTemplate>
     </DataList>
 </div>
 
 <!-- Animated Create Ticket Modal -->
-<ModalDialog IsOpen="isCreateModalOpen"
-             Title="ایجاد تیکت پشتیبانی جدید"
-             OnClose="CloseCreateModal"
-             MaxWidthClass="max-w-lg">
-
-    <EditForm Model="@newTicket" OnValidSubmit="HandleCreateTicket" class="p-6 space-y-4">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان تیکت</label>
-            <InputText @bind-Value="newTicket.Title" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="یک عنوان کوتاه بنویسید" required />
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
-                <InputSelect @bind-Value="newTicket.PriorityId" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition">
-                    <option value="1">Low (کم)</option>
-                    <option value="2">Medium (متوسط)</option>
-                    <option value="3">High (زیاد)</option>
-                    <option value="4">Critical (بحرانی)</option>
-                </InputSelect>
-            </div>
-
-            <!-- Searchable Project Dropdown Component -->
-            <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-1">پروژه مربوطه</label>
-                <button type="button" @onclick="ToggleProjectDropdown" class="w-full text-right px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition bg-white flex justify-between items-center min-h-[42px]">
-                    <span class="@(selectedProjectName == null ? "text-gray-400" : "text-gray-800 font-medium")">
-                        @(selectedProjectName ?? "انتخاب پروژه...")
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 smooth-transition @(isProjectDropdownOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                </button>
-
-                @if (isProjectDropdownOpen)
-                {
-                    <div class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-y-auto p-2 space-y-1">
-                        <input type="text" @bind="projectSearchQuery" @bind:event="oninput" placeholder="جستجوی نام پروژه..." class="w-full px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-xs mb-1" />
-
-                        @if (!filteredProjectsForDropdown.Any())
-                        {
-                            <div class="text-xs text-gray-400 text-center py-3">پروژه‌ای یافت نشد</div>
-                        }
-                        else
-                        {
-                            @foreach (var proj in filteredProjectsForDropdown)
-                            {
-                                <button type="button" @onclick="() => SelectProject(proj)" class="w-full text-right px-3 py-2 text-xs rounded-lg hover:bg-slate-50 smooth-transition text-slate-700 font-medium flex items-center justify-between">
-                                    <span>@proj.Name</span>
-                                    @if (newTicket.ProjectId == proj.Id)
-                                    {
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                    }
-                                </button>
-                            }
-                        }
-                    </div>
-                }
-            </div>
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">توضیحات تیکت</label>
-            <InputTextArea @bind-Value="newTicket.Description" rows="4" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." required />
-        </div>
-
-        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button type="button" @onclick="CloseCreateModal" class="smooth-transition px-5 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">انصراف</button>
-            <button type="submit" class="smooth-transition px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/10" disabled="@(newTicket.ProjectId == 0)">ثبت تیکت</button>
-        </div>
-    </EditForm>
-
-</ModalDialog>
+<TicketFormModal IsOpen="isCreateModalOpen"
+                 Model="newTicket"
+                 Projects="projects"
+                 OnSubmit="HandleCreateTicket"
+                 OnCancel="CloseCreateModal" />

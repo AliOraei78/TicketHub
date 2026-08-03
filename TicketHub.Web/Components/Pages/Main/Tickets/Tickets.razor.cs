@@ -18,7 +18,7 @@ public partial class Tickets : ComponentBase
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-
+    private int pageSize = 10;
     private IEnumerable<Ticket> tickets = new List<Ticket>();
     private IEnumerable<Project> projects = new List<Project>();
     private IEnumerable<Status> statuses = new List<Status>();
@@ -31,15 +31,6 @@ public partial class Tickets : ComponentBase
     private List<int> selectedProjectIds = new();
     private List<int> selectedStatusIds = new();
 
-    // --- متغیرهای دراپ‌داون ایجاد تیکت ---
-    private bool isProjectDropdownOpen = false;
-    private string projectSearchQuery = string.Empty;
-    private string? selectedProjectName = null;
-
-    // --- متدهای تغییر فیلتر ---
-    private void FilterProjectsChanged(List<int> values) => selectedProjectIds = values;
-    private void FilterStatusesChanged(List<int> values) => selectedStatusIds = values;
-
     // --- اعمال فیلترها روی لیست تیکت‌ها ---
     private IEnumerable<Ticket> filteredTickets => tickets
         .Where(t => !selectedStatusIds.Any() || selectedStatusIds.Contains(t.StatusId))
@@ -49,9 +40,6 @@ public partial class Tickets : ComponentBase
                     t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
 
     // --- جستجو در دراپ‌داون پروژه‌ها (مدال ایجاد) ---
-    private IEnumerable<Project> filteredProjectsForDropdown => projects
-        .Where(p => string.IsNullOrEmpty(projectSearchQuery) || p.Name.Contains(projectSearchQuery, StringComparison.OrdinalIgnoreCase));
-
     protected override async Task OnInitializedAsync()
     {
         await LoadTickets();
@@ -79,27 +67,12 @@ public partial class Tickets : ComponentBase
             ProjectId = 0
         };
 
-        selectedProjectName = null;
-        projectSearchQuery = string.Empty;
-        isProjectDropdownOpen = false;
         isCreateModalOpen = true;
     }
 
     private void CloseCreateModal()
     {
         isCreateModalOpen = false;
-    }
-
-    private void ToggleProjectDropdown()
-    {
-        isProjectDropdownOpen = !isProjectDropdownOpen;
-    }
-
-    private void SelectProject(Project project)
-    {
-        newTicket.ProjectId = project.Id;
-        selectedProjectName = project.Name;
-        isProjectDropdownOpen = false;
     }
 
     private async Task HandleCreateTicket()
@@ -111,22 +84,6 @@ public partial class Tickets : ComponentBase
         await LoadTickets();
         isCreateModalOpen = false;
     }
-
-    private string GetPriorityClass(string priority) => priority switch
-    {
-        "Low" => "bg-blue-50 text-blue-600",
-        "Medium" => "bg-amber-50 text-amber-600",
-        "High" => "bg-orange-50 text-orange-600",
-        "Critical" => "bg-rose-50 text-rose-600",
-        _ => "bg-gray-50 text-gray-600"
-    };
-
-    private string GetStatusClass(string status) => status switch
-    {
-        "Open" => "bg-emerald-100 text-emerald-800",
-        "Closed" => "bg-gray-100 text-gray-600",
-        _ => "bg-gray-100 text-gray-600"
-    };
 
     private void NavigateToDetails(int id)
     {
