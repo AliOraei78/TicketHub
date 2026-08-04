@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
@@ -88,8 +89,17 @@ public class TicketEffects
     private readonly ICategoryService _categoryService;
     private readonly IState<TicketState> _state;
     private readonly ITicketFieldService _ticketFieldService;
+    private readonly ILogger<TicketEffects> _logger;
 
-    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IPriorityService priorityService, ICategoryService categoryService, IState<TicketState> state, ITicketFieldService ticketFieldService)
+    public TicketEffects(
+        ITicketService ticketService,
+        IProjectService projectService,
+        IStatusService statusService,
+        IPriorityService priorityService,
+        ICategoryService categoryService,
+        IState<TicketState> state,
+        ITicketFieldService ticketFieldService,
+        ILogger<TicketEffects> logger)
     {
         _ticketService = ticketService;
         _projectService = projectService;
@@ -98,36 +108,68 @@ public class TicketEffects
         _categoryService = categoryService;
         _state = state;
         _ticketFieldService = ticketFieldService;
+        _logger = logger;
     }
 
     [EffectMethod]
     public async Task HandleLoadInitialData(LoadTicketInitialDataAction action, IDispatcher dispatcher)
     {
-        var projects = await _projectService.GetProjectsByUserRolesAsync(action.UserRoles);
-        var statuses = await _statusService.GetAllAsync();
-        var priorities = await _priorityService.GetAllAsync();
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی اطلاعات اولیه تیکت‌ها.");
 
-        var categories = await _categoryService.GetCategoriesByUserRolesAsync(action.UserRoles);
+            var projects = await _projectService.GetProjectsByUserRolesAsync(action.UserRoles);
+            var statuses = await _statusService.GetAllAsync();
+            var priorities = await _priorityService.GetAllAsync();
+            var categories = await _categoryService.GetCategoriesByUserRolesAsync(action.UserRoles);
 
-        dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses, priorities, categories));
-        dispatcher.Dispatch(new LoadTicketsAction());
+            dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses, priorities, categories));
+            dispatcher.Dispatch(new LoadTicketsAction());
+
+            _logger.LogInformation("اطلاعات اولیه تیکت‌ها با موفقیت بارگذاری شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت اطلاعات اولیه تیکت‌ها.");
+        }
     }
 
     [EffectMethod(typeof(LoadTicketsAction))]
     public async Task HandleLoadTickets(IDispatcher dispatcher)
     {
-        var st = _state.Value;
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی لیست تیکت‌ها.");
 
-        var result = await _ticketService.GetFilteredTicketsAsync(string.Empty, null, null, null, 1, 1000);
+            var st = _state.Value;
+            var result = await _ticketService.GetFilteredTicketsAsync(string.Empty, null, null, null, 1, 1000);
 
-        dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, 1));
+            dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, 1));
+
+            _logger.LogInformation("لیست تیکت‌ها با موفقیت دریافت شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت لیست تیکت‌ها.");
+        }
     }
 
     [EffectMethod]
     public async Task HandleLoadDynamicFields(LoadDynamicFieldsAction action, IDispatcher dispatcher)
     {
-        var fields = await _ticketFieldService.GetFieldsByCategoryIdAsync(action.CategoryId);
-        dispatcher.Dispatch(new DynamicFieldsLoadedAction(fields));
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی فیلدهای داینامیک برای دسته‌بندی با شناسه {CategoryId}.", action.CategoryId);
+
+            var fields = await _ticketFieldService.GetFieldsByCategoryIdAsync(action.CategoryId);
+            dispatcher.Dispatch(new DynamicFieldsLoadedAction(fields));
+
+            _logger.LogInformation("فیلدهای داینامیک با موفقیت دریافت شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت فیلدهای داینامیک برای دسته‌بندی {CategoryId}.", action.CategoryId);
+        }
     }
 
     [EffectMethod]
@@ -148,6 +190,8 @@ public class TicketEffects
 
         try
         {
+            _logger.LogInformation("اجرای اکشن SaveTicketAction برای {ActionType} تیکت.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
+
             if (ticketModel.Id == 0)
                 await _ticketService.CreateAsync(ticketModel);
             else
@@ -155,9 +199,12 @@ public class TicketEffects
 
             dispatcher.Dispatch(new SaveTicketSuccessAction());
             dispatcher.Dispatch(new LoadTicketsAction());
+
+            _logger.LogInformation("تیکت با موفقیت {ActionType} شد.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در زمان {ActionType} تیکت.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
             dispatcher.Dispatch(new SaveTicketFailedAction("• خطایی در ذخیره تیکت رخ داد."));
         }
     }

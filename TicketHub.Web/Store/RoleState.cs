@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 
@@ -61,13 +62,33 @@ public static class RoleReducers
 public class RoleEffects
 {
     private readonly IRoleService _roleService;
-    public RoleEffects(IRoleService roleService) => _roleService = roleService;
+    private readonly ILogger<RoleEffects> _logger;
+
+    public RoleEffects(
+        IRoleService roleService,
+        ILogger<RoleEffects> logger)
+    {
+        _roleService = roleService;
+        _logger = logger;
+    }
 
     [EffectMethod]
     public async Task HandleLoadRoles(LoadRolesAction action, IDispatcher dispatcher)
     {
-        var roles = await _roleService.GetAllRolesAsync();
-        dispatcher.Dispatch(new RolesLoadedAction(roles));
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی لیست نقش‌ها.");
+
+            var roles = await _roleService.GetAllRolesAsync();
+            dispatcher.Dispatch(new RolesLoadedAction(roles));
+
+            _logger.LogInformation("دریافت لیست نقش‌ها با موفقیت انجام شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت لیست نقش‌ها.");
+            dispatcher.Dispatch(new SetRoleMessageAction("خطا در بارگذاری اطلاعات نقش‌ها.", true));
+        }
     }
 
     [EffectMethod]
@@ -75,6 +96,8 @@ public class RoleEffects
     {
         try
         {
+            _logger.LogInformation("اجرای اکشن SaveRoleAction برای {ActionType} نقش.", action.IsEditing ? "ویرایش" : "ایجاد");
+
             if (action.IsEditing && action.EditingRoleId.HasValue)
             {
                 await _roleService.UpdateRoleAsync(action.EditingRoleId.Value, action.Role);
@@ -88,8 +111,9 @@ public class RoleEffects
 
             dispatcher.Dispatch(new LoadRolesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در زمان {ActionType} نقش.", action.IsEditing ? "ویرایش" : "ایجاد");
             dispatcher.Dispatch(new SetRoleMessageAction("خطایی در ذخیره اطلاعات رخ داد.", true));
         }
     }
@@ -99,12 +123,16 @@ public class RoleEffects
     {
         try
         {
+            _logger.LogWarning("درخواست حذف نقش با شناسه {RoleId}.", action.Id);
+
             await _roleService.DeleteRoleAsync(action.Id);
+
             dispatcher.Dispatch(new SetRoleMessageAction("نقش با موفقیت حذف شد.", false));
             dispatcher.Dispatch(new LoadRolesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در حذف نقش با شناسه {RoleId}.", action.Id);
             dispatcher.Dispatch(new SetRoleMessageAction("امکان حذف وجود ندارد! نقش در حال استفاده است.", true));
         }
     }
@@ -114,13 +142,18 @@ public class RoleEffects
     {
         try
         {
+            int count = action.Ids.Count();
+            _logger.LogWarning("درخواست حذف گروهی نقش‌ها به تعداد {Count}.", count);
+
             await _roleService.DeleteRolesAsync(action.Ids.ToHashSet());
-            var verb = action.Ids.Count() == 1 ? "شد" : "شدند";
-            dispatcher.Dispatch(new SetRoleMessageAction($"{action.Ids.Count()} نقش با موفقیت حذف {verb}.", false));
+
+            var verb = count == 1 ? "شد" : "شدند";
+            dispatcher.Dispatch(new SetRoleMessageAction($"{count} نقش با موفقیت حذف {verb}.", false));
             dispatcher.Dispatch(new LoadRolesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در حذف گروهی نقش‌ها.");
             dispatcher.Dispatch(new SetRoleMessageAction("خطایی در حذف گروهی رخ داد.", true));
         }
     }
@@ -130,14 +163,19 @@ public class RoleEffects
     {
         try
         {
-            await _roleService.UpdateRolesStatusAsync(action.Ids.ToHashSet(), action.IsActive);
-            var verb = action.Ids.Count() == 1 ? "شد" : "شدند";
+            int count = action.Ids.Count();
             var statusStr = action.IsActive ? "فعال" : "غیرفعال";
-            dispatcher.Dispatch(new SetRoleMessageAction($"{action.Ids.Count()} نقش با موفقیت {statusStr} {verb}.", false));
+            _logger.LogInformation("تغییر وضعیت {Count} نقش به {Status}.", count, statusStr);
+
+            await _roleService.UpdateRolesStatusAsync(action.Ids.ToHashSet(), action.IsActive);
+
+            var verb = count == 1 ? "شد" : "شدند";
+            dispatcher.Dispatch(new SetRoleMessageAction($"{count} نقش با موفقیت {statusStr} {verb}.", false));
             dispatcher.Dispatch(new LoadRolesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در تغییر وضعیت گروهی نقش‌ها.");
             dispatcher.Dispatch(new SetRoleMessageAction("عملیات با خطا مواجه شد!", true));
         }
     }

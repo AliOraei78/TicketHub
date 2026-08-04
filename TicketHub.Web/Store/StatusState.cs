@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 
@@ -61,13 +62,33 @@ public static class StatusReducers
 public class StatusEffects
 {
     private readonly IStatusService _statusService;
-    public StatusEffects(IStatusService statusService) => _statusService = statusService;
+    private readonly ILogger<StatusEffects> _logger;
+
+    public StatusEffects(
+        IStatusService statusService,
+        ILogger<StatusEffects> logger)
+    {
+        _statusService = statusService;
+        _logger = logger;
+    }
 
     [EffectMethod]
     public async Task HandleLoadStatuses(LoadStatusesAction action, IDispatcher dispatcher)
     {
-        var statuses = await _statusService.GetAllAsync();
-        dispatcher.Dispatch(new StatusesLoadedAction(statuses));
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی لیست وضعیت‌ها.");
+
+            var statuses = await _statusService.GetAllAsync();
+            dispatcher.Dispatch(new StatusesLoadedAction(statuses));
+
+            _logger.LogInformation("دریافت لیست وضعیت‌ها با موفقیت انجام شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت لیست وضعیت‌ها.");
+            dispatcher.Dispatch(new SetStatusMessageAction("خطا در بارگذاری اطلاعات وضعیت‌ها.", true));
+        }
     }
 
     [EffectMethod]
@@ -75,14 +96,19 @@ public class StatusEffects
     {
         try
         {
-            if (action.IsEditing) await _statusService.UpdateAsync(action.Status);
-            else await _statusService.AddAsync(action.Status);
+            _logger.LogInformation("اجرای اکشن SaveStatusAction برای {ActionType} وضعیت.", action.IsEditing ? "ویرایش" : "ایجاد");
+
+            if (action.IsEditing)
+                await _statusService.UpdateAsync(action.Status);
+            else
+                await _statusService.AddAsync(action.Status);
 
             dispatcher.Dispatch(new SetStatusMessageAction(action.IsEditing ? "وضعیت با موفقیت ویرایش شد." : "وضعیت با موفقیت ایجاد شد.", false));
             dispatcher.Dispatch(new LoadStatusesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در زمان {ActionType} وضعیت.", action.IsEditing ? "ویرایش" : "ایجاد");
             dispatcher.Dispatch(new SetStatusMessageAction("خطایی در ذخیره اطلاعات رخ داد.", true));
         }
     }
@@ -92,12 +118,16 @@ public class StatusEffects
     {
         try
         {
+            _logger.LogWarning("درخواست حذف وضعیت با شناسه {StatusId}.", action.Id);
+
             await _statusService.DeleteAsync(action.Id);
+
             dispatcher.Dispatch(new SetStatusMessageAction("وضعیت با موفقیت حذف شد.", false));
             dispatcher.Dispatch(new LoadStatusesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در حذف وضعیت با شناسه {StatusId}.", action.Id);
             dispatcher.Dispatch(new SetStatusMessageAction("امکان حذف وجود ندارد! ابتدا باید تیکت‌هایی که در این وضعیت هستند را ویرایش کنید.", true));
         }
     }
@@ -107,13 +137,18 @@ public class StatusEffects
     {
         try
         {
+            int count = action.Ids.Count();
+            _logger.LogWarning("درخواست حذف گروهی وضعیت‌ها به تعداد {Count}.", count);
+
             await _statusService.DeleteRangeAsync(action.Ids);
-            var verb = action.Ids.Count() == 1 ? "شد" : "شدند";
-            dispatcher.Dispatch(new SetStatusMessageAction($"{action.Ids.Count()} وضعیت با موفقیت حذف {verb}.", false));
+
+            var verb = count == 1 ? "شد" : "شدند";
+            dispatcher.Dispatch(new SetStatusMessageAction($"{count} وضعیت با موفقیت حذف {verb}.", false));
             dispatcher.Dispatch(new LoadStatusesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در حذف گروهی وضعیت‌ها.");
             dispatcher.Dispatch(new SetStatusMessageAction("امکان حذف وجود ندارد! تیکت‌های مرتبط را بررسی کنید.", true));
         }
     }
@@ -123,14 +158,18 @@ public class StatusEffects
     {
         try
         {
-            await _statusService.UpdateStatesStatusAsync(action.Ids, action.IsActive);
-            var count = action.Ids.Count();
+            int count = action.Ids.Count();
             var actionName = action.IsActive ? "فعال" : "غیرفعال";
+            _logger.LogInformation("تغییر وضعیت {Count} وضعیت به {Status}.", count, actionName);
+
+            await _statusService.UpdateStatesStatusAsync(action.Ids, action.IsActive);
+
             dispatcher.Dispatch(new SetStatusMessageAction($"{count} وضعیت با موفقیت {actionName} {(count == 1 ? "شد" : "شدند")}.", false));
             dispatcher.Dispatch(new LoadStatusesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در تغییر وضعیت گروهی وضعیت‌ها.");
             dispatcher.Dispatch(new SetStatusMessageAction("عملیات با خطا مواجه شد!", true));
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
@@ -85,40 +86,69 @@ public class UserEffects
     private readonly IRoleService _roleService;
     private readonly IProjectService _projectService;
     private readonly IState<UserState> _state;
+    private readonly ILogger<UserEffects> _logger;
 
-    public UserEffects(IUserService userService, IRoleService roleService, IProjectService projectService, IState<UserState> state)
+    public UserEffects(
+        IUserService userService,
+        IRoleService roleService,
+        IProjectService projectService,
+        IState<UserState> state,
+        ILogger<UserEffects> logger)
     {
         _userService = userService;
         _roleService = roleService;
         _projectService = projectService;
         _state = state;
+        _logger = logger;
     }
 
     [EffectMethod(typeof(LoadUserInitialDataAction))]
     public async Task HandleLoadInitialData(IDispatcher dispatcher)
     {
-        var roles = await _roleService.GetAllRolesAsync();
-        var projects = await _projectService.GetProjectsAsync();
-        dispatcher.Dispatch(new UserInitialDataLoadedAction(roles, projects));
-        dispatcher.Dispatch(new LoadUsersAction());
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی اطلاعات اولیه کاربران.");
+
+            var roles = await _roleService.GetAllRolesAsync();
+            var projects = await _projectService.GetProjectsAsync();
+
+            dispatcher.Dispatch(new UserInitialDataLoadedAction(roles, projects));
+            dispatcher.Dispatch(new LoadUsersAction());
+
+            _logger.LogInformation("اطلاعات اولیه کاربران با موفقیت بارگذاری شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت اطلاعات اولیه کاربران.");
+        }
     }
 
     [EffectMethod(typeof(LoadUsersAction))]
     public async Task HandleLoadUsers(IDispatcher dispatcher)
     {
-        var st = _state.Value;
-        var result = await _userService.GetFilteredUsersAsync(st.SearchTerm, st.SelectedFilterRoleIds, st.SelectedFilterProjectIds, st.SelectedFilterStatus, st.CurrentPage, st.PageSize);
-
-        int maxPage = result.TotalCount == 0 ? 1 : (int)Math.Ceiling(result.TotalCount / (double)st.PageSize);
-        var finalPage = st.CurrentPage;
-
-        if (st.CurrentPage > maxPage && maxPage > 0)
+        try
         {
-            finalPage = maxPage;
-            result = await _userService.GetFilteredUsersAsync(st.SearchTerm, st.SelectedFilterRoleIds, st.SelectedFilterProjectIds, st.SelectedFilterStatus, finalPage, st.PageSize);
-        }
+            _logger.LogInformation("شروع فراخوانی لیست کاربران.");
 
-        dispatcher.Dispatch(new UsersLoadedAction(result.Users, result.TotalCount, finalPage));
+            var st = _state.Value;
+            var result = await _userService.GetFilteredUsersAsync(st.SearchTerm, st.SelectedFilterRoleIds, st.SelectedFilterProjectIds, st.SelectedFilterStatus, st.CurrentPage, st.PageSize);
+
+            int maxPage = result.TotalCount == 0 ? 1 : (int)Math.Ceiling(result.TotalCount / (double)st.PageSize);
+            var finalPage = st.CurrentPage;
+
+            if (st.CurrentPage > maxPage && maxPage > 0)
+            {
+                finalPage = maxPage;
+                result = await _userService.GetFilteredUsersAsync(st.SearchTerm, st.SelectedFilterRoleIds, st.SelectedFilterProjectIds, st.SelectedFilterStatus, finalPage, st.PageSize);
+            }
+
+            dispatcher.Dispatch(new UsersLoadedAction(result.Users, result.TotalCount, finalPage));
+            _logger.LogInformation("لیست کاربران با موفقیت دریافت شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت لیست کاربران.");
+        }
     }
 
     [EffectMethod]
@@ -153,15 +183,22 @@ public class UserEffects
 
         try
         {
+            _logger.LogInformation("اجرای اکشن SaveUserAction برای {ActionType} کاربر.", userModel.Id == 0 ? "ایجاد" : "ویرایش");
+
             var roleIdsToAssign = action.AvailableRoles.Where(r => action.SelectedRoles.Contains(r.Name)).Select(r => r.Id).ToList();
-            if (userModel.Id == 0) await _userService.CreateAsync(userModel, action.Password, roleIdsToAssign);
-            else await _userService.UpdateAsync(userModel, action.Password, roleIdsToAssign);
+            if (userModel.Id == 0)
+                await _userService.CreateAsync(userModel, action.Password, roleIdsToAssign);
+            else
+                await _userService.UpdateAsync(userModel, action.Password, roleIdsToAssign);
 
             dispatcher.Dispatch(new SaveUserSuccessAction());
             dispatcher.Dispatch(new LoadUsersAction());
+
+            _logger.LogInformation("کاربر با موفقیت {ActionType} شد.", userModel.Id == 0 ? "ایجاد" : "ویرایش");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در زمان {ActionType} کاربر.", userModel.Id == 0 ? "ایجاد" : "ویرایش");
             dispatcher.Dispatch(new SaveUserFailedAction("• خطایی در ذخیره اطلاعات رخ داد."));
         }
     }
@@ -171,11 +208,16 @@ public class UserEffects
     {
         try
         {
+            _logger.LogInformation("اجرای عملیات گروهی {ActionType} برای کاربران.", action.ActionType);
+
             await _userService.ExecuteBulkActionAsync(action.UserIds, action.ActionType, action.SingleId);
             dispatcher.Dispatch(new LoadUsersAction());
+
+            _logger.LogInformation("عملیات گروهی {ActionType} با موفقیت انجام شد.", action.ActionType);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در انجام عملیات گروهی {ActionType} کاربران.", action.ActionType);
             dispatcher.Dispatch(new SetUserDeleteErrorAction("امکان انجام عملیات وجود ندارد!"));
         }
     }

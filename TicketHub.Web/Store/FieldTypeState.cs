@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 
@@ -31,16 +32,31 @@ public static class FieldTypeReducers
 public class FieldTypeEffects
 {
     private readonly IFieldTypeService _service;
+    private readonly ILogger<FieldTypeEffects> _logger;
 
-    public FieldTypeEffects(IFieldTypeService service)
+    public FieldTypeEffects(IFieldTypeService service, ILogger<FieldTypeEffects> logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     [EffectMethod(typeof(LoadFieldTypesAction))]
     public async Task HandleLoad(IDispatcher dispatcher)
     {
-        var types = await _service.GetAllAsync(); //[cite: 11]
-        dispatcher.Dispatch(new FieldTypesLoadedAction(types));
+        try
+        {
+            _logger.LogInformation("شروع دریافت لیست انواع فیلدها.");
+
+            var types = await _service.GetAllAsync();
+
+            _logger.LogInformation("دریافت انواع فیلدها با موفقیت انجام شد.");
+            dispatcher.Dispatch(new FieldTypesLoadedAction(types));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت لیست انواع فیلدها.");
+            // بازگرداندن یک لیست خالی برای خروج State از حالت Loading
+            dispatcher.Dispatch(new FieldTypesLoadedAction(Array.Empty<FieldTypeDto>()));
+        }
     }
 }

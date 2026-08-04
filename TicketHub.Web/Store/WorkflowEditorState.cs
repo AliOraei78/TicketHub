@@ -1,5 +1,6 @@
 ﻿using Fluxor;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Common;
@@ -68,75 +69,90 @@ public static class WorkflowEditorReducers
 public class WorkflowEditorEffects
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<WorkflowEditorEffects> _logger;
 
-    public WorkflowEditorEffects(IServiceScopeFactory scopeFactory)
+    public WorkflowEditorEffects(
+        IServiceScopeFactory scopeFactory,
+        ILogger<WorkflowEditorEffects> logger)
     {
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     [EffectMethod]
     public async Task HandleLoadData(LoadEditorDataAction action, IDispatcher dispatcher)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
-        var _statusService = scope.ServiceProvider.GetRequiredService<IStatusService>();
-        var _roleService = scope.ServiceProvider.GetRequiredService<IRoleService>();
-        var _fieldTypeService = scope.ServiceProvider.GetRequiredService<IFieldTypeService>();
-
-        var statuses = (await _statusService.GetAllAsync()).ToList();
-        var roles = (await _roleService.GetAllRolesAsync()).ToList();
-        var fields = (await _fieldTypeService.GetAllAsync()).ToList();
-
-        WorkflowDto? currentWf = null;
-        string name = "", desc = "";
-        List<CanvasNodeDto> nodes = new();
-        List<CanvasConnection> connections = new();
-
-        if (action.WorkflowId.HasValue)
+        try
         {
-            currentWf = await _workflowService.GetByIdWithDetailsAsync(action.WorkflowId.Value);
-            if (currentWf != null)
+            _logger.LogInformation("شروع بارگذاری اطلاعات ویرایشگر جریان کاری. WorkflowId: {WorkflowId}", action.WorkflowId);
+
+            using var scope = _scopeFactory.CreateScope();
+            var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+            var _statusService = scope.ServiceProvider.GetRequiredService<IStatusService>();
+            var _roleService = scope.ServiceProvider.GetRequiredService<IRoleService>();
+            var _fieldTypeService = scope.ServiceProvider.GetRequiredService<IFieldTypeService>();
+
+            var statuses = (await _statusService.GetAllAsync()).ToList();
+            var roles = (await _roleService.GetAllRolesAsync()).ToList();
+            var fields = (await _fieldTypeService.GetAllAsync()).ToList();
+
+            WorkflowDto? currentWf = null;
+            string name = "", desc = "";
+            List<CanvasNodeDto> nodes = new();
+            List<CanvasConnection> connections = new();
+
+            if (action.WorkflowId.HasValue)
             {
-                name = currentWf.Name ?? "";
-                desc = currentWf.Description ?? "";
-
-                nodes = currentWf.WorkflowStatuses.Select(ws => new CanvasNodeDto
+                currentWf = await _workflowService.GetByIdWithDetailsAsync(action.WorkflowId.Value);
+                if (currentWf != null)
                 {
-                    Id = ws.NodeId != Guid.Empty ? ws.NodeId : Guid.NewGuid(),
-                    Status = ws.Status!,
-                    X = ws.PositionX,
-                    Y = ws.PositionY
-                }).ToList();
+                    name = currentWf.Name ?? "";
+                    desc = currentWf.Description ?? "";
 
-                connections = currentWf.Transitions
-                    .Select(t => new CanvasConnection
+                    nodes = currentWf.WorkflowStatuses.Select(ws => new CanvasNodeDto
                     {
-                        Id = Guid.NewGuid(),
-                        DbId = t.Id,
-                        FromNodeId = t.FromNodeId != Guid.Empty ? t.FromNodeId : nodes.FirstOrDefault(n => n.Status.Id == t.FromState)?.Id ?? Guid.Empty,
-                        ToNodeId = t.ToNodeId != Guid.Empty ? t.ToNodeId : nodes.FirstOrDefault(n => n.Status.Id == t.ToState)?.Id ?? Guid.Empty,
-                        SourcePort = string.IsNullOrEmpty(t.SourcePort) ? "Right" : t.SourcePort,
-                        TargetPort = string.IsNullOrEmpty(t.TargetPort) ? "Left" : t.TargetPort,
-                        Name = t.Name,
-                        IsAutomatic = t.IsAutomated == 1,
-                        IsActive = t.IsActive,
-                        AllowedRoleIds = t.AllowedRoleIds.ToHashSet(),
-                        CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
+                        Id = ws.NodeId != Guid.Empty ? ws.NodeId : Guid.NewGuid(),
+                        Status = ws.Status!,
+                        X = ws.PositionX,
+                        Y = ws.PositionY
+                    }).ToList();
+
+                    connections = currentWf.Transitions
+                        .Select(t => new CanvasConnection
                         {
-                            Id = tf.Id,
-                            FieldTypeId = tf.FieldTypeId,
-                            FieldName = tf.FieldName,
-                            IsRequired = tf.IsRequired,
-                            SortOrder = tf.SortOrder,
-                            Options = tf.Options,
-                            Placeholder = tf.Placeholder,
-                            DefaultValue = tf.DefaultValue,
-                            IsActive = tf.IsActive
-                        }).ToList()
-                    }).Where(c => c.FromNodeId != Guid.Empty && c.ToNodeId != Guid.Empty).ToList();
+                            Id = Guid.NewGuid(),
+                            DbId = t.Id,
+                            FromNodeId = t.FromNodeId != Guid.Empty ? t.FromNodeId : nodes.FirstOrDefault(n => n.Status.Id == t.FromState)?.Id ?? Guid.Empty,
+                            ToNodeId = t.ToNodeId != Guid.Empty ? t.ToNodeId : nodes.FirstOrDefault(n => n.Status.Id == t.ToState)?.Id ?? Guid.Empty,
+                            SourcePort = string.IsNullOrEmpty(t.SourcePort) ? "Right" : t.SourcePort,
+                            TargetPort = string.IsNullOrEmpty(t.TargetPort) ? "Left" : t.TargetPort,
+                            Name = t.Name,
+                            IsAutomatic = t.IsAutomated == 1,
+                            IsActive = t.IsActive,
+                            AllowedRoleIds = t.AllowedRoleIds.ToHashSet(),
+                            CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
+                            {
+                                Id = tf.Id,
+                                FieldTypeId = tf.FieldTypeId,
+                                FieldName = tf.FieldName,
+                                IsRequired = tf.IsRequired,
+                                SortOrder = tf.SortOrder,
+                                Options = tf.Options,
+                                Placeholder = tf.Placeholder,
+                                DefaultValue = tf.DefaultValue,
+                                IsActive = tf.IsActive
+                            }).ToList()
+                        }).Where(c => c.FromNodeId != Guid.Empty && c.ToNodeId != Guid.Empty).ToList();
+                }
             }
+            dispatcher.Dispatch(new EditorDataLoadedAction(statuses, roles, fields, currentWf, name, desc, nodes, connections));
+            _logger.LogInformation("اطلاعات ویرایشگر جریان کاری با موفقیت دریافت شد.");
         }
-        dispatcher.Dispatch(new EditorDataLoadedAction(statuses, roles, fields, currentWf, name, desc, nodes, connections));
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در بارگذاری اطلاعات ویرایشگر جریان کاری.");
+            // در صورت نیاز می‌توانید یک اکشن برای هندل کردن خطای بارگذاری اضافه کنید
+        }
     }
 
     [EffectMethod]
@@ -144,6 +160,8 @@ public class WorkflowEditorEffects
     {
         try
         {
+            _logger.LogInformation("شروع ذخیره‌سازی جریان کاری. WorkflowId: {WorkflowId}", action.WorkflowId);
+
             using var scope = _scopeFactory.CreateScope();
             var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
 
@@ -157,6 +175,8 @@ public class WorkflowEditorEffects
 
                     var activeNodeIds = action.Nodes.Select(n => n.Id).ToList();
                     var statusesToRemove = wf.WorkflowStatuses.Where(ws => !activeNodeIds.Contains(ws.NodeId)).ToList();
+
+                    // حذف کامل نودهای حذف شده
                     foreach (var st in statusesToRemove) wf.WorkflowStatuses.Remove(st);
 
                     foreach (var n in action.Nodes)
@@ -168,6 +188,8 @@ public class WorkflowEditorEffects
 
                     var activeUiConnectionDbIds = action.Connections.Where(c => c.DbId > 0).Select(c => c.DbId).ToList();
                     var transitionsToRemove = wf.Transitions.Where(t => !activeUiConnectionDbIds.Contains(t.Id)).ToList();
+
+                    // حذف کامل ترانزیشن‌های حذف شده (مطابق با استراتژی Hard Delete)
                     foreach (var t in transitionsToRemove) wf.Transitions.Remove(t);
 
                     foreach (var conn in action.Connections)
@@ -229,6 +251,7 @@ public class WorkflowEditorEffects
                         }
                     }
                     await _workflowService.UpdateAsync(wf);
+                    _logger.LogInformation("جریان کاری با موفقیت ویرایش شد.");
                 }
             }
             else
@@ -269,11 +292,13 @@ public class WorkflowEditorEffects
                     }).ToList()
                 };
                 await _workflowService.CreateAsync(workflow);
+                _logger.LogInformation("جریان کاری جدید با موفقیت ایجاد شد.");
             }
             dispatcher.Dispatch(new SaveWorkflowEditorSuccessAction());
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در ذخیره‌سازی جریان کاری.");
             dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(ex.InnerException?.Message ?? ex.Message));
         }
     }

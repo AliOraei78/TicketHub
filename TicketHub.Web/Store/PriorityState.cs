@@ -1,4 +1,5 @@
 ﻿using Fluxor;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 
@@ -61,13 +62,33 @@ public static class PriorityReducers
 public class PriorityEffects
 {
     private readonly IPriorityService _service;
-    public PriorityEffects(IPriorityService service) => _service = service;
+    private readonly ILogger<PriorityEffects> _logger;
+
+    public PriorityEffects(
+        IPriorityService service,
+        ILogger<PriorityEffects> logger)
+    {
+        _service = service;
+        _logger = logger;
+    }
 
     [EffectMethod]
     public async Task HandleLoadPriorities(LoadPrioritiesAction action, IDispatcher dispatcher)
     {
-        var priorities = await _service.GetAllAsync();
-        dispatcher.Dispatch(new PrioritiesLoadedAction(priorities));
+        try
+        {
+            _logger.LogInformation("شروع فراخوانی لیست اولویت‌های سیستم.");
+
+            var priorities = await _service.GetAllAsync();
+            dispatcher.Dispatch(new PrioritiesLoadedAction(priorities));
+
+            _logger.LogInformation("دریافت لیست اولویت‌ها با موفقیت انجام شد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت لیست اولویت‌ها.");
+            dispatcher.Dispatch(new SetPriorityMessageAction("خطا در بارگذاری اطلاعات اولویت‌ها.", true));
+        }
     }
 
     [EffectMethod]
@@ -75,14 +96,19 @@ public class PriorityEffects
     {
         try
         {
-            if (action.IsEditing) await _service.UpdateAsync(action.Priority);
-            else await _service.AddAsync(action.Priority);
+            _logger.LogInformation("اجرای اکشن SavePriorityAction برای {ActionType} اولویت.", action.IsEditing ? "ویرایش" : "ایجاد");
+
+            if (action.IsEditing)
+                await _service.UpdateAsync(action.Priority);
+            else
+                await _service.AddAsync(action.Priority);
 
             dispatcher.Dispatch(new SetPriorityMessageAction(action.IsEditing ? "اولویت با موفقیت ویرایش شد." : "اولویت با موفقیت ایجاد شد.", false));
             dispatcher.Dispatch(new LoadPrioritiesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در زمان {ActionType} اولویت.", action.IsEditing ? "ویرایش" : "ایجاد");
             dispatcher.Dispatch(new SetPriorityMessageAction("خطایی در ذخیره اطلاعات رخ داد.", true));
         }
     }
@@ -92,12 +118,16 @@ public class PriorityEffects
     {
         try
         {
+            _logger.LogWarning("درخواست حذف اولویت با شناسه {PriorityId}.", action.Id);
+
             await _service.DeleteAsync(action.Id);
+
             dispatcher.Dispatch(new SetPriorityMessageAction("اولویت با موفقیت حذف شد.", false));
             dispatcher.Dispatch(new LoadPrioritiesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در حذف اولویت با شناسه {PriorityId}.", action.Id);
             dispatcher.Dispatch(new SetPriorityMessageAction("امکان حذف وجود ندارد! ابتدا باید تیکت‌های مرتبط با این اولویت را ویرایش کنید.", true));
         }
     }
@@ -107,12 +137,17 @@ public class PriorityEffects
     {
         try
         {
+            int count = action.Ids.Count();
+            _logger.LogWarning("درخواست حذف گروهی اولویت‌ها به تعداد {Count}.", count);
+
             await _service.DeleteRangeAsync(action.Ids);
-            dispatcher.Dispatch(new SetPriorityMessageAction($"{action.Ids.Count()} اولویت با موفقیت حذف شدند.", false));
+
+            dispatcher.Dispatch(new SetPriorityMessageAction($"{count} اولویت با موفقیت حذف شدند.", false));
             dispatcher.Dispatch(new LoadPrioritiesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در حذف گروهی اولویت‌ها.");
             dispatcher.Dispatch(new SetPriorityMessageAction("خطایی در حذف گروهی رخ داد.", true));
         }
     }
@@ -122,13 +157,18 @@ public class PriorityEffects
     {
         try
         {
-            await _service.UpdatePrioritiesStatusAsync(action.Ids, action.IsActive);
+            int count = action.Ids.Count();
             string actionName = action.IsActive ? "فعال" : "غیرفعال";
-            dispatcher.Dispatch(new SetPriorityMessageAction($"{action.Ids.Count()} اولویت با موفقیت {actionName} شدند.", false));
+            _logger.LogInformation("تغییر وضعیت {Count} اولویت به {Status}.", count, actionName);
+
+            await _service.UpdatePrioritiesStatusAsync(action.Ids, action.IsActive);
+
+            dispatcher.Dispatch(new SetPriorityMessageAction($"{count} اولویت با موفقیت {actionName} شدند.", false));
             dispatcher.Dispatch(new LoadPrioritiesAction());
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "خطا در تغییر وضعیت گروهی اولویت‌ها.");
             dispatcher.Dispatch(new SetPriorityMessageAction("عملیات با خطا مواجه شد!", true));
         }
     }

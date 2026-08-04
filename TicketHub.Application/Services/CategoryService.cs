@@ -1,4 +1,5 @@
 ﻿using Mapster;
+using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Entities;
@@ -12,201 +13,301 @@ public class CategoryService : ICategoryService
     private readonly IRepository<CategoryProject> _categoryProjectRepo;
     private readonly IRepository<CategoryRole> _categoryRoleRepo;
     private readonly IRepository<Role> _roleRepo;
+    private readonly ILogger<CategoryService> _logger;
 
     public CategoryService(
         IRepository<Category> categoryRepo,
         IRepository<CategoryProject> categoryProjectRepo,
         IRepository<CategoryRole> categoryRoleRepo,
-        IRepository<Role> roleRepo) // این خط اضافه شد
+        IRepository<Role> roleRepo,
+        ILogger<CategoryService> logger)
     {
         _categoryRepo = categoryRepo;
         _categoryProjectRepo = categoryProjectRepo;
         _categoryRoleRepo = categoryRoleRepo;
-        _roleRepo = roleRepo; // این خط اضافه شد
+        _roleRepo = roleRepo;
+        _logger = logger;
     }
 
     public async Task<List<CategoryDto>> GetAllAsync()
     {
-        var categories = await _categoryRepo.GetAllWithIncludesAsync(
-            c => c.CategoryProjects,
-            c => c.CategoryRoles);
+        try
+        {
+            _logger.LogInformation("شروع دریافت تمامی دسته‌بندی‌ها از دیتابیس.");
 
-        return categories.Adapt<List<CategoryDto>>();
+            var categories = await _categoryRepo.GetAllWithIncludesAsync(
+                c => c.CategoryProjects,
+                c => c.CategoryRoles);
+
+            _logger.LogInformation("تعداد {Count} دسته‌بندی با موفقیت دریافت شد.", categories.Count());
+            return categories.Adapt<List<CategoryDto>>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت تمامی دسته‌بندی‌ها.");
+            throw;
+        }
     }
 
     public async Task<CategoryDto?> GetByIdAsync(int id)
     {
-        var categories = await _categoryRepo.GetAllWithIncludesAsync(
-            c => c.CategoryProjects,
-            c => c.CategoryRoles);
+        try
+        {
+            _logger.LogInformation("جستجوی دسته‌بندی با شناسه: {Id}", id);
 
-        var category = categories.FirstOrDefault(c => c.Id == id);
-        return category?.Adapt<CategoryDto>();
+            var categories = await _categoryRepo.GetAllWithIncludesAsync(
+                c => c.CategoryProjects,
+                c => c.CategoryRoles);
+
+            var category = categories.FirstOrDefault(c => c.Id == id);
+
+            if (category == null)
+                _logger.LogWarning("دسته‌بندی با شناسه {Id} یافت نشد.", id);
+            else
+                _logger.LogInformation("دسته‌بندی با شناسه {Id} با موفقیت پیدا شد.", id);
+
+            return category?.Adapt<CategoryDto>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در دریافت دسته‌بندی با شناسه {Id}.", id);
+            throw;
+        }
     }
 
     public async Task<CategoryDto> AddAsync(CategoryDto dto)
     {
-        var entity = dto.Adapt<Category>();
-        entity.CreatedAt = DateTime.UtcNow;
-
-        await _categoryRepo.AddAsync(entity);
-
-        // ذخیره پروژه‌ها
-        if (dto.ProjectIds?.Any() == true)
+        try
         {
-            foreach (var projectId in dto.ProjectIds)
-            {
-                await _categoryProjectRepo.AddAsync(new CategoryProject
-                {
-                    CategoryId = entity.Id,
-                    ProjectId = projectId
-                });
-            }
-        }
+            _logger.LogInformation("شروع فرآیند ایجاد دسته‌بندی جدید.");
 
-        // ذخیره نقش‌ها
-        if (dto.RoleIds?.Any() == true)
+            var entity = dto.Adapt<Category>();
+            entity.CreatedAt = DateTime.UtcNow;
+
+            await _categoryRepo.AddAsync(entity);
+            _logger.LogInformation("دسته‌بندی پایه با شناسه {Id} ایجاد شد.", entity.Id);
+
+            if (dto.ProjectIds?.Any() == true)
+            {
+                _logger.LogInformation("افزودن {Count} پروژه به دسته‌بندی {Id}.", dto.ProjectIds.Count(), entity.Id);
+                foreach (var projectId in dto.ProjectIds)
+                {
+                    await _categoryProjectRepo.AddAsync(new CategoryProject
+                    {
+                        CategoryId = entity.Id,
+                        ProjectId = projectId
+                    });
+                }
+            }
+
+            if (dto.RoleIds?.Any() == true)
+            {
+                _logger.LogInformation("افزودن {Count} نقش به دسته‌بندی {Id}.", dto.RoleIds.Count(), entity.Id);
+                foreach (var roleId in dto.RoleIds)
+                {
+                    await _categoryRoleRepo.AddAsync(new CategoryRole
+                    {
+                        CategoryId = entity.Id,
+                        RoleId = roleId
+                    });
+                }
+            }
+
+            _logger.LogInformation("فرآیند ایجاد دسته‌بندی {Id} با موفقیت به پایان رسید.", entity.Id);
+            return entity.Adapt<CategoryDto>();
+        }
+        catch (Exception ex)
         {
-            foreach (var roleId in dto.RoleIds)
-            {
-                await _categoryRoleRepo.AddAsync(new CategoryRole
-                {
-                    CategoryId = entity.Id,
-                    RoleId = roleId
-                });
-            }
+            _logger.LogError(ex, "خطا در ایجاد دسته‌بندی جدید.");
+            throw;
         }
-
-        return entity.Adapt<CategoryDto>();
     }
 
     public async Task UpdateAsync(CategoryDto dto)
     {
-        var entity = dto.Adapt<Category>();
-        await _categoryRepo.UpdateAsync(entity);
-
-        // بروزرسانی پروژه‌ها: حذف قبلی‌ها و ثبت جدیدها
-        var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
-        var oldProjects = allCategoryProjects.Where(cp => cp.CategoryId == entity.Id).ToList();
-
-        if (oldProjects.Any())
+        try
         {
-            await _categoryProjectRepo.DeleteRangeAsync(oldProjects);
-        }
+            _logger.LogInformation("شروع فرآیند بروزرسانی دسته‌بندی با شناسه {Id}.", dto.Id);
 
-        if (dto.ProjectIds?.Any() == true)
-        {
-            foreach (var projectId in dto.ProjectIds)
+            var entity = dto.Adapt<Category>();
+            await _categoryRepo.UpdateAsync(entity);
+
+            // پروژه‌ها
+            var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
+            var oldProjects = allCategoryProjects.Where(cp => cp.CategoryId == entity.Id).ToList();
+
+            if (oldProjects.Any())
             {
-                await _categoryProjectRepo.AddAsync(new CategoryProject
-                {
-                    CategoryId = entity.Id,
-                    ProjectId = projectId
-                });
+                _logger.LogInformation("حذف {Count} پروژه قدیمی از دسته‌بندی {Id}.", oldProjects.Count, entity.Id);
+                await _categoryProjectRepo.DeleteRangeAsync(oldProjects);
             }
-        }
 
-        // بروزرسانی نقش‌ها: حذف قبلی‌ها و ثبت جدیدها
-        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
-        var oldRoles = allCategoryRoles.Where(cr => cr.CategoryId == entity.Id).ToList();
-
-        if (oldRoles.Any())
-        {
-            await _categoryRoleRepo.DeleteRangeAsync(oldRoles);
-        }
-
-        if (dto.RoleIds?.Any() == true)
-        {
-            foreach (var roleId in dto.RoleIds)
+            if (dto.ProjectIds?.Any() == true)
             {
-                await _categoryRoleRepo.AddAsync(new CategoryRole
+                _logger.LogInformation("ثبت {Count} پروژه جدید برای دسته‌بندی {Id}.", dto.ProjectIds.Count(), entity.Id);
+                foreach (var projectId in dto.ProjectIds)
                 {
-                    CategoryId = entity.Id,
-                    RoleId = roleId
-                });
+                    await _categoryProjectRepo.AddAsync(new CategoryProject
+                    {
+                        CategoryId = entity.Id,
+                        ProjectId = projectId
+                    });
+                }
             }
+
+            // نقش‌ها
+            var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
+            var oldRoles = allCategoryRoles.Where(cr => cr.CategoryId == entity.Id).ToList();
+
+            if (oldRoles.Any())
+            {
+                _logger.LogInformation("حذف {Count} نقش قدیمی از دسته‌بندی {Id}.", oldRoles.Count, entity.Id);
+                await _categoryRoleRepo.DeleteRangeAsync(oldRoles);
+            }
+
+            if (dto.RoleIds?.Any() == true)
+            {
+                _logger.LogInformation("ثبت {Count} نقش جدید برای دسته‌بندی {Id}.", dto.RoleIds.Count(), entity.Id);
+                foreach (var roleId in dto.RoleIds)
+                {
+                    await _categoryRoleRepo.AddAsync(new CategoryRole
+                    {
+                        CategoryId = entity.Id,
+                        RoleId = roleId
+                    });
+                }
+            }
+
+            _logger.LogInformation("بروزرسانی دسته‌بندی {Id} با موفقیت انجام شد.", entity.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در بروزرسانی دسته‌بندی با شناسه {Id}.", dto.Id);
+            throw;
         }
     }
 
     public async Task DeleteAsync(CategoryDto categoryDto)
     {
-        // حذف پروژه‌های مرتبط
-        var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
-        var projectsToDelete = allCategoryProjects.Where(cp => cp.CategoryId == categoryDto.Id).ToList();
-        if (projectsToDelete.Any())
+        try
         {
-            await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
-        }
+            _logger.LogWarning("شروع فرآیند حذف دسته‌بندی با شناسه {Id}.", categoryDto.Id);
 
-        // حذف نقش‌های مرتبط
-        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
-        var rolesToDelete = allCategoryRoles.Where(cr => cr.CategoryId == categoryDto.Id).ToList();
-        if (rolesToDelete.Any())
+            var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
+            var projectsToDelete = allCategoryProjects.Where(cp => cp.CategoryId == categoryDto.Id).ToList();
+            if (projectsToDelete.Any())
+            {
+                await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
+                _logger.LogInformation("تعداد {Count} پروژه مرتبط با دسته‌بندی {Id} حذف شد.", projectsToDelete.Count, categoryDto.Id);
+            }
+
+            var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
+            var rolesToDelete = allCategoryRoles.Where(cr => cr.CategoryId == categoryDto.Id).ToList();
+            if (rolesToDelete.Any())
+            {
+                await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
+                _logger.LogInformation("تعداد {Count} نقش مرتبط با دسته‌بندی {Id} حذف شد.", rolesToDelete.Count, categoryDto.Id);
+            }
+
+            await _categoryRepo.DeleteAsync(categoryDto.Id);
+            _logger.LogWarning("دسته‌بندی با شناسه {Id} با موفقیت به طور کامل حذف شد.", categoryDto.Id);
+        }
+        catch (Exception ex)
         {
-            await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
+            _logger.LogError(ex, "خطا در حذف دسته‌بندی با شناسه {Id}.", categoryDto.Id);
+            throw;
         }
-
-        // در نهایت حذف خود کتگوری
-        await _categoryRepo.DeleteAsync(categoryDto.Id);
     }
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
-        // حذف پروژه‌های مرتبط با این دسته‌ها
-        var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
-        var projectsToDelete = allCategoryProjects.Where(cp => ids.Contains(cp.CategoryId)).ToList();
-        if (projectsToDelete.Any())
+        try
         {
-            await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
+            var idsList = ids.ToList();
+            _logger.LogWarning("درخواست حذف گروهی دسته‌بندی‌ها. تعداد: {Count}", idsList.Count);
+
+            var allCategoryProjects = await _categoryProjectRepo.GetAllAsync();
+            var projectsToDelete = allCategoryProjects.Where(cp => idsList.Contains(cp.CategoryId)).ToList();
+            if (projectsToDelete.Any())
+            {
+                await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
+            }
+
+            var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
+            var rolesToDelete = allCategoryRoles.Where(cr => idsList.Contains(cr.CategoryId)).ToList();
+            if (rolesToDelete.Any())
+            {
+                await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
+            }
+
+            var allCategories = await _categoryRepo.GetAllAsync();
+            var toDelete = allCategories.Where(c => idsList.Contains(c.Id)).ToList();
+
+            if (toDelete.Any())
+            {
+                await _categoryRepo.DeleteRangeAsync(toDelete);
+                _logger.LogWarning("{Count} دسته‌بندی با موفقیت به صورت گروهی حذف شدند.", toDelete.Count);
+            }
         }
-
-        // حذف نقش‌های مرتبط با این دسته‌ها
-        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
-        var rolesToDelete = allCategoryRoles.Where(cr => ids.Contains(cr.CategoryId)).ToList();
-        if (rolesToDelete.Any())
+        catch (Exception ex)
         {
-            await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
-        }
-
-        // در نهایت حذف خود دسته‌ها
-        var allCategories = await _categoryRepo.GetAllAsync();
-        var toDelete = allCategories.Where(c => ids.Contains(c.Id)).ToList();
-
-        if (toDelete.Any())
-        {
-            await _categoryRepo.DeleteRangeAsync(toDelete);
+            _logger.LogError(ex, "خطا در حذف گروهی دسته‌بندی‌ها.");
+            throw;
         }
     }
 
     public async Task UpdateCategoriesStatusAsync(IEnumerable<int> ids, bool isActive)
     {
-        var roles = await _categoryRepo.GetAllAsync();
-        var rolesToUpdate = roles.Where(r => ids.Contains(r.Id)).ToList();
-
-        foreach (var role in rolesToUpdate)
+        try
         {
-            role.IsActive = isActive;
-            await _categoryRepo.UpdateAsync(role);
+            var idsList = ids.ToList();
+            _logger.LogInformation("درخواست تغییر وضعیت {Count} دسته‌بندی به وضعیت فعال={IsActive}.", idsList.Count, isActive);
+
+            var categories = await _categoryRepo.GetAllAsync();
+            var categoriesToUpdate = categories.Where(r => idsList.Contains(r.Id)).ToList();
+
+            foreach (var category in categoriesToUpdate)
+            {
+                category.IsActive = isActive;
+                await _categoryRepo.UpdateAsync(category);
+            }
+
+            _logger.LogInformation("وضعیت دسته‌بندی‌ها با موفقیت تغییر کرد.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در تغییر وضعیت گروهی دسته‌بندی‌ها.");
+            throw;
         }
     }
 
     public async Task<List<CategoryDto>> GetCategoriesByUserRolesAsync(IEnumerable<string> userRoles)
     {
-        // دریافت تمام نقش‌ها برای یافتن ID نقش‌های کاربر
-        var allRoles = await _roleRepo.GetAllAsync();
-        var userRoleIds = allRoles
-            .Where(r => userRoles.Contains(r.Name))
-            .Select(r => r.Id)
-            .ToList();
+        try
+        {
+            var rolesList = userRoles.ToList();
+            _logger.LogInformation("جستجوی دسته‌بندی‌ها بر اساس {Count} نقش کاربر.", rolesList.Count);
 
-        // دریافت دسته‌بندی‌ها به همراه نقش‌های متصل به آن‌ها
-        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryRoles);
+            var allRoles = await _roleRepo.GetAllAsync();
+            var userRoleIds = allRoles
+                .Where(r => rolesList.Contains(r.Name))
+                .Select(r => r.Id)
+                .ToList();
 
-        // فیلتر کردن دسته‌بندی‌هایی که حداقل یکی از نقش‌های کاربر به آن‌ها دسترسی دارد
-        var filteredCategories = categories
-            .Where(c => c.CategoryRoles.Any(cr => userRoleIds.Contains(cr.RoleId)))
-            .ToList();
+            var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryRoles);
 
-        return filteredCategories.Adapt<List<CategoryDto>>();
+            var filteredCategories = categories
+                .Where(c => c.CategoryRoles.Any(cr => userRoleIds.Contains(cr.RoleId)))
+                .ToList();
+
+            _logger.LogInformation("تعداد {Count} دسته‌بندی منطبق با نقش‌های کاربر یافت شد.", filteredCategories.Count);
+
+            return filteredCategories.Adapt<List<CategoryDto>>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در جستجوی دسته‌بندی‌ها بر اساس نقش کاربر.");
+            throw;
+        }
     }
 }

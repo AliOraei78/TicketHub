@@ -38,7 +38,7 @@ else
 @code {
     protected override Task OnErrorAsync(Exception exception)
     {
-        Logger.LogError(exception, "یک خطای پیش‌بینی‌نشده در رندرینگ کامپوننت رخ داد.");
+        Logger.LogError(exception, "یک خطای پیش‌بینی‌نشده مشاهده شده، لطفا به پشتیبانی سامانه اطلاع دهید!");
         return base.OnErrorAsync(exception);
     }
 
