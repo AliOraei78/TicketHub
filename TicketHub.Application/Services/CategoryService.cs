@@ -11,15 +11,18 @@ public class CategoryService : ICategoryService
     private readonly IRepository<Category> _categoryRepo;
     private readonly IRepository<CategoryProject> _categoryProjectRepo;
     private readonly IRepository<CategoryRole> _categoryRoleRepo;
+    private readonly IRepository<Role> _roleRepo;
 
     public CategoryService(
         IRepository<Category> categoryRepo,
         IRepository<CategoryProject> categoryProjectRepo,
-        IRepository<CategoryRole> categoryRoleRepo)
+        IRepository<CategoryRole> categoryRoleRepo,
+        IRepository<Role> roleRepo) // این خط اضافه شد
     {
         _categoryRepo = categoryRepo;
         _categoryProjectRepo = categoryProjectRepo;
         _categoryRoleRepo = categoryRoleRepo;
+        _roleRepo = roleRepo; // این خط اضافه شد
     }
 
     public async Task<List<CategoryDto>> GetAllAsync()
@@ -185,5 +188,25 @@ public class CategoryService : ICategoryService
             role.IsActive = isActive;
             await _categoryRepo.UpdateAsync(role);
         }
+    }
+
+    public async Task<List<CategoryDto>> GetCategoriesByUserRolesAsync(IEnumerable<string> userRoles)
+    {
+        // دریافت تمام نقش‌ها برای یافتن ID نقش‌های کاربر
+        var allRoles = await _roleRepo.GetAllAsync();
+        var userRoleIds = allRoles
+            .Where(r => userRoles.Contains(r.Name))
+            .Select(r => r.Id)
+            .ToList();
+
+        // دریافت دسته‌بندی‌ها به همراه نقش‌های متصل به آن‌ها
+        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryRoles);
+
+        // فیلتر کردن دسته‌بندی‌هایی که حداقل یکی از نقش‌های کاربر به آن‌ها دسترسی دارد
+        var filteredCategories = categories
+            .Where(c => c.CategoryRoles.Any(cr => userRoleIds.Contains(cr.RoleId)))
+            .ToList();
+
+        return filteredCategories.Adapt<List<CategoryDto>>();
     }
 }

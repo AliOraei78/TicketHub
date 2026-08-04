@@ -55,9 +55,9 @@ public partial class Tickets : IDisposable
                     t.Title.Contains(TicketState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
                     t.Description.Contains(TicketState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase));
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
 
         // گوش دادن به اکشن موفقیت برای بستن خودکار مودال تیکت
         ActionSubscriber.SubscribeToAction<SaveTicketSuccessAction>(this, action =>
@@ -68,7 +68,13 @@ public partial class Tickets : IDisposable
 
         if (!TicketState.Value.AvailableProjects.Any())
         {
-            Dispatcher.Dispatch(new LoadTicketInitialDataAction());
+            var authState = await AuthState;
+            var roles = authState.User.Claims
+                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
+            Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
         }
     }
 

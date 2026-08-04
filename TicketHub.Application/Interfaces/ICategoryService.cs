@@ -17,4 +17,5 @@ public interface ICategoryService
     Task DeleteAsync(CategoryDto category);
     Task DeleteRangeAsync(IEnumerable<int> ids);
     Task UpdateCategoriesStatusAsync(IEnumerable<int> ids, bool isActive);
+    Task<List<CategoryDto>> GetCategoriesByUserRolesAsync(IEnumerable<string> userRoles);
 }

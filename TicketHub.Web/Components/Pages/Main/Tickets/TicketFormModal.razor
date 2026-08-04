@@ -18,7 +18,7 @@
             <InputText @bind-Value="Model.Title" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="یک عنوان کوتاه بنویسید" required />
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
                 <SlideSelect TItem="PriorityDto" TValue="int?"
                              Label="اولویت"
@@ -38,6 +38,17 @@
                              @bind-Value="Model.ProjectId"
                              ValueSelector="p => p.Id"
                              TextSelector="p => p.Name"
+                             AllowClear="false" />
+            </div>
+
+            <div>
+                <SlideSelect TItem="CategoryDto" TValue="int?"
+                             Label="دسته‌بندی"
+                             Placeholder="انتخاب دسته‌بندی..."
+                             Items="Categories"
+                             @bind-Value="Model.CategoryId"
+                             ValueSelector="c => c.Id"
+                             TextSelector="c => c.Name"
                              AllowClear="false" />
             </div>
         </div>
@@ -63,6 +74,7 @@
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public string? ErrorMessage { get; set; }
     [Parameter, EditorRequired] public IEnumerable<PriorityDto> Priorities { get; set; } = default!;
+    [Parameter, EditorRequired] public IEnumerable<CategoryDto> Categories { get; set; } = default!;
 
     private async Task HandleValidSubmit()
     {

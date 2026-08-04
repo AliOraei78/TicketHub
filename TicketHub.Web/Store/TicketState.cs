@@ -6,6 +6,7 @@ using TicketHub.Application.Services;
 namespace TicketHub.Web.Store;
 
 // 1. State
+// 1. State
 [FeatureState]
 public record TicketState(
     bool IsLoading,
@@ -14,6 +15,7 @@ public record TicketState(
     IEnumerable<ProjectDto> AvailableProjects,
     IEnumerable<StatusDto> AvailableStatuses,
     IEnumerable<PriorityDto> AvailablePriorities,
+    IEnumerable<CategoryDto> AvailableCategories,
     string SearchTerm,
     int PageSize,
     int CurrentPage,
@@ -21,12 +23,12 @@ public record TicketState(
     List<int> SelectedFilterStatusIds,
     string? FormErrorMessage)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), string.Empty, 10, 1, new(), new(), null) { }
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 10, 1, new(), new(), null) { } // مقداردهی اولیه اضافه شد
 }
 
 // 2. Actions
-public record LoadTicketInitialDataAction();
-public record TicketInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses, IEnumerable<PriorityDto> Priorities);
+public record LoadTicketInitialDataAction(IEnumerable<string> UserRoles);
+public record TicketInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses, IEnumerable<PriorityDto> Priorities, IEnumerable<CategoryDto> Categories);
 public record LoadTicketsAction();
 public record TicketsLoadedAction(IEnumerable<TicketDto> Tickets, int TotalCount, int ValidatedPage);
 public record SetTicketFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds);
@@ -43,7 +45,7 @@ public static class TicketReducers
 
     [ReducerMethod]
     public static TicketState ReduceInitialDataLoaded(TicketState state, TicketInitialDataLoadedAction action) =>
-            state with { AvailableProjects = action.Projects, AvailableStatuses = action.Statuses, AvailablePriorities = action.Priorities };
+                state with { AvailableProjects = action.Projects, AvailableStatuses = action.Statuses, AvailablePriorities = action.Priorities, AvailableCategories = action.Categories };
 
     [ReducerMethod]
     public static TicketState ReduceTicketsLoaded(TicketState state, TicketsLoadedAction action) =>
@@ -77,25 +79,29 @@ public class TicketEffects
     private readonly IProjectService _projectService;
     private readonly IStatusService _statusService;
     private readonly IPriorityService _priorityService;
+    private readonly ICategoryService _categoryService;
     private readonly IState<TicketState> _state;
 
-    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IPriorityService priorityService, IState<TicketState> state)
+    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IPriorityService priorityService, ICategoryService categoryService, IState<TicketState> state)
     {
         _ticketService = ticketService;
         _projectService = projectService;
         _statusService = statusService;
         _priorityService = priorityService;
+        _categoryService = categoryService;
         _state = state;
     }
 
-    [EffectMethod(typeof(LoadTicketInitialDataAction))]
-    public async Task HandleLoadInitialData(IDispatcher dispatcher)
+    [EffectMethod]
+    public async Task HandleLoadInitialData(LoadTicketInitialDataAction action, IDispatcher dispatcher)
     {
         var projects = await _projectService.GetProjectsAsync();
         var statuses = await _statusService.GetAllAsync();
         var priorities = await _priorityService.GetAllAsync();
 
-        dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses, priorities));
+        var categories = await _categoryService.GetCategoriesByUserRolesAsync(action.UserRoles);
+
+        dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses, priorities, categories));
         dispatcher.Dispatch(new LoadTicketsAction());
     }
 
@@ -104,7 +110,6 @@ public class TicketEffects
     {
         var st = _state.Value;
 
-        // فراخوانی سرویس (همانند قبل دیتای خام دریافت می‌شود تا فیلترها در UI یا با متد جدید سرور هندل شوند)
         var result = await _ticketService.GetFilteredTicketsAsync(string.Empty, null, null, null, 1, 1000);
 
         dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, 1));
