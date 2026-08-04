@@ -1,12 +1,14 @@
-﻿// TicketHub.Application.Services/PermissionService.cs
-using Mapster;
+﻿using Mapster;
 using Microsoft.Extensions.Logging;
-using TicketHub.Application.DTOs;
-using TicketHub.Application.Interfaces;
-using TicketHub.Core.Entities;
-using TicketHub.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
+using TicketHub.Core.Common.Exceptions;
+using TicketHub.Core.Entities;
+using TicketHub.Core.Interfaces;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Application.Services;
 
@@ -19,288 +21,249 @@ public class PermissionService : IPermissionService
     private static readonly System.Threading.SemaphoreSlim _semaphore = new(1, 1);
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<PermissionService> _logger;
+    private readonly IValidator<PermissionDto> _validator;
 
     public PermissionService(
             IRepository<Permission> permissionRepo,
             IRepository<RolePermission> rolePermissionRepo,
             IMemoryCache cache,
             IServiceScopeFactory scopeFactory,
-            ILogger<PermissionService> logger)
+            ILogger<PermissionService> logger,
+            IValidator<PermissionDto> validator)
     {
         _permissionRepo = permissionRepo;
         _rolePermissionRepo = rolePermissionRepo;
         _cache = cache;
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _validator = validator;
+    }
+
+    private async Task ValidateDtoAsync(PermissionDto dto)
+    {
+        var validationResult = await _validator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            throw new ValidationException(errors);
+        }
     }
 
     public async Task<IEnumerable<PermissionDto>> GetAllAsync()
     {
-        try
-        {
-            _logger.LogInformation("شروع دریافت لیست تمامی دسترسی‌ها.");
-            var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
-            return permissions.Adapt<IEnumerable<PermissionDto>>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در دریافت لیست دسترسی‌ها.");
-            throw;
-        }
+        _logger.LogInformation("شروع دریافت لیست تمامی دسترسی‌ها.");
+        var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
+        return permissions.Adapt<IEnumerable<PermissionDto>>();
     }
 
     public async Task<PermissionDto?> GetByIdAsync(int id)
     {
-        try
-        {
-            _logger.LogInformation("جستجوی دسترسی با شناسه {Id}.", id);
-            var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
-            var permission = permissions.FirstOrDefault(p => p.Id == id);
-            return permission?.Adapt<PermissionDto>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در دریافت دسترسی با شناسه {Id}.", id);
-            throw;
-        }
+        _logger.LogInformation("جستجوی دسترسی با شناسه {Id}.", id);
+
+        var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
+        var permission = permissions.FirstOrDefault(p => p.Id == id);
+
+        if (permission == null)
+            throw new NotFoundException("دسترسی", id);
+
+        return permission.Adapt<PermissionDto>();
     }
 
     public async Task<PermissionDto> CreateAsync(PermissionDto dto)
     {
-        try
-        {
-            _logger.LogInformation("شروع ایجاد دسترسی جدید.");
-            var permission = dto.Adapt<Permission>();
+        await ValidateDtoAsync(dto);
 
-            if (dto.RoleIds != null && dto.RoleIds.Any())
+        _logger.LogInformation("شروع ایجاد دسترسی جدید.");
+        var permission = dto.Adapt<Permission>();
+
+        if (dto.RoleIds != null && dto.RoleIds.Any())
+        {
+            permission.RolePermissions = dto.RoleIds.Select(roleId => new RolePermission
             {
-                permission.RolePermissions = dto.RoleIds.Select(roleId => new RolePermission
-                {
-                    RoleId = roleId
-                }).ToList();
-            }
-
-            await _permissionRepo.AddAsync(permission);
-            _logger.LogInformation("دسترسی جدید با شناسه {Id} با موفقیت ایجاد شد.", permission.Id);
-
-            return permission.Adapt<PermissionDto>();
+                RoleId = roleId
+            }).ToList();
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در ایجاد دسترسی جدید.");
-            throw;
-        }
+
+        await _permissionRepo.AddAsync(permission);
+        _logger.LogInformation("دسترسی جدید با شناسه {Id} با موفقیت ایجاد شد.", permission.Id);
+
+        ClearCache(); // پاکسازی کش پس از ایجاد دسترسی جدید
+
+        return permission.Adapt<PermissionDto>();
     }
 
     public async Task<bool> UpdateAsync(PermissionDto dto)
     {
-        try
+        await ValidateDtoAsync(dto);
+
+        _logger.LogInformation("شروع ویرایش دسترسی با شناسه {Id}.", dto.Id);
+
+        var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
+        var permission = permissions.FirstOrDefault(p => p.Id == dto.Id);
+
+        if (permission == null)
+            throw new NotFoundException("دسترسی", dto.Id);
+
+        dto.Adapt(permission);
+
+        if (dto.RoleIds != null)
         {
-            _logger.LogInformation("شروع ویرایش دسترسی با شناسه {Id}.", dto.Id);
-
-            var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
-            var permission = permissions.FirstOrDefault(p => p.Id == dto.Id);
-
-            if (permission == null)
+            var existingRoles = permission.RolePermissions.ToList();
+            if (existingRoles.Any())
             {
-                _logger.LogWarning("دسترسی با شناسه {Id} جهت ویرایش یافت نشد.", dto.Id);
-                return false;
+                await _rolePermissionRepo.DeleteRangeAsync(existingRoles);
             }
 
-            dto.Adapt(permission);
-
-            if (dto.RoleIds != null)
+            foreach (var roleId in dto.RoleIds)
             {
-                var existingRoles = permission.RolePermissions.ToList();
-                if (existingRoles.Any())
+                await _rolePermissionRepo.AddAsync(new RolePermission
                 {
-                    await _rolePermissionRepo.DeleteRangeAsync(existingRoles);
-                }
-
-                foreach (var roleId in dto.RoleIds)
-                {
-                    await _rolePermissionRepo.AddAsync(new RolePermission
-                    {
-                        PermissionId = permission.Id,
-                        RoleId = roleId
-                    });
-                }
+                    PermissionId = permission.Id,
+                    RoleId = roleId
+                });
             }
+        }
 
-            await _permissionRepo.UpdateAsync(permission);
-            _logger.LogInformation("دسترسی با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در ویرایش دسترسی با شناسه {Id}.", dto.Id);
-            throw;
-        }
+        await _permissionRepo.UpdateAsync(permission);
+        _logger.LogInformation("دسترسی با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);
+
+        ClearCache(); // پاکسازی کش پس از ویرایش
+
+        return true;
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        try
+        _logger.LogWarning("درخواست حذف دسترسی با شناسه {Id}.", id);
+
+        var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
+        var permission = permissions.FirstOrDefault(p => p.Id == id);
+
+        if (permission == null)
+            throw new NotFoundException("دسترسی", id);
+
+        if (permission.RolePermissions != null && permission.RolePermissions.Any())
         {
-            _logger.LogWarning("درخواست حذف دسترسی با شناسه {Id}.", id);
-
-            var permissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
-            var permission = permissions.FirstOrDefault(p => p.Id == id);
-
-            if (permission == null)
-            {
-                _logger.LogWarning("دسترسی با شناسه {Id} جهت حذف یافت نشد.", id);
-                return false;
-            }
-
-            if (permission.RolePermissions != null && permission.RolePermissions.Any())
-            {
-                await _rolePermissionRepo.DeleteRangeAsync(permission.RolePermissions);
-            }
-
-            await _permissionRepo.DeleteAsync(id);
-            _logger.LogInformation("دسترسی با شناسه {Id} با موفقیت حذف شد.", id);
-            return true;
+            await _rolePermissionRepo.DeleteRangeAsync(permission.RolePermissions);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در حذف دسترسی با شناسه {Id}.", id);
-            throw;
-        }
+
+        await _permissionRepo.DeleteAsync(id); // حذف قطعی (Hard Delete)
+        _logger.LogInformation("دسترسی با شناسه {Id} با موفقیت حذف شد.", id);
+
+        ClearCache();
+
+        return true;
     }
 
     public async Task<bool> AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds)
     {
-        try
+        _logger.LogInformation("انتساب {Count} دسترسی به نقش با شناسه {RoleId}.", permissionIds.Count, roleId);
+
+        var allRolePermissions = await _rolePermissionRepo.GetAllAsync();
+        var existing = allRolePermissions.Where(rp => rp.RoleId == roleId).ToList();
+
+        if (existing.Any())
         {
-            _logger.LogInformation("انتساب {Count} دسترسی به نقش با شناسه {RoleId}.", permissionIds.Count, roleId);
-
-            var allRolePermissions = await _rolePermissionRepo.GetAllAsync();
-            var existing = allRolePermissions.Where(rp => rp.RoleId == roleId).ToList();
-
-            if (existing.Any())
-            {
-                await _rolePermissionRepo.DeleteRangeAsync(existing);
-            }
-
-            foreach (var pId in permissionIds)
-            {
-                await _rolePermissionRepo.AddAsync(new RolePermission
-                {
-                    RoleId = roleId,
-                    PermissionId = pId
-                });
-            }
-
-            _logger.LogInformation("دسترسی‌ها با موفقیت به نقش {RoleId} منتسب شدند.", roleId);
-            return true;
+            await _rolePermissionRepo.DeleteRangeAsync(existing);
         }
-        catch (Exception ex)
+
+        foreach (var pId in permissionIds)
         {
-            _logger.LogError(ex, "خطا در انتساب دسترسی‌ها به نقش با شناسه {RoleId}.", roleId);
-            throw;
+            await _rolePermissionRepo.AddAsync(new RolePermission
+            {
+                RoleId = roleId,
+                PermissionId = pId
+            });
         }
+
+        _logger.LogInformation("دسترسی‌ها با موفقیت به نقش {RoleId} منتسب شدند.", roleId);
+
+        ClearCache();
+
+        return true;
     }
 
     public async Task<bool> DeleteRangeAsync(IEnumerable<int> ids)
     {
-        try
+        var idsList = ids.ToList();
+        _logger.LogWarning("درخواست حذف گروهی دسترسی‌ها به تعداد {Count}.", idsList.Count);
+
+        var allPermissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
+        var targetPermissions = allPermissions.Where(p => idsList.Contains(p.Id)).ToList();
+
+        if (!targetPermissions.Any())
+            throw new NotFoundException("هیچ دسترسی برای حذف یافت نشد.");
+
+        var allRolePermissionsToDelete = targetPermissions
+            .Where(p => p.RolePermissions != null)
+            .SelectMany(p => p.RolePermissions)
+            .ToList();
+
+        if (allRolePermissionsToDelete.Any())
         {
-            var idsList = ids.ToList();
-            _logger.LogWarning("درخواست حذف گروهی دسترسی‌ها به تعداد {Count}.", idsList.Count);
-
-            var allPermissions = await _permissionRepo.GetAllWithIncludesAsync(p => p.RolePermissions);
-            var targetPermissions = allPermissions.Where(p => idsList.Contains(p.Id)).ToList();
-
-            if (!targetPermissions.Any())
-                return false;
-
-            var allRolePermissionsToDelete = targetPermissions
-                .Where(p => p.RolePermissions != null)
-                .SelectMany(p => p.RolePermissions)
-                .ToList();
-
-            if (allRolePermissionsToDelete.Any())
-            {
-                await _rolePermissionRepo.DeleteRangeAsync(allRolePermissionsToDelete);
-            }
-
-            await _permissionRepo.DeleteRangeAsync(targetPermissions);
-            _logger.LogInformation("تعداد {Count} دسترسی با موفقیت حذف شدند.", targetPermissions.Count);
-
-            return true;
+            await _rolePermissionRepo.DeleteRangeAsync(allRolePermissionsToDelete);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در حذف گروهی دسترسی‌ها.");
-            throw;
-        }
+
+        await _permissionRepo.DeleteRangeAsync(targetPermissions); // حذف قطعی
+        _logger.LogInformation("تعداد {Count} دسترسی با موفقیت حذف شدند.", targetPermissions.Count);
+
+        ClearCache();
+
+        return true;
     }
 
     public async Task<bool> UpdateStatusAsync(IEnumerable<int> ids, bool isActive)
     {
-        try
+        var idsList = ids.ToList();
+        _logger.LogInformation("تغییر وضعیت {Count} دسترسی به فعال={IsActive}.", idsList.Count, isActive);
+
+        var allPermissions = await _permissionRepo.GetAllAsync();
+        var targetPermissions = allPermissions.Where(p => idsList.Contains(p.Id)).ToList();
+
+        if (!targetPermissions.Any())
+            throw new NotFoundException("هیچ دسترسی برای تغییر وضعیت یافت نشد.");
+
+        foreach (var permission in targetPermissions)
         {
-            var idsList = ids.ToList();
-            _logger.LogInformation("تغییر وضعیت {Count} دسترسی به فعال={IsActive}.", idsList.Count, isActive);
-
-            var allPermissions = await _permissionRepo.GetAllAsync();
-            var targetPermissions = allPermissions.Where(p => idsList.Contains(p.Id)).ToList();
-
-            foreach (var permission in targetPermissions)
-            {
-                permission.IsActive = isActive;
-                await _permissionRepo.UpdateAsync(permission);
-            }
-
-            _logger.LogInformation("وضعیت دسترسی‌ها با موفقیت تغییر کرد.");
-            return true;
+            permission.IsActive = isActive;
+            await _permissionRepo.UpdateAsync(permission);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در تغییر وضعیت گروهی دسترسی‌ها.");
-            throw;
-        }
+
+        _logger.LogInformation("وضعیت دسترسی‌ها با موفقیت تغییر کرد.");
+
+        ClearCache();
+
+        return true;
     }
 
     public async Task<bool> HasAccessAsync(System.Security.Claims.ClaimsPrincipal user, string resourceKey)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(resourceKey)) return true;
+        if (string.IsNullOrWhiteSpace(resourceKey)) return true;
 
-            var permissions = await GetPermissionsFromCacheAsync();
-            var targetPermission = permissions.FirstOrDefault(p =>
-                p.ResourceKey.Equals(resourceKey, StringComparison.OrdinalIgnoreCase));
+        var permissions = await GetPermissionsFromCacheAsync();
+        var targetPermission = permissions.FirstOrDefault(p =>
+            p.ResourceKey.Equals(resourceKey, StringComparison.OrdinalIgnoreCase));
 
-            if (targetPermission == null) return true;
+        if (targetPermission == null) return true;
 
-            var userRoles = user.Claims
-                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ToList();
+        var userRoles = user.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
 
-            return targetPermission.AllowedRoles.Any(r => userRoles.Contains(r));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در بررسی دسترسی کاربر برای کلید {ResourceKey}.", resourceKey);
-            throw;
-        }
+        return targetPermission.AllowedRoles.Any(r => userRoles.Contains(r));
     }
 
     public void ClearCache()
     {
-        try
-        {
-            _logger.LogInformation("پاکسازی کش دسترسی‌ها.");
-            _cache.Remove(CacheKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در پاکسازی کش دسترسی‌ها.");
-            throw;
-        }
+        _logger.LogInformation("پاکسازی کش دسترسی‌ها.");
+        _cache.Remove(CacheKey);
     }
 
     private async Task<List<PermissionCacheDto>> GetPermissionsFromCacheAsync()
@@ -339,11 +302,6 @@ public class PermissionService : IPermissionService
                     })
                     .ToList();
             }) ?? new List<PermissionCacheDto>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "خطا در بازیابی و کش کردن دسترسی‌ها.");
-            throw;
         }
         finally
         {

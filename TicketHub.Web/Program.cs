@@ -1,6 +1,7 @@
 using Audit.Core;
 using Audit.EntityFramework;
 using DNTCaptcha.Core;
+using FluentValidation;
 using Fluxor;
 using Mapster;
 using MapsterMapper;
@@ -8,9 +9,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies; // اضافه شود
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Serilog;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
+using TicketHub.Application.Validations;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
@@ -18,10 +24,6 @@ using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
 using TicketHub.Web.Middlewares;
-using System.Security.Claims;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using System.Text.Encodings.Web;
-using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -67,13 +69,24 @@ builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 // ----------------------------------------------
 
+builder.Services.AddValidatorsFromAssembly(typeof(AttachmentDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(CategoryDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(FieldTypeDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(PermissionDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(PriorityDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(ProjectDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(RoleDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(StatusDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(TicketDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(TicketFieldDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(UserDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(WorkflowDtoValidator).Assembly);
+
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
-// ------ این خطوط باید حذف شوند ------
-// builder.Services.AddScoped<ITicketService, TicketService>();
-// builder.Services.AddScoped<IProjectService, ProjectService>();
-// builder.Services.AddScoped<IStatusService, StatusService>();
-// ------------------------------------
+// --- ثبت هندلر خطاهای سفارشی ---
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // سرویس‌های مورد نیاز که باقی می‌مانند یا اضافه می‌شوند:
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
@@ -203,7 +216,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<LogEnrichmentMiddleware>();
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandler(); 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();

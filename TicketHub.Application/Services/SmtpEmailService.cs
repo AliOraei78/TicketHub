@@ -4,52 +4,43 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TicketHub.Core.Interfaces;
 
-namespace TicketHub.Infrastructure.Services
+namespace TicketHub.Infrastructure.Services;
+
+public class SmtpEmailService : IEmailService
 {
-    public class SmtpEmailService : IEmailService
+    private readonly ILogger<SmtpEmailService> _logger;
+
+    public SmtpEmailService(ILogger<SmtpEmailService> logger)
     {
-        private readonly ILogger<SmtpEmailService> _logger;
+        _logger = logger;
+    }
 
-        public SmtpEmailService(ILogger<SmtpEmailService> logger)
+    public async Task SendEmailAsync(string toEmail, string subject, string body)
+    {
+        _logger.LogInformation("شروع ارسال ایمیل به {ToEmail} با موضوع: {Subject}", toEmail, subject);
+
+        // Configure SMTP client settings (e.g., for Gmail)
+        using var smtpClient = new SmtpClient("smtp.gmail.com")
         {
-            _logger = logger;
-        }
+            Port = 587,
+            Credentials = new NetworkCredential("jenabicoder@gmail.com", "mdipkbeemzzylldh"),
+            EnableSsl = true,
+        };
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        // Prepare the email message
+        using var mailMessage = new MailMessage
         {
-            try
-            {
-                _logger.LogInformation("شروع ارسال ایمیل به {ToEmail} با موضوع: {Subject}", toEmail, subject);
+            From = new MailAddress("jenabicoder@gmail.com", "TicketHub System"),
+            Subject = subject,
+            Body = body,
+            IsBodyHtml = true, // Set to true if your body contains HTML tags
+        };
 
-                // Configure SMTP client settings (e.g., for Gmail)
-                var smtpClient = new SmtpClient("smtp.gmail.com")
-                {
-                    Port = 587,
-                    Credentials = new NetworkCredential("jenabicoder@gmail.com", "mdipkbeemzzylldh"),
-                    EnableSsl = true,
-                };
+        mailMessage.To.Add(toEmail);
 
-                // Prepare the email message
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress("jenabicoder@gmail.com", "TicketHub System"),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = true, // Set to true if your body contains HTML tags
-                };
+        // Send the email asynchronously
+        await smtpClient.SendMailAsync(mailMessage);
 
-                mailMessage.To.Add(toEmail);
-
-                // Send the email asynchronously
-                await smtpClient.SendMailAsync(mailMessage);
-
-                _logger.LogInformation("ایمیل با موفقیت به {ToEmail} ارسال شد.", toEmail);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "خطا در ارسال ایمیل به {ToEmail}.", toEmail);
-                throw;
-            }
-        }
+        _logger.LogInformation("ایمیل با موفقیت به {ToEmail} ارسال شد.", toEmail);
     }
 }
