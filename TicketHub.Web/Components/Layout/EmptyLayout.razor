@@ -1,5 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="h-screen w-full overflow-hidden bg-slate-50 font-['Vazirmatn'] page-transition-enter" dir="rtl">
-    @Body
+    <CustomErrorBoundary @ref="errorBoundary">
+        @Body
+    </CustomErrorBoundary>
 </div>
+
+@code {
+    private CustomErrorBoundary? errorBoundary;
+
+    protected override void OnParametersSet()
+    {
+        errorBoundary?.Recover();
+    }
+}

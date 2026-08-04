@@ -1,0 +1,49 @@
+﻿@inherits ErrorBoundary
+@inject ILogger<CustomErrorBoundary> Logger
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else
+{
+    <!-- اگر تگ ErrorContent هنگام استفاده پاس داده نشد، این ظاهر پیش‌فرض نمایش داده می‌شود -->
+    if (ErrorContent is not null)
+    {
+        @ErrorContent(CurrentException)
+    }
+    else
+    {
+        <div class="flex-1 flex items-center justify-center h-full w-full p-4">
+            <div class="flex flex-col items-center justify-center p-8 bg-white border border-slate-100 rounded-3xl shadow-sm text-center max-w-md w-full animate-[fadeIn_0.3s_ease-out]" dir="rtl">
+
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-24 h-24 text-slate-300 mb-6 drop-shadow-sm">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
+                    <line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"></line>
+                    <line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"></line>
+                </svg>
+
+                <h3 class="text-xl font-bold text-slate-800 mb-3 tracking-tight">یه خطای پیش بینی نشده دریافت شد 😔</h3>
+                <p class="text-slate-500 mb-8 text-sm leading-relaxed">لطفا بعدا تلاش فرمایید</p>
+
+                <button class="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-slate-900/20" @onclick="RecoverError">
+                    تلاش مجدد و بارگذاری صفحه
+                </button>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    protected override Task OnErrorAsync(Exception exception)
+    {
+        Logger.LogError(exception, "یک خطای پیش‌بینی‌نشده در رندرینگ کامپوننت رخ داد.");
+        return base.OnErrorAsync(exception);
+    }
+
+    private void RecoverError()
+    {
+        base.Recover();
+    }
+}

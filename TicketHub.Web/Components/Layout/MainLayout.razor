@@ -83,9 +83,10 @@
         </header>
 
         <main class="flex-1 p-4 md:p-8 overflow-y-auto relative custom-scrollbar">
-            <!-- اضافه کردن h-full برای اطمینان از کشیدگی درست محتوا -->
             <div @key="Navigation.Uri" class="page-transition-enter min-h-full flex flex-col">
-                @Body
+                <CustomErrorBoundary @ref="errorBoundary">
+                    @Body
+                </CustomErrorBoundary>
             </div>
         </main>
     </div>
@@ -103,9 +104,18 @@
     private bool isMobileMenuOpen = false;
     private bool isProfileMenuOpen = false;
     private bool isSidebarCollapsed = false;
+    
+    // متغیر ارجاع به مدیریت خطا
+    private CustomErrorBoundary? errorBoundary;
 
     private void ToggleMobileMenu() => isMobileMenuOpen = !isMobileMenuOpen;
     private void ToggleProfileMenu() => isProfileMenuOpen = !isProfileMenuOpen;
     private void ToggleDesktopSidebar() => isSidebarCollapsed = !isSidebarCollapsed;
     private void OpenSidebar() => isSidebarCollapsed = false;
+
+    // پاک کردن وضعیت خطا در جابجایی بین صفحات
+    protected override void OnParametersSet()
+    {
+        errorBoundary?.Recover();
+    }
 }
