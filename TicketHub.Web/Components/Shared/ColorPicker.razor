@@ -5,6 +5,8 @@
         <!-- Native HTML5 color input -->
         <input type="color"
                value="@Value"
+               placeholder="@Placeholder"
+               required="@IsRequired"
                @onchange="OnColorChanged"
                class="w-10 h-10 p-0 border-0 rounded-xl overflow-hidden cursor-pointer shadow-sm bg-transparent" />
     </label>
@@ -22,6 +24,8 @@
 
     [Parameter]
     public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+    [Parameter] public bool IsRequired { get; set; } = false;
 
     private async Task OnColorChanged(ChangeEventArgs e)
     {

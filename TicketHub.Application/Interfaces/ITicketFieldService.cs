@@ -11,4 +11,5 @@ public interface ITicketFieldService
     Task DeleteAsync(TicketFieldDto dto);
     Task DeleteRangeAsync(IEnumerable<int> ids);
     Task UpdateTicketFieldsStatusAsync(IEnumerable<int> ids, bool isActive);
+    Task<List<TicketFieldDto>> GetFieldsByCategoryIdAsync(int categoryId);
 }

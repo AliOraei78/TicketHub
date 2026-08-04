@@ -6,26 +6,28 @@
     @switch ((FieldTypeEnum)Field.FieldTypeId)
     {
         case FieldTypeEnum.Text:
-            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="text" />
+            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="text" Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.Number:
-            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="number" />
+            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="number" Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.Checkbox:
-            <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" />
+            <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" IsRequired="@Field.IsRequired" />
             break;
 
         case FieldTypeEnum.ColorPicker:
             <div class="mb-1">
                 <label class="block text-sm font-medium text-gray-700">@Field.Name</label>
             </div>
-            <ColorPicker @bind-Value="FieldValue.Value" />
+            <ColorPicker @bind-Value="FieldValue.Value" 
+                         IsRequired="@Field.IsRequired"
+                         Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.TextArea:
-            <CustomTextArea Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" />
+            <CustomTextArea Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.Dropdown:
@@ -48,6 +50,14 @@
 
         case FieldTypeEnum.File:
             <CustomFileUpload Label="@Field.Name" @bind-SelectedFiles="PendingFiles" />
+            break;
+
+        
+        case FieldTypeEnum.Date:
+            <CustomPersianDatePicker Label="@Field.Name"
+                                     @bind-Value="FieldValue.Value"
+                                     IsRequired="@Field.IsRequired"
+                                     Placeholder="@Field.Placeholder" />
             break;
 
         default:
@@ -93,5 +103,13 @@
             ? new List<string>()
             : FieldValue.Value.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
         set => FieldValue.Value = string.Join(",", value);
+    }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrWhiteSpace(FieldValue.Value) && !string.IsNullOrWhiteSpace(Field.DefaultValue))
+        {
+            FieldValue.Value = Field.DefaultValue;
+        }
     }
 }

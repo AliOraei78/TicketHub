@@ -98,6 +98,7 @@ public partial class Tickets : IDisposable
         };
 
         Dispatcher.Dispatch(new ClearTicketMessagesAction());
+        Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
         isCreateModalOpen = true;
     }
 
@@ -117,5 +118,20 @@ public partial class Tickets : IDisposable
     private void NavigateToDetails(int id)
     {
         Navigation.NavigateTo($"/tickets/{id}");
+    }
+
+    private void HandleCategoryChanged(int? categoryId)
+    {
+        newTicket.CategoryId = categoryId;
+
+        if (categoryId.HasValue)
+        {
+            Dispatcher.Dispatch(new LoadDynamicFieldsAction(categoryId.Value));
+        }
+        else
+        {
+            // اگر دسته‌بندی خالی شد، فیلدهای داینامیک هم پاک شوند
+            Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
+        }
     }
 }

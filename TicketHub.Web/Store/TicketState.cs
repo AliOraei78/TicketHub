@@ -6,7 +6,6 @@ using TicketHub.Application.Services;
 namespace TicketHub.Web.Store;
 
 // 1. State
-// 1. State
 [FeatureState]
 public record TicketState(
     bool IsLoading,
@@ -21,9 +20,10 @@ public record TicketState(
     int CurrentPage,
     List<int> SelectedFilterProjectIds,
     List<int> SelectedFilterStatusIds,
-    string? FormErrorMessage)
+    string? FormErrorMessage,
+    IEnumerable<TicketFieldDto> DynamicFields)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 10, 1, new(), new(), null) { } // مقداردهی اولیه اضافه شد
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 10, 1, new(), new(), null, Array.Empty<TicketFieldDto>()) { }
 }
 
 // 2. Actions
@@ -36,6 +36,8 @@ public record SaveTicketAction(TicketDto Ticket);
 public record SaveTicketSuccessAction();
 public record SaveTicketFailedAction(string ErrorMessage);
 public record ClearTicketMessagesAction();
+public record LoadDynamicFieldsAction(int CategoryId);
+public record DynamicFieldsLoadedAction(IEnumerable<TicketFieldDto> Fields);
 
 // 3. Reducers
 public static class TicketReducers
@@ -70,6 +72,10 @@ public static class TicketReducers
 
     [ReducerMethod(typeof(ClearTicketMessagesAction))]
     public static TicketState ReduceClearMessages(TicketState state) => state with { FormErrorMessage = null };
+
+    [ReducerMethod]
+    public static TicketState ReduceDynamicFieldsLoaded(TicketState state, DynamicFieldsLoadedAction action) =>
+    state with { DynamicFields = action.Fields };
 }
 
 // 4. Effects
@@ -81,8 +87,9 @@ public class TicketEffects
     private readonly IPriorityService _priorityService;
     private readonly ICategoryService _categoryService;
     private readonly IState<TicketState> _state;
+    private readonly ITicketFieldService _ticketFieldService;
 
-    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IPriorityService priorityService, ICategoryService categoryService, IState<TicketState> state)
+    public TicketEffects(ITicketService ticketService, IProjectService projectService, IStatusService statusService, IPriorityService priorityService, ICategoryService categoryService, IState<TicketState> state, ITicketFieldService ticketFieldService)
     {
         _ticketService = ticketService;
         _projectService = projectService;
@@ -90,6 +97,7 @@ public class TicketEffects
         _priorityService = priorityService;
         _categoryService = categoryService;
         _state = state;
+        _ticketFieldService = ticketFieldService;
     }
 
     [EffectMethod]
@@ -113,6 +121,13 @@ public class TicketEffects
         var result = await _ticketService.GetFilteredTicketsAsync(string.Empty, null, null, null, 1, 1000);
 
         dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, 1));
+    }
+
+    [EffectMethod]
+    public async Task HandleLoadDynamicFields(LoadDynamicFieldsAction action, IDispatcher dispatcher)
+    {
+        var fields = await _ticketFieldService.GetFieldsByCategoryIdAsync(action.CategoryId);
+        dispatcher.Dispatch(new DynamicFieldsLoadedAction(fields));
     }
 
     [EffectMethod]

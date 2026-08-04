@@ -133,4 +133,18 @@ public class TicketFieldService : ITicketFieldService
             await _ticketFieldRepo.UpdateAsync(field);
         }
     }
+
+    public async Task<List<TicketFieldDto>> GetFieldsByCategoryIdAsync(int categoryId)
+    {
+        var fields = await _ticketFieldRepo.GetAllWithIncludesAsync(
+            f => f.FieldCategories,
+            f => f.FieldType);
+
+        var categoryFields = fields
+            .Where(f => f.IsActive && f.FieldCategories.Any(fc => fc.CategoryId == categoryId))
+            .OrderBy(f => f.SortOrder)
+            .ToList();
+
+        return categoryFields.Adapt<List<TicketFieldDto>>();
+    }
 }
