@@ -95,7 +95,7 @@ public class TicketEffects
     [EffectMethod]
     public async Task HandleLoadInitialData(LoadTicketInitialDataAction action, IDispatcher dispatcher)
     {
-        var projects = await _projectService.GetProjectsAsync();
+        var projects = await _projectService.GetProjectsByUserRolesAsync(action.UserRoles);
         var statuses = await _statusService.GetAllAsync();
         var priorities = await _priorityService.GetAllAsync();
 

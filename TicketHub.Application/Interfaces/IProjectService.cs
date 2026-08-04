@@ -10,4 +10,5 @@ public interface IProjectService
     Task AddProjectAsync(ProjectDto project);
     Task UpdateProjectAsync(ProjectDto project);
     Task DeleteProjectAsync(int id);
+    Task<List<ProjectDto>> GetProjectsByUserRolesAsync(IEnumerable<string> userRoles);
 }

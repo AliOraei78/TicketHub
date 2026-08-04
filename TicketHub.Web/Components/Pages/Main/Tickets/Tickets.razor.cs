@@ -66,16 +66,14 @@ public partial class Tickets : IDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        if (!TicketState.Value.AvailableProjects.Any())
-        {
-            var authState = await AuthState;
-            var roles = authState.User.Claims
-                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ToList();
+        // شرط if حذف شد تا با هر بار ورود به صفحه، پروژه‌ها و دسته‌بندی‌های مجاز کاربر واکشی شوند
+        var authState = await AuthState;
+        var roles = authState.User.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
 
-            Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
-        }
+        Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
     }
 
     // متد مربوط به پاکسازی حافظه هنگام خروج از صفحه
