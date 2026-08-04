@@ -17,6 +17,13 @@
                 }
                 else
                 {
+                    @if (FilteredItems.Count() > 2)
+                    {
+                        <div @onclick="ToggleSelectAll" class="px-3 py-2.5 mx-2 my-1 hover:bg-gray-100 rounded-xl cursor-pointer flex items-center justify-between transition-colors border-b border-gray-100 mb-2 pb-3">
+                            <span class="text-sm font-bold text-gray-800">انتخاب / لغو همه</span>
+                            <input type="checkbox" checked="@AreAllSelected" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-colors" />
+                        </div>
+                    }
                     @foreach (var item in FilteredItems)
                     {
                         var val = ValueSelector(item);
@@ -62,6 +69,7 @@
 
     private string searchTerm = string.Empty;
     private bool showDropdown = false;
+    private bool AreAllSelected => FilteredItems.Any() && FilteredItems.All(i => SelectedValues.Contains(ValueSelector(i)));
 
     private IEnumerable<TItem> FilteredItems => string.IsNullOrEmpty(searchTerm)
         ? Items
@@ -87,5 +95,23 @@
     {
         await Task.Delay(200);
         showDropdown = false;
+    }
+
+    private async Task ToggleSelectAll()
+    {
+        if (AreAllSelected)
+        {
+            // اگر همه انتخاب شده‌اند، فقط آیتم‌های فیلتر شده فعلی را از لیست پاک کن
+            var filteredValues = FilteredItems.Select(ValueSelector).ToHashSet();
+            SelectedValues.RemoveAll(v => filteredValues.Contains(v));
+        }
+        else
+        {
+            // انتخاب همه آیتم‌های فیلتر شده فعلی
+            var newValues = FilteredItems.Select(ValueSelector).Where(v => !SelectedValues.Contains(v));
+            SelectedValues.AddRange(newValues);
+        }
+
+        await SelectedValuesChanged.InvokeAsync(SelectedValues);
     }
 }
