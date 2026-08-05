@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -90,6 +92,7 @@ public class TicketEffects
     private readonly IState<TicketState> _state;
     private readonly ITicketFieldService _ticketFieldService;
     private readonly ILogger<TicketEffects> _logger;
+    private readonly IToastService _toastService;
 
     public TicketEffects(
         ITicketService ticketService,
@@ -99,7 +102,8 @@ public class TicketEffects
         ICategoryService categoryService,
         IState<TicketState> state,
         ITicketFieldService ticketFieldService,
-        ILogger<TicketEffects> logger)
+        ILogger<TicketEffects> logger,
+        IToastService toastService)
     {
         _ticketService = ticketService;
         _projectService = projectService;
@@ -109,6 +113,7 @@ public class TicketEffects
         _state = state;
         _ticketFieldService = ticketFieldService;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod]
@@ -131,6 +136,7 @@ public class TicketEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت اطلاعات اولیه تیکت‌ها.");
+            _toastService.ShowError("خطا در دریافت اطلاعات اولیه. لطفا صفحه را مجدداً بارگذاری کنید.");
         }
     }
 
@@ -142,15 +148,16 @@ public class TicketEffects
             _logger.LogInformation("شروع فراخوانی لیست تیکت‌ها.");
 
             var st = _state.Value;
-            var result = await _ticketService.GetFilteredTicketsAsync(string.Empty, null, null, null, 1, 1000);
+            var result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, null, st.CurrentPage, st.PageSize);
 
-            dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, 1));
+            dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, st.CurrentPage));
 
             _logger.LogInformation("لیست تیکت‌ها با موفقیت دریافت شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست تیکت‌ها.");
+            _toastService.ShowError("خطا در دریافت لیست تیکت‌ها.");
         }
     }
 
@@ -169,24 +176,14 @@ public class TicketEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت فیلدهای داینامیک برای دسته‌بندی {CategoryId}.", action.CategoryId);
+            _toastService.ShowError("خطا در دریافت فیلدهای پویا.");
         }
     }
 
     [EffectMethod]
     public async Task HandleSaveTicket(SaveTicketAction action, IDispatcher dispatcher)
     {
-        var errors = new List<string>();
         var ticketModel = action.Ticket;
-
-        if (string.IsNullOrWhiteSpace(ticketModel.Title)) errors.Add("• عنوان تیکت الزامی است.");
-        if (string.IsNullOrWhiteSpace(ticketModel.Description)) errors.Add("• توضیحات تیکت الزامی است.");
-        if (ticketModel.ProjectId == 0) errors.Add("• انتخاب پروژه الزامی است.");
-
-        if (errors.Any())
-        {
-            dispatcher.Dispatch(new SaveTicketFailedAction(string.Join("\n", errors)));
-            return;
-        }
 
         try
         {
@@ -197,14 +194,26 @@ public class TicketEffects
             else
                 await _ticketService.UpdateAsync(ticketModel);
 
+            _toastService.ShowSuccess(ticketModel.Id == 0 ? "تیکت با موفقیت ایجاد شد." : "تغییرات تیکت با موفقیت ذخیره شد.");
+
             dispatcher.Dispatch(new SaveTicketSuccessAction());
             dispatcher.Dispatch(new LoadTicketsAction());
-
-            _logger.LogInformation("تیکت با موفقیت {ActionType} شد.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join("\n", ex.Errors.SelectMany(e => e.Value).Select(msg => $"• {msg}"));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+            dispatcher.Dispatch(new SaveTicketFailedAction(errorMessage));
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
+            dispatcher.Dispatch(new SaveTicketFailedAction(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "خطا در زمان {ActionType} تیکت.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
+            _logger.LogError(ex, "خطای سیستمی در زمان {ActionType} تیکت.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
+            _toastService.ShowError("یک خطای سیستمی رخ داد. لطفاً دوباره تلاش کنید.");
             dispatcher.Dispatch(new SaveTicketFailedAction("• خطایی در ذخیره تیکت رخ داد."));
         }
     }

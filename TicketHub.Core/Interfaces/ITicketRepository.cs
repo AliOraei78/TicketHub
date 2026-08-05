@@ -11,5 +11,5 @@ using TicketHub.Core.Entities;
 public interface ITicketRepository : IRepository<Ticket>
 {
     Task<(List<Ticket> Tickets, int TotalCount)> GetFilteredTicketsAsync(
-        string searchTerm, int? projectId, int? statusId, int? userId, int page, int pageSize);
+            string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId, int page, int pageSize);
 }

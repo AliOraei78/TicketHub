@@ -55,12 +55,12 @@ public class TicketService : ITicketService
     }
 
     public async Task<(List<TicketDto> Tickets, int TotalCount)> GetFilteredTicketsAsync(
-        string searchTerm, int? projectId, int? statusId, int? userId, int page, int pageSize)
+            string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId, int page, int pageSize)
     {
         _logger.LogInformation("دریافت لیست تیکت‌ها با فیلتر. صفحه: {Page}، تعداد در صفحه: {PageSize}.", page, pageSize);
 
         var (tickets, totalCount) = await _ticketRepository.GetFilteredTicketsAsync(
-            searchTerm, projectId, statusId, userId, page, pageSize);
+            searchTerm, projectIds, statusIds, userId, page, pageSize);
 
         _logger.LogInformation("تعداد {TotalCount} تیکت منطبق با فیلترها یافت شد.", totalCount);
 

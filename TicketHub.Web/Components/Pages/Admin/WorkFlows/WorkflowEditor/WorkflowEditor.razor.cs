@@ -16,13 +16,14 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
         [Inject] private IActionSubscriber ActionSubscriber { get; set; } = default!;
         [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-        // Form & DB Data (Local Copies for high-performance editing)
+        // Form & DB Data
         private WorkflowDto? CurrentWorkflow;
         private string WorkflowName = "";
         private string WorkflowDescription = "";
         private string StatusSearchTerm = "";
+        private bool WorkflowIsActive = true;
 
-        // Canvas UI State (High Frequency Updates)
+        // Canvas UI State
         private List<CanvasNodeDto> CanvasNodes = new();
         private List<CanvasConnection> Connections = new();
         private HashSet<CanvasNodeDto> SelectedNodes = new();
@@ -49,18 +50,17 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
         {
             base.OnInitialized();
 
-            // دریافت اطلاعات واکشی شده از دیتابیس و قرار دادن در استیت‌های گرافیکی
             ActionSubscriber.SubscribeToAction<EditorDataLoadedAction>(this, action =>
             {
                 CurrentWorkflow = action.CurrentWorkflow;
                 WorkflowName = action.Name;
                 WorkflowDescription = action.Description;
+                WorkflowIsActive = action.IsActive;
                 CanvasNodes = action.Nodes;
                 Connections = action.Connections;
                 InvokeAsync(StateHasChanged);
             });
 
-            // در صورت ذخیره موفق، به لیست برگرد
             ActionSubscriber.SubscribeToAction<SaveWorkflowEditorSuccessAction>(this, action =>
             {
                 Navigation.NavigateTo("/workflows");
@@ -76,7 +76,7 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
         private void SaveWorkflowAsync()
         {
-            Dispatcher.Dispatch(new SaveWorkflowEditorAction(Id, CurrentWorkflow, WorkflowName, WorkflowDescription, CanvasNodes, Connections));
+            Dispatcher.Dispatch(new SaveWorkflowEditorAction(Id, CurrentWorkflow, WorkflowName, WorkflowDescription, WorkflowIsActive, CanvasNodes, Connections));
         }
         private void ClearError() => Dispatcher.Dispatch(new ClearEditorErrorAction());
 
@@ -453,6 +453,16 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
                 if (clickedItem is CanvasNodeDto n) RemoveNode(n);
                 if (clickedItem is CanvasConnection c) DeleteConnection(c);
             }
+        }
+
+        private void SetInitialNode(CanvasNodeDto node)
+        {
+            if (node.IsInitial) return;
+
+            foreach (var n in CanvasNodes) n.IsInitial = false;
+            node.IsInitial = true;
+
+            InvokeAsync(StateHasChanged);
         }
     }
 }

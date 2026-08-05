@@ -14,6 +14,10 @@ public class WorkflowDtoValidator : AbstractValidator<WorkflowDto>
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage("توضیحات نمی‌تواند بیشتر از 500 کاراکتر باشد.");
 
+        RuleFor(x => x.WorkflowStatuses)
+            .Must(statuses => statuses.Count(s => s.IsInitial) == 1)
+            .WithMessage("دقیقاً یک وضعیت باید به عنوان وضعیت اولیه جریان کاری انتخاب شود.");
+
         RuleForEach(x => x.Transitions)
             .SetValidator(new TransitionDtoValidator());
     }

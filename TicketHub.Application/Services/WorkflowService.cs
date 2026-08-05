@@ -89,6 +89,7 @@ public class WorkflowService : IWorkflowService
         // ۲. آپدیت فیلدهای اصلی جریان کاری
         existingWorkflow.Name = dto.Name;
         existingWorkflow.Description = dto.Description;
+        existingWorkflow.IsActive = dto.IsActive;
 
         // ۳. مدیریت وضعیت‌ها (WorkflowStatuses) روی بوم
         var activeNodeIds = dto.WorkflowStatuses.Select(ws => ws.NodeId).ToList();
@@ -109,6 +110,7 @@ public class WorkflowService : IWorkflowService
                 existingWs.PositionX = statusDto.PositionX;
                 existingWs.PositionY = statusDto.PositionY;
                 existingWs.StatusId = statusDto.StatusId;
+                existingWs.IsInitial = statusDto.IsInitial;
             }
             else
             {

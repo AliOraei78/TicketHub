@@ -4,15 +4,15 @@
     @switch ((FieldTypeEnum)Field.FieldTypeId)
     {
         case FieldTypeEnum.Text:
-            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="text" Placeholder="@Field.Placeholder" />
+            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" Type="text" Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.Number:
-            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Type="number" Placeholder="@Field.Placeholder" />
+            <CustomInput Label="@Field.Name" @bind-Value="FieldValue.Value" Type="number" Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.Checkbox:
-            <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" IsRequired="@Field.IsRequired" />
+            <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" />
             break;
 
         case FieldTypeEnum.ColorPicker:
@@ -20,12 +20,11 @@
                 <label class="block text-sm font-medium text-gray-700">@Field.Name</label>
             </div>
             <ColorPicker @bind-Value="FieldValue.Value" 
-                         IsRequired="@Field.IsRequired"
                          Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.TextArea:
-            <CustomTextArea Label="@Field.Name" @bind-Value="FieldValue.Value" IsRequired="@Field.IsRequired" Placeholder="@Field.Placeholder" />
+            <CustomTextArea Label="@Field.Name" @bind-Value="FieldValue.Value" Placeholder="@Field.Placeholder" />
             break;
 
         case FieldTypeEnum.Dropdown:
@@ -54,7 +53,6 @@
         case FieldTypeEnum.Date:
             <CustomPersianDatePicker Label="@Field.Name"
                                      @bind-Value="FieldValue.Value"
-                                     IsRequired="@Field.IsRequired"
                                      Placeholder="@Field.Placeholder" />
             break;
 

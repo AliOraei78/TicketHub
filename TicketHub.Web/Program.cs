@@ -112,11 +112,10 @@ builder.Services.AddHttpContextAccessor();
 // --------- تنظیمات DNTCaptcha ---------
 builder.Services.AddDNTCaptcha(options =>
 {
-    // استفاده از حافظه رم سرور برای نگهداری توکن‌ها
     options.UseMemoryCacheStorageProvider()
-           .ShowThousandsSeparators(false) // عدم نمایش جداکننده هزارگان
-           .AbsoluteExpiration(minutes: 1) // انقضای دقیق بعد از 60 ثانیه
-           .WithEncryptionKey("TicketHub_Secret_Captcha_Key_2026!@#") // کلید رمزنگاری
+           .ShowThousandsSeparators(false)
+           .AbsoluteExpiration(minutes: 1)
+           .WithEncryptionKey("TicketHub_Secret_Captcha_Key_2026!@#")
            .InputNames(new DNTCaptchaComponent
            {
                CaptchaHiddenInputName = "DNTCaptchaText",

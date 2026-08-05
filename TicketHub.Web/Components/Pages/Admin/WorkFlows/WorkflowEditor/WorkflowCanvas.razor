@@ -92,6 +92,8 @@ tabindex="0"
         <CanvasNodeComponent @key="node.Id"
                              Node="node"
                              IsSelected="SelectedNodes.Contains(node)"
+                             ShowInitialButton="@(SelectedNodes.Count == 1 && SelectedConnections.Count == 0)"
+                             OnSetInitialNode="args => OnSetInitialNode.InvokeAsync(args)"
                              IsConnecting="IsConnecting"
                              ConnectingFromNode="ConnectingFromNode"
                              CursorStyle="@(IsDragging && DraggedNode == node ? "grabbing" : "grab")"
@@ -109,6 +111,8 @@ tabindex="0"
     [Parameter] public List<CanvasConnection> Connections { get; set; } = new();
     [Parameter] public HashSet<CanvasNodeDto> SelectedNodes { get; set; } = new();
     [Parameter] public HashSet<CanvasConnection> SelectedConnections { get; set; } = new();
+
+    [Parameter] public EventCallback<CanvasNodeDto> OnSetInitialNode { get; set; }
 
     [Parameter] public bool IsBoxSelecting { get; set; }
     [Parameter] public double BoxStartX { get; set; }

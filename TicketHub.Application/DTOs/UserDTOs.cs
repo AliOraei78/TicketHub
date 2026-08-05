@@ -14,7 +14,7 @@ public class UserDto
     public string Email { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
     public bool IsConfirmed { get; set; }
     public List<string> RoleNames { get; set; } = new();
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();

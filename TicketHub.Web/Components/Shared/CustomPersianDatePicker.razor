@@ -2,17 +2,6 @@
 @using Bit.BlazorUI
 
 <div class="w-full customdatepicker">
-    @if (!string.IsNullOrWhiteSpace(Label))
-    {
-        <label class="block text-xs font-medium text-gray-600 mb-1">
-            @Label
-            @if (IsRequired)
-            {
-                <span class="text-red-500">*</span>
-            }
-        </label>
-    }
-
     <BitDatePicker @bind-Value="InternalDateValue"
                    Culture="@PersianCulture"
                    ShowTimePicker="@ShowTimePicker"
@@ -94,7 +83,6 @@
 
 @code {
     [Parameter] public string Label { get; set; } = string.Empty;
-    [Parameter] public bool IsRequired { get; set; }
     [Parameter] public string Value { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
     [Parameter] public string Placeholder { get; set; } = string.Empty;

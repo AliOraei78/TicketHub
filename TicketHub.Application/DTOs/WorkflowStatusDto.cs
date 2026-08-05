@@ -12,7 +12,7 @@ public class WorkflowStatusDto
     public Guid NodeId { get; set; }
     public int WorkflowId { get; set; }
     public int StatusId { get; set; }
-
+    public bool IsInitial { get; set; } = false;
     public StatusDto? Status { get; set; }
 
     public double PositionX { get; set; }

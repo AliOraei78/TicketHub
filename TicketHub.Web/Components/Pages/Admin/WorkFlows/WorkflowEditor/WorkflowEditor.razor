@@ -29,7 +29,8 @@
 
         <WorkflowToolbar @bind-Name="WorkflowName"
                          @bind-Description="WorkflowDescription"
-                         OnSave="SaveWorkflowAsync" />
+                         OnSave="SaveWorkflowAsync" 
+                         @bind-IsActive="WorkflowIsActive" />
 
         <WorkflowCanvas Nodes="CanvasNodes"
                         Connections="Connections"
@@ -61,7 +62,8 @@
                         GetTextColor="GetTextColor"
                         GetBezierPath="GetBezierPath"
                         GetBezierCenter="GetBezierCenter"
-                        GetPortCoordinates="GetPortCoordinates" />
+                        GetPortCoordinates="GetPortCoordinates" 
+                        OnSetInitialNode="SetInitialNode" />
 
         <TransitionSidebar Connection="SelectedConnections.FirstOrDefault()"
                            AvailableRoles="EdState.Value.AvailableRoles"

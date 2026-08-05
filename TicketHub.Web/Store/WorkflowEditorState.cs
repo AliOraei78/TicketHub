@@ -31,6 +31,7 @@ public record EditorDataLoadedAction(
     WorkflowDto? CurrentWorkflow,
     string Name,
     string Description,
+    bool IsActive,
     List<CanvasNodeDto> Nodes,
     List<CanvasConnection> Connections);
 public record SaveWorkflowEditorAction(
@@ -38,6 +39,7 @@ public record SaveWorkflowEditorAction(
     WorkflowDto? CurrentWorkflow,
     string Name,
     string Description,
+    bool IsActive,
     List<CanvasNodeDto> Nodes,
     List<CanvasConnection> Connections);
 public record SaveWorkflowEditorSuccessAction();
@@ -101,6 +103,7 @@ public class WorkflowEditorEffects
 
             WorkflowDto? currentWf = null;
             string name = "", desc = "";
+            bool isActive = true;
             List<CanvasNodeDto> nodes = new();
             List<CanvasConnection> connections = new();
 
@@ -111,13 +114,15 @@ public class WorkflowEditorEffects
                 {
                     name = currentWf.Name ?? "";
                     desc = currentWf.Description ?? "";
+                    isActive = currentWf.IsActive;
 
                     nodes = currentWf.WorkflowStatuses.Select(ws => new CanvasNodeDto
                     {
                         Id = ws.NodeId != Guid.Empty ? ws.NodeId : Guid.NewGuid(),
                         Status = ws.Status!,
                         X = ws.PositionX,
-                        Y = ws.PositionY
+                        Y = ws.PositionY,
+                        IsInitial = ws.IsInitial
                     }).ToList();
 
                     connections = currentWf.Transitions
@@ -149,7 +154,7 @@ public class WorkflowEditorEffects
                         }).Where(c => c.FromNodeId != Guid.Empty && c.ToNodeId != Guid.Empty).ToList();
                 }
             }
-            dispatcher.Dispatch(new EditorDataLoadedAction(statuses, roles, fields, currentWf, name, desc, nodes, connections));
+            dispatcher.Dispatch(new EditorDataLoadedAction(statuses, roles, fields, currentWf, name, desc, isActive, nodes, connections));
         }
         catch (Exception ex)
         {
@@ -172,6 +177,7 @@ public class WorkflowEditorEffects
                 {
                     wf.Name = action.Name;
                     wf.Description = action.Description;
+                    wf.IsActive = action.IsActive;
 
                     var activeNodeIds = action.Nodes.Select(n => n.Id).ToList();
                     var statusesToRemove = wf.WorkflowStatuses.Where(ws => !activeNodeIds.Contains(ws.NodeId)).ToList();
@@ -180,8 +186,8 @@ public class WorkflowEditorEffects
                     foreach (var n in action.Nodes)
                     {
                         var existingWs = wf.WorkflowStatuses.FirstOrDefault(ws => ws.NodeId == n.Id);
-                        if (existingWs != null) { existingWs.PositionX = n.X; existingWs.PositionY = n.Y; existingWs.StatusId = n.Status.Id; }
-                        else { wf.WorkflowStatuses.Add(new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y }); }
+                        if (existingWs != null) { existingWs.PositionX = n.X; existingWs.PositionY = n.Y; existingWs.StatusId = n.Status.Id; existingWs.IsInitial = n.IsInitial; }
+                        else { wf.WorkflowStatuses.Add(new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y, IsInitial = n.IsInitial }); }
                     }
 
                     var activeUiConnectionDbIds = action.Connections.Where(c => c.DbId > 0).Select(c => c.DbId).ToList();
@@ -198,7 +204,6 @@ public class WorkflowEditorEffects
                             var dbTrans = wf.Transitions.FirstOrDefault(t => t.Id == conn.DbId);
                             if (dbTrans != null)
                             {
-                                // اصلاح: تخصیص مستقیم نام بدون دادن مقدار پیش‌فرض
                                 dbTrans.Name = conn.Name;
                                 dbTrans.SourcePort = conn.SourcePort; dbTrans.TargetPort = conn.TargetPort;
                                 dbTrans.FromNodeId = conn.FromNodeId; dbTrans.ToNodeId = conn.ToNodeId;
@@ -208,7 +213,6 @@ public class WorkflowEditorEffects
                                 dbTrans.ActivateAt = conn.ActivateAt;
                                 dbTrans.AllowedRoleIds = conn.AllowedRoleIds.ToList();
 
-                                // اصلاح: حذف شرط Where(f => f.FieldTypeId > 0) تا فیلدهای نامعتبر هم ولیدیت شوند
                                 dbTrans.TransitionFields = conn.CustomFields.Select(f => new TransitionFieldDto
                                 {
                                     Id = f.Id,
@@ -227,7 +231,6 @@ public class WorkflowEditorEffects
                         {
                             wf.Transitions.Add(new TransitionDto
                             {
-                                // اصلاح: تخصیص مستقیم نام بدون دادن مقدار پیش‌فرض
                                 Name = conn.Name,
                                 FromState = fromStatusId,
                                 ToState = toStatusId,
@@ -240,7 +243,6 @@ public class WorkflowEditorEffects
                                 ActivateAt = conn.ActivateAt,
                                 AllowedRoleIds = conn.AllowedRoleIds.ToList(),
 
-                                // اصلاح: حذف شرط Where(f => f.FieldTypeId > 0)
                                 TransitionFields = conn.CustomFields.Select(f => new TransitionFieldDto
                                 {
                                     FieldTypeId = f.FieldTypeId,
@@ -264,14 +266,14 @@ public class WorkflowEditorEffects
                 {
                     Name = action.Name,
                     Description = action.Description,
-                    WorkflowStatuses = action.Nodes.Select(n => new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y }).ToList(),
+                    IsActive = action.IsActive,
+                    WorkflowStatuses = action.Nodes.Select(n => new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y, IsInitial = n.IsInitial }).ToList(),
                     Transitions = action.Connections.Select(c =>
                     {
                         var fromStatusId = action.Nodes.First(n => n.Id == c.FromNodeId).Status.Id;
                         var toStatusId = action.Nodes.First(n => n.Id == c.ToNodeId).Status.Id;
                         return new TransitionDto
                         {
-                            // اصلاح: تخصیص مستقیم نام بدون دادن مقدار پیش‌فرض
                             Name = c.Name,
                             FromState = fromStatusId,
                             ToState = toStatusId,
@@ -284,7 +286,6 @@ public class WorkflowEditorEffects
                             ActivateAt = c.ActivateAt,
                             AllowedRoleIds = c.AllowedRoleIds.ToList(),
 
-                            // اصلاح: حذف شرط Where(f => f.FieldTypeId > 0)
                             TransitionFields = c.CustomFields.Select(f => new TransitionFieldDto
                             {
                                 FieldTypeId = f.FieldTypeId,

@@ -3,7 +3,6 @@
     <textarea @bind="CurrentValue"
               @bind:event="oninput"
               placeholder="@Placeholder"
-              required="@IsRequired"
               dir="@Dir"
               rows="@Rows"
               class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500"></textarea>
@@ -14,7 +13,6 @@
     [Parameter] public string Value { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
     [Parameter] public string Placeholder { get; set; } = string.Empty;
-    [Parameter] public bool IsRequired { get; set; }
     [Parameter] public string Dir { get; set; } = "rtl";
     [Parameter] public int Rows { get; set; } = 3;
 

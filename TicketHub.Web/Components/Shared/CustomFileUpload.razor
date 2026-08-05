@@ -46,7 +46,6 @@
     private string errorMessage = string.Empty;
     private const long MaxTotalSizeBytes = 10 * 1024 * 1024; // 10 MB
     private readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png", ".xlsx", ".xls", ".doc", ".docx", ".ppt", ".pptx", ".txt", ".json" };
-    [Parameter] public bool IsRequired { get; set; } = false;
 
     private async Task HandleSelection(InputFileChangeEventArgs e)
     {

@@ -5,7 +5,18 @@
             <input type="text" value="@Name" @oninput="OnNameInput" placeholder="نام جریان کاری..." class="text-xl font-bold text-slate-800 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
             <input type="text" value="@Description" @oninput="OnDescriptionInput" placeholder="توضیحات جریان کاری (اختیاری)..." class="text-sm text-slate-500 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-4 items-center">
+            <label class="relative inline-flex items-center cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">
+                <span class="text-sm font-bold text-slate-700 ml-3 whitespace-nowrap">جریان‌کار فعال:</span>
+                <div class="relative flex items-center w-11 h-6">
+                    <input type="checkbox" checked="@IsActive" @onchange="OnIsActiveChanged" class="sr-only peer">
+                    <!-- پس‌زمینه دکمه -->
+                    <div class="absolute inset-0 bg-slate-300 rounded-full peer-checked:bg-blue-600 transition-colors duration-300"></div>
+                    <!-- دایره متحرک (شروع از راست در RTL و حرکت به چپ) -->
+                    <div class="absolute right-[2px] w-5 h-5 bg-white border border-slate-300 rounded-full transition-transform duration-300 peer-checked:-translate-x-[20px] peer-checked:border-white z-10 shadow-sm"></div>
+                </div>
+            </label>
+
             <a href="/workflows" class="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 text-sm font-medium transition-colors">انصراف و بازگشت</a>
             <button type="button" @onclick="() => OnSave.InvokeAsync()" class="px-5 py-2.5 rounded-xl text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium transition-colors shadow-lg shadow-blue-500/30">ذخیره جریان کار</button>
         </div>
@@ -20,6 +31,15 @@
     [Parameter] public EventCallback<string> DescriptionChanged { get; set; }
 
     [Parameter] public EventCallback OnSave { get; set; }
+
+    [Parameter] public bool IsActive { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsActiveChanged { get; set; }
+
+    private async Task OnIsActiveChanged(ChangeEventArgs e)
+    {
+        IsActive = (bool)(e.Value ?? false);
+        await IsActiveChanged.InvokeAsync(IsActive);
+    }
 
     private async Task OnNameInput(ChangeEventArgs e)
     {
