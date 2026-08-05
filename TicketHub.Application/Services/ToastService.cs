@@ -1,17 +1,8 @@
-﻿using TicketHub.Application.Interfaces;
+﻿using TicketHub.Application.Enums;
+using TicketHub.Application.Interfaces;
+using TicketHub.Application.Models;
 
 namespace TicketHub.Application.Services;
-
-public enum ToastType { Success, Error, Warning, Info }
-
-public class ToastMessage
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Message { get; set; } = string.Empty;
-    public string? Title { get; set; }
-    public ToastType Type { get; set; }
-}
-
 public class ToastService : IToastService
 {
     public event Action? OnChanged;

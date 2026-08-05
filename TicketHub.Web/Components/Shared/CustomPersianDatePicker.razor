@@ -1,10 +1,10 @@
 ﻿@using System.Globalization
 @using Bit.BlazorUI
 
-<div class="mb-1">
+<div class="w-full customdatepicker">
     @if (!string.IsNullOrWhiteSpace(Label))
     {
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-xs font-medium text-gray-600 mb-1">
             @Label
             @if (IsRequired)
             {
@@ -12,12 +12,85 @@
             }
         </label>
     }
+
     <BitDatePicker @bind-Value="InternalDateValue"
                    Culture="@PersianCulture"
+                   ShowTimePicker="@ShowTimePicker"
+                   ShowGoToToday="true"
                    GoToTodayTitle="برو به امروز"
-                   Placeholder="@(!string.IsNullOrWhiteSpace(Placeholder) ? Placeholder : "انتخاب تاریخ...")"
-                   Class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                   Placeholder="@(!string.IsNullOrWhiteSpace(Placeholder) ? Placeholder : (ShowTimePicker ? "انتخاب تاریخ و زمان..." : "انتخاب تاریخ..."))"
+                   Class="styled-datepicker" />
 </div>
+
+<style>
+    .styled-datepicker,
+    .styled-datepicker,
+    .styled-datepicker.bit-dtp {
+        height: 46px !important;
+        border-radius: 1rem !important;
+        border: 1px solid #e5e7eb !important;
+        background-color: #f9fafb !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transition: all 0.2s !important;
+    }
+
+        .styled-datepicker .bit-dtp-wrp {
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            border: none !important;
+            background: transparent !important;
+            border-radius: 1rem !important;
+            overflow: visible !important; /* این خط جلوی مخفی شدن حروف را می‌گیرد */
+        }
+
+        .styled-datepicker:hover,
+        .styled-datepicker.bit-dtp:hover {
+            background-color: #ffffff !important;
+        }
+
+        .styled-datepicker:focus-within,
+        .styled-datepicker.bit-dtp:focus-within {
+            background-color: #ffffff !important;
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px #e0e7ff !important;
+            outline: none !important;
+        }
+
+        .styled-datepicker::after, .styled-datepicker::before,
+        .styled-datepicker .bit-dtp-wrp::after, .styled-datepicker .bit-dtp-wrp::before {
+            display: none !important;
+        }
+
+        .styled-datepicker input {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+            height: auto !important; /* تغییر مهم: حذف 100% تا اینپوت به فضای متن محدود نشود */
+            min-height: 46px !important;
+            padding: 0 1rem !important;
+            margin: 0 !important;
+            font-size: 0.875rem !important;
+            width: 100% !important;
+            color: #374151 !important;
+            overflow: visible !important; /* جلوگیری از بریده شدن حروف دم‌دار */
+            display: block !important;
+        }
+
+        .styled-datepicker .bit-dtp-icn {
+            background: transparent !important;
+            border: none !important;
+            color: #6b7280 !important;
+            margin: 0 0.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 100% !important;
+        }
+</style>
 
 @code {
     [Parameter] public string Label { get; set; } = string.Empty;
@@ -26,7 +99,9 @@
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
     [Parameter] public string Placeholder { get; set; } = string.Empty;
 
-    // تعریف Culture در بخش کد برای جلوگیری از خطای سینتکس Razor
+    // پارامتر تایم‌پیکر (پیش‌فرض: غیرفعال)
+    [Parameter] public bool ShowTimePicker { get; set; } = false;
+
     private CultureInfo PersianCulture = CultureInfo.GetCultureInfo("fa-IR");
 
     private DateTimeOffset? InternalDateValue

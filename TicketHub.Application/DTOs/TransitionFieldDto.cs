@@ -20,7 +20,4 @@ public class TransitionFieldDto
     public string? Placeholder { get; set; }
     public string? DefaultValue { get; set; }
     public bool IsActive { get; set; } = true;
-
-    // اگر AttachmentDto داری از خط زیر استفاده کن، در غیر این صورت پاکش کن
-    // public ICollection<AttachmentDto> Attachments { get; set; } = new List<AttachmentDto>();
 }

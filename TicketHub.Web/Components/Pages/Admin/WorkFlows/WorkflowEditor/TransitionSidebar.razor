@@ -1,6 +1,4 @@
-﻿
-
-<div class="absolute left-4 top-20 h-[calc(100vh-6rem)] w-80 bg-white border border-slate-200 rounded-2xl z-40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300 flex flex-col overflow-hidden @(Connection != null ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none")">
+﻿<div class="absolute left-4 top-20 h-[calc(100vh-6rem)] w-80 bg-white border border-slate-200 rounded-2xl z-40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300 flex flex-col overflow-hidden @(Connection != null ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none")">
 
     @if (Connection != null)
     {
@@ -14,7 +12,9 @@
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+        <EditForm Model="Connection" class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+            <FluentValidationValidator />
+
             <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <span class="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm">@GetNodeName?.Invoke(Connection.FromNodeId)</span>
                 <span>-></span>
@@ -23,16 +23,17 @@
 
             <div>
                 <label>عنوان انتقال</label>
-                <input type="text" @bind="Connection.Name" @bind:event="oninput" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl" />
+                <InputText @bind-Value="Connection.Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl" />
+                <ValidationMessage For="@(() => Connection.Name)" class="text-red-500 text-xs mt-1" />
             </div>
 
             <div class="flex items-center gap-4 pt-1">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" @bind="Connection.IsActive" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                    <InputCheckbox @bind-Value="Connection.IsActive" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
                     <span class="text-sm font-medium text-slate-700">فعال</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" @bind="Connection.IsAutomatic" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                    <InputCheckbox @bind-Value="Connection.IsAutomatic" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
                     <span class="text-sm font-medium text-slate-700">انتقال خودکار</span>
                 </label>
             </div>
@@ -81,36 +82,42 @@
 
                                     <div class="flex-1 min-w-0 flex flex-col gap-2">
                                         <!-- عنوان فیلد و نوع فیلد -->
-                                        <input type="text" @bind="field.FieldName" @bind:event="oninput" placeholder="عنوان فیلد" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                        <div>
+                                            <InputText @bind-Value="field.FieldName" placeholder="عنوان فیلد" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                            <ValidationMessage For="@(() => field.FieldName)" class="text-red-500 text-[10px] mt-0.5" />
+                                        </div>
 
-                                        <select @bind="field.FieldTypeId" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 pointer-events-auto">
-                                            <option value="0">انتخاب نوع...</option>
-                                            @foreach (var type in AvailableFieldTypes)
-                                            {
-                                                <option value="@type.Id">@type.Type</option>
-                                            }
-                                        </select>
+                                        <div>
+                                            <InputSelect @bind-Value="field.FieldTypeId" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 pointer-events-auto">
+                                                <option value="0">انتخاب نوع...</option>
+                                                @foreach (var type in AvailableFieldTypes)
+                                                {
+                                                    <option value="@type.Id">@type.Type</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => field.FieldTypeId)" class="text-red-500 text-[10px] mt-0.5" />
+                                        </div>
 
                                         <!-- نمایش فیلد گزینه‌ها تنها برای DropDown یا MultipleDropDown -->
                                         @if (AvailableFieldTypes.FirstOrDefault(t => t.Id == field.FieldTypeId)?.Type.Contains("DropDown", StringComparison.OrdinalIgnoreCase) == true)
                                         {
-                                            <input type="text" @bind="field.Options" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                            <InputText @bind-Value="field.Options" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
                                         }
 
                                         <!-- متن جایگیر و مقدار پیش‌فرض -->
-                                        <input type="text" @bind="field.Placeholder" placeholder="متن جایگیر (Placeholder)" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                        <InputText @bind-Value="field.Placeholder" placeholder="متن جایگیر (Placeholder)" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
 
-                                        <input type="text" @bind="field.DefaultValue" placeholder="مقدار پیش‌فرض" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                        <InputText @bind-Value="field.DefaultValue" placeholder="مقدار پیش‌فرض" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
 
                                         <!-- گزینه‌های فعال بودن و اجباری بودن -->
                                         <div class="flex items-center gap-4 mt-1">
                                             <label class="flex items-center gap-1.5 cursor-pointer w-fit pointer-events-auto">
                                                 <span class="text-xs font-medium text-slate-700">اجباری</span>
-                                                <input type="checkbox" @bind="field.IsRequired" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                                                <InputCheckbox @bind-Value="field.IsRequired" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
                                             </label>
                                             <label class="flex items-center gap-1.5 cursor-pointer w-fit pointer-events-auto">
                                                 <span class="text-xs font-medium text-slate-700">فعال</span>
-                                                <input type="checkbox" @bind="field.IsActive" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                                                <InputCheckbox @bind-Value="field.IsActive" class="w-4 h-4 text-blue-600 rounded border-slate-300" />
                                             </label>
                                         </div>
                                     </div>
@@ -135,7 +142,7 @@
             <div class="pt-4 mt-4 border-t border-slate-200">
                 <button type="button" @onclick="() => OnDelete.InvokeAsync(Connection)" class="w-full py-2.5 rounded-xl text-rose-600 bg-rose-50">حذف این مسیر</button>
             </div>
-        </div>
+        </EditForm>
     }
 </div>
 

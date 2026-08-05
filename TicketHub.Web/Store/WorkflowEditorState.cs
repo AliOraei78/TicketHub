@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Core.Common;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -70,13 +72,16 @@ public class WorkflowEditorEffects
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<WorkflowEditorEffects> _logger;
+    private readonly IToastService _toastService;
 
     public WorkflowEditorEffects(
         IServiceScopeFactory scopeFactory,
-        ILogger<WorkflowEditorEffects> logger)
+        ILogger<WorkflowEditorEffects> logger,
+        IToastService toastService)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod]
@@ -84,8 +89,6 @@ public class WorkflowEditorEffects
     {
         try
         {
-            _logger.LogInformation("شروع بارگذاری اطلاعات ویرایشگر جریان کاری. WorkflowId: {WorkflowId}", action.WorkflowId);
-
             using var scope = _scopeFactory.CreateScope();
             var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
             var _statusService = scope.ServiceProvider.GetRequiredService<IStatusService>();
@@ -129,6 +132,7 @@ public class WorkflowEditorEffects
                             Name = t.Name,
                             IsAutomatic = t.IsAutomated == 1,
                             IsActive = t.IsActive,
+                            ActivateAt = t.ActivateAt,
                             AllowedRoleIds = t.AllowedRoleIds.ToHashSet(),
                             CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
                             {
@@ -146,12 +150,10 @@ public class WorkflowEditorEffects
                 }
             }
             dispatcher.Dispatch(new EditorDataLoadedAction(statuses, roles, fields, currentWf, name, desc, nodes, connections));
-            _logger.LogInformation("اطلاعات ویرایشگر جریان کاری با موفقیت دریافت شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در بارگذاری اطلاعات ویرایشگر جریان کاری.");
-            // در صورت نیاز می‌توانید یک اکشن برای هندل کردن خطای بارگذاری اضافه کنید
         }
     }
 
@@ -160,8 +162,6 @@ public class WorkflowEditorEffects
     {
         try
         {
-            _logger.LogInformation("شروع ذخیره‌سازی جریان کاری. WorkflowId: {WorkflowId}", action.WorkflowId);
-
             using var scope = _scopeFactory.CreateScope();
             var _workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
 
@@ -175,8 +175,6 @@ public class WorkflowEditorEffects
 
                     var activeNodeIds = action.Nodes.Select(n => n.Id).ToList();
                     var statusesToRemove = wf.WorkflowStatuses.Where(ws => !activeNodeIds.Contains(ws.NodeId)).ToList();
-
-                    // حذف کامل نودهای حذف شده
                     foreach (var st in statusesToRemove) wf.WorkflowStatuses.Remove(st);
 
                     foreach (var n in action.Nodes)
@@ -188,8 +186,6 @@ public class WorkflowEditorEffects
 
                     var activeUiConnectionDbIds = action.Connections.Where(c => c.DbId > 0).Select(c => c.DbId).ToList();
                     var transitionsToRemove = wf.Transitions.Where(t => !activeUiConnectionDbIds.Contains(t.Id)).ToList();
-
-                    // حذف کامل ترانزیشن‌های حذف شده (مطابق با استراتژی Hard Delete)
                     foreach (var t in transitionsToRemove) wf.Transitions.Remove(t);
 
                     foreach (var conn in action.Connections)
@@ -206,7 +202,9 @@ public class WorkflowEditorEffects
                                 dbTrans.SourcePort = conn.SourcePort; dbTrans.TargetPort = conn.TargetPort;
                                 dbTrans.FromNodeId = conn.FromNodeId; dbTrans.ToNodeId = conn.ToNodeId;
                                 dbTrans.FromState = fromStatusId; dbTrans.ToState = toStatusId;
-                                dbTrans.IsAutomated = conn.IsAutomatic ? 1 : 0; dbTrans.IsActive = conn.IsActive;
+                                dbTrans.IsAutomated = conn.IsAutomatic ? 1 : 0;
+                                dbTrans.IsActive = conn.IsActive;
+                                dbTrans.ActivateAt = conn.ActivateAt;
                                 dbTrans.AllowedRoleIds = conn.AllowedRoleIds.ToList();
                                 dbTrans.TransitionFields = conn.CustomFields.Where(f => f.FieldTypeId > 0).Select(f => new TransitionFieldDto
                                 {
@@ -235,6 +233,7 @@ public class WorkflowEditorEffects
                                 TargetPort = conn.TargetPort,
                                 IsAutomated = conn.IsAutomatic ? 1 : 0,
                                 IsActive = conn.IsActive,
+                                ActivateAt = conn.ActivateAt,
                                 AllowedRoleIds = conn.AllowedRoleIds.ToList(),
                                 TransitionFields = conn.CustomFields.Where(f => f.FieldTypeId > 0).Select(f => new TransitionFieldDto
                                 {
@@ -251,7 +250,6 @@ public class WorkflowEditorEffects
                         }
                     }
                     await _workflowService.UpdateAsync(wf);
-                    _logger.LogInformation("جریان کاری با موفقیت ویرایش شد.");
                 }
             }
             else
@@ -276,6 +274,7 @@ public class WorkflowEditorEffects
                             TargetPort = c.TargetPort,
                             IsAutomated = c.IsAutomatic ? 1 : 0,
                             IsActive = c.IsActive,
+                            ActivateAt = c.ActivateAt,
                             AllowedRoleIds = c.AllowedRoleIds.ToList(),
                             TransitionFields = c.CustomFields.Where(f => f.FieldTypeId > 0).Select(f => new TransitionFieldDto
                             {
@@ -292,14 +291,28 @@ public class WorkflowEditorEffects
                     }).ToList()
                 };
                 await _workflowService.CreateAsync(workflow);
-                _logger.LogInformation("جریان کاری جدید با موفقیت ایجاد شد.");
             }
+
             dispatcher.Dispatch(new SaveWorkflowEditorSuccessAction());
+            _toastService.ShowSuccess("جریان کاری با موفقیت ذخیره شد.");
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+            dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(errorMessage));
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
+            dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "خطا در ذخیره‌سازی جریان کاری.");
-            dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(ex.InnerException?.Message ?? ex.Message));
+            _logger.LogError(ex, "خطای سیستمی غیرمنتظره در ذخیره‌سازی جریان کاری.");
+            var fallbackError = "یک خطای سیستمی رخ داد. لطفاً دوباره تلاش کنید.";
+            _toastService.ShowError(fallbackError);
+            dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(fallbackError));
         }
     }
 }

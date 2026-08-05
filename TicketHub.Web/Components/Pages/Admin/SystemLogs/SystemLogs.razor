@@ -1,0 +1,260 @@
+﻿@page "/system-logs"
+@using System.Globalization
+@using TicketHub.Application.Interfaces
+@inject ISystemLogService LogService
+@implements IDisposable
+@rendermode InteractiveServer
+
+<PageTitle>لاگ‌های زنده سیستم | سامانه تیکتینگ</PageTitle>
+
+<div class="p-6 space-y-6">
+    <!-- Header -->
+    <PageHeader Title="لاگ‌های سیستم"
+                Description="مشاهده زنده و بررسی تمام لاگ‌های ذخیره‌شده با امکان فیلتر پیشرفته."
+                ButtonText="بروزرسانی دستی"
+                ButtonThemeClass="bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black text-white shadow-lg border-0"
+                OnActionClick="LoadLogsAsync">
+        <Icon>
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+        </Icon>
+    </PageHeader>
+
+    <!-- Filter Bar (همه فیلترها در یک راستا) -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+            
+            <!-- جستجو -->
+            <div class="lg:col-span-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">جستجو در متن</label>
+                <input type="text" @bind="searchTerm" @bind:event="oninput" @bind:after="ApplyFilters"
+                       placeholder="جستجوی متن یا خطا..."
+                       class="w-full h-[42px] px-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500" />
+            </div>
+
+            <!-- سطح لاگ -->
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">سطح لاگ</label>
+                <select @bind="selectedLevel" @bind:after="ApplyFilters"
+                        class="w-full h-[42px] px-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500/20">
+                    <option value="">همه سطح‌ها</option>
+                    <option value="Information">Information</option>
+                    <option value="Warning">Warning</option>
+                    <option value="Error">Error</option>
+                    <option value="Fatal">Fatal</option>
+                    <option value="Debug">Debug</option>
+                </select>
+            </div>
+
+            <!-- از تاریخ -->
+            <div class="lg:col-span-2">
+                <CustomPersianDatePicker Label="از تاریخ"
+                                         Value="@fromDateStr"
+                                         ValueChanged="OnFromDateChanged"
+                                         Placeholder="از..." 
+                                         ShowTimePicker="true" />
+            </div>
+
+            <!-- تا تاریخ -->
+            <div class="lg:col-span-2">
+                <CustomPersianDatePicker Label="تا تاریخ"
+                                         Value="@toDateStr"
+                                         ValueChanged="OnToDateChanged"
+                                         Placeholder="تا..." 
+                                         ShowTimePicker="true" />
+            </div>
+
+            <!-- دکمه دریافت زنده -->
+            <div class="lg:col-span-3 flex items-center">
+                <button type="button" @onclick="ToggleLiveStream"
+                        class="w-full h-[42px] px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer @(isLive ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20 animate-pulse" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <span class="w-2.5 h-2.5 rounded-full @(isLive ? "bg-white" : "bg-gray-400")"></span>
+                    @(isLive ? "پخش زنده فعال است" : "فعالسازی پخش زنده")
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول نمایش لاگ‌ها -->
+    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        @if (isLoading)
+        {
+            <div class="p-8 text-center text-gray-400 text-sm">در حال دریافت و پردازش لاگ‌ها...</div>
+        }
+        else if (!PagedLogs.Any())
+        {
+            <div class="p-8 text-center text-gray-400 text-sm">هیچ لاگی با فیلترهای مشخص‌شده یافت نشد.</div>
+        }
+        else
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-100 text-gray-500 font-medium">
+                        <tr>
+                            <th class="p-3.5 pr-4">زمان</th>
+                            <th class="p-3.5">سطح</th>
+                            <th class="p-3.5">سرویس/منبع</th>
+                            <th class="p-3.5">پیام</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 font-mono text-xs">
+                        @foreach (var log in PagedLogs)
+                        {
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="p-3.5 pr-4 whitespace-nowrap text-gray-500 dir-ltr text-right">
+                                    @GetPersianFormattedDate(log.Timestamp)
+                                </td>
+                                <td class="p-3.5 whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-lg text-[11px] font-sans font-bold border @GetLevelBadgeClass(log.Level)">
+                                        @log.Level
+                                    </span>
+                                </td>
+                                <td class="p-3.5 text-gray-500 font-sans truncate max-w-[180px]" title="@log.SourceContext">
+                                    @(log.SourceContext ?? "-")
+                                </td>
+                                <td class="p-3.5 text-gray-800 font-sans">
+                                    <div class="break-all">@log.Message</div>
+                                    @if (!string.IsNullOrEmpty(log.Exception))
+                                    {
+                                        <details class="mt-1">
+                                            <summary class="text-rose-600 font-semibold cursor-pointer text-[11px]">نمایش استک تریس خطا</summary>
+                                            <pre class="mt-2 p-3 bg-slate-900 text-rose-300 rounded-xl overflow-x-auto dir-ltr text-left text-[11px]">@log.Exception</pre>
+                                        </details>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- بخش صفحه‌بندی -->
+            <div class="p-4 border-t border-gray-100">
+                <Pagination CurrentPage="currentPage"
+                            PageSize="pageSize"
+                            ItemName="لاگ"
+                            TotalItems="allFilteredLogs.Count"
+                            OnNext="() => { currentPage++; }"
+                            OnPrevious="() => { currentPage--; }" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<LogEntry> allFilteredLogs = new();
+    private string searchTerm = string.Empty;
+    private string selectedLevel = string.Empty;
+    private string fromDateStr = string.Empty;
+    private string toDateStr = string.Empty;
+
+    private bool isLoading = true;
+    private bool isLive = false;
+    private PeriodicTimer? timer;
+    private CancellationTokenSource? cts;
+
+    private int currentPage = 1;
+    private int pageSize = 15;
+
+    private IEnumerable<LogEntry> PagedLogs => allFilteredLogs
+        .Skip((currentPage - 1) * pageSize)
+        .Take(pageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLogsAsync();
+    }
+
+    private async Task LoadLogsAsync()
+    {
+        isLoading = true;
+        DateTime? fromDate = ParsePersianToGregorian(fromDateStr);
+        DateTime? toDate = ParsePersianToGregorian(toDateStr, isEndOfDay: true);
+
+        allFilteredLogs = await LogService.GetLogsAsync(fromDate, toDate, selectedLevel, searchTerm);
+        isLoading = false;
+    }
+
+    private async Task ApplyFilters()
+    {
+        currentPage = 1;
+        await LoadLogsAsync();
+    }
+
+    private async Task ToggleLiveStream()
+    {
+        isLive = !isLive;
+
+        if (isLive)
+        {
+            cts = new CancellationTokenSource();
+            timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
+            _ = StartLivePollingAsync(cts.Token);
+        }
+        else
+        {
+            cts?.Cancel();
+            timer?.Dispose();
+        }
+    }
+
+    private async Task StartLivePollingAsync(CancellationToken cancellationToken)
+    {
+        while (timer != null && await timer.WaitForNextTickAsync(cancellationToken))
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadLogsAsync();
+                StateHasChanged();
+            });
+        }
+    }
+
+    private string GetPersianFormattedDate(DateTime dt)
+    {
+        var pc = new PersianCalendar();
+        return $"{pc.GetYear(dt)}/{pc.GetMonth(dt):D2}/{pc.GetDayOfMonth(dt):D2} {dt:HH:mm:ss}";
+    }
+
+    private DateTime? ParsePersianToGregorian(string persianDateStr, bool isEndOfDay = false)
+    {
+        if (string.IsNullOrWhiteSpace(persianDateStr)) return null;
+
+        if (DateTimeOffset.TryParse(persianDateStr, out var dto))
+        {
+            var dt = dto.DateTime;
+            return isEndOfDay ? dt.Date.AddDays(1).AddTicks(-1) : dt;
+        }
+
+        return null;
+    }
+
+    private string GetLevelBadgeClass(string level) => level switch
+    {
+        "Error" or "Fatal" => "bg-rose-50 text-rose-700 border-rose-200",
+        "Warning" => "bg-amber-50 text-amber-700 border-amber-200",
+        "Information" => "bg-sky-50 text-sky-700 border-sky-200",
+        _ => "bg-gray-50 text-gray-600 border-gray-200"
+    };
+
+    public void Dispose()
+    {
+        cts?.Cancel();
+        timer?.Dispose();
+    }
+
+    private async Task OnFromDateChanged(string val)
+    {
+        fromDateStr = val;
+        await ApplyFilters();
+    }
+
+    private async Task OnToDateChanged(string val)
+    {
+        toDateStr = val;
+        await ApplyFilters();
+    }
+}

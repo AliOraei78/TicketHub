@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TicketHub.Application.Services;
+﻿using TicketHub.Application.Models;
 
 namespace TicketHub.Application.Interfaces;
 public interface IToastService
