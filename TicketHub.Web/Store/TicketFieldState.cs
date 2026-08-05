@@ -184,7 +184,8 @@ public class TicketFieldEffects
             int count = action.Ids.Count();
             await _ticketFieldService.DeleteRangeAsync(action.Ids);
 
-            _toastService.ShowSuccess($"{count} فیلد تیکت با موفقیت حذف شدند.");
+            string verb = count > 1 ? "شدند" : "شد";
+            _toastService.ShowSuccess($"{count} فیلد تیکت با موفقیت حذف {verb}.");
             dispatcher.Dispatch(new LoadTicketFieldsAction());
         }
         catch (Exception ex)
@@ -201,9 +202,11 @@ public class TicketFieldEffects
         {
             int count = action.Ids.Count();
             string actionName = action.IsActive ? "فعال" : "غیرفعال";
+            string verb = count > 1 ? "شدند" : "شد";
+
             await _ticketFieldService.UpdateTicketFieldsStatusAsync(action.Ids, action.IsActive);
 
-            _toastService.ShowSuccess($"{count} فیلد تیکت با موفقیت {actionName} شدند.");
+            _toastService.ShowSuccess($"{count} فیلد تیکت با موفقیت {actionName} {verb}.");
             dispatcher.Dispatch(new LoadTicketFieldsAction());
         }
         catch (Exception ex)

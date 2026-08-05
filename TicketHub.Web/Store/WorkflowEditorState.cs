@@ -198,7 +198,8 @@ public class WorkflowEditorEffects
                             var dbTrans = wf.Transitions.FirstOrDefault(t => t.Id == conn.DbId);
                             if (dbTrans != null)
                             {
-                                dbTrans.Name = string.IsNullOrWhiteSpace(conn.Name) ? "انتقال" : conn.Name;
+                                // اصلاح: تخصیص مستقیم نام بدون دادن مقدار پیش‌فرض
+                                dbTrans.Name = conn.Name;
                                 dbTrans.SourcePort = conn.SourcePort; dbTrans.TargetPort = conn.TargetPort;
                                 dbTrans.FromNodeId = conn.FromNodeId; dbTrans.ToNodeId = conn.ToNodeId;
                                 dbTrans.FromState = fromStatusId; dbTrans.ToState = toStatusId;
@@ -206,7 +207,9 @@ public class WorkflowEditorEffects
                                 dbTrans.IsActive = conn.IsActive;
                                 dbTrans.ActivateAt = conn.ActivateAt;
                                 dbTrans.AllowedRoleIds = conn.AllowedRoleIds.ToList();
-                                dbTrans.TransitionFields = conn.CustomFields.Where(f => f.FieldTypeId > 0).Select(f => new TransitionFieldDto
+
+                                // اصلاح: حذف شرط Where(f => f.FieldTypeId > 0) تا فیلدهای نامعتبر هم ولیدیت شوند
+                                dbTrans.TransitionFields = conn.CustomFields.Select(f => new TransitionFieldDto
                                 {
                                     Id = f.Id,
                                     FieldTypeId = f.FieldTypeId,
@@ -224,7 +227,8 @@ public class WorkflowEditorEffects
                         {
                             wf.Transitions.Add(new TransitionDto
                             {
-                                Name = string.IsNullOrWhiteSpace(conn.Name) ? "انتقال" : conn.Name,
+                                // اصلاح: تخصیص مستقیم نام بدون دادن مقدار پیش‌فرض
+                                Name = conn.Name,
                                 FromState = fromStatusId,
                                 ToState = toStatusId,
                                 FromNodeId = conn.FromNodeId,
@@ -235,7 +239,9 @@ public class WorkflowEditorEffects
                                 IsActive = conn.IsActive,
                                 ActivateAt = conn.ActivateAt,
                                 AllowedRoleIds = conn.AllowedRoleIds.ToList(),
-                                TransitionFields = conn.CustomFields.Where(f => f.FieldTypeId > 0).Select(f => new TransitionFieldDto
+
+                                // اصلاح: حذف شرط Where(f => f.FieldTypeId > 0)
+                                TransitionFields = conn.CustomFields.Select(f => new TransitionFieldDto
                                 {
                                     FieldTypeId = f.FieldTypeId,
                                     FieldName = f.FieldName,
@@ -265,7 +271,8 @@ public class WorkflowEditorEffects
                         var toStatusId = action.Nodes.First(n => n.Id == c.ToNodeId).Status.Id;
                         return new TransitionDto
                         {
-                            Name = string.IsNullOrWhiteSpace(c.Name) ? "انتقال" : c.Name,
+                            // اصلاح: تخصیص مستقیم نام بدون دادن مقدار پیش‌فرض
+                            Name = c.Name,
                             FromState = fromStatusId,
                             ToState = toStatusId,
                             FromNodeId = c.FromNodeId,
@@ -276,7 +283,9 @@ public class WorkflowEditorEffects
                             IsActive = c.IsActive,
                             ActivateAt = c.ActivateAt,
                             AllowedRoleIds = c.AllowedRoleIds.ToList(),
-                            TransitionFields = c.CustomFields.Where(f => f.FieldTypeId > 0).Select(f => new TransitionFieldDto
+
+                            // اصلاح: حذف شرط Where(f => f.FieldTypeId > 0)
+                            TransitionFields = c.CustomFields.Select(f => new TransitionFieldDto
                             {
                                 FieldTypeId = f.FieldTypeId,
                                 FieldName = f.FieldName,
@@ -298,7 +307,8 @@ public class WorkflowEditorEffects
         }
         catch (ValidationException ex)
         {
-            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            var errorMessage = string.Join("\n", ex.Errors.SelectMany(e => e.Value).Select(err => $"• {err}"));
+
             _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
             dispatcher.Dispatch(new SaveWorkflowEditorFailedAction(errorMessage));
         }

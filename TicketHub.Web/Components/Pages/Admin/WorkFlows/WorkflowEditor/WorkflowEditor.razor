@@ -3,16 +3,6 @@
 @rendermode InteractiveServer
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
-@if (!string.IsNullOrEmpty(EdState.Value.ErrorMessage))
-{
-    <div class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 min-w-[350px]">
-        <AlertMessage Message="@EdState.Value.ErrorMessage"
-                      Type="AlertMessage.AlertType.Error"
-                      IsDark="false"
-                      OnClose="ClearError" />
-    </div>
-}
-
 <div class="flex h-full w-full">
 
     <DraggableSidebar TItem="StatusDto"

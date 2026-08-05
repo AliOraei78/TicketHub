@@ -4,6 +4,8 @@ using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -31,8 +33,9 @@ public record WorkflowInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, 
 public record LoadWorkflowsAction();
 public record WorkflowsLoadedAction(IEnumerable<WorkflowDto> Workflows, int TotalCount, int ValidatedPage);
 public record SetWorkflowFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds);
-public record DeleteWorkflowAction(int Id);
-public record DeleteMultipleWorkflowsAction(IEnumerable<int> Ids);
+public record DeleteWorkflowAction(int Id, string WorkflowName);
+public record DeleteMultipleWorkflowsAction(IEnumerable<int> Ids, IEnumerable<string> WorkflowNames);
+
 
 // 3. Reducers
 public static class WorkflowReducers
@@ -66,15 +69,18 @@ public class WorkflowEffects
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IState<WorkflowState> _state;
     private readonly ILogger<WorkflowEffects> _logger;
+    private readonly IToastService _toastService; // اضافه شدن سرویس نوتیفیکیشن
 
     public WorkflowEffects(
         IServiceScopeFactory scopeFactory,
         IState<WorkflowState> state,
-        ILogger<WorkflowEffects> logger)
+        ILogger<WorkflowEffects> logger,
+        IToastService toastService) // تزریق در سازنده
     {
         _scopeFactory = scopeFactory;
         _state = state;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod(typeof(LoadWorkflowInitialDataAction))]
@@ -99,6 +105,7 @@ public class WorkflowEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت اطلاعات اولیه جریان‌های کاری.");
+            _toastService.ShowError("خطا در دریافت اطلاعات اولیه. لطفا صفحه را مجدداً بارگذاری کنید.");
         }
     }
 
@@ -156,6 +163,7 @@ public class WorkflowEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست جریان‌های کاری.");
+            _toastService.ShowError("خطا در دریافت لیست جریان‌های کاری. لطفا دوباره تلاش کنید.");
         }
     }
 
@@ -172,11 +180,24 @@ public class WorkflowEffects
             await workflowService.DeleteAsync(action.Id);
             dispatcher.Dispatch(new LoadWorkflowsAction());
 
+            // نمایش پیام با ذکر نام جریان کاری حذف شده
+            _toastService.ShowSuccess($"جریان کاری '{action.WorkflowName}' با موفقیت حذف شد.");
             _logger.LogInformation("جریان کاری با شناسه {WorkflowId} با موفقیت حذف شد.", action.Id);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "تلاش برای حذف جریان کاری که وجود ندارد.");
+            _toastService.ShowWarning(ex.Message, "یافت نشد");
+            dispatcher.Dispatch(new LoadWorkflowsAction());
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف جریان کاری با شناسه {WorkflowId}.", action.Id);
+            _toastService.ShowError("خطا در حذف جریان کاری. لطفاً دوباره تلاش کنید.");
         }
     }
 
@@ -194,11 +215,20 @@ public class WorkflowEffects
             await workflowService.DeleteRangeAsync(action.Ids);
             dispatcher.Dispatch(new LoadWorkflowsAction());
 
+            var successMessage = string.Join("\n", action.WorkflowNames.Select(name => $"• جریان کاری '{name}' با موفقیت حذف شد."));
+
+            _toastService.ShowSuccess(successMessage);
             _logger.LogInformation("تعداد {Count} جریان کاری با موفقیت حذف شدند.", count);
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
+            dispatcher.Dispatch(new LoadWorkflowsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف گروهی جریان‌های کاری.");
+            _toastService.ShowError("خطا در حذف گروهی جریان‌های کاری. لطفاً دوباره تلاش کنید.");
         }
     }
 }

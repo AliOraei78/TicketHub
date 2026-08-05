@@ -67,14 +67,27 @@ public partial class Workflows : IDisposable
 
         if (isBulkDelete)
         {
+            // استخراج نام جریان‌های کاری انتخاب شده برای نمایش در پیام تایید
+            var selectedNames = WfState.Value.Workflows
+                .Where(w => selectedWorkflowIds.Contains(w.Id))
+                .Select(w => w.Name)
+                .ToList();
+
             // ایجاد نسخه کپی با ToList() برای جلوگیری از پاک شدن داده‌ها قبل از اجرای اکشن
-            Dispatcher.Dispatch(new DeleteMultipleWorkflowsAction(selectedWorkflowIds.ToList()));
+            Dispatcher.Dispatch(new DeleteMultipleWorkflowsAction(selectedWorkflowIds.ToList(), selectedNames));
             selectedWorkflowIds.Clear();
         }
         else if (workflowToDelete != null)
         {
             deletingWorkflowIds.Add(workflowToDelete.Id);
-            Dispatcher.Dispatch(new DeleteWorkflowAction(workflowToDelete.Id));
+
+            // رفع مشکل: اگر آیتم در لیست انتخاب شده‌ها بود، آن را خارج کن تا شمارشگر بالا آپدیت شود
+            if (selectedWorkflowIds.Contains(workflowToDelete.Id))
+            {
+                selectedWorkflowIds.Remove(workflowToDelete.Id);
+            }
+
+            Dispatcher.Dispatch(new DeleteWorkflowAction(workflowToDelete.Id, workflowToDelete.Name));
 
             _ = Task.Delay(400).ContinueWith(_ => InvokeAsync(() => deletingWorkflowIds.Clear()));
         }

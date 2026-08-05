@@ -95,13 +95,20 @@ public partial class CategoriesSettings
     {
         if (isBulkDelete)
         {
-            Dispatcher.Dispatch(new DeleteMultipleCategoriesAction(selectedCategoryIds));
+            // استفاده از ToList برای ارسال یک کپی از مقادیر و جلوگیری از صفر شدن به دلیل ClearSelection
+            Dispatcher.Dispatch(new DeleteMultipleCategoriesAction(selectedCategoryIds.ToList()));
             ClearSelection();
         }
         else if (categoryToDelete != null)
         {
             Dispatcher.Dispatch(new DeleteCategoryAction(categoryToDelete.Id));
-            selectedCategoryIds.Remove(categoryToDelete.Id);
+
+            if (selectedCategoryIds.Contains(categoryToDelete.Id))
+            {
+                selectedCategoryIds.Remove(categoryToDelete.Id);
+                selectedCategoryIds = new HashSet<int>(selectedCategoryIds);
+            }
+
             if (isEditing && editingCategoryId == categoryToDelete.Id) CancelEdit();
         }
 
@@ -113,7 +120,7 @@ public partial class CategoriesSettings
 
     private void UpdateCategoriesStatus(bool isActive)
     {
-        Dispatcher.Dispatch(new UpdateCategoryStatusAction(selectedCategoryIds, isActive));
+        Dispatcher.Dispatch(new UpdateCategoryStatusAction(selectedCategoryIds.ToList(), isActive));
         ClearSelection();
     }
 }

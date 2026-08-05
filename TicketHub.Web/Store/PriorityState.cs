@@ -141,7 +141,8 @@ public class PriorityEffects
             int count = action.Ids.Count();
             await _service.DeleteRangeAsync(action.Ids);
 
-            _toastService.ShowSuccess($"{count} اولویت با موفقیت حذف شدند.");
+            string verb = count > 1 ? "شدند" : "شد";
+            _toastService.ShowSuccess($"{count} اولویت با موفقیت حذف {verb}.");
             dispatcher.Dispatch(new LoadPrioritiesAction());
         }
         catch (Exception ex)
@@ -160,7 +161,8 @@ public class PriorityEffects
             await _service.UpdatePrioritiesStatusAsync(action.Ids, action.IsActive);
 
             string actionName = action.IsActive ? "فعال" : "غیرفعال";
-            _toastService.ShowSuccess($"{count} اولویت با موفقیت {actionName} شدند.");
+            string verb = count > 1 ? "شدند" : "شد";
+            _toastService.ShowSuccess($"{count} اولویت با موفقیت {actionName} {verb}.");
             dispatcher.Dispatch(new LoadPrioritiesAction());
         }
         catch (Exception ex)

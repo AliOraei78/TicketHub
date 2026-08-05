@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using TicketHub.Application.DTOs;
+using TicketHub.Application.Enums;
 
 namespace TicketHub.Application.Validations;
 
@@ -16,5 +17,9 @@ public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
 
         RuleFor(x => x.Placeholder)
             .MaximumLength(200).WithMessage("متن نگهدارنده (Placeholder) نمی‌تواند بیشتر از 200 کاراکتر باشد.");
+
+        RuleFor(x => x.Options)
+            .NotEmpty().WithMessage("وارد کردن گزینه‌ها برای لیست‌های کشویی الزامی است.")
+            .When(x => x.FieldTypeId == (int)FieldTypeEnum.Dropdown || x.FieldTypeId == (int)FieldTypeEnum.MultipleDropdown);
     }
 }

@@ -134,7 +134,7 @@ public class CategoryEffects
             else
                 await _categoryService.AddAsync(action.Category);
 
-            _toastService.ShowSuccess(action.IsEditing ? "نوع تیکت با موفقیت ویرایش شد." : "ایجاد شد.");
+            _toastService.ShowSuccess($"نوع تیکت با موفقیت {(action.IsEditing ? "ویرایش" : "ایجاد")} شد.");
             dispatcher.Dispatch(new LoadCategoriesAction());
         }
         catch (ValidationException ex)
@@ -180,9 +180,13 @@ public class CategoryEffects
     {
         try
         {
-            _logger.LogInformation("اجرای اکشن DeleteMultipleCategoriesAction برای حذف {Count} دسته‌بندی.", action.Ids.Count());
+            int count = action.Ids.Count();
+            _logger.LogInformation("اجرای اکشن DeleteMultipleCategoriesAction برای حذف {Count} دسته‌بندی.", count);
             await _categoryService.DeleteRangeAsync(action.Ids);
-            _toastService.ShowSuccess($"{action.Ids.Count()} آیتم با موفقیت حذف شدند.");
+
+            string verb = count > 1 ? "شدند" : "شد";
+            _toastService.ShowSuccess($"{count} نوع تیکت با موفقیت حذف {verb}.");
+
             dispatcher.Dispatch(new LoadCategoriesAction());
         }
         catch (Exception ex)
@@ -197,10 +201,14 @@ public class CategoryEffects
     {
         try
         {
-            _logger.LogInformation("اجرای اکشن UpdateCategoryStatusAction برای تغییر وضعیت {Count} دسته‌بندی.", action.Ids.Count());
+            int count = action.Ids.Count();
+            _logger.LogInformation("اجرای اکشن UpdateCategoryStatusAction برای تغییر وضعیت {Count} دسته‌بندی.", count);
             await _categoryService.UpdateCategoriesStatusAsync(action.Ids, action.IsActive);
+
             string actionName = action.IsActive ? "فعال" : "غیرفعال";
-            _toastService.ShowSuccess($"{action.Ids.Count()} نوع تیکت با موفقیت {actionName} شدند.");
+            string verb = count > 1 ? "شدند" : "شد";
+            _toastService.ShowSuccess($"{count} نوع تیکت با موفقیت {actionName} {verb}.");
+
             dispatcher.Dispatch(new LoadCategoriesAction());
         }
         catch (Exception ex)

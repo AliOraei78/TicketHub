@@ -126,7 +126,12 @@ public partial class TicketFieldsSettings
         else if (fieldToDelete != null)
         {
             Dispatcher.Dispatch(new DeleteTicketFieldAction(fieldToDelete.Id));
-            selectedFieldIds.Remove(fieldToDelete.Id);
+
+            // ایجاد یک نمونه جدید برای تریگر شدن StateHasChanged در Blazor
+            var newSelection = new HashSet<int>(selectedFieldIds);
+            newSelection.Remove(fieldToDelete.Id);
+            selectedFieldIds = newSelection;
+
             if (isEditing && editingFieldId == fieldToDelete.Id) CancelEdit();
         }
 

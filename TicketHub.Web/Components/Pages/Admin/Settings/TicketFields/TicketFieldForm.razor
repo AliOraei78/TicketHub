@@ -1,45 +1,53 @@
-﻿
-<EditForm Model="Model" OnValidSubmit="OnValidSubmit">
+﻿<EditForm Model="Model" OnValidSubmit="OnValidSubmit">
     <FluentValidationValidator />
 
     <div class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">عنوان فیلد</label>
             <InputText @bind-Value="Model.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: شماره موبایل" />
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">متن جایگیر</label>
-            <InputText @bind-Value="Model.Placeholder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="متن جایگیر..." />
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">مقدار پیش‌فرض</label>
-            <InputText @bind-Value="Model.DefaultValue" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+            <ValidationMessage For="() => Model.Name" class="text-xs text-rose-500 mt-1" />
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">شماره ترتیب</label>
             <InputNumber @bind-Value="Model.SortOrder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" />
+            <ValidationMessage For="() => Model.SortOrder" class="text-xs text-rose-500 mt-1" />
         </div>
+
+        <div>
+            <SlideSelect TItem="FieldTypeDto" TValue="int"
+                         Label="نوع فیلد" Placeholder="انتخاب نوع فیلد..."
+                         Items="AvailableFieldTypes"
+                         @bind-Value="Model.FieldTypeId"
+                         ValueSelector="t => t.Id"
+                         TextSelector="t => t.Type"
+                         AllowClear="true" ClearText="بدون انتخاب" />
+            <ValidationMessage For="() => Model.FieldTypeId" class="text-xs text-rose-500 mt-1" />
+        </div>
+
+        @if (Model.FieldTypeId == (int)FieldTypeEnum.Text || Model.FieldTypeId == (int)FieldTypeEnum.TextArea || Model.FieldTypeId == (int)FieldTypeEnum.Number)
+        {
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">متن جایگیر</label>
+                <InputText @bind-Value="Model.Placeholder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="متن جایگیر..." />
+                <ValidationMessage For="() => Model.Placeholder" class="text-xs text-rose-500 mt-1" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">مقدار پیش‌فرض</label>
+                <InputText @bind-Value="Model.DefaultValue" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+                <ValidationMessage For="() => Model.DefaultValue" class="text-xs text-rose-500 mt-1" />
+            </div>
+        }
 
         @if (Model.FieldTypeId == (int)FieldTypeEnum.Dropdown || Model.FieldTypeId == (int)FieldTypeEnum.MultipleDropdown)
         {
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">گزینه‌ها (با کاما از هم جدا کنید)</label>
                 <InputText @bind-Value="Model.Options" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="گزینه ۱، گزینه ۲، گزینه ۳" />
+                <ValidationMessage For="() => Model.Options" class="text-xs text-rose-500 mt-1" />
             </div>
         }
-
-        <div>
-            <SlideSelect TItem="FieldTypeDto" TValue="int"
-                                  Label="نوع فیلد" Placeholder="انتخاب نوع فیلد..."
-                                  Items="AvailableFieldTypes" 
-                                  @bind-Value="Model.FieldTypeId"
-                                  ValueSelector="t => t.Id" 
-                                  TextSelector="t => t.Type" 
-                                  AllowClear="true" ClearText="بدون انتخاب" />
-        </div>
 
         <div>
             <MultiSelectDropdown TItem="CategoryDto" TValue="int"
