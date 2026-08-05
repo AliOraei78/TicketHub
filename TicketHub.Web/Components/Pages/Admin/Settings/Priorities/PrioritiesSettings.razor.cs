@@ -43,7 +43,6 @@ public partial class PrioritiesSettings
 
         Dispatcher.Dispatch(new SavePriorityAction(priorityModel, isEditing));
         CancelEdit();
-        ClearMessageAfterDelay();
     }
 
     protected void EditPriority(PriorityDto item)
@@ -102,7 +101,6 @@ public partial class PrioritiesSettings
             if (isEditing && editingId == itemToDelete.Id) CancelEdit();
         }
         CancelDelete();
-        ClearMessageAfterDelay();
     }
 
     protected void BulkActivatePriorities() => UpdatePrioritiesStatus(true);
@@ -112,14 +110,5 @@ public partial class PrioritiesSettings
     {
         Dispatcher.Dispatch(new UpdatePriorityStatusAction(selectedIds, isActive));
         ClearSelection();
-        ClearMessageAfterDelay();
-    }
-
-    private void ClearMessageAfterDelay()
-    {
-        _ = Task.Delay(4000).ContinueWith(_ =>
-        {
-            Dispatcher.Dispatch(new ClearPriorityMessageAction());
-        });
     }
 }

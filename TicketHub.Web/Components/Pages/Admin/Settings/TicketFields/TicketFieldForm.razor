@@ -1,7 +1,6 @@
 ﻿
 <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary class="text-rose-600 text-sm mb-4 list-disc list-inside" />
+    <FluentValidationValidator />
 
     <div class="space-y-4">
         <div>
@@ -72,18 +71,11 @@
     </div>
 </EditForm>
 
-@if (!string.IsNullOrEmpty(SuccessMessage))
-{
-    <div class="mt-4 p-3 @(IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@SuccessMessage</div>
-}
-
 @code {
     [Parameter] public TicketFieldDto Model { get; set; } = new();
     [Parameter] public bool IsEditing { get; set; }
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public string? SuccessMessage { get; set; }
-    [Parameter] public bool IsError { get; set; }
 
     [Parameter] public IEnumerable<CategoryDto> AvailableCategories { get; set; } = new List<CategoryDto>();
     [Parameter] public IEnumerable<FieldTypeDto> AvailableFieldTypes { get; set; } = new List<FieldTypeDto>();

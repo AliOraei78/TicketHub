@@ -1,16 +1,18 @@
 ﻿
 
 <EditForm Model="Model" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
+    <FluentValidationValidator />
     <div class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">عنوان وضعیت (انگلیسی یا فارسی)</label>
             <InputText @bind-Value="Model.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: In Progress" />
+            <ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-xs mt-1" />
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">رنگ نمایشی</label>
             <ColorPicker @bind-Value="Model.ColorCode" />
+             <ValidationMessage For="@(() => Model.ColorCode)" class="text-red-500 text-xs mt-1" />
         </div>
 
         <div class="flex items-center gap-2 pt-2">

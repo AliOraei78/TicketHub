@@ -19,8 +19,6 @@
         <div class="md:col-span-1">
             <RoleForm Model="roleModel"
                       IsEditing="isEditing"
-                      SuccessMessage="@RolState.Value.StatusMessage"
-                      IsError="RolState.Value.IsError"
                       OnValidSubmit="HandleSubmitRole"
                       OnCancel="CancelEdit" />
         </div>
@@ -121,6 +119,5 @@
 
 <ConfirmDeleteModal IsOpen="showDeleteModal"
                     Description="@deleteModalDescription"
-                    ErrorMessage="@(RolState.Value.IsError ? RolState.Value.StatusMessage : null)"
                     OnConfirm="ConfirmDelete"
                     OnCancel="CancelDelete" />

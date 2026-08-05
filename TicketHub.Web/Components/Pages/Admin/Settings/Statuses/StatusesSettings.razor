@@ -24,13 +24,6 @@
                             IsEditing="isEditing"
                             OnSubmit="HandleSubmitStatus"
                             OnCancel="CancelEdit" />
-
-                @if (!string.IsNullOrEmpty(StatState.Value.StatusMessage))
-                {
-                    <div class="mt-4 p-3 @(StatState.Value.IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">
-                        @StatState.Value.StatusMessage
-                    </div>
-                }
             </div>
         </div>
 
@@ -142,6 +135,5 @@
 
 <ConfirmDeleteModal IsOpen="showDeleteModal"
                     Description="@deleteModalDescription"
-                    ErrorMessage="@(StatState.Value.IsError ? StatState.Value.StatusMessage : null)"
                     OnConfirm="ConfirmDelete"
                     OnCancel="CancelDelete" />

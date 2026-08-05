@@ -1,12 +1,12 @@
 ﻿
 <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary class="text-rose-600 text-sm mb-4 list-disc list-inside" />
+    <FluentValidationValidator />
 
     <div class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">عنوان نوع تیکت</label>
             <InputText @bind-Value="Model.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: پشتیبانی فنی" />
+            <ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-xs mt-1" />
         </div>
 
         <div>
@@ -42,18 +42,11 @@
     </div>
 </EditForm>
 
-@if (!string.IsNullOrEmpty(SuccessMessage))
-{
-    <div class="mt-4 p-3 @(IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@SuccessMessage</div>
-}
-
 @code {
     [Parameter] public CategoryDto Model { get; set; } = new();
     [Parameter] public bool IsEditing { get; set; }
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public string? SuccessMessage { get; set; }
-    [Parameter] public bool IsError { get; set; }
     [Parameter] public IEnumerable<ProjectDto> AvailableProjects { get; set; } = new List<ProjectDto>();
     [Parameter] public IEnumerable<RoleDto> AvailableRoles { get; set; } = new List<RoleDto>();
 }

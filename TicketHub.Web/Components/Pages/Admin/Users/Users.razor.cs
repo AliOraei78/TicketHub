@@ -63,7 +63,6 @@ public partial class Users : IDisposable
         userModel = new UserDto();
         passwordInput = string.Empty;
         selectedRoles.Clear();
-        Dispatcher.Dispatch(new ClearUserMessagesAction());
         isUserModalOpen = true;
     }
 
@@ -81,7 +80,6 @@ public partial class Users : IDisposable
         };
         passwordInput = string.Empty;
         selectedRoles = new List<string>(user.RoleNames);
-        Dispatcher.Dispatch(new ClearUserMessagesAction());
         isUserModalOpen = true;
     }
 
@@ -101,14 +99,12 @@ public partial class Users : IDisposable
     {
         userToDelete = user;
         isBulkDelete = false;
-        Dispatcher.Dispatch(new ClearUserMessagesAction());
         showDeleteModal = true;
     }
 
     private void OpenBulkDeleteModal()
     {
         isBulkDelete = true;
-        Dispatcher.Dispatch(new ClearUserMessagesAction());
         showDeleteModal = true;
     }
 
@@ -131,7 +127,6 @@ public partial class Users : IDisposable
 
         selectedUserIds.Clear();
         _ = Task.Delay(400).ContinueWith(_ => InvokeAsync(() => deletingUserIds.Clear()));
-        ClearErrorAfterDelay();
     }
 
     private void ClearSelection() => selectedUserIds.Clear();
@@ -146,15 +141,5 @@ public partial class Users : IDisposable
     {
         Dispatcher.Dispatch(new ExecuteUserBulkAction(selectedUserIds, "Activate"));
         ClearSelection();
-    }
-
-    private void ClearErrorAfterDelay()
-    {
-        _ = Task.Delay(4000).ContinueWith(_ =>
-        {
-            Dispatcher.Dispatch(new ClearUserMessagesAction());
-            if (!string.IsNullOrEmpty(UsrState.Value.DeleteErrorMessage))
-                InvokeAsync(() => showDeleteModal = true); // Re-open if error occurred
-        });
     }
 }

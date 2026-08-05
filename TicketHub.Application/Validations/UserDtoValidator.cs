@@ -18,6 +18,7 @@ public class UserDtoValidator : AbstractValidator<UserDto>
 
         // استفاده از الگوی Regex سفارشی شما برای شماره موبایل (در صورت وارد شدن مقدار)
         RuleFor(x => x.PhoneNumber)
+            .NotEmpty().WithMessage("شماره تماس الزامی است.")
             .Matches(@"^09\d{9}$").When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber))
             .WithMessage("شماره تماس باید ۱۱ رقم باشد و با 09 شروع شود.");
     }

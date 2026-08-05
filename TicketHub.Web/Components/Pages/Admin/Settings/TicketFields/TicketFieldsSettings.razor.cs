@@ -67,7 +67,6 @@ public partial class TicketFieldsSettings
 
         Dispatcher.Dispatch(new SaveTicketFieldAction(fieldModel, isEditing));
         CancelEdit();
-        ClearMessageAfterDelay();
     }
 
     private void EditField(TicketFieldDto field)
@@ -121,7 +120,6 @@ public partial class TicketFieldsSettings
     {
         if (isBulkDelete)
         {
-            // اضافه شدن .ToList() برای جلوگیری از پاک شدن رفرنس
             Dispatcher.Dispatch(new DeleteMultipleTicketFieldsAction(selectedFieldIds.ToList()));
             ClearSelection();
         }
@@ -133,7 +131,6 @@ public partial class TicketFieldsSettings
         }
 
         CancelDelete();
-        ClearMessageAfterDelay();
     }
 
     private void BulkActivateFields() => UpdateFieldsStatus(true);
@@ -141,17 +138,7 @@ public partial class TicketFieldsSettings
 
     private void UpdateFieldsStatus(bool isActive)
     {
-        // اضافه شدن .ToList() برای جلوگیری از پاک شدن رفرنس
         Dispatcher.Dispatch(new UpdateTicketFieldStatusAction(selectedFieldIds.ToList(), isActive));
         ClearSelection();
-        ClearMessageAfterDelay();
-    }
-
-    private void ClearMessageAfterDelay()
-    {
-        _ = Task.Delay(4000).ContinueWith(_ =>
-        {
-            Dispatcher.Dispatch(new ClearTicketFieldMessageAction());
-        });
     }
 }

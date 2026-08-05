@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -13,11 +15,9 @@ public record TicketFieldState(
     string SearchTerm,
     bool? SelectedFilterStatus,
     List<int> SelectedFilterCategoryIds,
-    List<int> SelectedFilterFieldTypeIds,
-    string? StatusMessage,
-    bool IsError)
+    List<int> SelectedFilterFieldTypeIds)
 {
-    private TicketFieldState() : this(true, Array.Empty<TicketFieldDto>(), string.Empty, null, new(), new(), null, false) { }
+    private TicketFieldState() : this(true, Array.Empty<TicketFieldDto>(), string.Empty, null, new(), new()) { }
 }
 
 // 2. Actions
@@ -31,8 +31,6 @@ public record SetTicketFieldFilterStatusAction(bool? Status);
 public record SetTicketFieldSearchAction(string Term);
 public record SetTicketFieldCategoryFilterAction(List<int> CategoryIds);
 public record SetTicketFieldTypeFilterAction(List<int> FieldTypeIds);
-public record SetTicketFieldMessageAction(string Message, bool IsError);
-public record ClearTicketFieldMessageAction();
 public record LoadTicketFieldInitialDataAction();
 
 // Action فرضی برای پر کردن دراپ‌داون‌ها
@@ -64,14 +62,6 @@ public static class TicketFieldReducers
     [ReducerMethod]
     public static TicketFieldState ReduceSetTypeFilter(TicketFieldState state, SetTicketFieldTypeFilterAction action) =>
         state with { SelectedFilterFieldTypeIds = action.FieldTypeIds };
-
-    [ReducerMethod]
-    public static TicketFieldState ReduceSetMessage(TicketFieldState state, SetTicketFieldMessageAction action) =>
-        state with { StatusMessage = action.Message, IsError = action.IsError };
-
-    [ReducerMethod(typeof(ClearTicketFieldMessageAction))]
-    public static TicketFieldState ReduceClearMessage(TicketFieldState state) =>
-        state with { StatusMessage = null, IsError = false };
 }
 
 // 4. Effects
@@ -81,17 +71,20 @@ public class TicketFieldEffects
     private readonly ICategoryService _categoryService;
     private readonly IFieldTypeService _fieldTypeService;
     private readonly ILogger<TicketFieldEffects> _logger;
+    private readonly IToastService _toastService;
 
     public TicketFieldEffects(
         ITicketFieldService ticketFieldService,
         ICategoryService categoryService,
         IFieldTypeService fieldTypeService,
-        ILogger<TicketFieldEffects> logger)
+        ILogger<TicketFieldEffects> logger,
+        IToastService toastService)
     {
         _ticketFieldService = ticketFieldService;
         _categoryService = categoryService;
         _fieldTypeService = fieldTypeService;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod(typeof(LoadTicketFieldInitialDataAction))]
@@ -107,13 +100,11 @@ public class TicketFieldEffects
 
             dispatcher.Dispatch(new TicketFieldsLoadedAction(fields));
             dispatcher.Dispatch(new TicketFieldDependenciesLoadedAction(categories, fieldTypes));
-
-            _logger.LogInformation("دریافت اطلاعات اولیه فیلدهای تیکت با موفقیت انجام شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت اطلاعات اولیه فیلدهای تیکت.");
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("خطا در بارگذاری اطلاعات اولیه.", true));
+            _toastService.ShowError("خطا در بارگذاری اطلاعات اولیه.");
         }
     }
 
@@ -123,16 +114,13 @@ public class TicketFieldEffects
         try
         {
             _logger.LogInformation("شروع فراخوانی لیست فیلدهای تیکت.");
-
             var fields = await _ticketFieldService.GetAllAsync();
             dispatcher.Dispatch(new TicketFieldsLoadedAction(fields));
-
-            _logger.LogInformation("دریافت لیست فیلدهای تیکت با موفقیت انجام شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست فیلدهای تیکت.");
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("خطا در بارگذاری اطلاعات فیلدها.", true));
+            _toastService.ShowError("خطا در بارگذاری اطلاعات فیلدها.");
         }
     }
 
@@ -148,13 +136,22 @@ public class TicketFieldEffects
             else
                 await _ticketFieldService.AddAsync(action.TicketField);
 
-            dispatcher.Dispatch(new SetTicketFieldMessageAction(action.IsEditing ? "فیلد تیکت با موفقیت ویرایش شد." : "ایجاد شد.", false));
+            _toastService.ShowSuccess(action.IsEditing ? "فیلد تیکت با موفقیت ویرایش شد." : "فیلد ایجاد شد.");
             dispatcher.Dispatch(new LoadTicketFieldsAction());
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در زمان {ActionType} فیلد تیکت.", action.IsEditing ? "ویرایش" : "ایجاد");
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("خطایی در ذخیره اطلاعات رخ داد.", true));
+            _toastService.ShowError("خطایی در ذخیره اطلاعات رخ داد.");
         }
     }
 
@@ -163,17 +160,19 @@ public class TicketFieldEffects
     {
         try
         {
-            _logger.LogWarning("درخواست حذف فیلد تیکت با شناسه {TicketFieldId}.", action.Id);
-
             await _ticketFieldService.DeleteAsync(new TicketFieldDto { Id = action.Id });
-
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("فیلد تیکت با موفقیت حذف شد.", false));
+            _toastService.ShowSuccess("فیلد تیکت با موفقیت حذف شد.");
+            dispatcher.Dispatch(new LoadTicketFieldsAction());
+        }
+        catch (NotFoundException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "یافت نشد");
             dispatcher.Dispatch(new LoadTicketFieldsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف فیلد تیکت با شناسه {TicketFieldId}.", action.Id);
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("امکان حذف وجود ندارد! ارتباطات را بررسی کنید.", true));
+            _toastService.ShowError("امکان حذف وجود ندارد! ارتباطات را بررسی کنید.");
         }
     }
 
@@ -183,21 +182,15 @@ public class TicketFieldEffects
         try
         {
             int count = action.Ids.Count();
-            _logger.LogWarning("درخواست حذف گروهی فیلدهای تیکت به تعداد {Count}.", count);
-
             await _ticketFieldService.DeleteRangeAsync(action.Ids);
 
-            string message = count == 1
-                ? $"{count} فیلد تیکت با موفقیت حذف شد."
-                : $"{count} فیلد تیکت با موفقیت حذف شدند.";
-
-            dispatcher.Dispatch(new SetTicketFieldMessageAction(message, false));
+            _toastService.ShowSuccess($"{count} فیلد تیکت با موفقیت حذف شدند.");
             dispatcher.Dispatch(new LoadTicketFieldsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف گروهی فیلدهای تیکت.");
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("خطایی در حذف گروهی رخ داد.", true));
+            _toastService.ShowError("خطایی در حذف گروهی رخ داد.");
         }
     }
 
@@ -208,21 +201,15 @@ public class TicketFieldEffects
         {
             int count = action.Ids.Count();
             string actionName = action.IsActive ? "فعال" : "غیرفعال";
-            _logger.LogInformation("تغییر وضعیت {Count} فیلد تیکت به {Status}.", count, actionName);
-
             await _ticketFieldService.UpdateTicketFieldsStatusAsync(action.Ids, action.IsActive);
 
-            string message = count == 1
-                ? $"{count} فیلد تیکت با موفقیت {actionName} شد."
-                : $"{count} فیلد تیکت با موفقیت {actionName} شدند.";
-
-            dispatcher.Dispatch(new SetTicketFieldMessageAction(message, false));
+            _toastService.ShowSuccess($"{count} فیلد تیکت با موفقیت {actionName} شدند.");
             dispatcher.Dispatch(new LoadTicketFieldsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در تغییر وضعیت گروهی فیلدهای تیکت.");
-            dispatcher.Dispatch(new SetTicketFieldMessageAction("عملیات با خطا مواجه شد!", true));
+            _toastService.ShowError("عملیات با خطا مواجه شد!");
         }
     }
 }

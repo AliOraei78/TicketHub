@@ -2,7 +2,7 @@
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
-using TicketHub.Web.Store; // مسیر استیت‌های Fluxor
+using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.Settings.Categories;
 
@@ -45,7 +45,6 @@ public partial class CategoriesSettings
 
         Dispatcher.Dispatch(new SaveCategoryAction(categoryModel, isEditing));
         CancelEdit();
-        ClearMessageAfterDelay();
     }
 
     private void EditCategory(CategoryDto category)
@@ -107,7 +106,6 @@ public partial class CategoriesSettings
         }
 
         CancelDelete();
-        ClearMessageAfterDelay();
     }
 
     private void BulkActivateCategories() => UpdateCategoriesStatus(true);
@@ -117,14 +115,5 @@ public partial class CategoriesSettings
     {
         Dispatcher.Dispatch(new UpdateCategoryStatusAction(selectedCategoryIds, isActive));
         ClearSelection();
-        ClearMessageAfterDelay();
-    }
-
-    private void ClearMessageAfterDelay()
-    {
-        _ = Task.Delay(4000).ContinueWith(_ =>
-        {
-            Dispatcher.Dispatch(new ClearCategoryMessageAction());
-        });
     }
 }

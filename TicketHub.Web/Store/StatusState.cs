@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -11,11 +13,9 @@ public record StatusState(
     bool IsLoading,
     IEnumerable<StatusDto> Statuses,
     string SearchTerm,
-    bool? SelectedFilterStatus,
-    string? StatusMessage,
-    bool IsError)
+    bool? SelectedFilterStatus)
 {
-    private StatusState() : this(true, Array.Empty<StatusDto>(), string.Empty, null, null, false) { }
+    private StatusState() : this(true, Array.Empty<StatusDto>(), string.Empty, null) { }
 }
 
 // 2. Actions
@@ -27,8 +27,6 @@ public record DeleteMultipleStatusesAction(IEnumerable<int> Ids);
 public record UpdateStatusesStatusAction(IEnumerable<int> Ids, bool IsActive);
 public record SetStatusFilterStatusAction(bool? Status);
 public record SetStatusSearchAction(string Term);
-public record SetStatusMessageAction(string Message, bool IsError);
-public record ClearStatusMessageAction();
 
 // 3. Reducers
 public static class StatusReducers
@@ -48,14 +46,6 @@ public static class StatusReducers
     [ReducerMethod]
     public static StatusState ReduceSetFilterStatus(StatusState state, SetStatusFilterStatusAction action) =>
         state with { SelectedFilterStatus = action.Status };
-
-    [ReducerMethod]
-    public static StatusState ReduceSetMessage(StatusState state, SetStatusMessageAction action) =>
-        state with { StatusMessage = action.Message, IsError = action.IsError };
-
-    [ReducerMethod(typeof(ClearStatusMessageAction))]
-    public static StatusState ReduceClearMessage(StatusState state) =>
-        state with { StatusMessage = null, IsError = false };
 }
 
 // 4. Effects
@@ -63,13 +53,16 @@ public class StatusEffects
 {
     private readonly IStatusService _statusService;
     private readonly ILogger<StatusEffects> _logger;
+    private readonly IToastService _toastService;
 
     public StatusEffects(
         IStatusService statusService,
-        ILogger<StatusEffects> logger)
+        ILogger<StatusEffects> logger,
+        IToastService toastService)
     {
         _statusService = statusService;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod]
@@ -78,16 +71,13 @@ public class StatusEffects
         try
         {
             _logger.LogInformation("شروع فراخوانی لیست وضعیت‌ها.");
-
             var statuses = await _statusService.GetAllAsync();
             dispatcher.Dispatch(new StatusesLoadedAction(statuses));
-
-            _logger.LogInformation("دریافت لیست وضعیت‌ها با موفقیت انجام شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست وضعیت‌ها.");
-            dispatcher.Dispatch(new SetStatusMessageAction("خطا در بارگذاری اطلاعات وضعیت‌ها.", true));
+            _toastService.ShowError("خطا در بارگذاری اطلاعات وضعیت‌ها.");
         }
     }
 
@@ -103,13 +93,22 @@ public class StatusEffects
             else
                 await _statusService.AddAsync(action.Status);
 
-            dispatcher.Dispatch(new SetStatusMessageAction(action.IsEditing ? "وضعیت با موفقیت ویرایش شد." : "وضعیت با موفقیت ایجاد شد.", false));
+            _toastService.ShowSuccess(action.IsEditing ? "وضعیت با موفقیت ویرایش شد." : "وضعیت با موفقیت ایجاد شد.");
             dispatcher.Dispatch(new LoadStatusesAction());
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در زمان {ActionType} وضعیت.", action.IsEditing ? "ویرایش" : "ایجاد");
-            dispatcher.Dispatch(new SetStatusMessageAction("خطایی در ذخیره اطلاعات رخ داد.", true));
+            _toastService.ShowError("خطایی در ذخیره اطلاعات رخ داد.");
         }
     }
 
@@ -118,17 +117,19 @@ public class StatusEffects
     {
         try
         {
-            _logger.LogWarning("درخواست حذف وضعیت با شناسه {StatusId}.", action.Id);
-
             await _statusService.DeleteAsync(action.Id);
-
-            dispatcher.Dispatch(new SetStatusMessageAction("وضعیت با موفقیت حذف شد.", false));
+            _toastService.ShowSuccess("وضعیت با موفقیت حذف شد.");
+            dispatcher.Dispatch(new LoadStatusesAction());
+        }
+        catch (NotFoundException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "یافت نشد");
             dispatcher.Dispatch(new LoadStatusesAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف وضعیت با شناسه {StatusId}.", action.Id);
-            dispatcher.Dispatch(new SetStatusMessageAction("امکان حذف وجود ندارد! ابتدا باید تیکت‌هایی که در این وضعیت هستند را ویرایش کنید.", true));
+            _toastService.ShowError("امکان حذف وجود ندارد! ابتدا باید تیکت‌هایی که در این وضعیت هستند را ویرایش کنید.");
         }
     }
 
@@ -138,18 +139,16 @@ public class StatusEffects
         try
         {
             int count = action.Ids.Count();
-            _logger.LogWarning("درخواست حذف گروهی وضعیت‌ها به تعداد {Count}.", count);
-
             await _statusService.DeleteRangeAsync(action.Ids);
 
             var verb = count == 1 ? "شد" : "شدند";
-            dispatcher.Dispatch(new SetStatusMessageAction($"{count} وضعیت با موفقیت حذف {verb}.", false));
+            _toastService.ShowSuccess($"{count} وضعیت با موفقیت حذف {verb}.");
             dispatcher.Dispatch(new LoadStatusesAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف گروهی وضعیت‌ها.");
-            dispatcher.Dispatch(new SetStatusMessageAction("امکان حذف وجود ندارد! تیکت‌های مرتبط را بررسی کنید.", true));
+            _toastService.ShowError("امکان حذف وجود ندارد! تیکت‌های مرتبط را بررسی کنید.");
         }
     }
 
@@ -160,17 +159,15 @@ public class StatusEffects
         {
             int count = action.Ids.Count();
             var actionName = action.IsActive ? "فعال" : "غیرفعال";
-            _logger.LogInformation("تغییر وضعیت {Count} وضعیت به {Status}.", count, actionName);
-
             await _statusService.UpdateStatesStatusAsync(action.Ids, action.IsActive);
 
-            dispatcher.Dispatch(new SetStatusMessageAction($"{count} وضعیت با موفقیت {actionName} {(count == 1 ? "شد" : "شدند")}.", false));
+            _toastService.ShowSuccess($"{count} وضعیت با موفقیت {actionName} {(count == 1 ? "شد" : "شدند")}.");
             dispatcher.Dispatch(new LoadStatusesAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در تغییر وضعیت گروهی وضعیت‌ها.");
-            dispatcher.Dispatch(new SetStatusMessageAction("عملیات با خطا مواجه شد!", true));
+            _toastService.ShowError("عملیات با خطا مواجه شد!");
         }
     }
 }

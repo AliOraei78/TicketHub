@@ -44,7 +44,6 @@ public partial class StatusesSettings
 
         Dispatcher.Dispatch(new SaveStatusAction(statusModel, isEditing));
         CancelEdit();
-        ClearMessageAfterDelay();
     }
 
     protected void EditStatus(StatusDto status)
@@ -104,7 +103,6 @@ public partial class StatusesSettings
         }
 
         CancelDelete();
-        ClearMessageAfterDelay();
     }
 
     protected void BulkActivateStatuses() => UpdateStatusesStatus(true);
@@ -114,14 +112,5 @@ public partial class StatusesSettings
     {
         Dispatcher.Dispatch(new UpdateStatusesStatusAction(selectedStatusIds, isActive));
         ClearSelection();
-        ClearMessageAfterDelay();
-    }
-
-    private void ClearMessageAfterDelay()
-    {
-        _ = Task.Delay(4000).ContinueWith(_ =>
-        {
-            Dispatcher.Dispatch(new ClearStatusMessageAction());
-        });
     }
 }

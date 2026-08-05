@@ -36,7 +36,6 @@ public partial class PermissionsSettings
         if (isEditing && editingId.HasValue) permModel.Id = editingId.Value;
         Dispatcher.Dispatch(new SavePermissionAction(permModel, isEditing));
         CancelEdit();
-        ClearMsg();
     }
 
     protected void Edit(PermissionDto p) { isEditing = true; editingId = p.Id; permModel = p.Adapt<PermissionDto>(); }
@@ -57,10 +56,12 @@ public partial class PermissionsSettings
     {
         if (isBulkDelete) { Dispatcher.Dispatch(new DeleteMultiplePermissionsAction(selectedIds.ToList())); ClearSelection(); }
         else if (toDelete != null) { Dispatcher.Dispatch(new DeletePermissionAction(toDelete.Id)); selectedIds.Remove(toDelete.Id); }
-        CancelDelete(); ClearMsg();
+        CancelDelete();
     }
 
-    protected void BulkUpdateStatus(bool isActive) { Dispatcher.Dispatch(new UpdatePermissionStatusAction(selectedIds.ToList(), isActive)); ClearSelection(); ClearMsg(); }
-
-    private void ClearMsg() => _ = Task.Delay(4000).ContinueWith(_ => Dispatcher.Dispatch(new ClearPermissionMessageAction()));
+    protected void BulkUpdateStatus(bool isActive)
+    {
+        Dispatcher.Dispatch(new UpdatePermissionStatusAction(selectedIds.ToList(), isActive));
+        ClearSelection();
+    }
 }

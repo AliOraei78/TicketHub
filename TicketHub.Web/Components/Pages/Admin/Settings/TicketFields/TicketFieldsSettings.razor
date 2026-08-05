@@ -24,9 +24,7 @@
                                  AvailableCategories="CatState.Value.Categories"
                                  AvailableFieldTypes="TypeState.Value.FieldTypes"
                                  OnValidSubmit="HandleSubmitField"
-                                 OnCancel="CancelEdit"
-                                 SuccessMessage="@FieldState.Value.StatusMessage"
-                                 IsError="FieldState.Value.IsError" />
+                                 OnCancel="CancelEdit" />
             </div>
         </div>
 
@@ -203,6 +201,5 @@
 
 <ConfirmDeleteModal IsOpen="showDeleteModal"
                     Description="@deleteModalDescription"
-                    ErrorMessage="@(FieldState.Value.IsError ? FieldState.Value.StatusMessage : null)"
                     OnConfirm="ConfirmDelete"
                     OnCancel="CancelDelete" />

@@ -1,39 +1,44 @@
-﻿
-<ModalDialog IsOpen="IsOpen" Title="@(Model.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
-    <EditForm Model="@Model" OnValidSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]" novalidate>
+﻿<ModalDialog IsOpen="IsOpen" Title="@(FormModel.User.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
+    <EditForm EditContext="editContext" OnSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]">
+        <FluentValidationValidator />
+
         <div class="p-8 space-y-8 overflow-y-auto flex-1">
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium whitespace-pre-line leading-relaxed">
-                    @ErrorMessage
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <CustomInput Label="نام کاربر" @bind-Value="FormModel.User.Name" />
+                    <ValidationMessage For="@(() => FormModel.User.Name)" class="text-red-500 text-xs mt-1" />
                 </div>
-            }
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CustomInput Label="نام کاربر" @bind-Value="Model.Name" IsRequired="true" />
-                <CustomInput Label="ایمیل" Type="email" @bind-Value="Model.Email" Dir="ltr" IsRequired="true" />
+                <div>
+                    <CustomInput Label="ایمیل" Type="email" @bind-Value="FormModel.User.Email" Dir="ltr" />
+                    <ValidationMessage For="@(() => FormModel.User.Email)" class="text-red-500 text-xs mt-1" />
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CustomInput Label="شماره تلفن" Type="tel" @bind-Value="Model.PhoneNumber" Dir="ltr" IsRequired="true" />
-                <CustomInput Label="@(Model.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")"
-                             Type="password"
-                             @bind-Value="PasswordInput"
-                             Placeholder="@(Model.Id == 0 ? "رمز عبور را وارد کنید" : "خالی بگذارید اگر تغییری نمی‌خواهید")"
-                             IsRequired="@(Model.Id == 0)"
-                             Dir="ltr" />
+                <div>
+                    <CustomInput Label="شماره تلفن" Type="tel" @bind-Value="FormModel.User.PhoneNumber" Dir="ltr" />
+                    <ValidationMessage For="@(() => FormModel.User.PhoneNumber)" class="text-red-500 text-xs mt-1" />
+                </div>
+                <div>
+                    <CustomInput Label="@(FormModel.User.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")"
+                                 Type="password"
+                                 @bind-Value="FormModel.Password"
+                                 Placeholder="@(FormModel.User.Id == 0 ? "رمز عبور را وارد کنید" : "خالی بگذارید اگر تغییری نمی‌خواهید")"
+                                 Dir="ltr" />
+                    <ValidationMessage For="@(() => FormModel.Password)" class="text-red-500 text-xs mt-1" />
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="Model.IsConfirmed" />
-                <CustomCheckbox Label="کاربر فعال است؟" @bind-Value="Model.IsActive" />
+                <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="FormModel.User.IsConfirmed" />
+                <CustomCheckbox Label="کاربر فعال است؟" @bind-Value="FormModel.User.IsActive" />
             </div>
 
             <MultiSelectDropdown TItem="RoleDto" TValue="string"
                                  Label="نقش‌ها"
                                  Placeholder="جستجو و انتخاب نقش..."
                                  Items="AvailableRoles"
-                                 @bind-SelectedValues="SelectedRoles"
+                                 @bind-SelectedValues="FormModel.SelectedRoles"
                                  ValueSelector="r => r.Name"
                                  DisplaySelector="r => r.Name"
                                  BadgeBgClass="bg-indigo-100"
@@ -41,7 +46,7 @@
                                  BadgeButtonClass="text-indigo-500 hover:text-indigo-900" />
         </div>
         <div class="px-8 py-6 border-t bg-gray-50 flex gap-3">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl smooth-transition">@(Model.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")</button>
+            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl smooth-transition">@(FormModel.User.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")</button>
             <button type="button" @onclick="OnCancel" class="flex-1 border border-gray-300 hover:bg-gray-100 font-medium py-3.5 rounded-2xl smooth-transition">انصراف</button>
         </div>
     </EditForm>
@@ -55,15 +60,35 @@
     [Parameter] public List<string> SelectedRoles { get; set; } = new();
     [Parameter] public EventCallback<UserFormSubmissionResult> OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public string? ErrorMessage { get; set; }
+
+    private UserFormSubmissionResult FormModel = new();
+
+    private EditContext editContext = default!;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(FormModel);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && FormModel.User != Model)
+        {
+            FormModel.User = Model;
+            FormModel.Password = PasswordInput;
+            FormModel.SelectedRoles = SelectedRoles;
+
+            // ساخت کانتکست جدید برای اطمینان از ردیابی صحیح فیلدهای خالی
+            editContext = new EditContext(FormModel);
+        }
+    }
 
     private async Task HandleSubmit()
     {
-        await OnSubmit.InvokeAsync(new UserFormSubmissionResult
+        // فراخوانی دستی اعتبارسنجی برای تریگر شدن خطاها روی فرم
+        if (editContext.Validate())
         {
-            User = Model,
-            Password = PasswordInput,
-            SelectedRoles = SelectedRoles,
-        });
+            await OnSubmit.InvokeAsync(FormModel);
+        }
     }
 }

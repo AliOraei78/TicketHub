@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -14,11 +16,9 @@ public record CategoryState(
     string SearchTerm,
     bool? SelectedFilterStatus,
     List<int> SelectedFilterProjectIds,
-    List<int> SelectedFilterRoleIds,
-    string? StatusMessage,
-    bool IsError)
+    List<int> SelectedFilterRoleIds)
 {
-    private CategoryState() : this(true, Array.Empty<CategoryDto>(), string.Empty, null, new(), new(), null, false) { }
+    private CategoryState() : this(true, Array.Empty<CategoryDto>(), string.Empty, null, new(), new()) { }
 }
 
 // 2. Actions
@@ -32,8 +32,6 @@ public record SetCategoryFilterStatusAction(bool? Status);
 public record SetCategorySearchAction(string Term);
 public record SetCategoryProjectFilterAction(List<int> ProjectIds);
 public record SetCategoryRoleFilterAction(List<int> RoleIds);
-public record SetCategoryMessageAction(string Message, bool IsError);
-public record ClearCategoryMessageAction();
 public record LoadCategoryInitialDataAction();
 
 // 3. Reducers
@@ -62,14 +60,6 @@ public static class CategoryReducers
     [ReducerMethod]
     public static CategoryState ReduceSetRoleFilter(CategoryState state, SetCategoryRoleFilterAction action) =>
         state with { SelectedFilterRoleIds = action.RoleIds };
-
-    [ReducerMethod]
-    public static CategoryState ReduceSetMessage(CategoryState state, SetCategoryMessageAction action) =>
-        state with { StatusMessage = action.Message, IsError = action.IsError };
-
-    [ReducerMethod(typeof(ClearCategoryMessageAction))]
-    public static CategoryState ReduceClearMessage(CategoryState state) =>
-        state with { StatusMessage = null, IsError = false };
 }
 
 // 4. Effects
@@ -79,17 +69,20 @@ public class CategoryEffects
     private readonly IProjectService _projectService;
     private readonly IRoleService _roleService;
     private readonly ILogger<CategoryEffects> _logger;
+    private readonly IToastService _toastService;
 
     public CategoryEffects(
         ICategoryService categoryService,
         IProjectService projectService,
         IRoleService roleService,
-        ILogger<CategoryEffects> logger)
+        ILogger<CategoryEffects> logger,
+        IToastService toastService)
     {
         _categoryService = categoryService;
         _projectService = projectService;
         _roleService = roleService;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod(typeof(LoadCategoryInitialDataAction))]
@@ -110,7 +103,7 @@ public class CategoryEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در بارگذاری دیتای اولیه دسته‌بندی‌ها.");
-            dispatcher.Dispatch(new SetCategoryMessageAction("خطا در دریافت اطلاعات اولیه.", true));
+            _toastService.ShowError("خطا در دریافت اطلاعات اولیه.");
         }
     }
 
@@ -126,7 +119,7 @@ public class CategoryEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست دسته‌بندی‌ها از سرویس.");
-            dispatcher.Dispatch(new SetCategoryMessageAction("خطا در دریافت لیست دسته‌بندی‌ها.", true));
+            _toastService.ShowError("خطا در دریافت لیست دسته‌بندی‌ها.");
         }
     }
 
@@ -141,13 +134,22 @@ public class CategoryEffects
             else
                 await _categoryService.AddAsync(action.Category);
 
-            dispatcher.Dispatch(new SetCategoryMessageAction(action.IsEditing ? "نوع تیکت با موفقیت ویرایش شد." : "ایجاد شد.", false));
+            _toastService.ShowSuccess(action.IsEditing ? "نوع تیکت با موفقیت ویرایش شد." : "ایجاد شد.");
             dispatcher.Dispatch(new LoadCategoriesAction());
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در زمان {ActionType} دسته‌بندی رخ داد.", action.IsEditing ? "ویرایش" : "ایجاد");
-            dispatcher.Dispatch(new SetCategoryMessageAction("خطایی در ذخیره اطلاعات رخ داد.", true));
+            _toastService.ShowError("خطایی در ذخیره اطلاعات رخ داد.");
         }
     }
 
@@ -158,13 +160,18 @@ public class CategoryEffects
         {
             _logger.LogInformation("اجرای اکشن DeleteCategoryAction برای حذف دسته‌بندی {Id}.", action.Id);
             await _categoryService.DeleteAsync(new CategoryDto { Id = action.Id });
-            dispatcher.Dispatch(new SetCategoryMessageAction("نوع تیکت با موفقیت حذف شد.", false));
+            _toastService.ShowSuccess("نوع تیکت با موفقیت حذف شد.");
+            dispatcher.Dispatch(new LoadCategoriesAction());
+        }
+        catch (NotFoundException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "یافت نشد");
             dispatcher.Dispatch(new LoadCategoriesAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در زمان حذف دسته‌بندی شناسه {Id}.", action.Id);
-            dispatcher.Dispatch(new SetCategoryMessageAction("امکان حذف وجود ندارد! تیکت‌های مرتبط را بررسی کنید.", true));
+            _toastService.ShowError("امکان حذف وجود ندارد! تیکت‌های مرتبط را بررسی کنید.");
         }
     }
 
@@ -175,13 +182,13 @@ public class CategoryEffects
         {
             _logger.LogInformation("اجرای اکشن DeleteMultipleCategoriesAction برای حذف {Count} دسته‌بندی.", action.Ids.Count());
             await _categoryService.DeleteRangeAsync(action.Ids);
-            dispatcher.Dispatch(new SetCategoryMessageAction($"{action.Ids.Count()} آیتم با موفقیت حذف شدند.", false));
+            _toastService.ShowSuccess($"{action.Ids.Count()} آیتم با موفقیت حذف شدند.");
             dispatcher.Dispatch(new LoadCategoriesAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در زمان حذف گروهی دسته‌بندی‌ها.");
-            dispatcher.Dispatch(new SetCategoryMessageAction("خطایی در حذف گروهی رخ داد.", true));
+            _toastService.ShowError("خطایی در حذف گروهی رخ داد.");
         }
     }
 
@@ -193,13 +200,13 @@ public class CategoryEffects
             _logger.LogInformation("اجرای اکشن UpdateCategoryStatusAction برای تغییر وضعیت {Count} دسته‌بندی.", action.Ids.Count());
             await _categoryService.UpdateCategoriesStatusAsync(action.Ids, action.IsActive);
             string actionName = action.IsActive ? "فعال" : "غیرفعال";
-            dispatcher.Dispatch(new SetCategoryMessageAction($"{action.Ids.Count()} نوع تیکت با موفقیت {actionName} شدند.", false));
+            _toastService.ShowSuccess($"{action.Ids.Count()} نوع تیکت با موفقیت {actionName} شدند.");
             dispatcher.Dispatch(new LoadCategoriesAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در زمان تغییر وضعیت گروهی دسته‌بندی‌ها.");
-            dispatcher.Dispatch(new SetCategoryMessageAction("عملیات با خطا مواجه شد!", true));
+            _toastService.ShowError("عملیات با خطا مواجه شد!");
         }
     }
 }

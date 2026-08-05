@@ -39,7 +39,6 @@ public partial class RolesSettings
 
         Dispatcher.Dispatch(new SaveRoleAction(roleModel, isEditing, editingRoleId));
         CancelEdit();
-        ClearMessageAfterDelay();
     }
 
     protected void EditRole(RoleDto role)
@@ -99,7 +98,6 @@ public partial class RolesSettings
         }
 
         CancelDelete();
-        ClearMessageAfterDelay();
     }
 
     protected void BulkDeactivateRoles() => UpdateRolesStatus(false);
@@ -109,14 +107,5 @@ public partial class RolesSettings
     {
         Dispatcher.Dispatch(new UpdateRoleStatusAction(selectedRoleIds, isActive));
         ClearSelection();
-        ClearMessageAfterDelay();
-    }
-
-    private void ClearMessageAfterDelay()
-    {
-        _ = Task.Delay(4000).ContinueWith(_ =>
-        {
-            Dispatcher.Dispatch(new ClearRoleMessageAction());
-        });
     }
 }

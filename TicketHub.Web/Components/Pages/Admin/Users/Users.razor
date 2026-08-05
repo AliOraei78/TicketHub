@@ -76,11 +76,9 @@
                AvailableRoles="UsrState.Value.AvailableRoles.ToList()"
                SelectedRoles="selectedRoles"
                OnSubmit="HandleSaveUser"
-               OnCancel="CloseUserModal"
-               ErrorMessage="@UsrState.Value.FormErrorMessage" />
+               OnCancel="CloseUserModal" />
 
 <ConfirmDeleteModal IsOpen="showDeleteModal"
                     Description="@($"آیا از حذف کاربر {(isBulkDelete ? "های انتخاب شده" : userToDelete?.Name)} مطمئن هستید؟")"
-                    ErrorMessage="@UsrState.Value.DeleteErrorMessage"
                     OnConfirm="ConfirmDeleteUser"
                     OnCancel="CloseDeleteModal" />

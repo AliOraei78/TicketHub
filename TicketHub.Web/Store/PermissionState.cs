@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -12,11 +14,9 @@ public record PermissionState(
     IEnumerable<RoleDto> AvailableRoles,
     string SearchTerm,
     bool? SelectedFilterStatus,
-    List<int> SelectedFilterRoleIds,
-    string? StatusMessage,
-    bool IsError)
+    List<int> SelectedFilterRoleIds)
 {
-    private PermissionState() : this(true, Array.Empty<PermissionDto>(), Array.Empty<RoleDto>(), string.Empty, null, new(), null, false) { }
+    private PermissionState() : this(true, Array.Empty<PermissionDto>(), Array.Empty<RoleDto>(), string.Empty, null, new()) { }
 }
 
 // Actions
@@ -29,8 +29,6 @@ public record UpdatePermissionStatusAction(IEnumerable<int> Ids, bool IsActive);
 public record SetPermissionFilterStatusAction(bool? Status);
 public record SetPermissionSearchAction(string Term);
 public record SetPermissionRoleFilterAction(List<int> RoleIds);
-public record SetPermissionMessageAction(string Message, bool IsError);
-public record ClearPermissionMessageAction();
 public record AvailableRolesLoadedAction(IEnumerable<RoleDto> Roles);
 
 // Reducers
@@ -52,12 +50,6 @@ public static class PermissionReducers
     public static PermissionState ReduceSetRoleFilter(PermissionState state, SetPermissionRoleFilterAction action) => state with { SelectedFilterRoleIds = action.RoleIds };
 
     [ReducerMethod]
-    public static PermissionState ReduceSetMessage(PermissionState state, SetPermissionMessageAction action) => state with { StatusMessage = action.Message, IsError = action.IsError };
-
-    [ReducerMethod(typeof(ClearPermissionMessageAction))]
-    public static PermissionState ReduceClearMessage(PermissionState state) => state with { StatusMessage = null, IsError = false };
-
-    [ReducerMethod]
     public static PermissionState ReduceRolesLoaded(PermissionState state, AvailableRolesLoadedAction action) => state with { AvailableRoles = action.Roles };
 }
 
@@ -67,15 +59,18 @@ public class PermissionEffects
     private readonly IPermissionService _permissionService;
     private readonly IRoleService _roleService;
     private readonly ILogger<PermissionEffects> _logger;
+    private readonly IToastService _toastService;
 
     public PermissionEffects(
         IPermissionService permissionService,
         IRoleService roleService,
-        ILogger<PermissionEffects> logger)
+        ILogger<PermissionEffects> logger,
+        IToastService toastService)
     {
         _permissionService = permissionService;
         _roleService = roleService;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod]
@@ -84,19 +79,16 @@ public class PermissionEffects
         try
         {
             _logger.LogInformation("شروع فراخوانی لیست دسترسی‌ها و نقش‌های سیستم.");
-
             var permissions = await _permissionService.GetAllAsync();
             dispatcher.Dispatch(new PermissionsLoadedAction(permissions));
 
             var roles = await _roleService.GetAllRolesAsync();
             dispatcher.Dispatch(new AvailableRolesLoadedAction(roles));
-
-            _logger.LogInformation("دریافت لیست دسترسی‌ها و نقش‌ها با موفقیت انجام شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست دسترسی‌ها یا نقش‌ها.");
-            dispatcher.Dispatch(new SetPermissionMessageAction("خطا در بارگذاری اطلاعات دسترسی‌ها.", true));
+            _toastService.ShowError("خطا در بارگذاری اطلاعات دسترسی‌ها.");
         }
     }
 
@@ -112,13 +104,22 @@ public class PermissionEffects
             else
                 await _permissionService.CreateAsync(action.Permission);
 
-            dispatcher.Dispatch(new SetPermissionMessageAction(action.IsEditing ? "دسترسی ویرایش شد." : "ایجاد شد.", false));
+            _toastService.ShowSuccess(action.IsEditing ? "دسترسی ویرایش شد." : "دسترسی ایجاد شد.");
             dispatcher.Dispatch(new LoadPermissionsAction());
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "خطا در زمان {ActionType} دسترسی {PermissionTitle}.", action.IsEditing ? "ویرایش" : "ایجاد", action.Permission.Title);
-            dispatcher.Dispatch(new SetPermissionMessageAction("خطا در ذخیره.", true));
+            _logger.LogError(ex, "خطا در زمان {ActionType} دسترسی.", action.IsEditing ? "ویرایش" : "ایجاد");
+            _toastService.ShowError("خطا در ذخیره اطلاعات.");
         }
     }
 
@@ -127,17 +128,19 @@ public class PermissionEffects
     {
         try
         {
-            _logger.LogWarning("درخواست حذف دسترسی با شناسه {PermissionId}.", action.Id);
-
             await _permissionService.DeleteAsync(action.Id);
-
-            dispatcher.Dispatch(new SetPermissionMessageAction("حذف شد.", false));
+            _toastService.ShowSuccess("دسترسی با موفقیت حذف شد.");
+            dispatcher.Dispatch(new LoadPermissionsAction());
+        }
+        catch (NotFoundException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "یافت نشد");
             dispatcher.Dispatch(new LoadPermissionsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف دسترسی با شناسه {PermissionId}.", action.Id);
-            dispatcher.Dispatch(new SetPermissionMessageAction("امکان حذف وجود ندارد.", true));
+            _toastService.ShowError("امکان حذف وجود ندارد.");
         }
     }
 
@@ -147,21 +150,15 @@ public class PermissionEffects
         try
         {
             int count = action.Ids.Count();
-            _logger.LogWarning("درخواست حذف گروهی دسترسی‌ها به تعداد {Count}.", count);
-
             await _permissionService.DeleteRangeAsync(action.Ids);
 
-            string message = count == 1
-                ? $"{count} دسترسی با موفقیت حذف شد."
-                : $"{count} دسترسی با موفقیت حذف شدند.";
-
-            dispatcher.Dispatch(new SetPermissionMessageAction(message, false));
+            _toastService.ShowSuccess($"{count} دسترسی با موفقیت حذف شدند.");
             dispatcher.Dispatch(new LoadPermissionsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف گروهی دسترسی‌ها.");
-            dispatcher.Dispatch(new SetPermissionMessageAction("خطا در حذف گروهی.", true));
+            _toastService.ShowError("خطا در حذف گروهی.");
         }
     }
 
@@ -171,22 +168,16 @@ public class PermissionEffects
         try
         {
             int count = action.Ids.Count();
-            string actionName = action.IsActive ? "فعال" : "غیر فعال";
-            _logger.LogInformation("تغییر وضعیت {Count} دسترسی به {Status}.", count, actionName);
-
             await _permissionService.UpdateStatusAsync(action.Ids, action.IsActive);
 
-            string message = count == 1
-                ? $"{count} دسترسی با موفقیت {actionName} شد."
-                : $"{count} دسترسی با موفقیت {actionName} شدند.";
-
-            dispatcher.Dispatch(new SetPermissionMessageAction(message, false));
+            string actionName = action.IsActive ? "فعال" : "غیر فعال";
+            _toastService.ShowSuccess($"{count} دسترسی با موفقیت {actionName} شدند.");
             dispatcher.Dispatch(new LoadPermissionsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در تغییر وضعیت گروهی دسترسی‌ها.");
-            dispatcher.Dispatch(new SetPermissionMessageAction("خطا در تغییر وضعیت.", true));
+            _toastService.ShowError("خطا در تغییر وضعیت.");
         }
     }
 }

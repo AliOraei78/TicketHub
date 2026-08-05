@@ -20,14 +20,7 @@
                 <PriorityForm Model="priorityModel"
                               IsEditing="isEditing"
                               OnValidSubmit="HandleSubmit"
-                              OnCancel="CancelEdit" />
-
-                @if (!string.IsNullOrEmpty(PriState.Value.StatusMessage))
-                {
-                    <div class="mt-4 p-3 @(PriState.Value.IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">
-                        @PriState.Value.StatusMessage
-                    </div>
-                }
+                              OnCancel="CancelEdit" />          
             </div>
         </div>
 
@@ -119,4 +112,4 @@
                    OnActivate="BulkActivatePriorities"
                    OnDeactivate="BulkDeactivatePriorities" />
 
-<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" ErrorMessage="@(PriState.Value.IsError ? PriState.Value.StatusMessage : null)" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
+<ConfirmDeleteModal IsOpen="showDeleteModal" Description="@deleteModalDescription" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />

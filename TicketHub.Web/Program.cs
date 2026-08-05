@@ -79,6 +79,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(StatusDtoValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(TicketDtoValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(TicketFieldDtoValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(UserDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(UserFormSubmissionResultValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(WorkflowDtoValidator).Assembly);
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));

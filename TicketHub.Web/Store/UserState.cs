@@ -3,7 +3,8 @@ using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
-using TicketHub.Application.Validations;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -20,11 +21,9 @@ public record UserState(
     int CurrentPage,
     bool? SelectedFilterStatus,
     List<int> SelectedFilterRoleIds,
-    List<int> SelectedFilterProjectIds,
-    string? FormErrorMessage,
-    string? DeleteErrorMessage)
+    List<int> SelectedFilterProjectIds)
 {
-    private UserState() : this(true, Array.Empty<UserDto>(), 0, Array.Empty<RoleDto>(), Array.Empty<ProjectDto>(), string.Empty, 10, 1, null, new(), new(), null, null) { }
+    private UserState() : this(true, Array.Empty<UserDto>(), 0, Array.Empty<RoleDto>(), Array.Empty<ProjectDto>(), string.Empty, 10, 1, null, new(), new()) { }
 }
 
 // 2. Actions
@@ -34,11 +33,8 @@ public record LoadUsersAction();
 public record UsersLoadedAction(IEnumerable<UserDto> Users, int TotalCount, int ValidatedPage);
 public record SetUserFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, bool? Status, List<int>? RoleIds, List<int>? ProjectIds);
 public record SaveUserAction(UserDto User, string Password, List<string> SelectedRoles, List<RoleDto> AvailableRoles);
-public record SaveUserSuccessAction();
-public record SaveUserFailedAction(string ErrorMessage);
+public record SaveUserSuccessAction(); // برای بستن مُدال در کامپوننت نیاز است
 public record ExecuteUserBulkAction(HashSet<int> UserIds, string ActionType, int? SingleId = null);
-public record SetUserDeleteErrorAction(string ErrorMessage);
-public record ClearUserMessagesAction();
 
 // 3. Reducers
 public static class UserReducers
@@ -65,18 +61,6 @@ public static class UserReducers
             SelectedFilterRoleIds = action.RoleIds ?? state.SelectedFilterRoleIds,
             SelectedFilterProjectIds = action.ProjectIds ?? state.SelectedFilterProjectIds
         };
-
-    [ReducerMethod]
-    public static UserState ReduceSaveFailed(UserState state, SaveUserFailedAction action) => state with { FormErrorMessage = action.ErrorMessage };
-
-    [ReducerMethod(typeof(SaveUserSuccessAction))]
-    public static UserState ReduceSaveSuccess(UserState state) => state with { FormErrorMessage = null };
-
-    [ReducerMethod]
-    public static UserState ReduceDeleteError(UserState state, SetUserDeleteErrorAction action) => state with { DeleteErrorMessage = action.ErrorMessage };
-
-    [ReducerMethod(typeof(ClearUserMessagesAction))]
-    public static UserState ReduceClearMessages(UserState state) => state with { FormErrorMessage = null, DeleteErrorMessage = null };
 }
 
 // 4. Effects
@@ -87,19 +71,22 @@ public class UserEffects
     private readonly IProjectService _projectService;
     private readonly IState<UserState> _state;
     private readonly ILogger<UserEffects> _logger;
+    private readonly IToastService _toastService;
 
     public UserEffects(
         IUserService userService,
         IRoleService roleService,
         IProjectService projectService,
         IState<UserState> state,
-        ILogger<UserEffects> logger)
+        ILogger<UserEffects> logger,
+        IToastService toastService)
     {
         _userService = userService;
         _roleService = roleService;
         _projectService = projectService;
         _state = state;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod(typeof(LoadUserInitialDataAction))]
@@ -108,18 +95,16 @@ public class UserEffects
         try
         {
             _logger.LogInformation("شروع فراخوانی اطلاعات اولیه کاربران.");
-
             var roles = await _roleService.GetAllRolesAsync();
             var projects = await _projectService.GetProjectsAsync();
 
             dispatcher.Dispatch(new UserInitialDataLoadedAction(roles, projects));
             dispatcher.Dispatch(new LoadUsersAction());
-
-            _logger.LogInformation("اطلاعات اولیه کاربران با موفقیت بارگذاری شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت اطلاعات اولیه کاربران.");
+            _toastService.ShowError("خطا در بارگذاری اطلاعات اولیه.");
         }
     }
 
@@ -128,8 +113,6 @@ public class UserEffects
     {
         try
         {
-            _logger.LogInformation("شروع فراخوانی لیست کاربران.");
-
             var st = _state.Value;
             var result = await _userService.GetFilteredUsersAsync(st.SearchTerm, st.SelectedFilterRoleIds, st.SelectedFilterProjectIds, st.SelectedFilterStatus, st.CurrentPage, st.PageSize);
 
@@ -143,63 +126,45 @@ public class UserEffects
             }
 
             dispatcher.Dispatch(new UsersLoadedAction(result.Users, result.TotalCount, finalPage));
-            _logger.LogInformation("لیست کاربران با موفقیت دریافت شد.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست کاربران.");
+            _toastService.ShowError("خطا در بارگذاری لیست کاربران.");
         }
     }
 
     [EffectMethod]
     public async Task HandleSaveUser(SaveUserAction action, IDispatcher dispatcher)
     {
-        var errors = new List<string>();
-        var userModel = action.User;
-
-        if (string.IsNullOrWhiteSpace(userModel.Name)) errors.Add("• نام کاربر الزامی است.");
-
-        if (string.IsNullOrWhiteSpace(userModel.Email)) errors.Add("• ایمیل الزامی است.");
-        else if (!new ValidEmailAttribute().IsValid(userModel.Email)) errors.Add($"• {new ValidEmailAttribute().ErrorMessage}");
-        else
-        {
-            var allUsers = await _userService.GetAllAsync();
-            if (allUsers.Any(u => u.Email == userModel.Email && u.Id != userModel.Id))
-                errors.Add("• این ایمیل قبلاً ثبت شده است.");
-        }
-
-        if (string.IsNullOrWhiteSpace(userModel.PhoneNumber)) errors.Add("• شماره تلفن الزامی است.");
-        else if (!new ValidPhoneNumberAttribute().IsValid(userModel.PhoneNumber)) errors.Add($"• {new ValidPhoneNumberAttribute().ErrorMessage}");
-
-        if (userModel.Id == 0 && string.IsNullOrWhiteSpace(action.Password)) errors.Add("• رمز عبور الزامی است.");
-        else if (!string.IsNullOrWhiteSpace(action.Password) && !new StrongPasswordAttribute().IsValid(action.Password))
-            errors.Add($"• {new StrongPasswordAttribute().ErrorMessage}");
-
-        if (errors.Any())
-        {
-            dispatcher.Dispatch(new SaveUserFailedAction(string.Join("\n", errors)));
-            return;
-        }
-
         try
         {
-            _logger.LogInformation("اجرای اکشن SaveUserAction برای {ActionType} کاربر.", userModel.Id == 0 ? "ایجاد" : "ویرایش");
+            _logger.LogInformation("اجرای اکشن SaveUserAction برای {ActionType} کاربر.", action.User.Id == 0 ? "ایجاد" : "ویرایش");
 
             var roleIdsToAssign = action.AvailableRoles.Where(r => action.SelectedRoles.Contains(r.Name)).Select(r => r.Id).ToList();
-            if (userModel.Id == 0)
-                await _userService.CreateAsync(userModel, action.Password, roleIdsToAssign);
+            if (action.User.Id == 0)
+                await _userService.CreateAsync(action.User, action.Password, roleIdsToAssign);
             else
-                await _userService.UpdateAsync(userModel, action.Password, roleIdsToAssign);
+                await _userService.UpdateAsync(action.User, action.Password, roleIdsToAssign);
+
+            _toastService.ShowSuccess(action.User.Id == 0 ? "کاربر جدید ایجاد شد." : "تغییرات کاربر با موفقیت ذخیره شد.");
 
             dispatcher.Dispatch(new SaveUserSuccessAction());
             dispatcher.Dispatch(new LoadUsersAction());
-
-            _logger.LogInformation("کاربر با موفقیت {ActionType} شد.", userModel.Id == 0 ? "ایجاد" : "ویرایش");
+        }
+        catch (ValidationException ex)
+        {
+            var errorMessage = string.Join("\n", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "خطا در زمان {ActionType} کاربر.", userModel.Id == 0 ? "ایجاد" : "ویرایش");
-            dispatcher.Dispatch(new SaveUserFailedAction("• خطایی در ذخیره اطلاعات رخ داد."));
+            _logger.LogError(ex, "خطا در زمان {ActionType} کاربر.", action.User.Id == 0 ? "ایجاد" : "ویرایش");
+            _toastService.ShowError("خطایی در ذخیره اطلاعات رخ داد.");
         }
     }
 
@@ -208,17 +173,17 @@ public class UserEffects
     {
         try
         {
-            _logger.LogInformation("اجرای عملیات گروهی {ActionType} برای کاربران.", action.ActionType);
-
             await _userService.ExecuteBulkActionAsync(action.UserIds, action.ActionType, action.SingleId);
-            dispatcher.Dispatch(new LoadUsersAction());
 
-            _logger.LogInformation("عملیات گروهی {ActionType} با موفقیت انجام شد.", action.ActionType);
+            string verb = action.ActionType == "Delete" || action.ActionType == "SingleDelete" ? "حذف" : (action.ActionType == "Activate" ? "فعال" : "غیرفعال");
+            _toastService.ShowSuccess($"عملیات {verb} با موفقیت انجام شد.");
+
+            dispatcher.Dispatch(new LoadUsersAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در انجام عملیات گروهی {ActionType} کاربران.", action.ActionType);
-            dispatcher.Dispatch(new SetUserDeleteErrorAction("امکان انجام عملیات وجود ندارد!"));
+            _toastService.ShowError("امکان انجام عملیات وجود ندارد!");
         }
     }
 }

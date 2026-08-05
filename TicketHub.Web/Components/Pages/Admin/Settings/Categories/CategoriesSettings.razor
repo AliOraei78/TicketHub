@@ -24,9 +24,7 @@
                               AvailableProjects="ProjState.Value.Projects"
                               AvailableRoles="ProjState.Value.Roles"
                               OnValidSubmit="HandleSubmitCategory"
-                              OnCancel="CancelEdit"
-                              SuccessMessage="@CatState.Value.StatusMessage"
-                              IsError="CatState.Value.IsError" />
+                              OnCancel="CancelEdit" />
             </div>
         </div>
 
@@ -192,6 +190,5 @@
 
 <ConfirmDeleteModal IsOpen="showDeleteModal"
                     Description="@deleteModalDescription"
-                    ErrorMessage="@(CatState.Value.IsError ? CatState.Value.StatusMessage : null)"
                     OnConfirm="ConfirmDelete"
                     OnCancel="CancelDelete" />
