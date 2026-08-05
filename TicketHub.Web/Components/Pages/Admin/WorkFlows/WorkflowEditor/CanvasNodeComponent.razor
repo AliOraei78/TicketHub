@@ -1,6 +1,4 @@
 ﻿<!-- CanvasNodeComponent.razor -->
-@using TicketHub.Core.Common
-@using TicketHub.Application.DTOs
 
 <div draggable="false" class="absolute w-[150px] rounded-xl shadow-lg border-2 flex flex-col items-center justify-center p-3 select-none z-10 transition-shadow @(IsSelected ? "border-slate-800 shadow-xl ring-4 ring-slate-800/20 scale-105" : "border-black/10 hover:shadow-xl") @(IsConnecting ? "pointer-events-none" : "pointer-events-auto")"
      style="@($"left: {Node.X}px; top: {Node.Y}px; background-color: {Node.Status.ColorCode}; cursor: {CursorStyle};")"

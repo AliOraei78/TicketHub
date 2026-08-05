@@ -25,6 +25,7 @@
     <PackageReference Include="Bit.BlazorUI" Version="10.5.0" />
     <PackageReference Include="DNTCaptcha.Core" Version="5.3.4" />
     <PackageReference Include="Fluxor.Blazor.Web" Version="6.10.0" />
+    <PackageReference Include="GreatIdeas.Blazored.FluentValidation" Version="3.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.29">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

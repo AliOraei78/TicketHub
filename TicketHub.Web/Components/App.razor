@@ -34,17 +34,14 @@
         .catch(error => console.error('خطا در دریافت کپچا:', error));
         };
 
-        // اجرا در لود اولیه
         document.addEventListener('DOMContentLoaded', function () {
         if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
         });
 
-        // اجرا پس از جابه‌جایی بین صفحات
         Blazor.addEventListener('enhancedload', function () {
         if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
         });
     </script>
-
 </body>
 </html>
 
@@ -52,12 +49,11 @@
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
-    // این بخش به صورت هوشمند رندرمود را بر اساس آدرس صفحه تعیین می‌کند
     private Microsoft.AspNetCore.Components.IComponentRenderMode? PageRenderMode =>
             HttpContext != null && (
                 HttpContext.Request.Path.StartsWithSegments("/login") ||
                 HttpContext.Request.Path.StartsWithSegments("/register") ||
-                HttpContext.Request.Path.StartsWithSegments("/confirm-email")) // این خط اضافه شد
+                HttpContext.Request.Path.StartsWithSegments("/confirm-email"))
                 ? null
                 : new InteractiveServerRenderMode(prerender: false);
 }

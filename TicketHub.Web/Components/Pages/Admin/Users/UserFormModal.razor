@@ -1,7 +1,4 @@
-﻿@using TicketHub.Application.DTOs
-@using TicketHub.Application.Models
-@using TicketHub.Web.Components.Shared
-
+﻿
 <ModalDialog IsOpen="IsOpen" Title="@(Model.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
     <EditForm Model="@Model" OnValidSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]" novalidate>
         <div class="p-8 space-y-8 overflow-y-auto flex-1">

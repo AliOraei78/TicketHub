@@ -1,8 +1,6 @@
 ﻿@page "/workflows/editor/{Id:int?}"
 @layout TicketHub.Web.Components.Layout.EmptyLayout
 @rendermode InteractiveServer
-@using TicketHub.Web.Components.Shared
-@using TicketHub.Application.DTOs
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @if (!string.IsNullOrEmpty(EdState.Value.ErrorMessage))
