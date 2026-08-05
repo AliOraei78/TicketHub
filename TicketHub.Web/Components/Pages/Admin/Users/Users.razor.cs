@@ -117,7 +117,7 @@ public partial class Users : IDisposable
         if (isBulkDelete)
         {
             deletingUserIds = new HashSet<int>(selectedUserIds);
-            Dispatcher.Dispatch(new ExecuteUserBulkAction(selectedUserIds, "Delete"));
+            Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(selectedUserIds), "Delete"));
         }
         else if (userToDelete != null)
         {
@@ -133,13 +133,13 @@ public partial class Users : IDisposable
 
     private void BulkDeactivateUsers()
     {
-        Dispatcher.Dispatch(new ExecuteUserBulkAction(selectedUserIds, "Deactivate"));
+        Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(selectedUserIds), "Deactivate"));
         ClearSelection();
     }
 
     private void BulkActivateUsers()
     {
-        Dispatcher.Dispatch(new ExecuteUserBulkAction(selectedUserIds, "Activate"));
+        Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(selectedUserIds), "Activate"));
         ClearSelection();
     }
 }

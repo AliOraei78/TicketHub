@@ -175,8 +175,13 @@ public class UserEffects
         {
             await _userService.ExecuteBulkActionAsync(action.UserIds, action.ActionType, action.SingleId);
 
-            string verb = action.ActionType == "Delete" || action.ActionType == "SingleDelete" ? "حذف" : (action.ActionType == "Activate" ? "فعال" : "غیرفعال");
-            _toastService.ShowSuccess($"عملیات {verb} با موفقیت انجام شد.");
+            int count = action.SingleId.HasValue ? 1 : (action.UserIds?.Count ?? 0);
+            string actionName = (action.ActionType == "Delete" || action.ActionType == "SingleDelete") ? "حذف"
+                              : (action.ActionType == "Activate" ? "فعال" : "غیرفعال");
+
+            string verb = count > 1 ? "شدند" : "شد";
+
+            _toastService.ShowSuccess($"{count} کاربر با موفقیت {actionName} {verb}.");
 
             dispatcher.Dispatch(new LoadUsersAction());
         }

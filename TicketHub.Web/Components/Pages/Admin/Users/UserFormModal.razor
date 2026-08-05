@@ -1,5 +1,5 @@
 ﻿<ModalDialog IsOpen="IsOpen" Title="@(FormModel.User.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
-    <EditForm EditContext="editContext" OnSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]">
+    <EditForm EditContext="editContext" OnSubmit="HandleSubmit" class="flex flex-col max-h-[85vh]" novalidate>
         <FluentValidationValidator />
 
         <div class="p-8 space-y-8 overflow-y-auto flex-1">

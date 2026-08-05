@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
+using TicketHub.Core.Common.Exceptions;
 
 namespace TicketHub.Web.Store;
 
@@ -33,11 +34,13 @@ public class FieldTypeEffects
 {
     private readonly IFieldTypeService _service;
     private readonly ILogger<FieldTypeEffects> _logger;
+    private readonly IToastService _toastService;
 
-    public FieldTypeEffects(IFieldTypeService service, ILogger<FieldTypeEffects> logger)
+    public FieldTypeEffects(IFieldTypeService service, ILogger<FieldTypeEffects> logger, IToastService toastService)
     {
         _service = service;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod(typeof(LoadFieldTypesAction))]
@@ -55,6 +58,8 @@ public class FieldTypeEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست انواع فیلدها.");
+            _toastService.ShowError("خطا در دریافت اطلاعات انواع فیلدها. لطفا صفحه را مجدداً بارگذاری کنید.");
+
             // بازگرداندن یک لیست خالی برای خروج State از حالت Loading
             dispatcher.Dispatch(new FieldTypesLoadedAction(Array.Empty<FieldTypeDto>()));
         }

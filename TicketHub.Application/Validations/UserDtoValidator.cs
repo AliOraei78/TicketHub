@@ -11,15 +11,14 @@ public class UserDtoValidator : AbstractValidator<UserDto>
             .NotEmpty().WithMessage("نام کاربر الزامی است.")
             .MaximumLength(100).WithMessage("نام کاربر نمی‌تواند بیشتر از 100 کاراکتر باشد.");
 
-        // استفاده از الگوی Regex سفارشی شما برای ایمیل
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("ایمیل الزامی است.")
             .Matches(@"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$").WithMessage("فرمت ایمیل وارد شده معتبر نیست.");
 
-        // استفاده از الگوی Regex سفارشی شما برای شماره موبایل (در صورت وارد شدن مقدار)
+        // --- تغییرات مربوط به شماره تماس ---
         RuleFor(x => x.PhoneNumber)
-            .NotEmpty().WithMessage("شماره تماس الزامی است.")
-            .Matches(@"^09\d{9}$").When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber))
-            .WithMessage("شماره تماس باید ۱۱ رقم باشد و با 09 شروع شود.");
+            .Cascade(CascadeMode.Stop) // در صورت خالی بودن، بقیه شرط‌ها را چک نمی‌کند
+            .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage("شماره تماس الزامی است.")
+            .Matches(@"^09\d{9}$").WithMessage("شماره تماس باید ۱۱ رقم باشد و با 09 شروع شود.");
     }
 }

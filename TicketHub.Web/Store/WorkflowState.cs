@@ -215,8 +215,7 @@ public class WorkflowEffects
             await workflowService.DeleteRangeAsync(action.Ids);
             dispatcher.Dispatch(new LoadWorkflowsAction());
 
-            var successMessage = string.Join("\n", action.WorkflowNames.Select(name => $"• جریان کاری '{name}' با موفقیت حذف شد."));
-
+            var successMessage = count == 1 ? "1 جریان کاری حذف شد." : $"{count} جریان کاری حذف شدند.";
             _toastService.ShowSuccess(successMessage);
             _logger.LogInformation("تعداد {Count} جریان کاری با موفقیت حذف شدند.", count);
         }
