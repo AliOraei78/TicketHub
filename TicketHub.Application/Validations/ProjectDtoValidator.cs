@@ -12,6 +12,7 @@ public class ProjectDtoValidator : AbstractValidator<ProjectDto>
             .MaximumLength(150).WithMessage("نام پروژه نمی‌تواند بیشتر از 150 کاراکتر باشد.");
 
         RuleFor(x => x.Description)
+            .NotEmpty().WithMessage("لطفا اطلاعاتی از پروژه را وارد نمایید.")
             .MaximumLength(500).WithMessage("توضیحات پروژه نمی‌تواند بیشتر از 500 کاراکتر باشد.");
     }
 }

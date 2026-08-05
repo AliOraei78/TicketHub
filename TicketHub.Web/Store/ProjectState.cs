@@ -1,8 +1,9 @@
 ﻿using Fluxor;
-using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
+using TicketHub.Core.Common.Exceptions;
+using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
 namespace TicketHub.Web.Store;
 
@@ -49,15 +50,18 @@ public class ProjectEffects
     private readonly IProjectService _projectService;
     private readonly IRoleService _roleService;
     private readonly ILogger<ProjectEffects> _logger;
+    private readonly IToastService _toastService;
 
     public ProjectEffects(
         IProjectService projectService,
         IRoleService roleService,
-        ILogger<ProjectEffects> logger)
+        ILogger<ProjectEffects> logger,
+        IToastService toastService)
     {
         _projectService = projectService;
         _roleService = roleService;
         _logger = logger;
+        _toastService = toastService;
     }
 
     [EffectMethod]
@@ -78,6 +82,7 @@ public class ProjectEffects
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست پروژه‌ها یا اطلاعات وابسته.");
+            _toastService.ShowError("خطا در دریافت اطلاعات. لطفا صفحه را مجدداً بارگذاری کنید.");
         }
     }
 
@@ -93,12 +98,25 @@ public class ProjectEffects
             else
                 await _projectService.UpdateProjectAsync(action.Project);
 
-            _logger.LogInformation("پروژه با موفقیت {ActionType} شد.", action.Project.Id == 0 ? "ایجاد" : "ویرایش");
+            _toastService.ShowSuccess(action.Project.Id == 0 ? "پروژه با موفقیت ایجاد شد." : "تغییرات پروژه با موفقیت ذخیره شد.");
+
             dispatcher.Dispatch(new LoadProjectsAction());
+        }
+        catch (ValidationException ex)
+        {
+            // استخراج خطاهای FluentValidation و نمایش به کاربر
+            var errorMessage = string.Join(" | ", ex.Errors.SelectMany(e => e.Value));
+            _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
+        }
+        catch (TicketHubException ex)
+        {
+            // نمایش خطاهای بیزینسی (مانند NotFoundException)
+            _toastService.ShowWarning(ex.Message, "توجه");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "خطا در زمان {ActionType} پروژه.", action.Project.Id == 0 ? "ایجاد" : "ویرایش");
+            _logger.LogError(ex, "خطای سیستمی غیرمنتظره در زمان {ActionType} پروژه.", action.Project.Id == 0 ? "ایجاد" : "ویرایش");
+            _toastService.ShowError("یک خطای سیستمی رخ داد. لطفاً دوباره تلاش کنید.");
         }
     }
 
@@ -111,12 +129,19 @@ public class ProjectEffects
 
             await _projectService.DeleteProjectAsync(action.Id);
 
-            _logger.LogInformation("پروژه با شناسه {ProjectId} با موفقیت حذف شد.", action.Id);
+            _toastService.ShowSuccess("پروژه با موفقیت حذف شد.");
+            dispatcher.Dispatch(new LoadProjectsAction());
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "تلاش برای حذف پروژه‌ای که وجود ندارد.");
+            _toastService.ShowWarning(ex.Message, "پروژه یافت نشد");
             dispatcher.Dispatch(new LoadProjectsAction());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در حذف پروژه با شناسه {ProjectId}.", action.Id);
+            _toastService.ShowError("خطا در حذف پروژه. لطفاً با پشتیبانی تماس بگیرید.");
         }
     }
 }

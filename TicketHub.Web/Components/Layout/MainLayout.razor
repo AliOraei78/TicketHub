@@ -19,6 +19,8 @@
 
 <div class="min-h-screen flex bg-slate-50 font-['Vazirmatn'] selection:bg-blue-500/10 selection:text-blue-600" dir="rtl">
     
+    <ToastContainer />
+
     <!-- Desktop Sidebar -->
     <div class="hidden md:block @(isSidebarCollapsed ? "w-20" : "w-64") h-screen sticky top-0 flex-shrink-0 z-20 shadow-xl shadow-slate-900/5 sidebar-transition">
         <NavMenu IsMobileMenuOpen="false" IsCollapsed="isSidebarCollapsed" OnExpandRequested="OpenSidebar" OnToggleSidebar="ToggleDesktopSidebar" />
