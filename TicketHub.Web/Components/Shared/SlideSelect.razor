@@ -6,8 +6,7 @@
     {
         <label class="block text-sm font-medium text-gray-700 mb-2">@Label</label>
     }
-    <div @onclick="Toggle" class="w-full h-[46px] px-4 border border-gray-300 rounded-2xl cursor-pointer flex justify-between items-center hover:border-indigo-500 smooth-transition bg-white">
-        <!-- جایگزین تگ span متن انتخاب شده -->
+    <div @onclick="Toggle" class="w-full h-[46px] px-4 border border-gray-200 rounded-2xl cursor-pointer flex justify-between items-center transition-all shadow-sm bg-gray-50 hover:bg-white hover:border-indigo-500 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 focus-within:bg-white text-sm">
         <span class="text-sm truncate block max-w-[90%] @(EqualityComparer<TValue>.Default.Equals(Value, default) ? "text-gray-400" : "text-gray-900")" title="@GetSelectedText()">
             @GetSelectedText()
         </span>
