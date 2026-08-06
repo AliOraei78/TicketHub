@@ -9,26 +9,28 @@ namespace TicketHub.Infrastructure.Repositories;
 
 public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowRepository
 {
-    public WorkflowRepository(AppDbContext context) : base(context)
+    public WorkflowRepository(IDbContextFactory<AppDbContext> factory) : base(factory)
     {
     }
 
     public async Task<Workflow?> GetWorkflowWithDetailsAsync(int id)
     {
-        return await _dbSet
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<Workflow>()
             .Include(w => w.WorkflowStatuses)
                 .ThenInclude(ws => ws.Status)
             .Include(w => w.Transitions)
                 .ThenInclude(t => t.AllowedRoles)
-            .Include(w => w.Transitions)                                // <--- اضافه شود
+            .Include(w => w.Transitions)
                 .ThenInclude(t => t.TransitionFields)
-                .AsSplitQuery()// <--- اضافه شود
+            .AsSplitQuery()
             .FirstOrDefaultAsync(w => w.Id == id);
     }
 
     public override async Task DeleteAsync(int id)
     {
-        var entity = await _dbSet
+        using var context = await _factory.CreateDbContextAsync();
+        var entity = await context.Set<Workflow>()
             .Include(w => w.Transitions)
             .Include(w => w.WorkflowStatuses)
             .AsSplitQuery()
@@ -38,63 +40,75 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         {
             if (entity.Transitions.Any())
             {
-                _context.Set<Transition>().RemoveRange(entity.Transitions);
+                context.Set<Transition>().RemoveRange(entity.Transitions);
             }
 
             if (entity.WorkflowStatuses.Any())
             {
-                _context.Set<WorkflowStatus>().RemoveRange(entity.WorkflowStatuses);
+                context.Set<WorkflowStatus>().RemoveRange(entity.WorkflowStatuses);
             }
 
-            _dbSet.Remove(entity);
-            await SaveChangesAsync();
+            context.Set<Workflow>().Remove(entity);
+            await context.SaveChangesAsync();
         }
     }
 
     public async Task<List<Status>> GetAllStatusesAsync()
     {
-        return await _context.Set<Status>().ToListAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<Status>().ToListAsync();
     }
 
-    // به انتهای کلاس WorkflowRepository اضافه کنید
     public async Task<List<Project>> GetProjectsAsync()
     {
-        return await _context.Set<Project>().ToListAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<Project>().ToListAsync();
     }
 
     public async Task<List<WorkflowStatus>> GetStatusesAsync()
     {
-        return await _context.Set<WorkflowStatus>().ToListAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<WorkflowStatus>().ToListAsync();
     }
 
     public void RemoveTransitionRoles(IEnumerable<TransitionRole> roles)
     {
-        _context.Set<TransitionRole>().RemoveRange(roles);
+        using var context = _factory.CreateDbContext();
+        context.Set<TransitionRole>().RemoveRange(roles);
+        context.SaveChanges();
     }
 
     public void RemoveTransitionFields(IEnumerable<TransitionField> fields)
     {
-        _context.Set<TransitionField>().RemoveRange(fields);
+        using var context = _factory.CreateDbContext();
+        context.Set<TransitionField>().RemoveRange(fields);
+        context.SaveChanges();
     }
 
     public void RemoveWorkflowStatuses(IEnumerable<WorkflowStatus> statuses)
     {
-        _context.Set<WorkflowStatus>().RemoveRange(statuses);
+        using var context = _factory.CreateDbContext();
+        context.Set<WorkflowStatus>().RemoveRange(statuses);
+        context.SaveChanges();
     }
 
     public void RemoveTransitions(IEnumerable<Transition> transitions)
     {
-        _context.Set<Transition>().RemoveRange(transitions);
+        using var context = _factory.CreateDbContext();
+        context.Set<Transition>().RemoveRange(transitions);
+        context.SaveChanges();
     }
 
     public async Task CommitChangesAsync()
     {
-        await _context.SaveChangesAsync();
+        // در الگوی Factory تغییرات درون خود متدها (به صورت ایزوله) Save می‌شوند
+        await Task.CompletedTask;
     }
 
     public async Task<List<Workflow>> GetAllWithDetailsAsync()
     {
-        return await _dbSet
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<Workflow>()
             .Include(w => w.WorkflowStatuses)
             .Include(w => w.Transitions)
             .AsSplitQuery()
@@ -103,7 +117,8 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
-        await _dbSet
+        using var context = await _factory.CreateDbContextAsync();
+        await context.Set<Workflow>()
             .Where(w => ids.Contains(w.Id))
             .ExecuteDeleteAsync();
     }

@@ -2,10 +2,11 @@
 using Audit.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
+using TicketHub.Core.Interfaces;
 
 namespace TicketHub.Infrastructure.Data
 {
-    public class AppDbContext : AuditDbContext
+    public class AppDbContext : AuditDbContext, IAppDbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

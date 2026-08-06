@@ -33,5 +33,5 @@ public class TicketDto
     public List<int> TicketHistoryIds { get; set; } = new();
     public List<int> CommentIds { get; set; } = new();
     public List<int> FieldValueIds { get; set; } = new();
-    public List<TicketFieldValueDto> TicketFieldValues { get; set; } = new();
+    public List<TicketFieldValueDto> FieldValues { get; set; } = new();
 }

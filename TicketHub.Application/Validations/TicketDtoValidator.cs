@@ -6,7 +6,8 @@ namespace TicketHub.Application.Validations;
 
 public class TicketDtoValidator : AbstractValidator<TicketDto>
 {
-    public TicketDtoValidator(ITicketFieldService ticketFieldService)
+    // این متد سازنده جایگزین قبلی می‌شود
+    public TicketDtoValidator()
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("عنوان تیکت الزامی است.")
@@ -30,24 +31,21 @@ public class TicketDtoValidator : AbstractValidator<TicketDto>
         RuleFor(x => x.UserId)
             .GreaterThan(0).WithMessage("کاربر ثبت‌کننده تیکت باید مشخص باشد.");
 
-        RuleFor(x => x.TicketFieldValues)
-            .CustomAsync(async (fieldValues, context, cancellation) =>
+        // اعتبارسنجی همگام و سریع فیلدهای داینامیک
+        RuleForEach(x => x.FieldValues).Custom((fieldValue, context) =>
+        {
+            if (fieldValue.IsRequired)
             {
-                var ticket = context.InstanceToValidate;
-                if (!ticket.CategoryId.HasValue) return;
+                bool hasTextValue = !string.IsNullOrWhiteSpace(fieldValue.Value);
+                bool hasFiles = fieldValue.PendingUploads?.Any() == true ||
+                                fieldValue.Attachments?.Any() == true;
 
-                var fields = await ticketFieldService.GetFieldsByCategoryIdAsync(ticket.CategoryId.Value);
-
-                foreach (var field in fields.Where(f => f.IsRequired))
+                if (!hasTextValue && !hasFiles)
                 {
-                    // فرض بر این است که پراپرتی مقدار در TicketFieldValueDto با نام Value تعریف شده است
-                    var value = fieldValues?.FirstOrDefault(v => v.TicketFieldId == field.Id)?.Value;
-
-                    if (string.IsNullOrWhiteSpace(value))
-                    {
-                        context.AddFailure($"DynamicField_{field.Id}", $"تکمیل فیلد «{field.Name}» الزامی است.");
-                    }
+                    // نام‌گذاری کلید خطا به این شکل، برای ردیف ۳ کاربرد دارد
+                    context.AddFailure("Value", $"تکمیل فیلد «{fieldValue.FieldName}» الزامی است.");
                 }
-            });
+            }
+        });
     }
 }

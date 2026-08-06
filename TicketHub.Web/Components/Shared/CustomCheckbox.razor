@@ -1,6 +1,11 @@
-﻿<div class="mt-4 flex items-center gap-3">
-    <label for="@Id" class="text-sm font-medium text-gray-700">@Label</label>
-    <input @Field.IsRequired"" type="checkbox" id="@Id" @bind="CurrentValue" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+﻿<div>
+    <!-- این لیبل مخفی، فضای خالی معادل لیبل‌های بالای سایر فیلدها را ایجاد می‌کند تا چک‌باکس هم‌تراز شود -->
+    <label class="block text-sm mb-2 invisible">Spacer</label>
+
+    <div class="flex items-center gap-3 h-[46px]">
+        <input type="checkbox" id="@Id" @bind="CurrentValue" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 shadow-sm cursor-pointer" />
+        <label for="@Id" class="text-sm font-medium text-gray-700 cursor-pointer select-none">@Label</label>
+    </div>
 </div>
 
 @code {

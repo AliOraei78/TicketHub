@@ -18,6 +18,6 @@ public class PriorityDtoValidator : AbstractValidator<PriorityDto>
         RuleFor(x => x.Level)
             .NotEmpty().WithMessage("تعیین سطح الزامی است.")
             .GreaterThan(0).WithMessage("سطح باید از صفر بزرگتر باشد.")
-            .InclusiveBetween(0, 99).WithMessage("فرمت کد رنگ نامعتبر است.");
+            .InclusiveBetween(0, 99).WithMessage("عدد باید بین 0 تا 99 باشد.");
     }
 }

@@ -33,12 +33,14 @@
                 <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-start gap-4">
                     <h3 class="font-bold text-gray-800 text-lg whitespace-nowrap">لیست دسترسی‌ها</h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full items-start">
-                        <div class="w-full mt-4">
+                    <!-- استفاده از items-center مانند فایل دسته‌بندی‌ها -->
+                    <div class="flex flex-wrap gap-3 w-full items-center">
+
+                        <div class="w-full sm:w-45">
                             <SearchBox Placeholder="جستجو..." SearchTerm="@PermState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
                         </div>
 
-                        <div class="w-full mt-4">
+                        <div class="w-full sm:w-45">
                             <GenericStatusFilter TValue="bool?"
                                                  Options="new bool?[] { null, true, false }"
                                                  SelectedValue="PermState.Value.SelectedFilterStatus"
@@ -51,7 +53,7 @@
                             </GenericStatusFilter>
                         </div>
 
-                        <div class="w-full z-10 mt-4 [&_label]:hidden">
+                        <div class="w-full sm:w-45 z-10">
                             <MultiSelectDropdown TItem="RoleDto" TValue="int"
                                                  Placeholder="فیلتر نقش..."
                                                  Items="PermState.Value.AvailableRoles"
@@ -60,6 +62,7 @@
                                                  ValueSelector="r => r.Id" DisplaySelector="r => r.Name"
                                                  BadgeBgClass="bg-purple-100" BadgeTextClass="text-purple-700" />
                         </div>
+
                     </div>
                 </div>
 
@@ -74,9 +77,13 @@
                         </HeaderTemplate>
 
                         <RowTemplate Context="perm">
-                            <td class="px-6 py-4 font-bold text-gray-800">@perm.Title</td>
-                            <td class="px-6 py-4">
-                                <span class="block text-sm text-gray-600">@perm.ResourceKey</span>                       
+                            <td class="px-6 py-4 font-bold text-gray-800 max-w-[200px] truncate" title="@perm.Title">
+                                @perm.Title
+                            </td>
+                            <td class="px-6 py-4 max-w-[250px]">
+                                <span class="block text-sm text-gray-600 truncate" title="@perm.ResourceKey">
+                                    @perm.ResourceKey
+                                </span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1">
@@ -87,7 +94,7 @@
                                             var role = PermState.Value.AvailableRoles.FirstOrDefault(r => r.Id == roleId);
                                             if (role != null)
                                             {
-                                                <Badge><span class="block truncate max-w-[100px]">@role.Name</span></Badge>
+                                                <Badge><span class="block truncate max-w-[100px]" title="@role.Name">@role.Name</span></Badge>
                                             }
                                         }
                                     }

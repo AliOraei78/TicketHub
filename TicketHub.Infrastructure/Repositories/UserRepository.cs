@@ -8,11 +8,13 @@ namespace TicketHub.Infrastructure.Repositories
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
     {
-        public UserRepository(AppDbContext context) : base(context) { }
+        public UserRepository(IDbContextFactory<AppDbContext> factory) : base(factory) { }
 
         public async Task<(List<User> Users, int TotalCount)> GetFilteredUsersAsync(string searchTerm, List<int> roleIds, List<int> projectIds, bool? status, int page, int pageSize)
         {
-            var query = _context.Users
+            using var context = await _factory.CreateDbContextAsync();
+
+            var query = context.Users
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RoleProjects).ThenInclude(rp => rp.Project)
                 .AsSplitQuery()
                 .AsQueryable();
@@ -38,31 +40,37 @@ namespace TicketHub.Infrastructure.Repositories
 
         public async Task UpdateUserRolesAsync(int userId, List<int> roleIds)
         {
-            var currentRoles = await _context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync();
-            _context.UserRoles.RemoveRange(currentRoles);
+            using var context = await _factory.CreateDbContextAsync();
+            var currentRoles = await context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync();
+            context.UserRoles.RemoveRange(currentRoles);
 
             var newRoles = roleIds.Select(roleId => new UserRole { UserId = userId, RoleId = roleId });
-            await _context.UserRoles.AddRangeAsync(newRoles);
-            await SaveChangesAsync();
+            await context.UserRoles.AddRangeAsync(newRoles);
+
+            // ذخیره‌سازی محلی کانتکست
+            await context.SaveChangesAsync();
         }
 
         public async Task BulkUpdateStatusAsync(HashSet<int> userIds, bool isActive)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            var users = await context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
             users.ForEach(u => u.IsActive = isActive);
-            await SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
 
         public async Task BulkDeleteAsync(HashSet<int> userIds)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
-            _context.Users.RemoveRange(users);
-            await SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            var users = await context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            context.Users.RemoveRange(users);
+            await context.SaveChangesAsync();
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Users
                         .Include(u => u.UserRoles)
                         .ThenInclude(ur => ur.Role)
                         .FirstOrDefaultAsync(u => u.Email == email);

@@ -12,7 +12,7 @@ namespace TicketHub.Application.Services;
 
 public class ProjectService : IProjectService
 {
-    private readonly IRepository<Project> _projectRepo;
+    private readonly IProjectRepository _projectRepo;
     private readonly IRepository<Workflow> _workflowRepo;
     private readonly IRepository<RoleProject> _roleProjectRepo;
     private readonly IRepository<Role> _roleRepo;
@@ -20,7 +20,7 @@ public class ProjectService : IProjectService
     private readonly IValidator<ProjectDto> _validator;
 
     public ProjectService(
-            IRepository<Project> projectRepo,
+            IProjectRepository projectRepo,
             IRepository<Workflow> workflowRepo,
             IRepository<RoleProject> roleProjectRepo,
             IRepository<Role> roleRepo,

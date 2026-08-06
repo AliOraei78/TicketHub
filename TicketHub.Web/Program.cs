@@ -6,7 +6,7 @@ using Fluxor;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies; // اضافه شود
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Serilog;
@@ -14,6 +14,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using TicketHub.Application.Interfaces;
+using TicketHub.Application.Mapping;
 using TicketHub.Application.Services;
 using TicketHub.Application.Validations;
 using TicketHub.Core.Entities;
@@ -34,17 +35,23 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-    .EnableSensitiveDataLogging() // ثبت مقادیر ارسال شده به دیتابیس در لاگ
-           .EnableDetailedErrors());     // نمایش جزئیات دقیق‌تر خطاهای EF
+    .EnableSensitiveDataLogging()
+    .EnableDetailedErrors());
 
-// --- افزودن کدهای Mapster ---
+// برای جلوگیری از خطای کامپایل تا زمانی که تمام ریپازیتوری‌ها آپدیت شوند، 
+// کانتکست را به صورت Scoped هم از طریق Factory ثبت می‌کنیم:
+builder.Services.AddScoped<AppDbContext>(provider =>
+    provider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
+
+builder.Services.AddScoped<IAppDbContext>(provider =>
+    provider.GetRequiredService<AppDbContext>());
+
 var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
-// مسیر اسمبلی حاوی MapsterConfig.cs را بدهید (مثلا typeof(MapsterConfig).Assembly)
-typeAdapterConfig.Scan(typeof(TicketHub.Application.Mapping.MapsterConfig).Assembly);
-builder.Services.AddSingleton(typeAdapterConfig);
-builder.Services.AddScoped<IMapper, ServiceMapper>();
+typeAdapterConfig.Scan(typeof(MapsterConfig).Assembly);
+builder.Services.AddSingleton(typeAdapterConfig); // ثبت مقادیر ارسال شده به دیتابیس در لاگ
+builder.Services.AddScoped<IMapper, ServiceMapper>(); // نمایش جزئیات دقیق‌تر خطاهای EF
 // ------------------------------
 
 // --------- بخش جدید احراز هویت با کوکی ---------
@@ -95,6 +102,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IFieldTypeService, FieldTypeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -104,6 +112,7 @@ builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<ITicketFieldService, TicketFieldService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ISystemLogService, SystemLogService>();
 builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
@@ -197,7 +206,10 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<AppDbContext>();
+        // ساخت کانتکست جدید و ایزوله از طریق فکتوری
+        var factory = services.GetRequiredService<IDbContextFactory<AppDbContext>>();
+        using var context = factory.CreateDbContext();
+
         // فراخوانی متد برای ساخت دیتابیس و داده‌ها
         await DbInitializer.InitializeAsync(context);
     }
@@ -230,6 +242,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapControllers();
+app.MapDefaultControllerRoute();
 
 app.MapPost("/logout", async (HttpContext context) =>
 {

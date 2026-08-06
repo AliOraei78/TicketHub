@@ -9,21 +9,28 @@ using TicketHub.Core.Common.Exceptions;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
+using System.Linq; // اضافه شد برای کوئری‌های لیست
 
 public class TicketService : ITicketService
 {
     private readonly ITicketRepository _ticketRepository;
     private readonly ILogger<TicketService> _logger;
     private readonly IValidator<TicketDto> _validator;
+    private readonly IProjectRepository _projectRepository;
+    private readonly IFileStorageService _fileStorageService;
 
     public TicketService(
         ITicketRepository ticketRepository,
         ILogger<TicketService> logger,
-        IValidator<TicketDto> validator)
+        IValidator<TicketDto> validator,
+        IProjectRepository projectRepository,
+        IFileStorageService fileStorageService)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
         _validator = validator;
+        _projectRepository = projectRepository;
+        _fileStorageService = fileStorageService;
     }
 
     private async Task ValidateDtoAsync(TicketDto dto)
@@ -70,26 +77,122 @@ public class TicketService : ITicketService
     public async Task CreateAsync(TicketDto dto)
     {
         await ValidateDtoAsync(dto);
-
         _logger.LogInformation("شروع ایجاد تیکت جدید.");
 
+        var project = await _projectRepository.GetProjectWithWorkflowAsync(dto.ProjectId);
+
+        if (project?.Workflow?.WorkflowStatuses == null || !project.Workflow.WorkflowStatuses.Any())
+            throw new ValidationException("جریان کاری معتبری برای این پروژه تعریف نشده است.");
+
+        var initialNode = project.Workflow.WorkflowStatuses.FirstOrDefault(ws => ws.IsInitial);
+
+        if (initialNode == null)
+            throw new ValidationException("هیچ وضعیتی به عنوان وضعیت شروع (IsInitial) در جریان کاری این پروژه مشخص نشده است.");
+
         var ticket = dto.Adapt<Ticket>();
+
+        ticket.WorkflowStatusId = initialNode.Id;
+        ticket.StatusId = initialNode.StatusId;
         ticket.CreatedAt = DateTime.UtcNow;
 
-        await _ticketRepository.AddAsync(ticket);
+        // 🌟 فیکس مشکل: انتقال دستی فیلدها به دلیل تفاوت نام در مپستر
+        ticket.FieldValues = dto.FieldValues?.Select(fv => new TicketFieldValue
+        {
+            TicketFieldId = fv.TicketFieldId,
+            Value = fv.Value ?? string.Empty
+        }).ToList() ?? new List<TicketFieldValue>();
 
+        // پردازش فایل‌های پیوست
+        if (dto.FieldValues != null)
+        {
+            foreach (var fieldValueDto in dto.FieldValues)
+            {
+                if (fieldValueDto.PendingUploads != null && fieldValueDto.PendingUploads.Any())
+                {
+                    // حالا با خیال راحت از FirstOrDefault استفاده می‌کنیم
+                    var entityFieldValue = ticket.FieldValues.FirstOrDefault(f => f.TicketFieldId == fieldValueDto.TicketFieldId);
+
+                    if (entityFieldValue != null)
+                    {
+                        foreach (var upload in fieldValueDto.PendingUploads)
+                        {
+                            var filePath = await _fileStorageService.SaveFileAsync(upload.Content, upload.FileName);
+
+                            entityFieldValue.Attachments.Add(new Attachment
+                            {
+                                FileName = upload.FileName,
+                                ContentType = upload.ContentType,
+                                FilePath = filePath,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        await _ticketRepository.AddAsync(ticket);
         _logger.LogInformation("تیکت با موفقیت ایجاد شد.");
     }
 
     public async Task UpdateAsync(TicketDto dto)
     {
         await ValidateDtoAsync(dto);
-
         _logger.LogInformation("ویرایش تیکت با شناسه {Id}.", dto.Id);
 
         var ticketInDb = await _ticketRepository.GetByIdAsync(dto.Id);
         if (ticketInDb == null)
             throw new NotFoundException("تیکت", dto.Id);
+
+        if (dto.FieldValues != null)
+        {
+            foreach (var fieldValueDto in dto.FieldValues)
+            {
+                var entityFieldValue = ticketInDb.FieldValues.FirstOrDefault(f => f.TicketFieldId == fieldValueDto.TicketFieldId);
+
+                if (entityFieldValue != null)
+                {
+                    // 🌟 فیکس مشکل: ویرایش مقادیر متنی و مولتی‌سلکت در زمان آپدیت تیکت
+                    entityFieldValue.Value = fieldValueDto.Value ?? string.Empty;
+
+                    // ۱. پیدا کردن و حذف پیوست‌هایی که کاربر در فرم پاک کرده است
+                    var keptAttachmentIds = fieldValueDto.Attachments?.Select(a => a.Id).ToList() ?? new List<int>();
+                    var attachmentsToRemove = entityFieldValue.Attachments.Where(a => !keptAttachmentIds.Contains(a.Id)).ToList();
+
+                    foreach (var toRemove in attachmentsToRemove)
+                    {
+                        _fileStorageService.DeleteFile(toRemove.FilePath);
+                        entityFieldValue.Attachments.Remove(toRemove);
+                    }
+
+                    // ۲. اضافه کردن فایل‌های جدید
+                    if (fieldValueDto.PendingUploads != null && fieldValueDto.PendingUploads.Any())
+                    {
+                        foreach (var upload in fieldValueDto.PendingUploads)
+                        {
+                            var filePath = await _fileStorageService.SaveFileAsync(upload.Content, upload.FileName);
+                            entityFieldValue.Attachments.Add(new Attachment
+                            {
+                                FileName = upload.FileName,
+                                ContentType = upload.ContentType,
+                                FilePath = filePath,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    // اگر فیلد جدیدی اضافه شده بود که در دیتابیس قبلا نبوده است
+                    var newFieldValue = new TicketFieldValue
+                    {
+                        TicketFieldId = fieldValueDto.TicketFieldId,
+                        Value = fieldValueDto.Value ?? string.Empty
+                    };
+                    ticketInDb.FieldValues.Add(newFieldValue);
+                }
+            }
+        }
 
         dto.Adapt(ticketInDb);
         await _ticketRepository.UpdateAsync(ticketInDb);
@@ -104,6 +207,28 @@ public class TicketService : ITicketService
         var ticketInDb = await _ticketRepository.GetByIdAsync(id);
         if (ticketInDb == null)
             throw new NotFoundException("تیکت", id);
+
+        if (ticketInDb.Attachments != null)
+        {
+            foreach (var attachment in ticketInDb.Attachments)
+            {
+                _fileStorageService.DeleteFile(attachment.FilePath);
+            }
+        }
+
+        if (ticketInDb.FieldValues != null)
+        {
+            foreach (var fieldValue in ticketInDb.FieldValues)
+            {
+                if (fieldValue.Attachments != null)
+                {
+                    foreach (var attachment in fieldValue.Attachments)
+                    {
+                        _fileStorageService.DeleteFile(attachment.FilePath);
+                    }
+                }
+            }
+        }
 
         await _ticketRepository.DeleteAsync(id);
 

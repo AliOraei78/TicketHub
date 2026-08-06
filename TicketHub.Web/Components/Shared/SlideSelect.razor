@@ -1,10 +1,10 @@
 ﻿@typeparam TItem
 @typeparam TValue
 
-<div class="relative mt-4" dir="rtl">
+<div class="relative" dir="rtl">
     @if (!string.IsNullOrEmpty(Label))
     {
-        <label class="block text-sm font-medium text-gray-700 mb-1">@Label</label>
+        <label class="block text-sm font-medium text-gray-700 mb-2">@Label</label>
     }
     <div @onclick="Toggle" class="w-full h-[46px] px-4 border border-gray-300 rounded-2xl cursor-pointer flex justify-between items-center hover:border-indigo-500 smooth-transition bg-white">
         <!-- جایگزین تگ span متن انتخاب شده -->

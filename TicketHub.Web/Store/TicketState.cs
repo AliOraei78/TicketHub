@@ -23,10 +23,9 @@ public record TicketState(
     int CurrentPage,
     List<int> SelectedFilterProjectIds,
     List<int> SelectedFilterStatusIds,
-    string? FormErrorMessage,
     IEnumerable<TicketFieldDto> DynamicFields)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 10, 1, new(), new(), null, Array.Empty<TicketFieldDto>()) { }
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 10, 1, new(), new(), Array.Empty<TicketFieldDto>()) { }
 }
 
 // 2. Actions
@@ -66,15 +65,6 @@ public static class TicketReducers
             SelectedFilterProjectIds = action.ProjectIds ?? state.SelectedFilterProjectIds,
             SelectedFilterStatusIds = action.StatusIds ?? state.SelectedFilterStatusIds
         };
-
-    [ReducerMethod]
-    public static TicketState ReduceSaveFailed(TicketState state, SaveTicketFailedAction action) => state with { FormErrorMessage = action.ErrorMessage };
-
-    [ReducerMethod(typeof(SaveTicketSuccessAction))]
-    public static TicketState ReduceSaveSuccess(TicketState state) => state with { FormErrorMessage = null };
-
-    [ReducerMethod(typeof(ClearTicketMessagesAction))]
-    public static TicketState ReduceClearMessages(TicketState state) => state with { FormErrorMessage = null };
 
     [ReducerMethod]
     public static TicketState ReduceDynamicFieldsLoaded(TicketState state, DynamicFieldsLoadedAction action) =>

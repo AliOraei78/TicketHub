@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
 
@@ -13,63 +12,73 @@ namespace TicketHub.Infrastructure.Repositories
 {
     public class GenericRepository<T> : IRepository<T> where T : class
     {
-        protected readonly AppDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        protected readonly IDbContextFactory<AppDbContext> _factory;
 
-        public GenericRepository(AppDbContext context)
+        public GenericRepository(IDbContextFactory<AppDbContext> factory)
         {
-            _context = context;
-            _dbSet = context.Set<T>();
+            _factory = factory;
         }
 
-        public async Task<T?> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
+        public async Task<T?> GetByIdAsync(int id)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Set<T>().FindAsync(id);
+        }
 
-        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.AsNoTracking().ToListAsync();
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Set<T>().AsNoTracking().ToListAsync();
+        }
 
-        // Implementation for eager loading
         public async Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, object?>>[] includes)
         {
-            IQueryable<T> query = _dbSet;
+            using var context = await _factory.CreateDbContextAsync();
+            IQueryable<T> query = context.Set<T>();
 
             foreach (var include in includes)
             {
                 query = query.Include(include);
             }
 
-            // Using AsNoTracking for read-only performance optimization
             return await query.AsNoTracking().AsSplitQuery().ToListAsync();
         }
 
         public async Task AddAsync(T entity)
         {
-            await _dbSet.AddAsync(entity);
-            await SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            await context.Set<T>().AddAsync(entity);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(T entity)
         {
-            _context.ChangeTracker.Clear();
-            _dbSet.Update(entity);
-            await SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            context.Set<T>().Update(entity);
+            await context.SaveChangesAsync();
         }
 
         public virtual async Task DeleteAsync(int id)
         {
-            var entity = await GetByIdAsync(id);
+            using var context = await _factory.CreateDbContextAsync();
+            var entity = await context.Set<T>().FindAsync(id);
             if (entity != null)
             {
-                _dbSet.Remove(entity);
-                await SaveChangesAsync();
+                context.Set<T>().Remove(entity);
+                await context.SaveChangesAsync();
             }
         }
 
-        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+        public async Task SaveChangesAsync()
+        {
+            await Task.CompletedTask;
+        }
 
         public async Task DeleteRangeAsync(IEnumerable<T> entities)
         {
-            _context.ChangeTracker.Clear();
-            _dbSet.RemoveRange(entities);
-            await SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            context.Set<T>().RemoveRange(entities);
+            await context.SaveChangesAsync();
         }
     }
 }

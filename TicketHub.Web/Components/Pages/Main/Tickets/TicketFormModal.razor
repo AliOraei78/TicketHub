@@ -1,90 +1,96 @@
-﻿<ModalDialog IsOpen="@IsOpen"
-             Title="ایجاد تیکت پشتیبانی جدید"
-             OnClose="HandleCancel"
-             MaxWidthClass="max-w-3xl w-full">
-    @if (!string.IsNullOrEmpty(ErrorMessage))
-    {
-        <div class="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 whitespace-pre-line leading-relaxed font-medium">
-            @ErrorMessage
-        </div>
-    }
+﻿@if (IsOpen)
+{
+    <div class="fixed inset-0 z-[9990] flex justify-center items-center p-4 sm:p-6 overflow-hidden">
+        <div class="absolute inset-0 modal-backdrop-animate backdrop-blur-sm" @onclick="HandleCancel"></div>
 
-    <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" novalidate class="p-6 space-y-4 max-h-[80vh] flex flex-col">
-        <FluentValidationValidator />
+        <div class="relative z-[9999] w-full max-w-3xl max-h-full bg-white rounded-3xl shadow-2xl flex flex-col modal-content-animate" dir="rtl">
 
-        <div class="overflow-y-auto pr-2 pb-2 flex-1">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">عنوان تیکت</label>
-                <InputText @bind-Value="Model.Title" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="یک عنوان کوتاه بنویسید" required />
-                <ValidationMessage For="@(() => Model.Title)" class="text-red-500 text-xs mt-1" />
+            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
+                <h2 class="text-xl font-bold text-gray-800">ایجاد تیکت پشتیبانی جدید</h2>
+                <button type="button" @onclick="HandleCancel" class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                <div>
-                    <SlideSelect TItem="PriorityDto" TValue="int?"
-                                 Label="اولویت"
-                                 Placeholder="انتخاب اولویت..."
-                                 Items="Priorities"
-                                 @bind-Value="Model.PriorityId"
-                                 ValueSelector="p => (int?)p.Id"
-                                 TextSelector="p => p.Name"
-                                 AllowClear="false" />
-                    <ValidationMessage For="@(() => Model.PriorityId)" class="text-red-500 text-xs mt-1" />
-                </div>
+            <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" novalidate class="flex flex-col overflow-hidden">
+                <FluentValidationValidator />
 
-                <div>
-                    <SlideSelect TItem="ProjectDto" TValue="int"
-                                 Label="پروژه مربوطه"
-                                 Placeholder="انتخاب پروژه..."
-                                 Items="Projects"
-                                 @bind-Value="Model.ProjectId"
-                                 ValueSelector="p => p.Id"
-                                 TextSelector="p => p.Name"
-                                 AllowClear="false" />
-                    <ValidationMessage For="@(() => Model.ProjectId)" class="text-red-500 text-xs mt-1" />
-                </div>
+                <div class="overflow-y-auto p-6 space-y-4 custom-scrollbar max-h-[70vh]">
 
-                <div>
-                    <SlideSelect TItem="CategoryDto" TValue="int?"
-                                 Label="دسته‌بندی"
-                                 Placeholder="انتخاب دسته‌بندی..."
-                                 Items="Categories"
-                                 Value="@Model.CategoryId"
-                                 ValueChanged="HandleCategoryChange"
-                                 ValueSelector="c => c.Id"
-                                 TextSelector="c => c.Name"
-                                 AllowClear="false" />
-                    <ValidationMessage For="@(() => Model.CategoryId)" class="text-red-500 text-xs mt-1" />
-
-                </div>
-            </div>
-
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">توضیحات تیکت</label>
-                <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm smooth-transition" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." required />
-                <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-xs mt-1" />
-            </div>
-
-            @if (DynamicFields?.Any() == true)
-            {
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <h3 class="text-sm font-medium text-gray-700 mb-4">فیلدهای اختصاصی دسته‌بندی</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                        @foreach (var field in DynamicFields.OrderBy(f => f.SortOrder))
-                        {
-                            <DynamicTicketField Field="field" FieldValue="GetOrCreateFieldValue(field.Id)" />
-                        }
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">عنوان تیکت</label>
+                        <InputText @bind-Value="Model.Title" class="w-full h-[46px] px-4 border border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-gray-50 hover:bg-white focus:bg-white text-sm" placeholder="یک عنوان کوتاه بنویسید" required />
+                        <ValidationMessage For="@(() => Model.Title)" class="text-red-500 text-xs mt-1" />
                     </div>
-                </div>
-            }
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-auto">
-                <button type="button" @onclick="HandleCancel" class="smooth-transition px-5 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">انصراف</button>
-                <button type="submit" class="smooth-transition px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/10">ثبت تیکت</button>
-            </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
+                        <div>
+                            <SlideSelect TItem="PriorityDto" TValue="int?"
+                                         Label="اولویت"
+                                         Placeholder="انتخاب اولویت..."
+                                         Items="Priorities"
+                                         @bind-Value="Model.PriorityId"
+                                         ValueSelector="p => (int?)p.Id"
+                                         TextSelector="p => p.Name"
+                                         AllowClear="false" />
+                            <ValidationMessage For="@(() => Model.PriorityId)" class="text-red-500 text-xs mt-1" />
+                        </div>
+
+                        <div>
+                            <SlideSelect TItem="ProjectDto" TValue="int"
+                                         Label="پروژه مربوطه"
+                                         Placeholder="انتخاب پروژه..."
+                                         Items="Projects"
+                                         @bind-Value="Model.ProjectId"
+                                         ValueSelector="p => p.Id"
+                                         TextSelector="p => p.Name"
+                                         AllowClear="false" />
+                            <ValidationMessage For="@(() => Model.ProjectId)" class="text-red-500 text-xs mt-1" />
+                        </div>
+
+                        <div>
+                            <SlideSelect TItem="CategoryDto" TValue="int?"
+                                         Label="دسته‌بندی"
+                                         Placeholder="انتخاب دسته‌بندی..."
+                                         Items="Categories"
+                                         Value="@Model.CategoryId"
+                                         ValueChanged="HandleCategoryChange"
+                                         ValueSelector="c => c.Id"
+                                         TextSelector="c => c.Name"
+                                         AllowClear="false" />
+                            <ValidationMessage For="@(() => Model.CategoryId)" class="text-red-500 text-xs mt-1" />
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">توضیحات تیکت</label>
+                        <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-gray-50 hover:bg-white focus:bg-white text-sm" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." required />
+                        <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-xs mt-1" />
+                    </div>
+
+                    @if (DynamicFields?.Any() == true)
+                    {
+                        <div class="mt-8 pt-6 border-t border-gray-100">
+                            <h3 class="text-sm font-bold text-gray-800 mb-6">فیلدهای اختصاصی دسته‌بندی</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+                                @foreach (var field in DynamicFields.OrderBy(f => f.SortOrder))
+                                {
+                                    <DynamicTicketField Field="field" FieldValue="GetOrCreateFieldValue(field)" />
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- فوتر دکمه‌ها -->
+                <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
+                    <button type="button" @onclick="HandleCancel" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors shadow-sm">انصراف</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all">ثبت تیکت</button>
+                </div>
+            </EditForm>
         </div>
-    </EditForm>
-</ModalDialog>
+    </div>
+}
 
 @code {
     [Parameter] public bool IsOpen { get; set; }
@@ -92,7 +98,6 @@
     [Parameter, EditorRequired] public IEnumerable<ProjectDto> Projects { get; set; } = default!;
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public string? ErrorMessage { get; set; }
     [Parameter, EditorRequired] public IEnumerable<PriorityDto> Priorities { get; set; } = default!;
     [Parameter, EditorRequired] public IEnumerable<CategoryDto> Categories { get; set; } = default!;
     [Parameter] public IEnumerable<TicketFieldDto> DynamicFields { get; set; } = Array.Empty<TicketFieldDto>();
@@ -119,15 +124,20 @@
         }
     }
 
-    private TicketFieldValueDto GetOrCreateFieldValue(int fieldId)
+    private TicketFieldValueDto GetOrCreateFieldValue(TicketFieldDto field)
     {
-        if (Model.TicketFieldValues == null) Model.TicketFieldValues = new List<TicketFieldValueDto>();
+        if (Model.FieldValues == null) Model.FieldValues = new List<TicketFieldValueDto>();
 
-        var val = Model.TicketFieldValues.FirstOrDefault(x => x.TicketFieldId == fieldId);
+        var val = Model.FieldValues.FirstOrDefault(x => x.TicketFieldId == field.Id);
         if (val == null)
         {
-            val = new TicketFieldValueDto { TicketFieldId = fieldId };
-            Model.TicketFieldValues.Add(val);
+            val = new TicketFieldValueDto
+            {
+                TicketFieldId = field.Id,
+                IsRequired = field.IsRequired,
+                FieldName = field.Name
+            };
+            Model.FieldValues.Add(val);
         }
         return val;
     }

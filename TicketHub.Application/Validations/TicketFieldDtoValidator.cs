@@ -1,12 +1,14 @@
 ﻿using FluentValidation;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Enums;
+using TicketHub.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace TicketHub.Application.Validations;
 
 public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
 {
-    public TicketFieldDtoValidator()
+    public TicketFieldDtoValidator(IAppDbContext context)
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("نام فیلد الزامی است.")
@@ -21,5 +23,21 @@ public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
         RuleFor(x => x.Options)
             .NotEmpty().WithMessage("وارد کردن گزینه‌ها برای لیست‌های کشویی الزامی است.")
             .When(x => x.FieldTypeId == (int)FieldTypeEnum.Dropdown || x.FieldTypeId == (int)FieldTypeEnum.MultipleDropdown);
+
+        RuleFor(x => x.SortOrder)
+            .MustAsync(async (dto, sortOrder, cancellation) =>
+            {
+                if (dto.CategoryIds == null || !dto.CategoryIds.Any())
+                    return true;
+
+                bool exists = await context.TicketFields
+                    .AnyAsync(f => f.Id != dto.Id &&
+                                   f.SortOrder == sortOrder &&
+                                   f.FieldCategories.Any(fc => dto.CategoryIds.Contains(fc.CategoryId)),
+                                   cancellation);
+
+                return !exists;
+            })
+            .WithMessage("مقدار ترتیب (Sort Order) برای یکی از انواع تیکت‌های انتخاب‌شده تکراری است.");
     }
 }
