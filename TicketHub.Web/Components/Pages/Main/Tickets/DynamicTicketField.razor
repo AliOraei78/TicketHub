@@ -12,9 +12,7 @@
             break;
 
         case FieldTypeEnum.Checkbox:
-            <div class="mt-[28px] flex h-[46px] items-center">
-                <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" />
-            </div>
+            <CustomCheckbox Label="@Field.Name" @bind-Value="CheckboxValue" />
             break;
 
         case FieldTypeEnum.ColorPicker:
