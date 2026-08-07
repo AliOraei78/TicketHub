@@ -1,4 +1,4 @@
-﻿namespace TicketHub.Infrastructure.Repositories;
+namespace TicketHub.Infrastructure.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
@@ -56,5 +56,33 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
                     .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return (tickets, total);
+    }
+
+    public async Task<Ticket?> GetTicketWithProjectAndStatusAsync(int id)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<Ticket>()
+            .Include(t => t.Project)
+                .ThenInclude(p => p.Workflow)
+            .Include(t => t.Status)
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        
+        var ticket = await context.Set<Ticket>().FirstOrDefaultAsync(t => t.Id == ticketId);
+        if (ticket != null)
+        {
+            ticket.StatusId = toStatusId;
+            if (workflowStatusId.HasValue)
+            {
+                ticket.WorkflowStatusId = workflowStatusId.Value;
+            }
+            
+            context.Set<TicketHistory>().Add(history);
+            await context.SaveChangesAsync();
+        }
     }
 }

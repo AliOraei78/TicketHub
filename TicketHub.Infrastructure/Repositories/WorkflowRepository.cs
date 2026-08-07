@@ -1,4 +1,4 @@
-﻿// TicketHub.Infrastructure/Repositories/WorkflowRepository.cs
+// TicketHub.Infrastructure/Repositories/WorkflowRepository.cs
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using TicketHub.Core.Interfaces;
@@ -121,5 +121,22 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         await context.Set<Workflow>()
             .Where(w => ids.Contains(w.Id))
             .ExecuteDeleteAsync();
+    }
+
+    public async Task<Transition?> GetTransitionWithDetailsAsync(int transitionId)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<Transition>()
+            .Include(t => t.FromStatus)
+            .Include(t => t.ToStatus)
+            .Include(t => t.TransitionFields)
+            .FirstOrDefaultAsync(t => t.Id == transitionId);
+    }
+
+    public async Task<WorkflowStatus?> GetWorkflowStatusAsync(int workflowId, int statusId)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.Set<WorkflowStatus>()
+            .FirstOrDefaultAsync(ws => ws.WorkflowId == workflowId && ws.StatusId == statusId);
     }
 }

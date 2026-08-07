@@ -1,4 +1,4 @@
-﻿// TicketHub.Core/Interfaces/IWorkflowRepository.cs
+// TicketHub.Core/Interfaces/IWorkflowRepository.cs
 using System.Threading.Tasks;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
@@ -19,4 +19,6 @@ public interface IWorkflowRepository : IRepository<Workflow>
     Task CommitChangesAsync();
     Task<List<Workflow>> GetAllWithDetailsAsync();
     Task DeleteRangeAsync(IEnumerable<int> ids);
+    Task<Transition?> GetTransitionWithDetailsAsync(int transitionId);
+    Task<WorkflowStatus?> GetWorkflowStatusAsync(int workflowId, int statusId);
 }

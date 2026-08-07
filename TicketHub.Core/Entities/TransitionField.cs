@@ -1,4 +1,4 @@
-﻿namespace TicketHub.Core.Entities;
+namespace TicketHub.Core.Entities;
 
 public class TransitionField
 {
@@ -20,4 +20,5 @@ public class TransitionField
 
     // به TransitionField.cs اضافه شود
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+    public ICollection<TransitionFieldValue> TransitionFieldValues { get; set; } = new List<TransitionFieldValue>();
 }

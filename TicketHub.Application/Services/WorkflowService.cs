@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using TicketHub.Application.DTOs;
@@ -204,6 +204,7 @@ public class WorkflowService : IWorkflowService
             }
         }
 
+        await _workflowRepository.UpdateAsync(existingWorkflow);
         await _workflowRepository.CommitChangesAsync();
         _logger.LogInformation("جریان کاری با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);
     }

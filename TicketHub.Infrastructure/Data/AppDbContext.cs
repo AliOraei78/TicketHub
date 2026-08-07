@@ -1,4 +1,4 @@
-﻿// TicketHub.Infrastructure/Data/AppDbContext.cs
+// TicketHub.Infrastructure/Data/AppDbContext.cs
 using Audit.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
@@ -34,6 +34,7 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<TicketField> TicketFields { get; set; }
         public DbSet<FieldCategory> FieldCategories { get; set; }
         public DbSet<TicketFieldValue> TicketFieldValues { get; set; }
+        public DbSet<TransitionFieldValue> TransitionFieldValues { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
 
@@ -80,10 +81,10 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(th => th.Transition).WithMany(t => t.Histories).HasForeignKey(th => th.TransitionId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.User).WithMany(u => u.Histories).HasForeignKey(th => th.RoleId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(th => th.User).WithMany(u => u.Histories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TicketHistory>()
-                .HasOne(th => th.Role).WithMany(u => u.Histories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(th => th.Role).WithMany(r => r.Histories).HasForeignKey(th => th.RoleId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TicketHistory>()
                 .HasOne(th => th.ParentHistory).WithMany(p => p.ChildHistories).HasForeignKey(th => th.ParentHistoryId).OnDelete(DeleteBehavior.Restrict);
@@ -225,12 +226,34 @@ namespace TicketHub.Infrastructure.Data
                 .HasForeignKey(tfv => tfv.TicketFieldId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // به انتهای متد OnModelCreating اضافه شود
             modelBuilder.Entity<Attachment>()
                 .HasOne(a => a.TicketFieldValue)
                 .WithMany(tfv => tfv.Attachments)
                 .HasForeignKey(a => a.TicketFieldValueId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TransitionFieldValue>().HasKey(tfv => tfv.Id);
+
+            modelBuilder.Entity<TransitionFieldValue>()
+                .HasIndex(tfv => new { tfv.TicketHistoryId, tfv.TransitionFieldId })
+                .IsUnique();
+
+            modelBuilder.Entity<TransitionFieldValue>()
+                .HasOne(tfv => tfv.TicketHistory)
+                .WithMany(th => th.TransitionFieldValues)
+                .HasForeignKey(tfv => tfv.TicketHistoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TransitionFieldValue>()
+                .HasOne(tfv => tfv.TransitionField)
+                .WithMany(tf => tf.TransitionFieldValues)
+                .HasForeignKey(tfv => tfv.TransitionFieldId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ارتباط جدید Attachment با TransitionFieldValue (اگر نیاز بود)
+            // modelBuilder.Entity<Attachment>()
+            //     .HasOne(a => a.TransitionFieldValue)
+            //     ...
 
             // ارتباط جدید بین Ticket و WorkflowStatus
             modelBuilder.Entity<Ticket>()

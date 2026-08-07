@@ -1,4 +1,4 @@
-﻿<div class="absolute left-4 top-20 h-[calc(100vh-6rem)] w-80 bg-white border border-slate-200 rounded-2xl z-40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300 flex flex-col overflow-hidden @(Connection != null ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none")">
+<div class="absolute left-4 top-20 h-[calc(100vh-6rem)] w-80 bg-white border border-slate-200 rounded-2xl z-40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300 flex flex-col overflow-hidden @(Connection != null ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none")">
 
     @if (Connection != null)
     {
@@ -160,10 +160,11 @@
     {
         if (Connection != null)
         {
+            int nextSortOrder = Connection.CustomFields.Any() ? Connection.CustomFields.Max(f => f.SortOrder) + 1 : 0;
             Connection.CustomFields.Add(new CanvasTransitionField
             {
                 Id = 0,
-                SortOrder = Connection.CustomFields.Count,
+                SortOrder = nextSortOrder,
                 IsActive = true
             });
         }

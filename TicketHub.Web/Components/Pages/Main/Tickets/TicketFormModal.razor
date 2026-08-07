@@ -1,4 +1,4 @@
-﻿@if (IsOpen)
+@if (IsOpen)
 {
     <style>
         main {
@@ -74,17 +74,9 @@
                             <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-xs mt-1" />
                         </div>
 
-                        @if (DynamicFields?.Any() == true)
+                        @if (DynamicFieldModels.Any())
                         {
-                            <div class="mt-8 pt-6 border-t border-gray-100">
-                                <h3 class="text-sm font-bold text-gray-800 mb-6">فیلدهای اختصاصی دسته‌بندی</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
-                                    @foreach (var field in DynamicFields.OrderBy(f => f.SortOrder))
-                                    {
-                                        <DynamicTicketField Field="field" FieldValue="GetOrCreateFieldValue(field)" />
-                                    }
-                                </div>
-                            </div>
+                            <DynamicFields Fields="DynamicFieldModels" />
                         }
                     </div>
 
@@ -109,8 +101,42 @@
     [Parameter] public IEnumerable<TicketFieldDto> DynamicFields { get; set; } = Array.Empty<TicketFieldDto>();
     [Parameter] public EventCallback<int?> OnCategoryChanged { get; set; }
 
+    private List<DynamicFieldModel> DynamicFieldModels { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        if (DynamicFields != null && DynamicFieldModels.Count != DynamicFields.Count())
+        {
+            DynamicFieldModels = DynamicFields.Select(f => new DynamicFieldModel
+            {
+                OriginalFieldId = f.Id,
+                Name = f.Name,
+                Placeholder = f.Placeholder,
+                SortOrder = f.SortOrder,
+                DefaultValue = f.DefaultValue,
+                IsRequired = f.IsRequired,
+                Options = f.Options,
+                FieldTypeId = f.FieldTypeId,
+                Value = Model.FieldValues?.FirstOrDefault(x => x.TicketFieldId == f.Id)?.Value ?? string.Empty
+            }).ToList();
+        }
+    }
+
+    private void MapDynamicFieldsToModel()
+    {
+        Model.FieldValues = DynamicFieldModels.Select(df => new TicketFieldValueDto
+        {
+            TicketFieldId = df.OriginalFieldId,
+            IsRequired = df.IsRequired,
+            FieldName = df.Name,
+            Value = df.Value,
+            PendingUploads = df.PendingUploads
+        }).ToList();
+    }
+
     private async Task HandleValidSubmit()
     {
+        MapDynamicFieldsToModel();
         if (OnSubmit.HasDelegate)
             await OnSubmit.InvokeAsync();
     }
@@ -128,23 +154,5 @@
         {
             await OnCategoryChanged.InvokeAsync(categoryId);
         }
-    }
-
-    private TicketFieldValueDto GetOrCreateFieldValue(TicketFieldDto field)
-    {
-        if (Model.FieldValues == null) Model.FieldValues = new List<TicketFieldValueDto>();
-
-        var val = Model.FieldValues.FirstOrDefault(x => x.TicketFieldId == field.Id);
-        if (val == null)
-        {
-            val = new TicketFieldValueDto
-            {
-                TicketFieldId = field.Id,
-                IsRequired = field.IsRequired,
-                FieldName = field.Name
-            };
-            Model.FieldValues.Add(val);
-        }
-        return val;
     }
 }

@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using TicketHub.Application.DTOs;
@@ -133,5 +133,27 @@ public partial class Tickets : IDisposable
             // اگر دسته‌بندی خالی شد، فیلدهای داینامیک هم پاک شوند
             Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
         }
+    }
+
+    private TicketTransitionModal transitionModal = default!;
+
+    private async Task HandleActionClick(TicketDto ticket)
+    {
+        if (ticket.Project != null && ticket.Project.WorkflowId.HasValue)
+        {
+            await transitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value);
+        }
+    }
+
+    private void HandleTransitionSaved()
+    {
+        // Reload tickets to reflect the status change
+        var authState = AuthState.Result;
+        var roles = authState.User.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+        Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
     }
 }

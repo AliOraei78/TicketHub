@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
 
 namespace TicketHub.Core.Interfaces;
@@ -29,6 +29,7 @@ public interface IAppDbContext
     DbSet<TicketField> TicketFields { get; set; }
     DbSet<FieldCategory> FieldCategories { get; set; }
     DbSet<TicketFieldValue> TicketFieldValues { get; set; }
+    DbSet<TransitionFieldValue> TransitionFieldValues { get; set; }
     DbSet<Permission> Permissions { get; set; }
     DbSet<RolePermission> RolePermissions { get; set; }
 

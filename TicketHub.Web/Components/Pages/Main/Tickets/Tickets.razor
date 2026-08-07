@@ -77,7 +77,7 @@
     {
         <DataList Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد.">
             <ItemTemplate Context="ticket">
-                <TicketCard Ticket="ticket" OnClick="NavigateToDetails" />
+                <TicketCard Ticket="ticket" OnClick="NavigateToDetails" OnActionClick="HandleActionClick" />
             </ItemTemplate>
         </DataList>
     }
@@ -93,3 +93,6 @@
                  OnCategoryChanged="HandleCategoryChanged"
                  OnSubmit="HandleCreateTicket"
                  OnCancel="CloseCreateModal" />
+
+<!-- Animated Transition Modal -->
+<TicketTransitionModal @ref="transitionModal" OnSaved="HandleTransitionSaved" />

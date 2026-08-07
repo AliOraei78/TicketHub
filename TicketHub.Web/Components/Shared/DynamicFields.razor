@@ -1,0 +1,170 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using TicketHub.Application.DTOs
+@using TicketHub.Application.Enums
+
+<div class="mt-8 pt-6 border-t border-gray-100">
+    <h3 class="text-sm font-bold text-gray-800 mb-6">فیلدهای اختصاصی دسته‌بندی</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+        @foreach (var field in Fields.OrderBy(f => f.SortOrder))
+        {
+            <div class="@GetGridClass(field)">
+                @switch ((FieldTypeEnum)field.FieldTypeId)
+                {
+                    case FieldTypeEnum.Text:
+                        <CustomInput Label="@field.Name" @bind-Value="field.Value" Type="text" Placeholder="@field.Placeholder" />
+                        break;
+
+                    case FieldTypeEnum.Number:
+                        <CustomInput Label="@field.Name" @bind-Value="field.Value" Type="number" Placeholder="@field.Placeholder" />
+                        break;
+
+                    case FieldTypeEnum.Checkbox:
+                        <CustomCheckbox Label="@field.Name" Value="@GetCheckboxValue(field)" ValueChanged="@(val => SetCheckboxValue(field, val))" />
+                        break;
+
+                    case FieldTypeEnum.ColorPicker:
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">@field.Name</label>
+                            <ColorPicker @bind-Value="field.Value" Placeholder="@field.Placeholder" />
+                        </div>
+                        break;
+
+                    case FieldTypeEnum.TextArea:
+                        <CustomTextArea Label="@field.Name" @bind-Value="field.Value" Placeholder="@field.Placeholder" />
+                        break;
+
+                    case FieldTypeEnum.Dropdown:
+                        <SlideSelect TItem="string" TValue="string"
+                                     Label="@field.Name"
+                                     Items="GetOptions(field)"
+                                     TextSelector="x => x"
+                                     ValueSelector="x => x"
+                                     @bind-Value="field.Value" />
+                        break;
+
+                    case FieldTypeEnum.MultipleDropdown:
+                        <MultiSelectDropdown TItem="string" TValue="string"
+                                             Label="@field.Name"
+                                             Items="GetOptions(field)"
+                                             DisplaySelector="x => x"
+                                             ValueSelector="x => x"
+                                             SelectedValues="GetMultipleValues(field)"
+                                             SelectedValuesChanged="@(vals => SetMultipleValues(field, vals))" />
+                        break;
+
+                    case FieldTypeEnum.File:
+                        <CustomFileUpload Label="@field.Name"
+                                          SelectedFiles="GetInternalBrowserFiles(field)"
+                                          SelectedFilesChanged="@(files => HandleFilesChanged(field, files))" />
+                        break;
+
+                    case FieldTypeEnum.Date:
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">@field.Name</label>
+                            <CustomPersianDatePicker @bind-Value="field.Value" Placeholder="@field.Placeholder" />
+                        </div>
+                        break;
+
+                    default:
+                        <div class="text-sm text-gray-400">نوع فیلد پشتیبانی نمی‌شود</div>
+                        break;
+                }
+
+                @if (field.IsRequired && string.IsNullOrWhiteSpace(field.Value))
+                {
+                    <ValidationMessage For="@(() => field.Value)" class="text-red-500 text-xs mt-1" />
+                }
+                @if (ValidationErrors != null && ValidationErrors.TryGetValue(field.Name, out var errorMsg))
+                {
+                    <div class="text-red-500 text-xs mt-1">@errorMsg</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<DynamicFieldModel> Fields { get; set; } = new();
+
+    [Parameter]
+    public Dictionary<string, string> ValidationErrors { get; set; } = new();
+
+    private string GetGridClass(DynamicFieldModel field)
+    {
+        var type = (FieldTypeEnum)field.FieldTypeId;
+        if (type == FieldTypeEnum.TextArea || type == FieldTypeEnum.File)
+        {
+            return "col-span-1 sm:col-span-2 flex flex-col";
+        }
+        return "col-span-1 flex flex-col";
+    }
+
+    private Dictionary<int, List<IBrowserFile>> _files = new();
+
+    private List<IBrowserFile> GetInternalBrowserFiles(DynamicFieldModel field)
+    {
+        if (_files.TryGetValue(field.OriginalFieldId, out var files))
+            return files;
+        return new List<IBrowserFile>();
+    }
+
+    private async Task HandleFilesChanged(DynamicFieldModel field, List<IBrowserFile> files)
+    {
+        _files[field.OriginalFieldId] = files;
+        var pendingUploads = new List<FileUploadDto>();
+        
+        foreach (var f in files)
+        {
+            var ms = new System.IO.MemoryStream();
+            await f.OpenReadStream(10 * 1024 * 1024).CopyToAsync(ms);
+            ms.Position = 0;
+            
+            pendingUploads.Add(new FileUploadDto
+            {
+                FileName = f.Name,
+                ContentType = f.ContentType,
+                Size = f.Size,
+                Content = ms
+            });
+        }
+        
+        field.PendingUploads = pendingUploads;
+        field.Value = files.Any() ? $"{files.Count} فایل انتخاب شد" : string.Empty;
+    }
+
+    private bool GetCheckboxValue(DynamicFieldModel field) => bool.TryParse(field.Value, out var val) && val;
+    private void SetCheckboxValue(DynamicFieldModel field, bool val) => field.Value = val.ToString().ToLower();
+
+    private List<string> GetOptions(DynamicFieldModel field)
+    {
+        return string.IsNullOrWhiteSpace(field.Options)
+            ? new List<string>()
+            : field.Options.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                           .Select(o => o.Trim())
+                           .ToList();
+    }
+
+    private List<string> GetMultipleValues(DynamicFieldModel field)
+    {
+        return string.IsNullOrWhiteSpace(field.Value)
+            ? new List<string>()
+            : field.Value.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+    
+    private void SetMultipleValues(DynamicFieldModel field, List<string> vals)
+    {
+        field.Value = string.Join(",", vals);
+    }
+
+    protected override void OnInitialized()
+    {
+        foreach (var field in Fields)
+        {
+            if (string.IsNullOrWhiteSpace(field.Value) && !string.IsNullOrWhiteSpace(field.DefaultValue))
+            {
+                field.Value = field.DefaultValue;
+            }
+        }
+    }
+}

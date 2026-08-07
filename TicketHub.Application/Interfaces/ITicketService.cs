@@ -1,4 +1,4 @@
-﻿using TicketHub.Application.DTOs;
+using TicketHub.Application.DTOs;
 
 namespace TicketHub.Application.Interfaces;
 
@@ -11,4 +11,5 @@ public interface ITicketService
     Task CreateAsync(TicketDto dto);
     Task UpdateAsync(TicketDto dto);
     Task DeleteAsync(int id);
+    Task ExecuteTransitionAsync(ExecuteTransitionDto dto, int currentUserId);
 }

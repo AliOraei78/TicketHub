@@ -1,4 +1,4 @@
-﻿namespace TicketHub.Application.Services;
+namespace TicketHub.Application.Services;
 
 using Mapster;
 using Microsoft.Extensions.Logging;
@@ -10,6 +10,7 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 using System.Linq; // اضافه شد برای کوئری‌های لیست
+using Microsoft.EntityFrameworkCore;
 
 public class TicketService : ITicketService
 {
@@ -18,19 +19,22 @@ public class TicketService : ITicketService
     private readonly IValidator<TicketDto> _validator;
     private readonly IProjectRepository _projectRepository;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IWorkflowRepository _workflowRepository;
 
     public TicketService(
         ITicketRepository ticketRepository,
         ILogger<TicketService> logger,
         IValidator<TicketDto> validator,
         IProjectRepository projectRepository,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        IWorkflowRepository workflowRepository)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
         _validator = validator;
         _projectRepository = projectRepository;
         _fileStorageService = fileStorageService;
+        _workflowRepository = workflowRepository;
     }
 
     private async Task ValidateDtoAsync(TicketDto dto)
@@ -233,5 +237,76 @@ public class TicketService : ITicketService
         await _ticketRepository.DeleteAsync(id);
 
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت حذف شد.", id);
+    }
+
+    public async Task ExecuteTransitionAsync(ExecuteTransitionDto dto, int currentUserId)
+    {
+        _logger.LogInformation("اجرای انتقال {TransitionId} روی تیکت {TicketId}", dto.TransitionId, dto.TicketId);
+
+        var ticketInDb = await _ticketRepository.GetTicketWithProjectAndStatusAsync(dto.TicketId);
+
+        if (ticketInDb == null) throw new NotFoundException("تیکت", dto.TicketId);
+
+        var transition = await _workflowRepository.GetTransitionWithDetailsAsync(dto.TransitionId);
+
+        if (transition == null) throw new NotFoundException("انتقال", dto.TransitionId);
+
+        if (ticketInDb.StatusId != transition.FromState)
+        {
+            throw new ValidationException("وضعیت فعلی تیکت با مبدا این عملیات تطابق ندارد.");
+        }
+
+        var nextWorkflowStatus = ticketInDb.Project?.WorkflowId.HasValue == true
+            ? await _workflowRepository.GetWorkflowStatusAsync(ticketInDb.Project.WorkflowId.Value, transition.ToState)
+            : null;
+
+        var ticketHistory = new TicketHistory
+        {
+            TicketId = ticketInDb.Id,
+            TicketTitle = ticketInDb.Title,
+            TransitionId = transition.Id,
+            TransitionTitle = transition.Name,
+            UserId = currentUserId,
+            WorkFlowId = ticketInDb.Project.WorkflowId,
+            WorkFlowName = ticketInDb.Project.Workflow?.Name ?? string.Empty,
+            FromStatusId = transition.FromState,
+            FromStatusName = transition.FromStatus?.Name,
+            ToStatusId = transition.ToState,
+            ToStatusName = transition.ToStatus?.Name,
+            Comment = dto.Comment,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        foreach (var field in dto.FieldValues)
+        {
+            var transitionField = transition.TransitionFields.FirstOrDefault(tf => tf.Id == field.TransitionFieldId);
+            if (transitionField == null) continue;
+
+            var fv = new TransitionFieldValue
+            {
+                TransitionFieldId = transitionField.Id,
+                Value = field.Value ?? string.Empty
+            };
+
+            if (field.PendingUploads != null && field.PendingUploads.Any())
+            {
+                foreach (var upload in field.PendingUploads)
+                {
+                    var filePath = await _fileStorageService.SaveFileAsync(upload.Content, upload.FileName);
+                    fv.Attachments.Add(new Attachment
+                    {
+                        FileName = upload.FileName,
+                        ContentType = upload.ContentType,
+                        FilePath = filePath,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            ticketHistory.TransitionFieldValues.Add(fv);
+        }
+
+        await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, transition.ToState, nextWorkflowStatus?.Id, ticketHistory);
+        _logger.LogInformation("عملیات با موفقیت انجام شد.");
     }
 }

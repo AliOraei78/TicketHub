@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -45,8 +45,10 @@ public class TicketHistory
     public string? ToStatusName { get; set; }
 
     public string? MetaData { get; set; } // فیلد JSON
+    public string? Comment { get; set; } // توضیحات مربوط به این انتقال
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     public ICollection<TicketHistory> ChildHistories { get; set; } = new List<TicketHistory>();
+    public ICollection<TransitionFieldValue> TransitionFieldValues { get; set; } = new List<TransitionFieldValue>();
 }

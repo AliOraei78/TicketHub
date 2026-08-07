@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketHub.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TicketHub.Infrastructure.Data;
 namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260807102936_AddTransitionFieldValue")]
+    partial class AddTransitionFieldValue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -580,9 +583,6 @@ namespace TicketHub.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1198,7 +1198,7 @@ namespace TicketHub.Infrastructure.Migrations
                         .HasForeignKey("ParentHistoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TicketHub.Core.Entities.Role", "Role")
+                    b.HasOne("TicketHub.Core.Entities.User", "User")
                         .WithMany("Histories")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1218,7 +1218,7 @@ namespace TicketHub.Infrastructure.Migrations
                         .HasForeignKey("TransitionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TicketHub.Core.Entities.User", "User")
+                    b.HasOne("TicketHub.Core.Entities.Role", "Role")
                         .WithMany("Histories")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
