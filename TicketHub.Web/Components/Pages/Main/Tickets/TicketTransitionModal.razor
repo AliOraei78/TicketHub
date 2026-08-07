@@ -79,7 +79,7 @@
                                                 @transition.Name
                                             </p>
                                             <p class="text-xs text-gray-500 mt-1">
-                                                به: @transition.ToStatus?.Name
+                                                به: @transition.ToStatus?.Status?.Name
                                             </p>
                                         </div>
                                         @if (Model.TransitionId == transition.Id)
@@ -183,9 +183,13 @@
         {
             // Get available transitions from the current state
             var workflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
-            if (workflow != null && workflow.Transitions != null)
+            if (workflow != null && workflow.Transitions != null && workflow.WorkflowStatuses != null)
             {
-                AvailableTransitions = workflow.Transitions.Where(t => t.FromState == currentStatusId).ToList();
+                var currentWorkflowStatus = workflow.WorkflowStatuses.FirstOrDefault(ws => ws.StatusId == currentStatusId);
+                if (currentWorkflowStatus != null)
+                {
+                    AvailableTransitions = workflow.Transitions.Where(t => t.FromState == currentWorkflowStatus.Id).ToList();
+                }
             }
         }
         catch (Exception)

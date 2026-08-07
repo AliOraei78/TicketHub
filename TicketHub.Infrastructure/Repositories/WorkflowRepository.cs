@@ -128,7 +128,9 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
         using var context = await _factory.CreateDbContextAsync();
         return await context.Set<Transition>()
             .Include(t => t.FromStatus)
+                .ThenInclude(ws => ws.Status)
             .Include(t => t.ToStatus)
+                .ThenInclude(ws => ws.Status)
             .Include(t => t.TransitionFields)
             .FirstOrDefaultAsync(t => t.Id == transitionId);
     }

@@ -1,14 +1,15 @@
-﻿using FluentValidation;
+using FluentValidation;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Enums;
+using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace TicketHub.Application.Validations;
 
 public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
 {
-    public TicketFieldDtoValidator(IAppDbContext context)
+    public TicketFieldDtoValidator(IRepository<TicketField> ticketFieldRepo)
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("نام فیلد الزامی است.")
@@ -30,11 +31,10 @@ public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
                 if (dto.CategoryIds == null || !dto.CategoryIds.Any())
                     return true;
 
-                bool exists = await context.TicketFields
-                    .AnyAsync(f => f.Id != dto.Id &&
-                                   f.SortOrder == sortOrder &&
-                                   f.FieldCategories.Any(fc => dto.CategoryIds.Contains(fc.CategoryId)),
-                                   cancellation);
+                var allFields = await ticketFieldRepo.GetAllWithIncludesAsync(f => f.FieldCategories);
+                bool exists = allFields.Any(f => f.Id != dto.Id &&
+                                                 f.SortOrder == sortOrder &&
+                                                 f.FieldCategories.Any(fc => dto.CategoryIds.Contains(fc.CategoryId)));
 
                 return !exists;
             })

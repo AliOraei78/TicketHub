@@ -68,6 +68,14 @@ public class WorkflowService : IWorkflowService
         _logger.LogInformation("شروع ایجاد جریان کاری جدید.");
 
         var entity = dto.Adapt<Workflow>();
+        
+        // Ensure navigation properties for transitions are correctly mapped using NodeIds
+        foreach (var transition in entity.Transitions)
+        {
+            transition.FromStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.FromNodeId);
+            transition.ToStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.ToNodeId);
+        }
+        
         await _workflowRepository.AddAsync(entity);
 
         _logger.LogInformation("جریان کاری با شناسه {Id} با موفقیت ایجاد شد.", entity.Id);
@@ -144,8 +152,11 @@ public class WorkflowService : IWorkflowService
                     existingDbTransition.TargetPort = dtoTransition.TargetPort;
                     existingDbTransition.FromNodeId = dtoTransition.FromNodeId;
                     existingDbTransition.ToNodeId = dtoTransition.ToNodeId;
-                    existingDbTransition.FromState = dtoTransition.FromState;
-                    existingDbTransition.ToState = dtoTransition.ToState;
+                    
+                    // Set navigation properties so EF Core handles foreign keys (especially for new statuses without DB IDs yet)
+                    existingDbTransition.FromStatus = existingWorkflow.WorkflowStatuses.First(ws => ws.NodeId == dtoTransition.FromNodeId);
+                    existingDbTransition.ToStatus = existingWorkflow.WorkflowStatuses.First(ws => ws.NodeId == dtoTransition.ToNodeId);
+                    
                     existingDbTransition.IsAutomated = dtoTransition.IsAutomated;
                     existingDbTransition.IsActive = dtoTransition.IsActive;
 
@@ -200,7 +211,10 @@ public class WorkflowService : IWorkflowService
             }
             else
             {
-                existingWorkflow.Transitions.Add(dtoTransition.Adapt<Transition>());
+                var newTransition = dtoTransition.Adapt<Transition>();
+                newTransition.FromStatus = existingWorkflow.WorkflowStatuses.First(ws => ws.NodeId == dtoTransition.FromNodeId);
+                newTransition.ToStatus = existingWorkflow.WorkflowStatuses.First(ws => ws.NodeId == dtoTransition.ToNodeId);
+                existingWorkflow.Transitions.Add(newTransition);
             }
         }
 

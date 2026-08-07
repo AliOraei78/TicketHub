@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
@@ -149,6 +149,13 @@ public class TicketEffects
             _logger.LogError(ex, "خطا در دریافت لیست تیکت‌ها.");
             _toastService.ShowError("خطا در دریافت لیست تیکت‌ها.");
         }
+    }
+
+    [EffectMethod(typeof(SetTicketFiltersAction))]
+    public Task HandleSetFilters(IDispatcher dispatcher)
+    {
+        dispatcher.Dispatch(new LoadTicketsAction());
+        return Task.CompletedTask;
     }
 
     [EffectMethod]

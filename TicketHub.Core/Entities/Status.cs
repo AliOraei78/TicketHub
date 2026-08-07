@@ -1,4 +1,4 @@
-﻿// TicketHub.Core/Entities/Status.cs
+// TicketHub.Core/Entities/Status.cs
 namespace TicketHub.Core.Entities
 {
     public class Status
@@ -13,10 +13,8 @@ namespace TicketHub.Core.Entities
         // 1-to-many relationship: One status can have many tickets
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 
-        // روابط جدید اضافه شده برای ترنزیشن‌ها
-        public ICollection<Transition> FromTransitions { get; set; } = new List<Transition>();
-        public ICollection<Transition> ToTransitions { get; set; } = new List<Transition>();
-
+        // روابط جدید اضافه شده برای ترنزیشن‌ها (حذف شده)
+        
         // این خطوط اضافه شوند
         public ICollection<TicketHistory> FromHistories { get; set; } = new List<TicketHistory>();
         public ICollection<TicketHistory> ToHistories { get; set; } = new List<TicketHistory>();

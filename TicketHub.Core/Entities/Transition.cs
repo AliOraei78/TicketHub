@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,10 +16,10 @@ public class Transition
     public string TargetPort { get; set; } = "Left";
 
     public int FromState { get; set; }
-    public Status? FromStatus { get; set; }
+    public WorkflowStatus? FromStatus { get; set; }
 
     public int ToState { get; set; }
-    public Status? ToStatus { get; set; }
+    public WorkflowStatus? ToStatus { get; set; }
 
     public int WorkflowId { get; set; }
     public Workflow Workflow { get; set; } = null!;

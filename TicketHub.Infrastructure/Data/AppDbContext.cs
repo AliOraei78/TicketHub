@@ -69,9 +69,9 @@ namespace TicketHub.Infrastructure.Data
 
             // 3. تنظیم روابط Transition
             modelBuilder.Entity<Transition>()
-                .HasOne(t => t.FromStatus).WithMany(s => s.FromTransitions).HasForeignKey(t => t.FromState).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(t => t.FromStatus).WithMany(ws => ws.FromTransitions).HasForeignKey(t => t.FromState).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Transition>()
-                .HasOne(t => t.ToStatus).WithMany(s => s.ToTransitions).HasForeignKey(t => t.ToState).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(t => t.ToStatus).WithMany(ws => ws.ToTransitions).HasForeignKey(t => t.ToState).OnDelete(DeleteBehavior.Restrict);
 
             // 4. تنظیم روابط TicketHistory برای رفع خطای Multiple Cascade Paths در SQL Server
             modelBuilder.Entity<TicketHistory>()

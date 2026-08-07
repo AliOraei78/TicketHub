@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +9,7 @@ namespace TicketHub.Application.DTOs;
 public class CanvasNodeDto
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public int DbId { get; set; }
     public bool IsInitial { get; set; } = false;
     public StatusDto Status { get; set; } = null!;
     public double X { get; set; }

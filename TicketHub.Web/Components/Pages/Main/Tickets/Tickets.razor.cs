@@ -48,12 +48,7 @@ public partial class Tickets : IDisposable
         set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, null, value));
     }
 
-    private IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets
-        .Where(t => !TicketState.Value.SelectedFilterStatusIds.Any() || TicketState.Value.SelectedFilterStatusIds.Contains(t.StatusId))
-        .Where(t => !TicketState.Value.SelectedFilterProjectIds.Any() || TicketState.Value.SelectedFilterProjectIds.Contains(t.ProjectId))
-        .Where(t => string.IsNullOrEmpty(TicketState.Value.SearchTerm) ||
-                    t.Title.Contains(TicketState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    t.Description.Contains(TicketState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets;
 
     protected override async Task OnInitializedAsync()
     {

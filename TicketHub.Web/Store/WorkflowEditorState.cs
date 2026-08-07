@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
@@ -119,6 +119,7 @@ public class WorkflowEditorEffects
                     nodes = currentWf.WorkflowStatuses.Select(ws => new CanvasNodeDto
                     {
                         Id = ws.NodeId != Guid.Empty ? ws.NodeId : Guid.NewGuid(),
+                        DbId = ws.Id,
                         Status = ws.Status!,
                         X = ws.PositionX,
                         Y = ws.PositionY,
@@ -130,8 +131,8 @@ public class WorkflowEditorEffects
                         {
                             Id = Guid.NewGuid(),
                             DbId = t.Id,
-                            FromNodeId = t.FromNodeId != Guid.Empty ? t.FromNodeId : nodes.FirstOrDefault(n => n.Status.Id == t.FromState)?.Id ?? Guid.Empty,
-                            ToNodeId = t.ToNodeId != Guid.Empty ? t.ToNodeId : nodes.FirstOrDefault(n => n.Status.Id == t.ToState)?.Id ?? Guid.Empty,
+                            FromNodeId = t.FromNodeId != Guid.Empty ? t.FromNodeId : nodes.FirstOrDefault(n => n.DbId == t.FromState)?.Id ?? Guid.Empty,
+                            ToNodeId = t.ToNodeId != Guid.Empty ? t.ToNodeId : nodes.FirstOrDefault(n => n.DbId == t.ToState)?.Id ?? Guid.Empty,
                             SourcePort = string.IsNullOrEmpty(t.SourcePort) ? "Right" : t.SourcePort,
                             TargetPort = string.IsNullOrEmpty(t.TargetPort) ? "Left" : t.TargetPort,
                             Name = t.Name,

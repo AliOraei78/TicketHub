@@ -251,14 +251,13 @@ public class TicketService : ITicketService
 
         if (transition == null) throw new NotFoundException("انتقال", dto.TransitionId);
 
-        if (ticketInDb.StatusId != transition.FromState)
+        // Since transition.FromState and ToState now refer to WorkflowStatus.Id
+        if (ticketInDb.WorkflowStatusId != transition.FromState)
         {
             throw new ValidationException("وضعیت فعلی تیکت با مبدا این عملیات تطابق ندارد.");
         }
 
-        var nextWorkflowStatus = ticketInDb.Project?.WorkflowId.HasValue == true
-            ? await _workflowRepository.GetWorkflowStatusAsync(ticketInDb.Project.WorkflowId.Value, transition.ToState)
-            : null;
+        // nextWorkflowStatus is no longer needed here because we use transition.ToStatus
 
         var ticketHistory = new TicketHistory
         {
@@ -269,10 +268,10 @@ public class TicketService : ITicketService
             UserId = currentUserId,
             WorkFlowId = ticketInDb.Project.WorkflowId,
             WorkFlowName = ticketInDb.Project.Workflow?.Name ?? string.Empty,
-            FromStatusId = transition.FromState,
-            FromStatusName = transition.FromStatus?.Name,
-            ToStatusId = transition.ToState,
-            ToStatusName = transition.ToStatus?.Name,
+            FromStatusId = transition.FromStatus?.StatusId ?? 0,
+            FromStatusName = transition.FromStatus?.Status?.Name,
+            ToStatusId = transition.ToStatus?.StatusId ?? 0,
+            ToStatusName = transition.ToStatus?.Status?.Name,
             Comment = dto.Comment,
             CreatedAt = DateTime.UtcNow
         };
@@ -306,7 +305,10 @@ public class TicketService : ITicketService
             ticketHistory.TransitionFieldValues.Add(fv);
         }
 
-        await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, transition.ToState, nextWorkflowStatus?.Id, ticketHistory);
+        var nextStatusId = transition.ToStatus?.StatusId ?? 0;
+        var nextWorkflowStatusId = transition.ToState;
+
+        await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, nextStatusId, nextWorkflowStatusId, ticketHistory);
         _logger.LogInformation("عملیات با موفقیت انجام شد.");
     }
 }
