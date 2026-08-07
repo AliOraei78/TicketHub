@@ -1,4 +1,4 @@
-﻿@typeparam TItem
+@typeparam TItem
 @typeparam TValue
 
 <div>
@@ -6,9 +6,8 @@
     <div class="relative">
         <input type="text" @bind="searchTerm" @bind:event="oninput" @onfocus="() => showDropdown = true" @onblur="HideDropdown" placeholder="@Placeholder" class="w-full h-[46px] px-4 border border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-gray-50 hover:bg-white focus:bg-white text-sm" />
 
-        @if (showDropdown)
-        {
-            <div class="absolute top-full mt-2 z-20 w-full bg-white border border-gray-100 rounded-2xl shadow-xl max-h-60 overflow-auto py-2">
+        <div class="absolute top-full mt-2 z-50 w-full bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 @(showDropdown ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent")">
+            <div class="max-h-60 overflow-y-auto py-2">
                 @if (!FilteredItems.Any())
                 {
                     <div class="px-4 py-3 text-sm text-gray-400 text-center">
@@ -29,14 +28,13 @@
                         var val = ValueSelector(item);
                         var display = DisplaySelector(item);
                         <div @onclick="() => ToggleSelection(val)" class="px-3 py-2.5 mx-2 my-1 hover:bg-indigo-50/80 rounded-xl cursor-pointer flex items-center justify-between group transition-colors">
-                            <!-- جایگزین span داخل حلقه -->
                             <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700 truncate block max-w-[85%]" title="@display">@display</span>
                             <input type="checkbox" checked="@SelectedValues.Contains(val)" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-colors" />
                         </div>
                     }
                 }
             </div>
-        }
+        </div>
     </div>    <div class="flex flex-wrap gap-2 mt-3">
     @foreach (var val in SelectedValues)
     {
@@ -77,18 +75,20 @@
 
     private async Task ToggleSelection(TValue value)
     {
-        if (SelectedValues.Contains(value))
-            SelectedValues.Remove(value);
+        var newValues = new List<TValue>(SelectedValues);
+        if (newValues.Contains(value))
+            newValues.Remove(value);
         else
-            SelectedValues.Add(value);
+            newValues.Add(value);
 
-        await SelectedValuesChanged.InvokeAsync(SelectedValues);
+        await SelectedValuesChanged.InvokeAsync(newValues);
     }
 
     private async Task RemoveSelection(TValue value)
     {
-        SelectedValues.Remove(value);
-        await SelectedValuesChanged.InvokeAsync(SelectedValues);
+        var newValues = new List<TValue>(SelectedValues);
+        newValues.Remove(value);
+        await SelectedValuesChanged.InvokeAsync(newValues);
     }
 
     private async Task HideDropdown()
@@ -99,19 +99,20 @@
 
     private async Task ToggleSelectAll()
     {
+        var newValues = new List<TValue>(SelectedValues);
         if (AreAllSelected)
         {
             // اگر همه انتخاب شده‌اند، فقط آیتم‌های فیلتر شده فعلی را از لیست پاک کن
             var filteredValues = FilteredItems.Select(ValueSelector).ToHashSet();
-            SelectedValues.RemoveAll(v => filteredValues.Contains(v));
+            newValues.RemoveAll(v => filteredValues.Contains(v));
         }
         else
         {
             // انتخاب همه آیتم‌های فیلتر شده فعلی
-            var newValues = FilteredItems.Select(ValueSelector).Where(v => !SelectedValues.Contains(v));
-            SelectedValues.AddRange(newValues);
+            var valuesToAdd = FilteredItems.Select(ValueSelector).Where(v => !newValues.Contains(v));
+            newValues.AddRange(valuesToAdd);
         }
 
-        await SelectedValuesChanged.InvokeAsync(SelectedValues);
+        await SelectedValuesChanged.InvokeAsync(newValues);
     }
 }
