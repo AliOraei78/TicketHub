@@ -3,13 +3,14 @@ using TicketHub.Application.DTOs;
 using TicketHub.Application.Enums;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 
 namespace TicketHub.Application.Validations;
 
 public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
 {
-    public TicketFieldDtoValidator(IRepository<TicketField> ticketFieldRepo)
+    public TicketFieldDtoValidator(IServiceScopeFactory scopeFactory)
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("نام فیلد الزامی است.")
@@ -30,6 +31,9 @@ public class TicketFieldDtoValidator : AbstractValidator<TicketFieldDto>
             {
                 if (dto.CategoryIds == null || !dto.CategoryIds.Any())
                     return true;
+
+                using var scope = scopeFactory.CreateScope();
+                var ticketFieldRepo = scope.ServiceProvider.GetRequiredService<IRepository<TicketField>>();
 
                 var allFields = await ticketFieldRepo.GetAllWithIncludesAsync(f => f.FieldCategories);
                 bool exists = allFields.Any(f => f.Id != dto.Id &&
