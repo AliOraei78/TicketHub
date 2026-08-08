@@ -23,7 +23,7 @@
 
             <div>
                 <label>عنوان انتقال</label>
-                <InputText @bind-Value="Connection.Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl" />
+                <input type="text" @bind="Connection.Name" @bind:event="oninput" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl" />
                 <ValidationMessage For="@(() => Connection.Name)" class="text-red-500 text-xs mt-1" />
             </div>
 
@@ -41,8 +41,7 @@
             <!-- ورودی تاریخ اصلاح شده برای شمسی -->
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">تاریخ فعال‌سازی</label>
-                <!-- از یک پلاگین JS تقویم شمسی مانند MD.BootstrapPersianDateTimePicker استفاده کنید -->
-                <input type="text" dir="ltr" placeholder="1403/05/12 14:30" @bind="Connection.ActivateAt" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white rounded-xl text-sm transition-colors outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" data-jdp />
+                <CustomPersianDatePicker @bind-Value="ActivateAtString" Placeholder="1403/05/12 14:30" ShowTimePicker="true" />
             </div>
 
             <div class="pt-2">
@@ -71,7 +70,7 @@
                     {
                         @foreach (var field in Connection.CustomFields.OrderBy(f => f.SortOrder))
                         {
-                            <div class="p-3 bg-white border rounded-xl shadow-sm cursor-move transition-all duration-200 @(field == _draggedField ? "opacity-30 border-dashed border-slate-400 scale-95 bg-slate-50" : "border-slate-200")"
+                            <div @key="field" class="p-3 bg-white border rounded-xl shadow-sm cursor-move transition-all duration-200 @(field == _draggedField ? "opacity-30 border-dashed border-slate-400 scale-95 bg-slate-50" : "border-slate-200")"
                                  draggable="true"
                                  @ondragstart="() => HandleDragStart(field)"
                                  @ondragenter="() => HandleDragEnter(field)"
@@ -83,7 +82,7 @@
                                     <div class="flex-1 min-w-0 flex flex-col gap-2">
                                         <!-- عنوان فیلد و نوع فیلد -->
                                         <div>
-                                            <InputText @bind-Value="field.FieldName" placeholder="عنوان فیلد" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                            <input type="text" @bind="field.FieldName" @bind:event="oninput" placeholder="عنوان فیلد" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
                                             <ValidationMessage For="@(() => field.FieldName)" class="text-red-500 text-[10px] mt-0.5" />
                                         </div>
 
@@ -109,15 +108,15 @@
                                         <!-- نمایش فیلد گزینه‌ها تنها برای DropDown یا MultipleDropDown -->
                                         <div class="grid transition-all duration-300 ease-in-out @(showOptions ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 mt-0")">
                                             <div class="overflow-hidden">
-                                                <InputText @bind-Value="field.Options" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                                <input type="text" @bind="field.Options" @bind:event="oninput" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
                                             </div>
                                         </div>
 
                                         <!-- متن جایگیر و مقدار پیش‌فرض -->
                                         <div class="grid transition-all duration-300 ease-in-out @(showTextProps ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 mt-0")">
                                             <div class="overflow-hidden flex flex-col gap-2">
-                                                <InputText @bind-Value="field.Placeholder" placeholder="متن جایگیر (Placeholder)" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
-                                                <InputText @bind-Value="field.DefaultValue" placeholder="مقدار پیش‌فرض" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                                <input type="text" @bind="field.Placeholder" @bind:event="oninput" placeholder="متن جایگیر (Placeholder)" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                                <input type="text" @bind="field.DefaultValue" @bind:event="oninput" placeholder="مقدار پیش‌فرض" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
                                             </div>
                                         </div>
 
@@ -167,6 +166,47 @@
     [Parameter] public EventCallback<int> OnRoleToggle { get; set; }
     [Parameter] public EventCallback<CanvasConnection> OnDelete { get; set; }
 
+    private string ActivateAtString
+    {
+        get
+        {
+            if (Connection == null || !Connection.ActivateAt.HasValue) return string.Empty;
+            var dt = Connection.ActivateAt.Value;
+            var pc = new System.Globalization.PersianCalendar();
+            return $"{pc.GetYear(dt):0000}/{pc.GetMonth(dt):00}/{pc.GetDayOfMonth(dt):00} {pc.GetHour(dt):00}:{pc.GetMinute(dt):00}";
+        }
+        set
+        {
+            if (Connection == null) return;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                Connection.ActivateAt = null;
+                return;
+            }
+            try
+            {
+                var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var dateParts = parts[0].Split('/');
+                int year = int.Parse(dateParts[0]);
+                int month = int.Parse(dateParts[1]);
+                int day = int.Parse(dateParts[2]);
+                
+                int hour = 0, minute = 0;
+                if (parts.Length > 1)
+                {
+                    var timeParts = parts[1].Split(':');
+                    hour = int.Parse(timeParts[0]);
+                    minute = int.Parse(timeParts[1]);
+                }
+                var pc = new System.Globalization.PersianCalendar();
+                Connection.ActivateAt = pc.ToDateTime(year, month, day, hour, minute, 0, 0);
+            }
+            catch
+            {
+                Connection.ActivateAt = null;
+            }
+        }
+    }
 
     private void AddCustomField()
     {
