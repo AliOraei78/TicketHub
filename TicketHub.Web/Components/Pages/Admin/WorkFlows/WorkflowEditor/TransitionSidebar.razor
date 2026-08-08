@@ -98,16 +98,28 @@
                                             <ValidationMessage For="@(() => field.FieldTypeId)" class="text-red-500 text-[10px] mt-0.5" />
                                         </div>
 
-                                        <!-- نمایش فیلد گزینه‌ها تنها برای DropDown یا MultipleDropDown -->
-                                        @if (AvailableFieldTypes.FirstOrDefault(t => t.Id == field.FieldTypeId)?.Type.Contains("DropDown", StringComparison.OrdinalIgnoreCase) == true)
-                                        {
-                                            <InputText @bind-Value="field.Options" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                        @{
+                                            var typeName = AvailableFieldTypes.FirstOrDefault(t => t.Id == field.FieldTypeId)?.Type ?? "";
+                                            var showOptions = typeName.Contains("Dropdown", StringComparison.OrdinalIgnoreCase);
+                                            var showTextProps = typeName.Contains("Text", StringComparison.OrdinalIgnoreCase) || 
+                                                                typeName.Contains("Number", StringComparison.OrdinalIgnoreCase) || 
+                                                                typeName.Contains("TextArea", StringComparison.OrdinalIgnoreCase);
                                         }
 
-                                        <!-- متن جایگیر و مقدار پیش‌فرض -->
-                                        <InputText @bind-Value="field.Placeholder" placeholder="متن جایگیر (Placeholder)" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                        <!-- نمایش فیلد گزینه‌ها تنها برای DropDown یا MultipleDropDown -->
+                                        <div class="grid transition-all duration-300 ease-in-out @(showOptions ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 mt-0")">
+                                            <div class="overflow-hidden">
+                                                <InputText @bind-Value="field.Options" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                            </div>
+                                        </div>
 
-                                        <InputText @bind-Value="field.DefaultValue" placeholder="مقدار پیش‌فرض" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                        <!-- متن جایگیر و مقدار پیش‌فرض -->
+                                        <div class="grid transition-all duration-300 ease-in-out @(showTextProps ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 mt-0")">
+                                            <div class="overflow-hidden flex flex-col gap-2">
+                                                <InputText @bind-Value="field.Placeholder" placeholder="متن جایگیر (Placeholder)" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                                <InputText @bind-Value="field.DefaultValue" placeholder="مقدار پیش‌فرض" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 focus:bg-white rounded-lg outline-none focus:border-blue-500 pointer-events-auto" />
+                                            </div>
+                                        </div>
 
                                         <!-- گزینه‌های فعال بودن و اجباری بودن -->
                                         <div class="flex items-center gap-4 mt-1">
