@@ -2,6 +2,8 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
+using FluentValidation;
+using TicketHub.Application.Validations;
 
 namespace TicketHub.Tests.bUnit
 {
@@ -19,6 +21,9 @@ namespace TicketHub.Tests.bUnit
             
             // Standard mocks for routing, JS interop, etc. can be added here
             JSInterop.Mode = JSRuntimeMode.Loose;
+
+            // Register all FluentValidation validators from the Application assembly
+            Services.AddValidatorsFromAssembly(typeof(RoleDtoValidator).Assembly);
         }
 
         public new void Dispose()

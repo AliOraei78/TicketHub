@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using TicketHub.Application.Interfaces;
 
 namespace TicketHub.Infrastructure.Services;
@@ -14,7 +14,8 @@ public class FileStorageService : IFileStorageService
 
     public async Task<string> SaveFileAsync(Stream content, string fileName, string folderName = "uploads/attachments")
     {
-        var uploadsFolder = Path.Combine(_env.WebRootPath, folderName);
+        var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var uploadsFolder = Path.Combine(webRoot, folderName);
         if (!Directory.Exists(uploadsFolder))
             Directory.CreateDirectory(uploadsFolder);
 
@@ -31,7 +32,8 @@ public class FileStorageService : IFileStorageService
     {
         if (string.IsNullOrWhiteSpace(relativeFilePath)) return;
 
-        var absolutePath = Path.Combine(_env.WebRootPath, relativeFilePath.TrimStart('/'));
+        var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var absolutePath = Path.Combine(webRoot, relativeFilePath.TrimStart('/'));
         if (File.Exists(absolutePath))
         {
             File.Delete(absolutePath);

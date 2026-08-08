@@ -1,7 +1,7 @@
 # Architecture & Infrastructure
 
 ## Test Infrastructure
-- **Activities**: Integrated bUnit (Component) & Playwright (E2E) w/ Testcontainers (SQL Server) & Mock Auth. Created BUnitComponentTestBase & PlaywrightTestBase. Phase 1 tests implemented and passing.
+- **Activities**: Integrated bUnit & Playwright w/ Testcontainers. Added Ticket form tests (validation & dynamic fields). Fixed FluentValidation in bUnit via `AddValidatorsFromAssembly`.
 - **Notes**: Playwright needs local Docker up. Testcontainers replaces DB connection string at runtime. Fluxor state/dispatcher mocked in bUnit using Moq.
 
 ## Web Application (Blazor)
