@@ -65,6 +65,24 @@ namespace TicketHub.Tests.bUnit
         }
 
         [Fact]
+        public void SubmitEmptyForm_ShowsValidationMessages()
+        {
+            var cut = Render<Users>();
+
+            // Open modal
+            var createBtn = cut.Find("button:contains('افزودن کاربر جدید')");
+            createBtn.Click();
+
+            // Click submit
+            var submitBtn = cut.Find("button[type='submit']");
+            submitBtn.Click();
+
+            // Verify validation messages render
+            var validationMessages = cut.FindAll(".validation-message, .text-red-500");
+            Assert.NotEmpty(validationMessages);
+        }
+
+        [Fact]
         public void ValidForm_Submits_Successfully()
         {
             var cut = Render<Users>();

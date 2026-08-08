@@ -1,8 +1,8 @@
 # Architecture & Infrastructure
 
 ## Test Infrastructure
-- **Activities**: Integrated bUnit & Playwright w/ Testcontainers. Added Ticket form tests (validation & dynamic fields). Fixed FluentValidation in bUnit via `AddValidatorsFromAssembly`.
-- **Notes**: Playwright needs local Docker up. Testcontainers replaces DB connection string at runtime. Fluxor state/dispatcher mocked in bUnit using Moq.
+- **Activities**: Integrated bUnit & Playwright. Added Ticket form tests. Fixed FluentValidation in bUnit. Separated workflow creation and deletion E2E tests for isolation. Added missing field validation tests for Categories(E2E), Projects(bUnit), Users(bUnit) & WorkflowEditor(bUnit).
+- **Notes**: Playwright needs local Docker. Testcontainers replaces DB string. Fluxor state mocked using Moq. Test separation prevents cross-test pollution. Existing test file doesn't guarantee validation logic is tested.
 
 ## Web Application (Blazor)
 - **Activities**: Uses Fluxor for state management. Uses TailwindCSS for styling. Uses FluentValidation for form validation.
@@ -21,8 +21,8 @@
 - **Notes**: When clicking action buttons in grids, ensure `title` attributes exist to avoid fragile DOM selectors.
 
 ## Workflows & Data Seeding
-- **Activities**: Updated `DbInitializer` to include `MultipleDropdown`, `Checkbox`, and `ColorPicker` field types in the seeded transition fields for completeness.
-- **Notes**: DbInitializer seeds roles, default users, projects, workflow statuses (including identical named statuses for multiple stages), and exhaustive transition field types to test all UI components.
+- **Activities**: Integrated `SlideSelect` in `TransitionSidebar` for Field Types. Updated `WorkflowsE2ETests` to handle custom UI overlay clicks. Seeded field types.
+- **Notes**: Playwright needs explicit `.WaitForAsync(Visible)` and `Force = true` for custom dropdowns utilizing overlays. DbInitializer exhaustively seeds transition field types.
 
 ## Security & Permissions
 - **Activities**: Fixed "Admin" vs "ادمین" role mapping bug in `DbInitializer`. Seeded 12 core system permissions and assigned them to the "ادمین" role to activate RBAC in `PermissionService`.

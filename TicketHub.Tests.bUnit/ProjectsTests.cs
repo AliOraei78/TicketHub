@@ -63,6 +63,22 @@ namespace TicketHub.Tests.bUnit
         }
 
         [Fact]
+        public void SubmitEmptyForm_ShowsValidationMessages()
+        {
+            var cut = Render<ProjectForm>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.Model, new ProjectDto())
+            );
+
+            // Act - Submit empty form
+            cut.Find("form").Submit();
+
+            // Assert
+            var validationMessages = cut.FindAll(".validation-message, .text-red-500");
+            Assert.NotEmpty(validationMessages);
+        }
+
+        [Fact]
         public void OpenCreateModal_ShowsForm()
         {
             // Arrange

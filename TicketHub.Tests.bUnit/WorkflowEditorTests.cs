@@ -112,5 +112,35 @@ namespace TicketHub.Tests.bUnit
                 a.Connections.Count == 1 &&
                 a.Connections[0].CustomFields.Count == 5)), Times.Once);
         }
+
+        [Fact]
+        public void TransitionSidebar_EmptyName_ShowsValidationErrors()
+        {
+            var conn = new CanvasConnection 
+            { 
+                Id = Guid.NewGuid(), 
+                FromNodeId = Guid.NewGuid(), 
+                ToNodeId = Guid.NewGuid(), 
+                Name = "" 
+            };
+
+            JSInterop.SetupVoid("initJalaliDatePicker", _ => true);
+
+            var cut = Render<TransitionSidebar>(parameters => parameters
+                .Add(p => p.Connection, conn)
+                .Add(p => p.AvailableRoles, new List<RoleDto>())
+                .Add(p => p.AvailableFieldTypes, new List<FieldTypeDto>())
+            );
+
+            // Act - Clear the name and trigger validation by submitting the form.
+            // Wait, TransitionSidebar doesn't have a submit button. It uses @bind:event="oninput".
+            // So we can trigger submit programmatically or just check validation messages if any submit button existed.
+            // But EditForm doesn't have a submit button here. Let's just submit the form.
+            cut.Find("form").Submit();
+
+            // Assert
+            var validationMsgs = cut.FindAll(".validation-message, .text-red-500");
+            Assert.NotEmpty(validationMsgs);
+        }
     }
 }
