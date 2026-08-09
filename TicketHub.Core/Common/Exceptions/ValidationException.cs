@@ -1,4 +1,4 @@
-﻿namespace TicketHub.Core.Common.Exceptions;
+namespace TicketHub.Core.Common.Exceptions;
 
 public class ValidationException : TicketHubException
 {
@@ -11,7 +11,10 @@ public class ValidationException : TicketHubException
 
     public ValidationException(string message) : base(message, 400)
     {
-        Errors = new Dictionary<string, string[]>();
+        Errors = new Dictionary<string, string[]>
+        {
+            { "General", new[] { message } }
+        };
     }
 
     public ValidationException(IDictionary<string, string[]> errors) : base("خطای اعتبارسنجی رخ داده است.", 400)

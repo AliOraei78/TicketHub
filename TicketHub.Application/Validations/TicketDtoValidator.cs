@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 
@@ -43,7 +43,7 @@ public class TicketDtoValidator : AbstractValidator<TicketDto>
                 if (!hasTextValue && !hasFiles)
                 {
                     // نام‌گذاری کلید خطا به این شکل، برای ردیف ۳ کاربرد دارد
-                    context.AddFailure("Value", $"تکمیل فیلد «{fieldValue.FieldName}» الزامی است.");
+                    context.AddFailure(fieldValue.FieldName, $"تکمیل فیلد «{fieldValue.FieldName}» الزامی است.");
                 }
             }
         });

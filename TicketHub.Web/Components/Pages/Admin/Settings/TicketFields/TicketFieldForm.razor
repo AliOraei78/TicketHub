@@ -1,4 +1,4 @@
-﻿<EditForm Model="Model" OnValidSubmit="OnValidSubmit">
+<EditForm Model="Model" OnValidSubmit="OnValidSubmit">
     <FluentValidationValidator />
 
     <div class="space-y-4">
@@ -35,7 +35,14 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">مقدار پیش‌فرض</label>
-                <InputText @bind-Value="Model.DefaultValue" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+                @if (Model.FieldTypeId == (int)FieldTypeEnum.Number)
+                {
+                    <input type="number" @bind="Model.DefaultValue" @bind:event="oninput" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+                }
+                else
+                {
+                    <InputText @bind-Value="Model.DefaultValue" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+                }
                 <ValidationMessage For="() => Model.DefaultValue" class="text-xs text-rose-500 mt-1" />
             </div>
         }

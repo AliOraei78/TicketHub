@@ -198,7 +198,9 @@ public class TicketEffects
         }
         catch (ValidationException ex)
         {
-            var errorMessage = string.Join("\n", ex.Errors.SelectMany(e => e.Value).Select(msg => $"• {msg}"));
+            var errorMessage = ex.Errors != null && ex.Errors.Any()
+                ? string.Join("\n", ex.Errors.SelectMany(e => e.Value).Select(msg => $"• {msg}"))
+                : $"• {ex.Message}";
             _toastService.ShowWarning(errorMessage, "خطای اطلاعات ورودی");
             dispatcher.Dispatch(new SaveTicketFailedAction(errorMessage));
         }

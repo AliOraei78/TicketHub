@@ -21,9 +21,13 @@
 - **Notes**: When clicking action buttons in grids, ensure `title` attributes exist to avoid fragile DOM selectors. When paginating, if `CurrentPage > TotalPages` after bulk delete, frontend must fallback to `maxPage`.
 
 ## Workflows & Data Seeding
-- **Activities**: Integrated `SlideSelect` in `TransitionSidebar` for Field Types. Updated `WorkflowsE2ETests` to handle custom UI overlay clicks. Seeded field types.
-- **Notes**: Playwright needs explicit `.WaitForAsync(Visible)` and `Force = true` for custom dropdowns utilizing overlays. DbInitializer exhaustively seeds transition field types.
+- **Activities**: Integrated `SlideSelect` in `TransitionSidebar` for Field Types. Updated `WorkflowsE2ETests` to handle custom UI overlay clicks. Seeded field types. Updated DbInitializer for workflow "جریان کاری عمومی" ensuring status "باز" has IsInitial = true across DB workflows.
+- **Notes**: Playwright needs explicit `.WaitForAsync(Visible)` and `Force = true` for custom dropdowns utilizing overlays. DbInitializer exhaustively seeds transition field types and sets IsInitial = true on default workflow status.
 
 ## Security & Permissions
 - **Activities**: Fixed "Admin" vs "ادمین" role mapping bug in `DbInitializer`. Seeded 12 core system permissions and assigned them to the "ادمین" role to activate RBAC in `PermissionService`. Standardized `ConfirmDeleteModal` description text and synchronized success toasts in E2E tests to correctly pass `PermissionsSettings_BulkActions_Scenario`.
 - **Notes**: Permissions enforce RBAC using `relativePath` as `ResourceKey` in `PermissionRouteGuard` and `SecuredView`. If a permission doesn't exist in DB, `PermissionService` defaults to allowing access, so default permissions must be seeded for security. When testing toast notifications for bulk actions, ensure spacing and pluralization exactly matches the `Store` state templates.
+
+## Ticket Module
+- **Activities**: Implemented Execute Transition mechanism in TicketDetails. Replaced manual status select with action button opening TicketTransitionModal when a workflow exists. Handled state reload on successful transition. Fixed inline dynamic field validation in TicketFormModal, populated ValidationException Errors, added claim fallback for UserId, and added bottom padding to prevent double scrolling on SlideSelect options.
+- **Notes**: Map dynamic fields prior to EditContext validation to render inline errors under dynamic fields. Added pb-36 bottom padding to modal container to avoid double scrolling on dropdowns. Populated Errors in ValidationException to display backend messages in toasts.

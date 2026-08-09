@@ -1,7 +1,7 @@
-﻿@typeparam TItem
+@typeparam TItem
 @typeparam TValue
 
-<div class="relative" dir="rtl">
+<div class="relative @(isOpen ? "z-[60]" : "")" dir="rtl">
     @if (!string.IsNullOrEmpty(Label))
     {
         <label class="block text-sm font-medium text-gray-700 mb-2">@Label</label>
@@ -20,19 +20,29 @@
         <div class="fixed inset-0 z-40" @onclick="() => isOpen = false"></div>
     }
 
-    <div class="absolute top-full left-0 z-50 w-full mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 @(isOpen ? "opacity-100 max-h-48" : "opacity-0 max-h-0")">
+    <div class="absolute top-full left-0 z-50 w-full mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 @(isOpen ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent")">
+        @if (isOpen)
+        {
+            <div class="p-2 border-b border-gray-100">
+                <input type="text" @bind="searchTerm" @bind:event="oninput" @onclick:stopPropagation class="w-full h-10 px-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-gray-50 focus:bg-white transition-all outline-none" placeholder="جستجو..." />
+            </div>
+        }
         <ul class="overflow-y-auto max-h-48 py-1">
             @if (AllowClear)
             {
                 <li @onclick="() => Select(default!)" class="px-4 py-2.5 text-sm text-gray-500 hover:bg-indigo-50 cursor-pointer transition-colors">@ClearText</li>
             }
-            @if (Items != null)
+            @if (FilteredItems != null && FilteredItems.Any())
             {
-                @foreach (var item in Items)
+                @foreach (var item in FilteredItems)
                 {
                     <!-- جایگزین تگ li داخل حلقه -->
                     <li @onclick="() => Select(ValueSelector(item))" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 cursor-pointer transition-colors truncate block max-w-full" title="@TextSelector(item)">@TextSelector(item)</li>
                 }
+            }
+            else if (FilteredItems != null && !FilteredItems.Any())
+            {
+                <li class="px-4 py-3 text-sm text-gray-400 text-center">نتیجه‌ای یافت نشد</li>
             }
         </ul>
     </div>
@@ -52,8 +62,26 @@
     [Parameter] public string ClearText { get; set; } = "بدون انتخاب";
 
     private bool isOpen;
+    private string searchTerm = string.Empty;
 
-    private void Toggle() => isOpen = !isOpen;
+    private IEnumerable<TItem> FilteredItems
+    {
+        get
+        {
+            if (Items == null) return Enumerable.Empty<TItem>();
+            if (string.IsNullOrEmpty(searchTerm)) return Items;
+            return Items.Where(i => TextSelector(i)?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true);
+        }
+    }
+
+    private void Toggle() 
+    {
+        isOpen = !isOpen;
+        if (!isOpen)
+        {
+            searchTerm = string.Empty;
+        }
+    }
 
     private async Task Select(TValue val)
     {

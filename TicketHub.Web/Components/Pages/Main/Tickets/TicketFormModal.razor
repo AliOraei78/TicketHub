@@ -18,10 +18,10 @@
                     </button>
                 </div>
 
-                <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" novalidate class="flex flex-col overflow-hidden">
+                <EditForm Model="@Model" OnSubmit="HandleSubmit" novalidate class="flex flex-col overflow-hidden">
                     <FluentValidationValidator />
 
-                    <div class="overflow-y-auto p-6 space-y-4 custom-scrollbar max-h-[70vh]">
+                    <div class="overflow-y-auto p-6 pb-36 space-y-4 custom-scrollbar max-h-[70vh]">
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">عنوان تیکت</label>
@@ -76,7 +76,7 @@
 
                         @if (DynamicFieldModels.Any())
                         {
-                            <DynamicFields Fields="DynamicFieldModels" />
+                            <DynamicFields Fields="DynamicFieldModels" ValidationErrors="dynamicValidationErrors" />
                         }
                     </div>
 
@@ -117,7 +117,7 @@
                 IsRequired = f.IsRequired,
                 Options = f.Options,
                 FieldTypeId = f.FieldTypeId,
-                Value = Model.FieldValues?.FirstOrDefault(x => x.TicketFieldId == f.Id)?.Value ?? string.Empty
+                Value = Model.FieldValues?.FirstOrDefault(x => x.TicketFieldId == f.Id)?.Value ?? (!string.IsNullOrWhiteSpace(f.DefaultValue) ? f.DefaultValue : string.Empty)
             }).ToList();
         }
     }
@@ -134,11 +134,34 @@
         }).ToList();
     }
 
-    private async Task HandleValidSubmit()
+    private Dictionary<string, string> dynamicValidationErrors = new();
+
+    private async Task HandleSubmit(EditContext editContext)
     {
+        dynamicValidationErrors.Clear();
         MapDynamicFieldsToModel();
-        if (OnSubmit.HasDelegate)
-            await OnSubmit.InvokeAsync();
+        
+        bool isValid = editContext.Validate();
+        
+        foreach (var field in DynamicFieldModels)
+        {
+            if (field.IsRequired)
+            {
+                bool hasTextValue = !string.IsNullOrWhiteSpace(field.Value);
+                bool hasFiles = field.PendingUploads?.Any() == true;
+                if (!hasTextValue && !hasFiles)
+                {
+                    dynamicValidationErrors[field.Name] = $"تکمیل فیلد «{field.Name}» الزامی است.";
+                    isValid = false;
+                }
+            }
+        }
+        
+        if (isValid)
+        {
+            if (OnSubmit.HasDelegate)
+                await OnSubmit.InvokeAsync();
+        }
     }
 
     private async Task HandleCancel()

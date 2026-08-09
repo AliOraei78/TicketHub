@@ -70,10 +70,6 @@
                         break;
                 }
 
-                @if (field.IsRequired && string.IsNullOrWhiteSpace(field.Value))
-                {
-                    <ValidationMessage For="@(() => field.Value)" class="text-red-500 text-xs mt-1" />
-                }
                 @if (ValidationErrors != null && ValidationErrors.TryGetValue(field.Name, out var errorMsg))
                 {
                     <div class="text-red-500 text-xs mt-1">@errorMsg</div>
@@ -155,16 +151,5 @@
     private void SetMultipleValues(DynamicFieldModel field, List<string> vals)
     {
         field.Value = string.Join(",", vals);
-    }
-
-    protected override void OnInitialized()
-    {
-        foreach (var field in Fields)
-        {
-            if (string.IsNullOrWhiteSpace(field.Value) && !string.IsNullOrWhiteSpace(field.DefaultValue))
-            {
-                field.Value = field.DefaultValue;
-            }
-        }
     }
 }

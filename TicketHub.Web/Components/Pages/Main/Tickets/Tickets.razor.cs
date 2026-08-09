@@ -80,7 +80,8 @@ public partial class Tickets : IDisposable
     {
         var authState = await AuthState;
         var user = authState.User;
-        var userIdString = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userIdString = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
         int currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
 
         newTicket = new TicketDto
