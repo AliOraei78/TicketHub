@@ -1,4 +1,4 @@
-﻿
+
 <DataGrid TItem="UserDto" TKey="int"
           Items="Users"
           IsLoading="IsLoading"
@@ -82,7 +82,7 @@
             }
         </td>
         <td class="px-6 py-2 text-center w-[10%]">
-            <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" />
+            <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" ResourceKey="@ResourceKey" />
         </td>
     </RowTemplate>
 
@@ -100,6 +100,7 @@
     [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
     [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
+    [Parameter] public string ResourceKey { get; set; } = "/users";
 
     private async Task OnSelectionChanged(HashSet<int> newKeys)
     {

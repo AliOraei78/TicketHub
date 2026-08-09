@@ -1,7 +1,14 @@
 
 
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @using TicketHub.Core.Common
 @using TicketHub.Web.Components.Layout.Shared
+@using TicketHub.Application.Interfaces
+@using TicketHub.Application.Enums
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionService PermissionService
 
 <div @onclick="HandleClick" class="cursor-pointer smooth-transition bg-white p-5 rounded-2xl shadow-sm border flex flex-col group h-full relative overflow-hidden @(IsSelected ? "border-blue-500 ring-2 ring-blue-100 shadow-md" : "border-gray-100 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1")">
     <div class="flex items-start gap-4 w-full mb-4">
@@ -48,7 +55,7 @@
                 @(Ticket.Status?.Name ?? "نامشخص")
             </span>
             
-            <SecuredView ResourceKey="/tickets" MinimumType="TicketHub.Application.Enums.PermissionType.SystemSection">
+            <SecuredView ResourceKey="/tickets" MinimumType="PermissionType.SystemSection">
                 <button type="button" @onclick:stopPropagation="true" @onclick="HandleActionClick" class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" title="عملیات">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -56,13 +63,14 @@
                 </button>
             </SecuredView>
 
-            <SecuredView ResourceKey="/tickets" MinimumType="TicketHub.Application.Enums.PermissionType.Full">
+            @if (_canDelete)
+            {
                 <button type="button" @onclick:stopPropagation="true" @onclick="HandleDeleteClick" class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-colors" title="حذف تیکت">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </button>
-            </SecuredView>
+            }
         </div>
     </div>
 </div>
@@ -85,6 +93,22 @@
 
     [Parameter]
     public EventCallback<TicketDto> OnDeleteClick { get; set; }
+
+    private bool _canDelete = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
+        int currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
+
+        bool isSender = (Ticket != null && currentUserId > 0 && Ticket.UserId == currentUserId);
+        bool hasFullAccess = await PermissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
+
+        _canDelete = isSender || hasFullAccess;
+    }
 
     private async Task HandleClick()
     {

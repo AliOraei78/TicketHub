@@ -1,61 +1,102 @@
-﻿@* BulkActionToolbar.razor *@
+@using TicketHub.Web.Components.Layout.Shared
+@using TicketHub.Application.Enums
 
 @if (SelectedCount > 0)
 {
-    <div class="fixed bottom-6 left-1/2 z-50 bg-white border border-rose-200 rounded-2xl p-2 pl-4 flex items-center gap-6 shadow-[0_10px_40px_-10px_rgba(225,29,72,0.3)] animate-[slideUpPopup_0.4s_cubic-bezier(0.16,1,0.3,1)_forwards]" dir="rtl">
-        <div class="flex items-center gap-2 pr-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">@SelectedCount</span>
-            <span class="text-rose-800 font-bold text-sm">مورد انتخاب شده</span>
-        </div>
+    @if (!string.IsNullOrWhiteSpace(ResourceKey))
+    {
+        <SecuredView ResourceKey="@ResourceKey" MinimumType="PermissionType.SystemSection">
+            <div class="fixed bottom-6 left-1/2 z-50 bg-white border border-rose-200 rounded-2xl p-2 pl-4 flex items-center gap-6 shadow-[0_10px_40px_-10px_rgba(225,29,72,0.3)] animate-[slideUpPopup_0.4s_cubic-bezier(0.16,1,0.3,1)_forwards]" dir="rtl">
+                <div class="flex items-center gap-2 pr-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">@SelectedCount</span>
+                    <span class="text-rose-800 font-bold text-sm">مورد انتخاب شده</span>
+                </div>
 
-        <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2">
+                    @if (OnActivate.HasDelegate)
+                    {
+                        <button @onclick="OnActivate" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            فعال‌سازی
+                        </button>
+                    }
 
-            <!-- دکمه فعال‌سازی گروهی (اختیاری) -->
-            @if (OnActivate.HasDelegate)
-            {
-                <button @onclick="OnActivate" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                    فعال‌سازی
+                    @if (OnDeactivate.HasDelegate)
+                    {
+                        <button @onclick="OnDeactivate" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                            غیرفعال‌سازی
+                        </button>
+                    }
+
+                    <SecuredView ResourceKey="@ResourceKey" MinimumType="PermissionType.Full">
+                        <button @onclick="OnDelete" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            حذف
+                        </button>
+                    </SecuredView>
+
+                    <button @onclick="OnCancel" class="px-4 py-1.5 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-xl text-sm font-bold smooth-transition">
+                        لغو
+                    </button>
+                </div>
+            </div>
+        </SecuredView>
+    }
+    else
+    {
+        <div class="fixed bottom-6 left-1/2 z-50 bg-white border border-rose-200 rounded-2xl p-2 pl-4 flex items-center gap-6 shadow-[0_10px_40px_-10px_rgba(225,29,72,0.3)] animate-[slideUpPopup_0.4s_cubic-bezier(0.16,1,0.3,1)_forwards]" dir="rtl">
+            <div class="flex items-center gap-2 pr-2">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">@SelectedCount</span>
+                <span class="text-rose-800 font-bold text-sm">مورد انتخاب شده</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if (OnActivate.HasDelegate)
+                {
+                    <button @onclick="OnActivate" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        فعال‌سازی
+                    </button>
+                }
+
+                @if (OnDeactivate.HasDelegate)
+                {
+                    <button @onclick="OnDeactivate" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                        غیرفعال‌سازی
+                    </button>
+                }
+
+                <button @onclick="OnDelete" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    حذف
                 </button>
-            }
 
-            @if (OnDeactivate.HasDelegate)
-            {
-                <button @onclick="OnDeactivate" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                    غیرفعال‌سازی
+                <button @onclick="OnCancel" class="px-4 py-1.5 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-xl text-sm font-bold smooth-transition">
+                    لغو
                 </button>
-            }
-
-            <button @onclick="OnDelete" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md text-sm font-bold smooth-transition flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                حذف
-            </button>
-
-            <button @onclick="OnCancel" class="px-4 py-1.5 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-xl text-sm font-bold smooth-transition">
-                لغو
-            </button>
-
+            </div>
         </div>
-    </div>
+    }
 }
 
 @code {
-    // Number of selected items to display
     [Parameter]
     public int SelectedCount { get; set; }
 
     [Parameter]
     public EventCallback OnDeactivate { get; set; }
 
-    // Event fired when the cancel button is clicked
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    // Event fired when the delete button is clicked
     [Parameter]
     public EventCallback OnDelete { get; set; }
 
     [Parameter]
     public EventCallback OnActivate { get; set; }
+
+    [Parameter]
+    public string? ResourceKey { get; set; }
 }

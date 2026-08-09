@@ -56,7 +56,8 @@
                        OnCancel="ClearSelection"
                        OnDelete="OpenBulkDeleteModal"
                        OnDeactivate="BulkDeactivateUsers"
-                       OnActivate="BulkActivateUsers" />
+                       OnActivate="BulkActivateUsers"
+                       ResourceKey="/users" />
 
     <UserTable Users="UsrState.Value.Users.ToList()"
                IsLoading="UsrState.Value.IsLoading"
