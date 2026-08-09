@@ -41,7 +41,8 @@
                 </div>
 
                 <EditForm Model="Model" OnValidSubmit="HandleValidSubmitAsync" class="flex flex-col overflow-hidden">
-                    <div class="overflow-y-auto p-6 space-y-4 custom-scrollbar max-h-[70vh]">
+                    <div class="overflow-y-auto p-6 pb-28 space-y-4 custom-scrollbar max-h-[70vh]">
+
                         <!-- Validation Summary -->
                         @if (ValidationErrors.Any())
                         {

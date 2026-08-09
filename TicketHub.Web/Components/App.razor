@@ -65,18 +65,40 @@
         };
 
         window.initClickOutside = (elementId, dotnetHelper) => {
-        var handler = function(e) {
-        var el = document.getElementById(elementId);
-        if (el && !el.contains(e.target)) {
-        dotnetHelper.invokeMethodAsync('CloseDropdown');
-        document.removeEventListener('pointerdown', handler);
-        }
-        };
-        setTimeout(function() {
-        document.addEventListener('pointerdown', handler);
-        }, 0);
+            var el = document.getElementById(elementId);
+            if (el) {
+                var rect = el.getBoundingClientRect();
+                var spaceBelow = window.innerHeight - rect.bottom;
+                var menu = el.querySelector('.dropdown-menu-container');
+                if (menu) {
+                    if (spaceBelow < 260 && rect.top > 260) {
+                        menu.classList.add('drop-up');
+                    } else {
+                        menu.classList.remove('drop-up');
+                    }
+                }
+            }
+
+            var handler = function(e) {
+                if (el && !el.contains(e.target)) {
+                    dotnetHelper.invokeMethodAsync('CloseDropdown');
+                    document.removeEventListener('pointerdown', handler);
+                }
+            };
+            setTimeout(function() {
+                document.addEventListener('pointerdown', handler);
+            }, 0);
         };
     </script>
+    <style>
+        .dropdown-menu-container.drop-up {
+            top: auto !important;
+            bottom: 100% !important;
+            margin-top: 0 !important;
+            margin-bottom: 0.5rem !important;
+        }
+    </style>
+
 </body>
 </html>
 

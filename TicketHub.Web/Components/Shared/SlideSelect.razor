@@ -16,7 +16,8 @@
         </svg>
     </div>
 
-    <div class="absolute top-full left-0 z-50 w-full mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 @(isOpen ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+    <div class="dropdown-menu-container absolute top-full left-0 z-50 w-full mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 @(isOpen ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+
         @if (isOpen)
         {
             <div class="p-2 border-b border-gray-100">
