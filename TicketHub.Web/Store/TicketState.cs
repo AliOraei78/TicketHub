@@ -40,6 +40,8 @@ public record SaveTicketFailedAction(string ErrorMessage);
 public record ClearTicketMessagesAction();
 public record LoadDynamicFieldsAction(int CategoryId);
 public record DynamicFieldsLoadedAction(IEnumerable<TicketFieldDto> Fields);
+public record DeleteTicketAction(int Id, string TicketTitle);
+public record DeleteMultipleTicketsAction(IEnumerable<int> Ids, IEnumerable<string> TicketTitles);
 
 // 3. Reducers
 public static class TicketReducers
@@ -214,6 +216,63 @@ public class TicketEffects
             _logger.LogError(ex, "خطای سیستمی در زمان {ActionType} تیکت.", ticketModel.Id == 0 ? "ایجاد" : "ویرایش");
             _toastService.ShowError("یک خطای سیستمی رخ داد. لطفاً دوباره تلاش کنید.");
             dispatcher.Dispatch(new SaveTicketFailedAction("• خطایی در ذخیره تیکت رخ داد."));
+        }
+    }
+
+    [EffectMethod]
+    public async Task HandleDeleteTicket(DeleteTicketAction action, IDispatcher dispatcher)
+    {
+        try
+        {
+            _logger.LogWarning("درخواست حذف تیکت با شناسه {TicketId}.", action.Id);
+
+            await _ticketService.DeleteAsync(action.Id);
+            dispatcher.Dispatch(new LoadTicketsAction());
+
+            _toastService.ShowSuccess($"تیکت '{action.TicketTitle}' با موفقیت حذف شد.");
+            _logger.LogInformation("تیکت با شناسه {TicketId} با موفقیت حذف شد.", action.Id);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "تلاش برای حذف تیکتی که وجود ندارد.");
+            _toastService.ShowWarning(ex.Message, "یافت نشد");
+            dispatcher.Dispatch(new LoadTicketsAction());
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در حذف تیکت با شناسه {TicketId}.", action.Id);
+            _toastService.ShowError("خطا در حذف تیکت. لطفاً دوباره تلاش کنید.");
+        }
+    }
+
+    [EffectMethod]
+    public async Task HandleDeleteMultipleTickets(DeleteMultipleTicketsAction action, IDispatcher dispatcher)
+    {
+        try
+        {
+            int count = action.Ids.Count();
+            _logger.LogWarning("درخواست حذف گروهی تیکت‌ها به تعداد {Count}.", count);
+
+            await _ticketService.DeleteRangeAsync(action.Ids);
+            dispatcher.Dispatch(new LoadTicketsAction());
+
+            var successMessage = count == 1 ? "1 تیکت حذف شد." : $"{count} تیکت حذف شدند.";
+            _toastService.ShowSuccess(successMessage);
+            _logger.LogInformation("تعداد {Count} تیکت با موفقیت حذف شدند.", count);
+        }
+        catch (TicketHubException ex)
+        {
+            _toastService.ShowWarning(ex.Message, "توجه");
+            dispatcher.Dispatch(new LoadTicketsAction());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در حذف گروهی تیکت‌ها.");
+            _toastService.ShowError("خطا در حذف گروهی تیکت‌ها. لطفاً دوباره تلاش کنید.");
         }
     }
 }

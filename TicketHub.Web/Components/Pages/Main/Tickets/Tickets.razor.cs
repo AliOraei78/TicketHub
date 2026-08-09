@@ -132,6 +132,74 @@ public partial class Tickets : IDisposable
 
     private TicketTransitionModal transitionModal = default!;
 
+    // UI Transient Selection & Delete States
+    private HashSet<int> selectedTicketIds = new();
+    private bool isDeleteModalOpen = false;
+    private string deleteModalDescription = string.Empty;
+    private TicketDto? ticketToDelete = null;
+    private bool isBulkDelete = false;
+
+    private void ClearSelection() => selectedTicketIds.Clear();
+
+    private void ToggleTicketSelection(int ticketId, bool isSelected)
+    {
+        if (isSelected)
+            selectedTicketIds.Add(ticketId);
+        else
+            selectedTicketIds.Remove(ticketId);
+
+        selectedTicketIds = new HashSet<int>(selectedTicketIds);
+    }
+
+    private void HandleSingleDelete(TicketDto ticket)
+    {
+        ticketToDelete = ticket;
+        isBulkDelete = false;
+        deleteModalDescription = $"آیا از حذف تیکت '{ticket.Title}' اطمینان دارید؟";
+        isDeleteModalOpen = true;
+    }
+
+    private void OpenBulkDeleteModal()
+    {
+        isBulkDelete = true;
+        ticketToDelete = null;
+        deleteModalDescription = $"آیا از حذف {selectedTicketIds.Count} تیکت انتخاب شده اطمینان دارید؟";
+        isDeleteModalOpen = true;
+    }
+
+    private void ConfirmDeleteAsync()
+    {
+        isDeleteModalOpen = false;
+
+        if (isBulkDelete)
+        {
+            var selectedTitles = TicketState.Value.Tickets
+                .Where(t => selectedTicketIds.Contains(t.Id))
+                .Select(t => t.Title)
+                .ToList();
+
+            Dispatcher.Dispatch(new DeleteMultipleTicketsAction(selectedTicketIds.ToList(), selectedTitles));
+            selectedTicketIds.Clear();
+        }
+        else if (ticketToDelete != null)
+        {
+            if (selectedTicketIds.Contains(ticketToDelete.Id))
+            {
+                selectedTicketIds.Remove(ticketToDelete.Id);
+                selectedTicketIds = new HashSet<int>(selectedTicketIds);
+            }
+
+            Dispatcher.Dispatch(new DeleteTicketAction(ticketToDelete.Id, ticketToDelete.Title));
+            ticketToDelete = null;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        isDeleteModalOpen = false;
+        ticketToDelete = null;
+    }
+
     private async Task HandleActionClick(TicketDto ticket)
     {
         if (ticket.Project != null && ticket.Project.WorkflowId.HasValue)

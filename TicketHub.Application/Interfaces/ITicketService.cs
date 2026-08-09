@@ -11,5 +11,6 @@ public interface ITicketService
     Task CreateAsync(TicketDto dto);
     Task UpdateAsync(TicketDto dto);
     Task DeleteAsync(int id);
+    Task DeleteRangeAsync(IEnumerable<int> ids);
     Task ExecuteTransitionAsync(ExecuteTransitionDto dto, int currentUserId);
 }

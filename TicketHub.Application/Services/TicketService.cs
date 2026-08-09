@@ -239,6 +239,17 @@ public class TicketService : ITicketService
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت حذف شد.", id);
     }
 
+    public async Task DeleteRangeAsync(IEnumerable<int> ids)
+    {
+        var idList = ids.ToList();
+        _logger.LogWarning("درخواست حذف گروهی تیکت‌ها به تعداد {Count}.", idList.Count);
+
+        foreach (var id in idList)
+        {
+            await DeleteAsync(id);
+        }
+    }
+
     public async Task ExecuteTransitionAsync(ExecuteTransitionDto dto, int currentUserId)
     {
         _logger.LogInformation("اجرای انتقال {TransitionId} روی تیکت {TicketId}", dto.TransitionId, dto.TicketId);

@@ -66,6 +66,15 @@
         </div>
     </ListFilterToolbar>
 
+    @if (selectedTicketIds.Any())
+    {
+        <div class="w-full flex justify-end animate-[fadeIn_0.2s_ease-out]">
+            <BulkActionToolbar SelectedCount="selectedTicketIds.Count"
+                               OnCancel="ClearSelection"
+                               OnDelete="OpenBulkDeleteModal" />
+        </div>
+    }
+
     <!-- Tickets Main Grid/List -->
     @if (TicketState.Value.IsLoading)
     {
@@ -77,7 +86,12 @@
     {
         <DataList Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد.">
             <ItemTemplate Context="ticket">
-                <TicketCard Ticket="ticket" OnClick="NavigateToDetails" OnActionClick="HandleActionClick" />
+                <TicketCard Ticket="ticket"
+                            OnClick="NavigateToDetails"
+                            OnActionClick="HandleActionClick"
+                            OnDeleteClick="HandleSingleDelete"
+                            IsSelected="selectedTicketIds.Contains(ticket.Id)"
+                            IsSelectedChanged="@(val => ToggleTicketSelection(ticket.Id, val))" />
             </ItemTemplate>
         </DataList>
     }
@@ -96,3 +110,10 @@
 
 <!-- Animated Transition Modal -->
 <TicketTransitionModal @ref="transitionModal" OnSaved="HandleTransitionSaved" />
+
+<!-- Confirm Delete Modal -->
+<ConfirmDeleteModal IsOpen="isDeleteModalOpen"
+                    Title="حذف تیکت"
+                    Description="@deleteModalDescription"
+                    OnConfirm="ConfirmDeleteAsync"
+                    OnCancel="CancelDelete" />

@@ -85,4 +85,83 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             await context.SaveChangesAsync();
         }
     }
+
+    public override async Task DeleteAsync(int id)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+
+        var ticket = await context.Set<Ticket>()
+            .Include(t => t.FieldValues)
+                .ThenInclude(fv => fv.Attachments)
+            .Include(t => t.TicketHistories)
+                .ThenInclude(th => th.TransitionFieldValues)
+            .Include(t => t.TicketHistories)
+                .ThenInclude(th => th.Attachments)
+            .Include(t => t.Comments)
+            .Include(t => t.Attachments)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket != null)
+        {
+            var allAttachments = new List<Attachment>();
+
+            if (ticket.Attachments != null && ticket.Attachments.Any())
+            {
+                allAttachments.AddRange(ticket.Attachments);
+            }
+
+            if (ticket.FieldValues != null)
+            {
+                foreach (var fv in ticket.FieldValues)
+                {
+                    if (fv.Attachments != null && fv.Attachments.Any())
+                    {
+                        allAttachments.AddRange(fv.Attachments);
+                    }
+                }
+            }
+
+            if (ticket.TicketHistories != null)
+            {
+                foreach (var th in ticket.TicketHistories)
+                {
+                    if (th.Attachments != null && th.Attachments.Any())
+                    {
+                        allAttachments.AddRange(th.Attachments);
+                    }
+                }
+            }
+
+            if (allAttachments.Any())
+            {
+                context.Set<Attachment>().RemoveRange(allAttachments.Distinct());
+            }
+
+            if (ticket.TicketHistories != null && ticket.TicketHistories.Any())
+            {
+                foreach (var history in ticket.TicketHistories)
+                {
+                    if (history.TransitionFieldValues != null && history.TransitionFieldValues.Any())
+                    {
+                        context.Set<TransitionFieldValue>().RemoveRange(history.TransitionFieldValues);
+                    }
+                }
+                context.Set<TicketHistory>().RemoveRange(ticket.TicketHistories);
+            }
+
+            if (ticket.FieldValues != null && ticket.FieldValues.Any())
+            {
+                context.Set<TicketFieldValue>().RemoveRange(ticket.FieldValues);
+            }
+
+            if (ticket.Comments != null && ticket.Comments.Any())
+            {
+                context.Set<Comment>().RemoveRange(ticket.Comments);
+            }
+
+            context.Set<Ticket>().Remove(ticket);
+            await context.SaveChangesAsync();
+        }
+    }
 }

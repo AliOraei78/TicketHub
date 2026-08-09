@@ -4,6 +4,8 @@
 @inject IStatusService StatusService
 @inject NavigationManager Navigation
 
+@using TicketHub.Core.Common
+
 <div class="container mx-auto p-4 md:p-8" dir="rtl">
     <!-- Back to List Button -->
     <button @onclick="GoBack" class="smooth-transition mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800">
@@ -83,7 +85,8 @@
                     <!-- Priority Metadata Info -->
                     <div class="pt-2">
                         <label class="block text-xs font-medium text-gray-400 mb-1">اولویت تیکت</label>
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold @GetPriorityClass(ticket.Priority?.Name ?? "")">
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                              style="background-color: @(ticket.Priority?.ColorCode ?? "#6B7280")20; color: @(ticket.Priority?.ColorCode ?? "#6B7280");">
                             @(ticket.Priority?.Name ?? "نامشخص")
                         </span>
                     </div>
@@ -96,7 +99,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span>تاریخ ایجاد:</span>
-                            <span class="font-medium text-gray-700">@ticket.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
+                            <span class="font-medium text-gray-700">@ticket.CreatedAt.ToPersianDateTimeString()</span>
                         </div>
                     </div>
                 </div>
@@ -160,13 +163,4 @@
     {
         Navigation.NavigateTo("/tickets");
     }
-
-    private string GetPriorityClass(string priority) => priority switch
-    {
-        "Low" => "bg-blue-50 text-blue-600",
-        "Medium" => "bg-amber-50 text-amber-600",
-        "High" => "bg-orange-50 text-orange-600",
-        "Critical" => "bg-rose-50 text-rose-600",
-        _ => "bg-gray-50 text-gray-600"
-    };
 }

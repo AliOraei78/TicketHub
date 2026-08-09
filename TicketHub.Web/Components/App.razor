@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8" />
@@ -62,6 +62,19 @@
         el.addEventListener('change', handler);
         el.addEventListener('jdp:change', handler);
         }
+        };
+
+        window.initClickOutside = (elementId, dotnetHelper) => {
+        var handler = function(e) {
+        var el = document.getElementById(elementId);
+        if (el && !el.contains(e.target)) {
+        dotnetHelper.invokeMethodAsync('CloseDropdown');
+        document.removeEventListener('pointerdown', handler);
+        }
+        };
+        setTimeout(function() {
+        document.addEventListener('pointerdown', handler);
+        }, 0);
         };
     </script>
 </body>
