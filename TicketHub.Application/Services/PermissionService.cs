@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -242,22 +242,32 @@ public class PermissionService : IPermissionService
         return true;
     }
 
-    public async Task<bool> HasAccessAsync(System.Security.Claims.ClaimsPrincipal user, string resourceKey)
+    public async Task<bool> HasAccessAsync(
+        System.Security.Claims.ClaimsPrincipal user, 
+        string resourceKey, 
+        TicketHub.Application.Enums.PermissionType minimumType = TicketHub.Application.Enums.PermissionType.Menu)
     {
         if (string.IsNullOrWhiteSpace(resourceKey)) return true;
 
         var permissions = await GetPermissionsFromCacheAsync();
-        var targetPermission = permissions.FirstOrDefault(p =>
-            p.ResourceKey.Equals(resourceKey, StringComparison.OrdinalIgnoreCase));
+        var matchingPermissions = permissions
+            .Where(p => p.ResourceKey.Equals(resourceKey, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        if (targetPermission == null) return true;
+        if (!matchingPermissions.Any()) return true;
 
         var userRoles = user.Claims
             .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
             .Select(c => c.Value)
             .ToList();
 
-        return targetPermission.AllowedRoles.Any(r => userRoles.Contains(r));
+        var grantedPermissions = matchingPermissions
+            .Where(p => p.AllowedRoles.Any(r => userRoles.Contains(r)))
+            .ToList();
+
+        if (!grantedPermissions.Any()) return false;
+
+        return grantedPermissions.Any(p => p.Type >= minimumType);
     }
 
     public void ClearCache()
@@ -295,6 +305,7 @@ public class PermissionService : IPermissionService
                     .Select(p => new PermissionCacheDto
                     {
                         ResourceKey = p.ResourceKey ?? string.Empty,
+                        Type = p.Type,
                         AllowedRoles = rolePermissions
                             .Where(rp => rp.PermissionId == p.Id && rp.Role != null)
                             .Select(rp => rp.Role.Name)

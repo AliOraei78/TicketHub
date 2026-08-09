@@ -5,6 +5,8 @@
 @inject NavigationManager Navigation
 
 @using TicketHub.Core.Common
+@using TicketHub.Web.Components.Layout.Shared
+@using TicketHub.Application.Enums
 
 <div class="w-full" dir="rtl">
     <!-- Back to List Button -->
@@ -60,12 +62,14 @@
                                 <span class="text-sm font-bold" style="color: @(ticket.Status?.ColorCode ?? "#6B7280");">
                                     @(ticket.Status?.Name ?? "نامشخص")
                                 </span>
-                                <button type="button" @onclick="OpenTransitionModal" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                    تغییر وضعیت
-                                </button>
+                                <SecuredView ResourceKey="/tickets" MinimumType="PermissionType.SystemSection">
+                                    <button type="button" @onclick="OpenTransitionModal" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        تغییر وضعیت
+                                    </button>
+                                </SecuredView>
                             </div>
                         }
                         else

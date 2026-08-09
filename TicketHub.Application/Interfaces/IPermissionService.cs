@@ -1,4 +1,4 @@
-﻿using TicketHub.Application.DTOs;
+using TicketHub.Application.DTOs;
 
 namespace TicketHub.Application.Interfaces;
 
@@ -12,6 +12,6 @@ public interface IPermissionService
     Task<bool> AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds);
     Task<bool> DeleteRangeAsync(IEnumerable<int> ids);
     Task<bool> UpdateStatusAsync(IEnumerable<int> ids, bool isActive);
-    Task<bool> HasAccessAsync(System.Security.Claims.ClaimsPrincipal user, string resourceKey);
+    Task<bool> HasAccessAsync(System.Security.Claims.ClaimsPrincipal user, string resourceKey, TicketHub.Application.Enums.PermissionType minimumType = TicketHub.Application.Enums.PermissionType.Menu);
     void ClearCache();
 }

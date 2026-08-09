@@ -1,4 +1,7 @@
-﻿<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+@using TicketHub.Web.Components.Layout.Shared
+@using TicketHub.Application.Enums
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
     <div>
         <div class="flex items-center gap-2">
             @if (Icon != null)
@@ -18,12 +21,26 @@
 
     @if (!string.IsNullOrWhiteSpace(ButtonText))
     {
-        <button @onclick="OnActionClick" class="smooth-transition @ButtonThemeClass text-white font-medium px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            @ButtonText
-        </button>
+        @if (!string.IsNullOrWhiteSpace(ResourceKey))
+        {
+            <SecuredView ResourceKey="@ResourceKey" MinimumType="@MinimumType">
+                <button @onclick="OnActionClick" class="smooth-transition @ButtonThemeClass text-white font-medium px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    @ButtonText
+                </button>
+            </SecuredView>
+        }
+        else
+        {
+            <button @onclick="OnActionClick" class="smooth-transition @ButtonThemeClass text-white font-medium px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                @ButtonText
+            </button>
+        }
     }
 </div>
 
@@ -45,4 +62,10 @@
 
     [Parameter]
     public RenderFragment? Icon { get; set; }
+
+    [Parameter]
+    public string? ResourceKey { get; set; }
+
+    [Parameter]
+    public PermissionType MinimumType { get; set; } = PermissionType.SystemSection;
 }
