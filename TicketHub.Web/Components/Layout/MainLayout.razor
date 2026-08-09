@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @inject NavigationManager Navigation
 
 <style>
@@ -84,7 +84,7 @@
             </div>
         </header>
 
-        <main class="flex-1 p-4 md:p-8 overflow-y-auto relative custom-scrollbar">
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto relative custom-scrollbar">
             <div @key="Navigation.Uri" class="page-transition-enter min-h-full flex flex-col">
                 <CustomErrorBoundary @ref="errorBoundary">
                     @Body
