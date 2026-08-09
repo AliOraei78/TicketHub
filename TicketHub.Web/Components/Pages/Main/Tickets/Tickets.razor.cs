@@ -204,9 +204,10 @@ public partial class Tickets : IDisposable
     {
         if (ticket.Project != null && ticket.Project.WorkflowId.HasValue)
         {
-            await transitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value);
+            await transitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value, ticket.WorkflowStatusId);
         }
     }
+
 
     private void HandleTransitionSaved()
     {

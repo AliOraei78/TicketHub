@@ -87,6 +87,33 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
     public void RemoveTransitionFields(IEnumerable<TransitionField> fields)
     {
         using var context = _factory.CreateDbContext();
+        var fieldIds = fields.Select(f => f.Id).Where(id => id > 0).ToList();
+        if (fieldIds.Any())
+        {
+            var fieldAttachments = context.Set<Attachment>()
+                .Where(a => a.TransitionFieldId != null && fieldIds.Contains(a.TransitionFieldId.Value))
+                .ToList();
+            if (fieldAttachments.Any())
+            {
+                context.Set<Attachment>().RemoveRange(fieldAttachments);
+            }
+
+            var fieldValues = context.Set<TransitionFieldValue>()
+                .Include(tfv => tfv.Attachments)
+                .Where(tfv => fieldIds.Contains(tfv.TransitionFieldId))
+                .ToList();
+
+            if (fieldValues.Any())
+            {
+                var valueAttachments = fieldValues.SelectMany(tfv => tfv.Attachments).ToList();
+                if (valueAttachments.Any())
+                {
+                    context.Set<Attachment>().RemoveRange(valueAttachments);
+                }
+                context.Set<TransitionFieldValue>().RemoveRange(fieldValues);
+            }
+        }
+
         context.Set<TransitionField>().RemoveRange(fields);
         context.SaveChanges();
     }
@@ -94,16 +121,77 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
     public void RemoveWorkflowStatuses(IEnumerable<WorkflowStatus> statuses)
     {
         using var context = _factory.CreateDbContext();
-        context.Set<WorkflowStatus>().RemoveRange(statuses);
+        var statusList = statuses.ToList();
+        var statusIds = statusList.Select(s => s.Id).Where(id => id > 0).ToList();
+        if (statusIds.Any())
+        {
+            var transitionsToRemove = context.Set<Transition>()
+                .Where(t => statusIds.Contains(t.FromState) || statusIds.Contains(t.ToState))
+                .ToList();
+
+            if (transitionsToRemove.Any())
+            {
+                RemoveTransitions(transitionsToRemove);
+            }
+        }
+
+        context.Set<WorkflowStatus>().RemoveRange(statusList);
         context.SaveChanges();
     }
 
     public void RemoveTransitions(IEnumerable<Transition> transitions)
     {
         using var context = _factory.CreateDbContext();
-        context.Set<Transition>().RemoveRange(transitions);
+        var transitionList = transitions.ToList();
+        var transitionIds = transitionList.Select(t => t.Id).Where(id => id > 0).ToList();
+        if (transitionIds.Any())
+        {
+            var transitionFields = context.Set<TransitionField>()
+                .Where(tf => transitionIds.Contains(tf.TransitionId))
+                .ToList();
+            if (transitionFields.Any())
+            {
+                var fieldIds = transitionFields.Select(tf => tf.Id).ToList();
+
+                var fieldAttachments = context.Set<Attachment>()
+                    .Where(a => a.TransitionFieldId != null && fieldIds.Contains(a.TransitionFieldId.Value))
+                    .ToList();
+                if (fieldAttachments.Any())
+                {
+                    context.Set<Attachment>().RemoveRange(fieldAttachments);
+                }
+
+                var fieldValues = context.Set<TransitionFieldValue>()
+                    .Include(tfv => tfv.Attachments)
+                    .Where(tfv => fieldIds.Contains(tfv.TransitionFieldId))
+                    .ToList();
+
+                if (fieldValues.Any())
+                {
+                    var valueAttachments = fieldValues.SelectMany(tfv => tfv.Attachments).ToList();
+                    if (valueAttachments.Any())
+                    {
+                        context.Set<Attachment>().RemoveRange(valueAttachments);
+                    }
+                    context.Set<TransitionFieldValue>().RemoveRange(fieldValues);
+                }
+
+                context.Set<TransitionField>().RemoveRange(transitionFields);
+            }
+
+            var transitionRoles = context.Set<TransitionRole>()
+                .Where(tr => transitionIds.Contains(tr.TransitionId))
+                .ToList();
+            if (transitionRoles.Any())
+            {
+                context.Set<TransitionRole>().RemoveRange(transitionRoles);
+            }
+        }
+
+        context.Set<Transition>().RemoveRange(transitionList);
         context.SaveChanges();
     }
+
 
     public async Task CommitChangesAsync()
     {
@@ -137,9 +225,12 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
                 .ThenInclude(ws => ws.Status)
             .Include(t => t.ToStatus)
                 .ThenInclude(ws => ws.Status)
+            .Include(t => t.AllowedRoles)
             .Include(t => t.TransitionFields)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == transitionId);
     }
+
 
     public async Task<WorkflowStatus?> GetWorkflowStatusAsync(int workflowId, int statusId)
     {

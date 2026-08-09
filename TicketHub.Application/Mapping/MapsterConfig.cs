@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using TicketHub.Application.DTOs;
 using TicketHub.Core.Common;
 using TicketHub.Core.Entities;
@@ -92,6 +92,15 @@ public class MapsterConfig : IRegister
         config.NewConfig<CommentDto, Comment>()
               .Ignore(dest => dest.Ticket)
               .Ignore(dest => dest.User);
+
+        config.NewConfig<TicketHistory, TicketHistoryDto>();
+        config.NewConfig<TicketHistoryDto, TicketHistory>()
+              .Ignore(dest => dest.Ticket)
+              .Ignore(dest => dest.User)
+              .Ignore(dest => dest.Transition)
+              .Ignore(dest => dest.FromStatus)
+              .Ignore(dest => dest.ToStatus);
+
 
         config.NewConfig<Ticket, TicketDto>()
               .Map(dest => dest.AttachmentIds, src => src.Attachments != null

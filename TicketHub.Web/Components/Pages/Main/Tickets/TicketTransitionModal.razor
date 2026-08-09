@@ -1,7 +1,9 @@
 @using TicketHub.Application.DTOs
 @using TicketHub.Application.Interfaces
+@using TicketHub.Core.Entities
 @using TicketHub.Core.Interfaces
 @using TicketHub.Web.Components.Shared
+
 @using FluentValidation
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ITicketService TicketService
@@ -162,7 +164,7 @@
     private List<string> ValidationErrors { get; set; } = new();
     private Dictionary<string, string> FieldValidationErrors { get; set; } = new();
 
-    public async Task OpenAsync(int ticketId, string title, int currentStatusId, int workflowId)
+    public async Task OpenAsync(int ticketId, string title, int currentStatusId, int workflowId, int? currentWorkflowStatusId = null)
     {
         IsVisible = true;
         IsLoading = true;
@@ -205,12 +207,23 @@
             var workflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
             if (workflow != null && workflow.Transitions != null && workflow.WorkflowStatuses != null)
             {
-                var currentWorkflowStatus = workflow.WorkflowStatuses
-                    .FirstOrDefault(ws => ws.StatusId == currentStatusId || ws.Id == currentStatusId);
+                WorkflowStatus? currentWorkflowStatus = null;
+                if (currentWorkflowStatusId.HasValue && currentWorkflowStatusId.Value > 0)
+                {
+                    currentWorkflowStatus = workflow.WorkflowStatuses
+                        .FirstOrDefault(ws => ws.Id == currentWorkflowStatusId.Value);
+                }
+
+                if (currentWorkflowStatus == null)
+                {
+                    currentWorkflowStatus = workflow.WorkflowStatuses
+                        .FirstOrDefault(ws => ws.StatusId == currentStatusId);
+                }
 
                 if (currentWorkflowStatus != null)
                 {
                     AvailableTransitions = workflow.Transitions
+                        .Where(t => t.IsActive)
                         .Where(t => t.FromState == currentWorkflowStatus.Id)
                         .Where(t => isAdmin 
                                  || !t.AllowedRoles.Any() 
@@ -247,8 +260,9 @@
         var selectedTransition = AvailableTransitions.FirstOrDefault(t => t.Id == transitionId);
         if (selectedTransition != null && selectedTransition.TransitionFields != null)
         {
-            // Map transition fields to dynamic field view models
+            // Map active transition fields to dynamic field view models
             DynamicFields = selectedTransition.TransitionFields
+                .Where(f => f.IsActive)
                 .OrderBy(f => f.SortOrder)
                 .Select(f => new DynamicFieldModel
                 {
@@ -264,6 +278,7 @@
                     PendingUploads = new()
                 }).ToList();
         }
+
         else
         {
             DynamicFields = new List<DynamicFieldModel>();

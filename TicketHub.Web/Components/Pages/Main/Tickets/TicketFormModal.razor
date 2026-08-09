@@ -105,22 +105,25 @@
 
     protected override void OnParametersSet()
     {
-        if (DynamicFields != null && DynamicFieldModels.Count != DynamicFields.Count())
+        if (DynamicFields != null && DynamicFieldModels.Count != DynamicFields.Where(f => f.IsActive).Count())
         {
-            DynamicFieldModels = DynamicFields.Select(f => new DynamicFieldModel
-            {
-                OriginalFieldId = f.Id,
-                Name = f.Name,
-                Placeholder = f.Placeholder,
-                SortOrder = f.SortOrder,
-                DefaultValue = f.DefaultValue,
-                IsRequired = f.IsRequired,
-                Options = f.Options,
-                FieldTypeId = f.FieldTypeId,
-                Value = Model.FieldValues?.FirstOrDefault(x => x.TicketFieldId == f.Id)?.Value ?? (!string.IsNullOrWhiteSpace(f.DefaultValue) ? f.DefaultValue : string.Empty)
-            }).ToList();
+            DynamicFieldModels = DynamicFields
+                .Where(f => f.IsActive)
+                .Select(f => new DynamicFieldModel
+                {
+                    OriginalFieldId = f.Id,
+                    Name = f.Name,
+                    Placeholder = f.Placeholder,
+                    SortOrder = f.SortOrder,
+                    DefaultValue = f.DefaultValue,
+                    IsRequired = f.IsRequired,
+                    Options = f.Options,
+                    FieldTypeId = f.FieldTypeId,
+                    Value = Model.FieldValues?.FirstOrDefault(x => x.TicketFieldId == f.Id)?.Value ?? (!string.IsNullOrWhiteSpace(f.DefaultValue) ? f.DefaultValue : string.Empty)
+                }).ToList();
         }
     }
+
 
     private void MapDynamicFieldsToModel()
     {

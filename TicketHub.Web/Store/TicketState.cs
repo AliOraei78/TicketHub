@@ -116,9 +116,10 @@ public class TicketEffects
             _logger.LogInformation("شروع فراخوانی اطلاعات اولیه تیکت‌ها.");
 
             var projects = await _projectService.GetProjectsByUserRolesAsync(action.UserRoles);
-            var statuses = await _statusService.GetAllAsync();
-            var priorities = await _priorityService.GetAllAsync();
+            var statuses = (await _statusService.GetAllAsync()).Where(s => s.IsActive).ToList();
+            var priorities = (await _priorityService.GetAllAsync()).Where(p => p.IsActive).ToList();
             var categories = await _categoryService.GetCategoriesByUserRolesAsync(action.UserRoles);
+
 
             dispatcher.Dispatch(new TicketInitialDataLoadedAction(projects, statuses, priorities, categories));
             dispatcher.Dispatch(new LoadTicketsAction());

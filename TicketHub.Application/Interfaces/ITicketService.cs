@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using TicketHub.Application.DTOs;
 
 namespace TicketHub.Application.Interfaces;
@@ -13,4 +14,9 @@ public interface ITicketService
     Task DeleteAsync(int id);
     Task DeleteRangeAsync(IEnumerable<int> ids);
     Task ExecuteTransitionAsync(ExecuteTransitionDto dto, int currentUserId);
+    Task<List<TicketHistoryDto>> GetTransitionsByTicketIdAsync(int ticketId);
+    Task DeleteAttachmentAsync(int attachmentId, int currentUserId, bool hasFullAccess);
+    Task<AttachmentDto> UploadTicketAttachmentAsync(int ticketId, int? ticketFieldValueId, Stream fileStream, string fileName, string contentType);
+    Task<bool> CanEditTicketAsync(int ticketId, ClaimsPrincipal user);
 }
+

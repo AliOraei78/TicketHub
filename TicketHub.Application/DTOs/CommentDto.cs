@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,4 +12,6 @@ public class CommentDto
     public DateTime CreatedAt { get; set; }
     public int? TicketId { get; set; }
     public int UserId { get; set; }
+    public UserDto? User { get; set; }
 }
+

@@ -65,8 +65,12 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .Include(t => t.Project)
                 .ThenInclude(p => p.Workflow)
             .Include(t => t.Status)
+            .Include(t => t.WorkflowStatus)
+                .ThenInclude(ws => ws.Status)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == id);
     }
+
 
     public async Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history)
     {

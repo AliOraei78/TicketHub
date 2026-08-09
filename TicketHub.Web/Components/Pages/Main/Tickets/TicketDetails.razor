@@ -1,19 +1,48 @@
 @page "/tickets/{TicketId:int}"
 @rendermode InteractiveServer
-@inject ITicketService TicketService
-@inject IStatusService StatusService
-@inject NavigationManager Navigation
+@implements IDisposable
 
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @using TicketHub.Core.Common
 @using TicketHub.Web.Components.Layout.Shared
 @using TicketHub.Application.Enums
+@using TicketHub.Application.DTOs
 
-<div class="w-full" dir="rtl">
-    <!-- Back to List Button -->
-    <button @onclick="GoBack" class="smooth-transition mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7" /></svg>
-        بازگشت به لیست تیکت‌ها
-    </button>
+@inject ITicketService TicketService
+@inject ICommentService CommentService
+@inject IStatusService StatusService
+@inject ICategoryService CategoryService
+@inject IPriorityService PriorityService
+@inject IToastService ToastService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionService PermissionService
+@inject NavigationManager Navigation
+
+
+<div class="w-full space-y-6" dir="rtl">
+    <!-- Navigation & Header Bar -->
+    <div class="flex items-center justify-between">
+        <button @onclick="GoBack" class="smooth-transition flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7" /></svg>
+            بازگشت به لیست تیکت‌ها
+        </button>
+
+        @if (ticket != null)
+        {
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-400">شناسه تیکت: #@ticket.Id</span>
+                @if (_canEdit)
+                {
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200/60 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 210.3H3v-3.572L16.732 3.732z" /></svg>
+                        قابلیت ویرایش آنلاین (فرستنده / دسترسی کامل)
+                    </span>
+                }
+            </div>
+        }
+    </div>
 
     @if (ticket == null)
     {
@@ -26,29 +55,313 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <!-- Main Content Area -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Ticket Main Card -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start border-b border-gray-50 pb-4 mb-4">
-                        <div>
-                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
+                <!-- Ticket Main Details Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4 relative">
+                    
+                    <!-- Project Badge & Inline Category Selector -->
+                    <div class="flex flex-wrap justify-between items-center border-b border-gray-50 pb-4 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
                                 پروژه: @(ticket.Project?.Name ?? "عمومی")
                             </span>
-                            <h1 class="text-2xl font-black text-gray-800 mt-2">@ticket.Title</h1>
+
+                            <!-- Inline Editable Category -->
+                            @if (_canEdit)
+                            {
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs text-gray-400">دسته‌بندی:</span>
+                                    <select value="@(ticket.CategoryId ?? 0)" @onchange="UpdateCategoryAsync" class="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-medium focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
+                                        <option value="0">انتخاب نشده</option>
+                                        @foreach (var cat in categories)
+                                        {
+                                            <option value="@cat.Id">@cat.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                            else if (ticket.Category != null)
+                            {
+                                <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md">
+                                    دسته‌بندی: @ticket.Category.Name
+                                </span>
+                            }
                         </div>
                     </div>
-                    <p class="text-gray-600 leading-relaxed text-sm whitespace-pre-line">@ticket.Description</p>
+
+                    <!-- Inline Editable Title -->
+                    <div>
+                        @if (_isEditingTitle)
+                        {
+                            <div class="flex items-center gap-2 mt-2">
+                                <input type="text" @bind="_titleValue" class="flex-grow text-xl font-bold text-gray-800 px-3 py-1.5 border-2 border-blue-500 rounded-xl focus:outline-none" autofocus />
+                                <button type="button" @onclick="SaveTitleAsync" class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors" title="ذخیره عنوان">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                </button>
+                                <button type="button" @onclick="() => _isEditingTitle = false" class="p-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors" title="انصراف">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="group flex items-center justify-between gap-3">
+                                <h1 class="text-2xl font-black text-gray-800">@ticket.Title</h1>
+                                @if (_canEdit)
+                                {
+                                    <button type="button" @onclick="EnableTitleEdit" class="opacity-0 group-hover:opacity-100 smooth-transition p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold flex items-center gap-1" title="ویرایش عنوان">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 210.3H3v-3.572L16.732 3.732z" /></svg>
+                                        ویرایش
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Inline Editable Description -->
+                    <div class="pt-2">
+                        @if (_isEditingDescription)
+                        {
+                            <div class="space-y-2">
+                                <textarea @bind="_descriptionValue" rows="5" class="w-full p-3 text-sm text-gray-700 border-2 border-blue-500 rounded-xl focus:outline-none leading-relaxed" placeholder="توضیحات تیکت..."></textarea>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" @onclick="SaveDescriptionAsync" class="px-4 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        ذخیره تغییرات
+                                    </button>
+                                    <button type="button" @onclick="() => _isEditingDescription = false" class="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 transition-colors">
+                                        انصراف
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="group relative bg-gray-50/60 p-4 rounded-xl border border-gray-100">
+                                <p class="text-gray-700 leading-relaxed text-sm whitespace-pre-line">@ticket.Description</p>
+                                @if (_canEdit)
+                                {
+                                    <button type="button" @onclick="EnableDescriptionEdit" class="absolute top-3 left-3 opacity-0 group-hover:opacity-100 smooth-transition p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 text-xs font-bold flex items-center gap-1" title="ویرایش شرح">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 210.3H3v-3.572L16.732 3.732z" /></svg>
+                                        ویرایش شرح
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Attachments Section (Deletable & Re-uploadable) -->
+                    <div class="border-t border-gray-100 pt-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                فایل‌های پیوست تیکت
+                            </h4>
+
+                            @if (_canEdit)
+                            {
+                                <label class="cursor-pointer px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-lg transition-colors flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                    آپلود فایل جدید
+                                    <InputFile OnChange="UploadFilesAsync" multiple class="hidden" />
+                                </label>
+                            }
+                        </div>
+
+                        @if (allAttachments != null && allAttachments.Any())
+                        {
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                @foreach (var att in allAttachments)
+                                {
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all group">
+                                        <a href="@att.FilePath" target="_blank" download class="flex items-center gap-2.5 min-w-0 flex-grow text-gray-700 hover:text-blue-600 font-medium text-xs truncate">
+                                            <div class="p-2 rounded-lg bg-blue-100 text-blue-600 flex-shrink-0">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                            </div>
+                                            <span class="truncate" title="@att.FileName">@att.FileName</span>
+                                        </a>
+
+                                        @if (_canEdit)
+                                        {
+                                            <button type="button" @onclick="() => DeleteAttachmentAsync(att.Id)" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors flex-shrink-0" title="حذف فایل">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                در حال حاضر فایلی برای این تیکت پیوست نشده است.
+                            </p>
+                        }
+                    </div>
                 </div>
 
-                <!-- Placeholder for Replies Section (Step 6 Extensions) -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                    <h3 class="font-bold text-gray-800 border-b border-gray-50 pb-2">پاسخ‌های تیکت</h3>
-                    <div class="p-4 bg-gray-50 rounded-xl text-center text-sm text-gray-400 border border-dashed border-gray-200">
-                        در حال حاضر پاسخی برای این تیکت ثبت نشده است.
+                <!-- Bottom Tabs Container (Live Comments & Transitions) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <!-- Tab Headers -->
+                    <div class="flex border-b border-gray-100 bg-gray-50/50">
+                        <button type="button" @onclick='() => _activeTab = "comments"' class="flex-1 py-3.5 px-4 text-center font-bold text-sm transition-all flex items-center justify-center gap-2 border-b-2 @(_activeTab == "comments" ? "border-blue-600 text-blue-600 bg-white" : "border-transparent text-gray-500 hover:text-gray-800")">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                            نظرات و گفتگو
+                            <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-extrabold rounded-full bg-blue-100 text-blue-700">
+                                @(comments?.Count ?? 0)
+                            </span>
+                            <span class="flex h-2 w-2 relative" title="گفتگوی زنده">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                        </button>
+
+                        <button type="button" @onclick='() => _activeTab = "transitions"' class="flex-1 py-3.5 px-4 text-center font-bold text-sm transition-all flex items-center justify-center gap-2 border-b-2 @(_activeTab == "transitions" ? "border-blue-600 text-blue-600 bg-white" : "border-transparent text-gray-500 hover:text-gray-800")">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            تاریخچه انتقالات
+                            <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-extrabold rounded-full bg-gray-200 text-gray-700">
+                                @(transitions?.Count ?? 0)
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Content Area -->
+                    <div class="p-6">
+                        @if (_activeTab == "comments")
+                        {
+                            <!-- Live Comments Tab -->
+                            <div class="space-y-6">
+                                <!-- Comment Input Form -->
+                                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                                    <h4 class="font-bold text-gray-800 text-xs">ارسال نظر جدید</h4>
+                                    <textarea @bind="_newCommentContent" rows="3" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all leading-relaxed" placeholder="نظر یا پاسخ خود را بنویسید..."></textarea>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-gray-400 flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                            به محض ارسال، نظرات به صورت زنده نمایش داده می‌شوند.
+                                        </span>
+                                        <button type="button" @onclick="AddCommentAsync" disabled="@(_isSubmittingComment || string.IsNullOrWhiteSpace(_newCommentContent))" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5">
+                                            @if (_isSubmittingComment)
+                                            {
+                                                <div class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
+                                            }
+                                            else
+                                            {
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                            }
+                                            ثبت نظر
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Comments List -->
+                                @if (comments != null && comments.Any())
+                                {
+                                    <div class="space-y-4">
+                                        @foreach (var comment in comments)
+                                        {
+                                            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-start gap-3 group">
+                                                <!-- Avatar Initials -->
+                                                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                                    @(GetInitials(comment.User?.Name ?? "کاربر"))
+                                                </div>
+
+                                                <div class="flex-grow space-y-1">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-bold text-sm text-gray-800">@(comment.User?.Name ?? "کاربر ناشناس")</span>
+                                                        </div>
+                                                        <span class="text-xs text-gray-400 dir-ltr" title="تاریخ هجری شمسی">
+                                                            @comment.CreatedAt.ToPersianDateTimeString()
+                                                        </span>
+                                                    </div>
+
+                                                    <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">@comment.Content</p>
+                                                </div>
+
+                                                @if (comment.UserId == _currentUserId || _hasFullAccess)
+                                                {
+                                                    <button type="button" @onclick="() => DeleteCommentAsync(comment.Id)" class="p-1 text-gray-300 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0" title="حذف نظر">
+                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="p-8 text-center text-sm text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        در حال حاضر هیچ نظری برای این تیکت ثبت نشده است. اولین نظر را شما ارسال کنید!
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else if (_activeTab == "transitions")
+                        {
+                            <!-- Transitions Tab (Persian Shamsi Dates) -->
+                            <div class="space-y-4">
+                                @if (transitions != null && transitions.Any())
+                                {
+                                    <div class="relative border-r-2 border-indigo-100 mr-3 pr-6 space-y-6">
+                                        @foreach (var item in transitions)
+                                        {
+                                            <div class="relative group">
+                                                <!-- Node Bullet Icon -->
+                                                <div class="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm"></div>
+
+                                                <div class="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-2">
+                                                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                                                        <span class="font-black text-sm text-gray-800">
+                                                            @(string.IsNullOrWhiteSpace(item.TransitionTitle) ? "تغییر وضعیت" : item.TransitionTitle)
+                                                        </span>
+                                                        <span class="text-xs font-semibold text-gray-400 dir-ltr" title="تاریخ هجری شمسی">
+                                                            @item.CreatedAt.ToPersianDateTimeString()
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- From Status -> To Status Badges -->
+                                                    <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
+                                                        <span class="text-gray-400">انتقال وضعیت:</span>
+                                                        <span class="px-2.5 py-1 rounded-full font-bold" style="background-color: @(item.FromStatusColor ?? "#6B7280")20; color: @(item.FromStatusColor ?? "#6B7280");">
+                                                            @(string.IsNullOrWhiteSpace(item.FromStatusName) ? "نامشخص" : item.FromStatusName)
+                                                        </span>
+                                                        <svg class="w-4 h-4 text-gray-400 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                                        <span class="px-2.5 py-1 rounded-full font-bold" style="background-color: @(item.ToStatusColor ?? "#6B7280")20; color: @(item.ToStatusColor ?? "#6B7280");">
+                                                            @(string.IsNullOrWhiteSpace(item.ToStatusName) ? "نامشخص" : item.ToStatusName)
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- User Executed -->
+                                                    <div class="flex items-center justify-between text-xs text-gray-500 pt-1">
+                                                        <span>انجام دهنده: <strong class="text-gray-700">@(item.UserName ?? "کاربر سیستم")</strong></span>
+                                                    </div>
+
+                                                    <!-- Transition Comment -->
+                                                    @if (!string.IsNullOrWhiteSpace(item.Comment))
+                                                    {
+                                                        <div class="bg-white p-3 rounded-lg border border-gray-100 text-xs text-gray-600 leading-relaxed mt-2">
+                                                            <span class="font-bold text-gray-400 block mb-1">توضیحات انتقال:</span>
+                                                            @item.Comment
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="p-8 text-center text-sm text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        هیچ گام انتقالی در جریان کاری برای این تیکت به ثبت نرسیده است.
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
-            <!-- Sidebar Actions & Info Area -->
+            <!-- Sidebar Actions & Metadata Info Area -->
             <div class="space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                     <h3 class="font-bold text-gray-800 border-b border-gray-50 pb-2">مدیریت وضعیت تیکت</h3>
@@ -74,7 +387,7 @@
                         }
                         else
                         {
-                            <select value="@ticket.StatusId" @onchange="UpdateStatus" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 smooth-transition font-medium">
+                            <select value="@ticket.StatusId" @onchange="UpdateStatusAsync" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 smooth-transition font-medium">
                                 @if (statuses != null)
                                 {
                                     @foreach (var status in statuses)
@@ -86,13 +399,26 @@
                         }
                     </div>
 
-                    <!-- Priority Metadata Info -->
+                    <!-- Inline Priority Dropdown Info -->
                     <div class="pt-2">
                         <label class="block text-xs font-medium text-gray-400 mb-1">اولویت تیکت</label>
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-                              style="background-color: @(ticket.Priority?.ColorCode ?? "#6B7280")20; color: @(ticket.Priority?.ColorCode ?? "#6B7280");">
-                            @(ticket.Priority?.Name ?? "نامشخص")
-                        </span>
+                        @if (_canEdit)
+                        {
+                            <select value="@(ticket.PriorityId ?? 0)" @onchange="UpdatePriorityAsync" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 smooth-transition font-medium">
+                                <option value="0">انتخاب نشده</option>
+                                @foreach (var pri in priorities)
+                                {
+                                    <option value="@pri.Id">@pri.Name</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                                  style="background-color: @(ticket.Priority?.ColorCode ?? "#6B7280")20; color: @(ticket.Priority?.ColorCode ?? "#6B7280");">
+                                @(ticket.Priority?.Name ?? "نامشخص")
+                            </span>
+                        }
                     </div>
 
                     <!-- Meta Details -->
@@ -102,8 +428,8 @@
                             <span class="font-medium text-gray-700">@(ticket.User?.Name ?? "کاربر ناشناس")</span>
                         </div>
                         <div class="flex justify-between">
-                            <span>تاریخ ایجاد:</span>
-                            <span class="font-medium text-gray-700">@ticket.CreatedAt.ToPersianDateTimeString()</span>
+                            <span>تاریخ ایجاد (شمسی):</span>
+                            <span class="font-medium text-gray-700 dir-ltr">@ticket.CreatedAt.ToPersianDateTimeString()</span>
                         </div>
                     </div>
                 </div>
@@ -120,16 +446,247 @@
 
     private TicketDto? ticket;
     private IEnumerable<StatusDto> statuses = new List<StatusDto>();
+    private IEnumerable<CategoryDto> categories = new List<CategoryDto>();
+    private IEnumerable<PriorityDto> priorities = new List<PriorityDto>();
+    private List<CommentDto> comments = new();
+    private List<TicketHistoryDto> transitions = new();
+    private List<AttachmentDto> allAttachments = new();
+
     private TicketTransitionModal transitionModal = default!;
+
+    private bool _canEdit = false;
+    private int _currentUserId = 0;
+    private bool _hasFullAccess = false;
+
+    private bool _isEditingTitle = false;
+    private string _titleValue = string.Empty;
+
+    private bool _isEditingDescription = false;
+    private string _descriptionValue = string.Empty;
+
+    private string _activeTab = "comments";
+    private string _newCommentContent = string.Empty;
+    private bool _isSubmittingComment = false;
 
     protected override async Task OnInitializedAsync()
     {
         ticket = await TicketService.GetByIdAsync(TicketId);
-        statuses = await StatusService.GetAllAsync();
 
         if (ticket == null)
         {
             Navigation.NavigateTo("/tickets");
+            return;
+        }
+
+        statuses = await StatusService.GetAllAsync();
+        categories = await CategoryService.GetAllAsync();
+        priorities = await PriorityService.GetAllAsync();
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
+        _currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
+
+        _hasFullAccess = await PermissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
+        bool isSender = (_currentUserId > 0 && ticket.UserId == _currentUserId);
+        _canEdit = isSender || _hasFullAccess;
+
+        // Load Comments & Transitions
+        comments = await CommentService.GetCommentsByTicketIdAsync(TicketId);
+        transitions = await TicketService.GetTransitionsByTicketIdAsync(TicketId);
+
+        // Populate attachments
+        LoadAttachments();
+
+        // Subscribe to live comments
+        CommentService.OnCommentAdded += HandleCommentAdded;
+    }
+
+    private void LoadAttachments()
+    {
+        allAttachments.Clear();
+
+        if (ticket != null)
+        {
+            // Direct ticket attachments can be populated if present in DTO or service
+            if (ticket.FieldValues != null)
+            {
+                foreach (var fv in ticket.FieldValues)
+                {
+                    if (fv.Attachments != null && fv.Attachments.Any())
+                    {
+                        allAttachments.AddRange(fv.Attachments);
+                    }
+                }
+            }
+        }
+    }
+
+    private async void HandleCommentAdded(int tId, CommentDto commentDto)
+    {
+        if (tId == TicketId)
+        {
+            if (!comments.Any(c => c.Id == commentDto.Id))
+            {
+                comments.Add(commentDto);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        CommentService.OnCommentAdded -= HandleCommentAdded;
+    }
+
+    private void EnableTitleEdit()
+    {
+        if (ticket == null) return;
+        _titleValue = ticket.Title;
+        _isEditingTitle = true;
+    }
+
+    private async Task SaveTitleAsync()
+    {
+        if (ticket == null || string.IsNullOrWhiteSpace(_titleValue)) return;
+
+        ticket.Title = _titleValue.Trim();
+        await TicketService.UpdateAsync(ticket);
+        _isEditingTitle = false;
+        ToastService.ShowSuccess("عنوان تیکت با موفقیت ویرایش شد.");
+    }
+
+    private void EnableDescriptionEdit()
+    {
+        if (ticket == null) return;
+        _descriptionValue = ticket.Description;
+        _isEditingDescription = true;
+    }
+
+    private async Task SaveDescriptionAsync()
+    {
+        if (ticket == null || string.IsNullOrWhiteSpace(_descriptionValue)) return;
+
+        ticket.Description = _descriptionValue.Trim();
+        await TicketService.UpdateAsync(ticket);
+        _isEditingDescription = false;
+        ToastService.ShowSuccess("توضیحات تیکت با موفقیت ویرایش شد.");
+    }
+
+    private async Task UpdateCategoryAsync(ChangeEventArgs e)
+    {
+        if (ticket == null || e.Value == null) return;
+
+        if (int.TryParse(e.Value.ToString(), out int catId))
+        {
+            ticket.CategoryId = catId == 0 ? null : catId;
+            await TicketService.UpdateAsync(ticket);
+            ticket = await TicketService.GetByIdAsync(TicketId);
+            ToastService.ShowSuccess("دسته‌بندی تیکت بروزرسانی شد.");
+        }
+    }
+
+    private async Task UpdatePriorityAsync(ChangeEventArgs e)
+    {
+        if (ticket == null || e.Value == null) return;
+
+        if (int.TryParse(e.Value.ToString(), out int priId))
+        {
+            ticket.PriorityId = priId == 0 ? null : priId;
+            await TicketService.UpdateAsync(ticket);
+            ticket = await TicketService.GetByIdAsync(TicketId);
+            ToastService.ShowSuccess("اولویت تیکت بروزرسانی شد.");
+        }
+    }
+
+    private async Task UpdateStatusAsync(ChangeEventArgs e)
+    {
+        if (ticket == null || e.Value == null) return;
+
+        if (int.TryParse(e.Value.ToString(), out int statusId))
+        {
+            ticket.StatusId = statusId;
+            await TicketService.UpdateAsync(ticket);
+            ticket = await TicketService.GetByIdAsync(TicketId);
+            ToastService.ShowSuccess("وضعیت تیکت بروزرسانی شد.");
+        }
+    }
+
+    private async Task DeleteAttachmentAsync(int attachmentId)
+    {
+        try
+        {
+            await TicketService.DeleteAttachmentAsync(attachmentId, _currentUserId, _hasFullAccess);
+            ticket = await TicketService.GetByIdAsync(TicketId);
+            LoadAttachments();
+            ToastService.ShowSuccess("فایل ضمیمه با موفقیت حذف شد.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+    }
+
+    private async Task UploadFilesAsync(InputFileChangeEventArgs e)
+    {
+        if (ticket == null) return;
+
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(5))
+            {
+                using var stream = file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024);
+                await TicketService.UploadTicketAttachmentAsync(TicketId, null, stream, file.Name, file.ContentType);
+            }
+
+            ticket = await TicketService.GetByIdAsync(TicketId);
+            LoadAttachments();
+            ToastService.ShowSuccess("فایل(های) جدید با موفقیت آپلود شد.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("خطا در آپلود فایل: " + ex.Message);
+        }
+    }
+
+    private async Task AddCommentAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newCommentContent)) return;
+
+        try
+        {
+            _isSubmittingComment = true;
+            await CommentService.AddCommentAsync(new CommentDto
+            {
+                TicketId = TicketId,
+                Content = _newCommentContent
+            }, _currentUserId);
+
+            _newCommentContent = string.Empty;
+            ToastService.ShowSuccess("نظر شما با موفقیت ثبت شد.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            _isSubmittingComment = false;
+        }
+    }
+
+    private async Task DeleteCommentAsync(int commentId)
+    {
+        try
+        {
+            await CommentService.DeleteCommentAsync(commentId, _currentUserId, _hasFullAccess);
+            comments.RemoveAll(c => c.Id == commentId);
+            ToastService.ShowSuccess("نظر با موفقیت حذف شد.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
         }
     }
 
@@ -137,34 +694,28 @@
     {
         if (ticket != null && ticket.Project != null && ticket.Project.WorkflowId.HasValue)
         {
-            await transitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value);
+            await transitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value, ticket.WorkflowStatusId);
         }
     }
+
 
     private async Task HandleTransitionSaved()
     {
-        // Reload ticket data to reflect new status and any other changes
         ticket = await TicketService.GetByIdAsync(TicketId);
+        transitions = await TicketService.GetTransitionsByTicketIdAsync(TicketId);
         StateHasChanged();
-    }
-
-    private async Task UpdateStatus(ChangeEventArgs e)
-    {
-        if (ticket == null || e.Value == null) return;
-
-        if (int.TryParse(e.Value.ToString(), out int statusId))
-        {
-            ticket.StatusId = statusId;
-            // با توجه به MapsterConfig، نیازی به ست کردن دستی آبجکت Status نیست
-            await TicketService.UpdateAsync(ticket);
-
-            // بروزرسانی UI با دیتای جدید
-            ticket = await TicketService.GetByIdAsync(TicketId);
-        }
     }
 
     private void GoBack()
     {
         Navigation.NavigateTo("/tickets");
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "ک";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString();
+        return $"{parts[0][0]}{parts[^1][0]}";
     }
 }

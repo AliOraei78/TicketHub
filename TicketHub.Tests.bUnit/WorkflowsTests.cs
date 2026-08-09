@@ -12,7 +12,8 @@ using Xunit;
 
 namespace TicketHub.Tests.bUnit
 {
-    public class WorkflowsTests : TestContext
+    public class WorkflowsTests : BUnitComponentTestBase
+
     {
         private readonly Mock<IDispatcher> _mockDispatcher;
         private readonly Mock<IState<WorkflowState>> _mockState;

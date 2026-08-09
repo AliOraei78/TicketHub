@@ -26,6 +26,8 @@ public class TicketService : ITicketService
     private readonly IWorkflowRepository _workflowRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IPermissionService _permissionService;
+    private readonly IRepository<TicketHistory> _historyRepo;
+    private readonly IRepository<Attachment> _attachmentRepo;
 
     public TicketService(
         ITicketRepository ticketRepository,
@@ -35,7 +37,9 @@ public class TicketService : ITicketService
         IFileStorageService fileStorageService,
         IWorkflowRepository workflowRepository,
         IHttpContextAccessor httpContextAccessor,
-        IPermissionService permissionService)
+        IPermissionService permissionService,
+        IRepository<TicketHistory> historyRepo,
+        IRepository<Attachment> attachmentRepo)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
@@ -45,7 +49,11 @@ public class TicketService : ITicketService
         _workflowRepository = workflowRepository;
         _httpContextAccessor = httpContextAccessor;
         _permissionService = permissionService;
+        _historyRepo = historyRepo;
+        _attachmentRepo = attachmentRepo;
     }
+
+
 
     private async Task ValidateDtoAsync(TicketDto dto)
     {
@@ -296,15 +304,26 @@ public class TicketService : ITicketService
 
         var transition = await _workflowRepository.GetTransitionWithDetailsAsync(dto.TransitionId);
 
-        if (transition == null) throw new NotFoundException("انتقال", dto.TransitionId);
+        if (!transition.IsActive)
+        {
+            throw new ValidationException("این عملیات در حال حاضر غیرفعال می‌باشد.");
+        }
 
-        // Since transition.FromState and ToState now refer to WorkflowStatus.Id
-        if (ticketInDb.WorkflowStatusId != transition.FromState)
+        // Validate source status strictly based on WorkflowStatus (canvas node instance)
+        int currentWorkflowStatusId = ticketInDb.WorkflowStatusId ?? 0;
+        if (currentWorkflowStatusId == 0 && ticketInDb.Project?.Workflow?.WorkflowStatuses != null)
+        {
+            var matchedStatusNode = ticketInDb.Project.Workflow.WorkflowStatuses.FirstOrDefault(ws => ws.StatusId == ticketInDb.StatusId);
+            if (matchedStatusNode != null)
+            {
+                currentWorkflowStatusId = matchedStatusNode.Id;
+            }
+        }
+
+        if (currentWorkflowStatusId != transition.FromState)
         {
             throw new ValidationException("وضعیت فعلی تیکت با مبدا این عملیات تطابق ندارد.");
         }
-
-        // nextWorkflowStatus is no longer needed here because we use transition.ToStatus
 
         var ticketHistory = new TicketHistory
         {
@@ -325,8 +344,9 @@ public class TicketService : ITicketService
 
         foreach (var field in dto.FieldValues)
         {
-            var transitionField = transition.TransitionFields.FirstOrDefault(tf => tf.Id == field.TransitionFieldId);
+            var transitionField = transition.TransitionFields.FirstOrDefault(tf => tf.Id == field.TransitionFieldId && tf.IsActive);
             if (transitionField == null) continue;
+
 
             var fv = new TransitionFieldValue
             {
@@ -358,4 +378,99 @@ public class TicketService : ITicketService
         await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, nextStatusId, nextWorkflowStatusId, ticketHistory);
         _logger.LogInformation("عملیات با موفقیت انجام شد.");
     }
-}
+
+    public async Task<List<TicketHistoryDto>> GetTransitionsByTicketIdAsync(int ticketId)
+    {
+        _logger.LogInformation("دریافت تاریخچه انتقالات برای تیکت با شناسه {TicketId}.", ticketId);
+
+        var histories = (await _historyRepo.GetAllWithIncludesAsync(
+                th => th.User,
+                th => th.FromStatus,
+                th => th.ToStatus,
+                th => th.Attachments))
+            .Where(th => th.TicketId == ticketId && (th.TransitionId != null || th.FromStatusId != null || th.ToStatusId != null))
+            .OrderByDescending(th => th.CreatedAt)
+            .ToList();
+
+        var result = new List<TicketHistoryDto>();
+        foreach (var th in histories)
+        {
+            var dto = th.Adapt<TicketHistoryDto>();
+            dto.FromStatusColor = th.FromStatus?.ColorCode;
+            dto.ToStatusColor = th.ToStatus?.ColorCode;
+            dto.UserName = th.User?.Name ?? th.UserName;
+            result.Add(dto);
+        }
+
+        return result;
+    }
+
+    public async Task DeleteAttachmentAsync(int attachmentId, int currentUserId, bool hasFullAccess)
+    {
+        _logger.LogWarning("درخواست حذف فایل ضمیمه با شناسه {AttachmentId}.", attachmentId);
+
+        var attachments = await _attachmentRepo.GetAllWithIncludesAsync(a => a.Ticket);
+        var attachment = attachments.FirstOrDefault(a => a.Id == attachmentId);
+
+        if (attachment == null)
+            throw new NotFoundException("فایل ضمیمه", attachmentId);
+
+        if (attachment.Ticket != null)
+        {
+            bool isSender = (currentUserId > 0 && attachment.Ticket.UserId == currentUserId);
+            if (!isSender && !hasFullAccess)
+            {
+                throw new ForbiddenException("شما دسترسی لازم برای حذف این فایل را ندارید.");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(attachment.FilePath))
+        {
+            _fileStorageService.DeleteFile(attachment.FilePath);
+        }
+
+        await _attachmentRepo.DeleteAsync(attachmentId);
+
+        _logger.LogInformation("فایل ضمیمه با شناسه {AttachmentId} با موفقیت حذف شد.", attachmentId);
+    }
+
+    public async Task<AttachmentDto> UploadTicketAttachmentAsync(int ticketId, int? ticketFieldValueId, Stream fileStream, string fileName, string contentType)
+    {
+        _logger.LogInformation("آپلود فایل ضمیمه جدید برای تیکت {TicketId}.", ticketId);
+
+        var filePath = await _fileStorageService.SaveFileAsync(fileStream, fileName);
+
+        var attachment = new Attachment
+        {
+            FileName = fileName,
+            ContentType = contentType,
+            FilePath = filePath,
+            CreatedAt = DateTime.UtcNow,
+            TicketId = ticketFieldValueId.HasValue ? null : ticketId,
+            TicketFieldValueId = ticketFieldValueId
+        };
+
+        await _attachmentRepo.AddAsync(attachment);
+
+        return attachment.Adapt<AttachmentDto>();
+    }
+
+
+    public async Task<bool> CanEditTicketAsync(int ticketId, ClaimsPrincipal user)
+    {
+        if (user == null || user.Identity?.IsAuthenticated != true)
+            return false;
+
+        var ticket = await _ticketRepository.GetByIdAsync(ticketId);
+        if (ticket == null) return false;
+
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
+        int currentUserId = int.TryParse(userIdString, out var parsedId) ? parsedId : 0;
+
+        bool isSender = (currentUserId > 0 && ticket.UserId == currentUserId);
+        bool hasFullAccess = await _permissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
+
+        return isSender || hasFullAccess;
+    }
+}
