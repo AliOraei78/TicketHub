@@ -292,6 +292,12 @@ public class CategoryService : ICategoryService
         var rolesList = userRoles.ToList();
         _logger.LogInformation("جستجوی دسته‌بندی‌ها بر اساس {Count} نقش کاربر.", rolesList.Count);
 
+        bool isAdmin = rolesList.Any(r => r == "مدیر سیستم" || r == "ادمین");
+        if (isAdmin)
+        {
+            return await GetAllAsync();
+        }
+
         var allRoles = await _roleRepo.GetAllAsync();
         var userRoleIds = allRoles
             .Where(r => rolesList.Contains(r.Name))
@@ -301,7 +307,7 @@ public class CategoryService : ICategoryService
         var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryRoles);
 
         var filteredCategories = categories
-            .Where(c => c.CategoryRoles.Any(cr => userRoleIds.Contains(cr.RoleId)))
+            .Where(c => !c.CategoryRoles.Any() || c.CategoryRoles.Any(cr => userRoleIds.Contains(cr.RoleId)))
             .ToList();
 
         _logger.LogInformation("تعداد {Count} دسته‌بندی منطبق با نقش‌های کاربر یافت شد.", filteredCategories.Count);

@@ -185,6 +185,12 @@ public class ProjectService : IProjectService
         var rolesList = userRoles.ToList();
         _logger.LogInformation("جستجوی پروژه‌ها بر اساس {Count} نقش کاربر.", rolesList.Count);
 
+        bool isAdmin = rolesList.Any(r => r == "مدیر سیستم" || r == "ادمین");
+        if (isAdmin)
+        {
+            return (await GetProjectsAsync()).ToList();
+        }
+
         var allRoles = await _roleRepo.GetAllAsync();
         var userRoleIds = allRoles
             .Where(r => rolesList.Contains(r.Name))
@@ -194,7 +200,7 @@ public class ProjectService : IProjectService
         var projects = await _projectRepo.GetAllWithIncludesAsync(p => p.RoleProjects);
 
         var filteredProjects = projects
-            .Where(p => p.RoleProjects.Any(rp => userRoleIds.Contains(rp.RoleId)))
+            .Where(p => !p.RoleProjects.Any() || p.RoleProjects.Any(rp => userRoleIds.Contains(rp.RoleId)))
             .ToList();
 
         _logger.LogInformation("تعداد {Count} پروژه منطبق با نقش‌های کاربر یافت شد.", filteredProjects.Count);

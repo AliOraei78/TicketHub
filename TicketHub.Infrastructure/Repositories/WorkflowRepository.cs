@@ -22,6 +22,12 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
             .Include(w => w.Transitions)
                 .ThenInclude(t => t.AllowedRoles)
             .Include(w => w.Transitions)
+                .ThenInclude(t => t.FromStatus)
+                    .ThenInclude(ws => ws.Status)
+            .Include(w => w.Transitions)
+                .ThenInclude(t => t.ToStatus)
+                    .ThenInclude(ws => ws.Status)
+            .Include(w => w.Transitions)
                 .ThenInclude(t => t.TransitionFields)
             .AsSplitQuery()
             .FirstOrDefaultAsync(w => w.Id == id);

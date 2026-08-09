@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ITicketService TicketService
 @inject IWorkflowRepository WorkflowRepository
+@inject IRoleService RoleService
 @inject IToastService ToastService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IValidator<ExecuteTransitionDto> Validator
@@ -79,7 +80,7 @@
                                                 @transition.Name
                                             </p>
                                             <p class="text-xs text-gray-500 mt-1">
-                                                به: @transition.ToStatus?.Status?.Name
+                                                به: @(transition.ToStatus?.Status?.Name ?? "نامشخص")
                                             </p>
                                         </div>
                                         @if (Model.TransitionId == transition.Id)
@@ -94,7 +95,7 @@
                             @if (!AvailableTransitions.Any())
                             {
                                 <p class="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                    عملیاتی برای وضعیت فعلی این تیکت یافت نشد.
+                                    عملیاتی برای وضعیت فعلی این تیکت و نقش‌های شما یافت نشد.
                                 </p>
                             }
                         </div>
@@ -181,18 +182,44 @@
 
         try
         {
-            // Get available transitions from the current state
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userRoles = user.Claims
+                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
+            bool isAdmin = userRoles.Any(r => r == "مدیر سیستم" || r == "ادمین");
+
+            List<int> userRoleIds = new();
+            if (!isAdmin && userRoles.Any())
+            {
+                var allRoles = await RoleService.GetAllRolesAsync();
+                userRoleIds = allRoles
+                    .Where(r => userRoles.Contains(r.Name))
+                    .Select(r => r.Id)
+                    .ToList();
+            }
+
+            // Get available transitions from the current workflow state matching user roles
             var workflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
             if (workflow != null && workflow.Transitions != null && workflow.WorkflowStatuses != null)
             {
-                var currentWorkflowStatus = workflow.WorkflowStatuses.FirstOrDefault(ws => ws.StatusId == currentStatusId);
+                var currentWorkflowStatus = workflow.WorkflowStatuses
+                    .FirstOrDefault(ws => ws.StatusId == currentStatusId || ws.Id == currentStatusId);
+
                 if (currentWorkflowStatus != null)
                 {
-                    AvailableTransitions = workflow.Transitions.Where(t => t.FromState == currentWorkflowStatus.Id).ToList();
+                    AvailableTransitions = workflow.Transitions
+                        .Where(t => t.FromState == currentWorkflowStatus.Id)
+                        .Where(t => isAdmin 
+                                 || !t.AllowedRoles.Any() 
+                                 || t.AllowedRoles.Any(ar => userRoleIds.Contains(ar.RoleId)))
+                        .ToList();
                 }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             ToastService.ShowError("خطا در دریافت لیست عملیات‌ها");
         }
