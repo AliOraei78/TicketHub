@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using TicketHub.Application.DTOs;
@@ -8,6 +8,9 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
+
 namespace TicketHub.Application.Services;
 
 public class RoleService : IRoleService
@@ -15,15 +18,33 @@ public class RoleService : IRoleService
     private readonly IRepository<Role> _repository;
     private readonly ILogger<RoleService> _logger;
     private readonly IValidator<RoleDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public RoleService(
         IRepository<Role> repository,
         ILogger<RoleService> logger,
-        IValidator<RoleDto> validator)
+        IValidator<RoleDto> validator,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _repository = repository;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
+    }
+
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/settings/roles", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
     }
 
     private async Task ValidateDtoAsync(RoleDto dto)
@@ -51,6 +72,7 @@ public class RoleService : IRoleService
 
     public async Task CreateRoleAsync(RoleDto roleDto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد نقش را ندارید.");
         await ValidateDtoAsync(roleDto);
 
         _logger.LogInformation("شروع ایجاد نقش جدید.");
@@ -61,6 +83,7 @@ public class RoleService : IRoleService
 
     public async Task UpdateRoleAsync(int id, RoleDto roleDto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش نقش را ندارید.");
         await ValidateDtoAsync(roleDto);
 
         _logger.LogInformation("ویرایش نقش با شناسه {RoleId}.", id);
@@ -76,6 +99,7 @@ public class RoleService : IRoleService
 
     public async Task DeleteRoleAsync(int id)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف نقش را ندارید.");
         _logger.LogWarning("درخواست حذف نقش با شناسه {RoleId}.", id);
 
         var existingRole = await _repository.GetByIdAsync(id);
@@ -88,6 +112,7 @@ public class RoleService : IRoleService
 
     public async Task DeleteRolesAsync(IEnumerable<int> ids)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف گروهی نقش‌ها را ندارید.");
         var idsList = ids.ToList();
         _logger.LogWarning("درخواست حذف گروهی نقش‌ها به تعداد {Count}.", idsList.Count);
 

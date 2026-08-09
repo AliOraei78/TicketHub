@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using TicketHub.Application.DTOs;
@@ -7,6 +7,9 @@ using TicketHub.Core.Common.Exceptions;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
+
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
 
 namespace TicketHub.Application.Services;
 
@@ -18,6 +21,8 @@ public class CategoryService : ICategoryService
     private readonly IRepository<Role> _roleRepo;
     private readonly ILogger<CategoryService> _logger;
     private readonly IValidator<CategoryDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public CategoryService(
         IRepository<Category> categoryRepo,
@@ -25,7 +30,9 @@ public class CategoryService : ICategoryService
         IRepository<CategoryRole> categoryRoleRepo,
         IRepository<Role> roleRepo,
         ILogger<CategoryService> logger,
-        IValidator<CategoryDto> validator)
+        IValidator<CategoryDto> validator,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _categoryRepo = categoryRepo;
         _categoryProjectRepo = categoryProjectRepo;
@@ -33,6 +40,20 @@ public class CategoryService : ICategoryService
         _roleRepo = roleRepo;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
+    }
+
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/settings/categories", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
     }
 
     private async Task ValidateDtoAsync(CategoryDto dto)
@@ -82,6 +103,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> AddAsync(CategoryDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد دسته‌بندی را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع فرآیند ایجاد دسته‌بندی جدید.");
@@ -124,6 +146,7 @@ public class CategoryService : ICategoryService
 
     public async Task UpdateAsync(CategoryDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش دسته‌بندی را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع فرآیند بروزرسانی دسته‌بندی با شناسه {Id}.", dto.Id);
@@ -186,6 +209,7 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteAsync(CategoryDto categoryDto)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف دسته‌بندی را ندارید.");
         _logger.LogWarning("شروع فرآیند حذف دسته‌بندی با شناسه {Id}.", categoryDto.Id);
 
         var existingCategory = await _categoryRepo.GetByIdAsync(categoryDto.Id);
@@ -214,6 +238,7 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف گروهی دسته‌بندی‌ها را ندارید.");
         var idsList = ids.ToList();
         _logger.LogWarning("درخواست حذف گروهی دسته‌بندی‌ها. تعداد: {Count}", idsList.Count);
 
@@ -243,6 +268,7 @@ public class CategoryService : ICategoryService
 
     public async Task UpdateCategoriesStatusAsync(IEnumerable<int> ids, bool isActive)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای تغییر وضعیت دسته‌بندی‌ها را ندارید.");
         var idsList = ids.ToList();
         _logger.LogInformation("درخواست تغییر وضعیت {Count} دسته‌بندی به وضعیت فعال={IsActive}.", idsList.Count, isActive);
 

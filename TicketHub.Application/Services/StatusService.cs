@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using TicketHub.Application.DTOs;
@@ -8,6 +8,9 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
+
 namespace TicketHub.Application.Services;
 
 public class StatusService : IStatusService
@@ -15,15 +18,33 @@ public class StatusService : IStatusService
     private readonly IRepository<Status> _repository;
     private readonly ILogger<StatusService> _logger;
     private readonly IValidator<StatusDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public StatusService(
         IRepository<Status> repository,
         ILogger<StatusService> logger,
-        IValidator<StatusDto> validator)
+        IValidator<StatusDto> validator,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _repository = repository;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
+    }
+
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/settings/statuses", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
     }
 
     private async Task ValidateDtoAsync(StatusDto dto)
@@ -51,6 +72,7 @@ public class StatusService : IStatusService
 
     public async Task AddAsync(StatusDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد وضعیت را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ایجاد وضعیت جدید.");
@@ -60,6 +82,7 @@ public class StatusService : IStatusService
 
     public async Task UpdateAsync(StatusDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش وضعیت را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("ویرایش وضعیت با شناسه {Id}.", dto.Id);
@@ -74,6 +97,7 @@ public class StatusService : IStatusService
 
     public async Task DeleteAsync(int id)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف وضعیت را ندارید.");
         _logger.LogWarning("درخواست حذف وضعیت با شناسه {Id}.", id);
 
         var existingEntity = await _repository.GetByIdAsync(id);
@@ -86,6 +110,7 @@ public class StatusService : IStatusService
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف گروهی وضعیت‌ها را ندارید.");
         var idsList = ids.ToList();
         _logger.LogWarning("درخواست حذف گروهی وضعیت‌ها به تعداد {Count}.", idsList.Count);
 

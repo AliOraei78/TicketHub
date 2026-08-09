@@ -1,4 +1,11 @@
 
+@using Microsoft.AspNetCore.Components.Authorization
+@using TicketHub.Application.Interfaces
+@using TicketHub.Application.Enums
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionService PermissionService
+
 <DataGrid TItem="UserDto" TKey="int"
           Items="Users"
           IsLoading="IsLoading"
@@ -8,7 +15,8 @@
           PageSize="PageSize"
           SelectedKeys="SelectedIds"
           SelectedKeysChanged="OnSelectionChanged"
-          EmptyStateValue="کاربری">
+          EmptyStateValue="کاربری"
+          ShowSelection="_canManage">
 
     <HeaderTemplate>
         <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نام کاربر</th>
@@ -101,6 +109,14 @@
     [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
     [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
     [Parameter] public string ResourceKey { get; set; } = "/users";
+
+    private bool _canManage = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _canManage = await PermissionService.HasAccessAsync(authState.User, ResourceKey, PermissionType.SystemSection);
+    }
 
     private async Task OnSelectionChanged(HashSet<int> newKeys)
     {

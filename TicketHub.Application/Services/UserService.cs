@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using System.Text.RegularExpressions;
@@ -10,6 +10,9 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
+
 namespace TicketHub.Application.Services;
 
 public class UserService : IUserService
@@ -19,19 +22,25 @@ public class UserService : IUserService
     private readonly IRepository<Role> _roleRepository;
     private readonly ILogger<UserService> _logger;
     private readonly IValidator<UserDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public UserService(
         IUserRepository userRepository,
         IEmailService emailService,
         IRepository<Role> roleRepository,
         ILogger<UserService> logger,
-        IValidator<UserDto> validator)
+        IValidator<UserDto> validator,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _userRepository = userRepository;
         _emailService = emailService;
         _roleRepository = roleRepository;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
     }
 
     private async Task ValidateDtoAsync(UserDto dto)
@@ -96,8 +105,21 @@ public class UserService : IUserService
         return user.Adapt<UserDto>();
     }
 
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/users", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
+    }
+
     public async Task CreateAsync(UserDto dto, string password, List<int> roleIds)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد کاربر را ندارید.");
         await ValidateDtoAsync(dto);
         ValidatePasswordStrict(password);
 
@@ -115,6 +137,7 @@ public class UserService : IUserService
 
     public async Task UpdateAsync(UserDto dto, string? password, List<int> roleIds)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش کاربر را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("ویرایش کاربر با شناسه {Id}.", dto.Id);
@@ -144,9 +167,11 @@ public class UserService : IUserService
         switch (actionType)
         {
             case "Delete":
+                await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف گروهی کاربران را ندارید.");
                 await _userRepository.BulkDeleteAsync(userIds);
                 break;
             case "SingleDelete":
+                await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف کاربر را ندارید.");
                 if (singleId.HasValue)
                 {
                     var user = await _userRepository.GetByIdAsync(singleId.Value);
@@ -156,9 +181,11 @@ public class UserService : IUserService
                 }
                 break;
             case "Activate":
+                await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای تغییر وضعیت کاربران را ندارید.");
                 await _userRepository.BulkUpdateStatusAsync(userIds, true);
                 break;
             case "Deactivate":
+                await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای تغییر وضعیت کاربران را ندارید.");
                 await _userRepository.BulkUpdateStatusAsync(userIds, false);
                 break;
         }

@@ -8,6 +8,9 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
+
 namespace TicketHub.Application.Services;
 
 public class WorkflowService : IWorkflowService
@@ -15,15 +18,21 @@ public class WorkflowService : IWorkflowService
     private readonly IWorkflowRepository _workflowRepository;
     private readonly ILogger<WorkflowService> _logger;
     private readonly IValidator<WorkflowDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public WorkflowService(
         IWorkflowRepository workflowRepository,
         ILogger<WorkflowService> logger,
-        IValidator<WorkflowDto> validator)
+        IValidator<WorkflowDto> validator,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _workflowRepository = workflowRepository;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
     }
 
     private async Task ValidateDtoAsync(WorkflowDto dto)
@@ -61,8 +70,21 @@ public class WorkflowService : IWorkflowService
         return workflow.Adapt<WorkflowDto>();
     }
 
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/workflows", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
+    }
+
     public async Task<WorkflowDto> CreateAsync(WorkflowDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد جریان کاری را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ایجاد جریان کاری جدید.");
@@ -84,6 +106,7 @@ public class WorkflowService : IWorkflowService
 
     public async Task UpdateAsync(WorkflowDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش جریان کاری را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ویرایش جریان کاری با شناسه {Id}.", dto.Id);
@@ -225,6 +248,7 @@ public class WorkflowService : IWorkflowService
 
     public async Task DeleteAsync(int id)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف جریان کاری را ندارید.");
         _logger.LogWarning("درخواست حذف جریان کاری با شناسه {Id}.", id);
 
         var existingWorkflow = await _workflowRepository.GetWorkflowWithDetailsAsync(id);
@@ -244,6 +268,7 @@ public class WorkflowService : IWorkflowService
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف گروهی جریان‌های کاری را ندارید.");
         var idsList = ids.ToList();
         _logger.LogWarning("درخواست حذف گروهی جریان‌های کاری به تعداد {Count}.", idsList.Count);
 

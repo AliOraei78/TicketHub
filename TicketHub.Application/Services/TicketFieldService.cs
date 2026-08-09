@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using TicketHub.Application.DTOs;
@@ -8,6 +8,9 @@ using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
 
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
+
 namespace TicketHub.Application.Services;
 
 public class TicketFieldService : ITicketFieldService
@@ -16,17 +19,35 @@ public class TicketFieldService : ITicketFieldService
     private readonly IRepository<FieldCategory> _fieldCategoryRepo;
     private readonly ILogger<TicketFieldService> _logger;
     private readonly IValidator<TicketFieldDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public TicketFieldService(
         IRepository<TicketField> ticketFieldRepo,
         IRepository<FieldCategory> fieldCategoryRepo,
         ILogger<TicketFieldService> logger,
-        IValidator<TicketFieldDto> validator)
+        IValidator<TicketFieldDto> validator,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _ticketFieldRepo = ticketFieldRepo;
         _fieldCategoryRepo = fieldCategoryRepo;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
+    }
+
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/settings/ticket-fields", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
     }
 
     private async Task ValidateDtoAsync(TicketFieldDto dto)
@@ -74,6 +95,7 @@ public class TicketFieldService : ITicketFieldService
 
     public async Task<TicketFieldDto> AddAsync(TicketFieldDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد فیلد تیکت را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ایجاد فیلد تیکت جدید.");
@@ -104,6 +126,7 @@ public class TicketFieldService : ITicketFieldService
 
     public async Task UpdateAsync(TicketFieldDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش فیلد تیکت را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ویرایش فیلد تیکت با شناسه {Id}.", dto.Id);
@@ -143,6 +166,7 @@ public class TicketFieldService : ITicketFieldService
 
     public async Task DeleteAsync(TicketFieldDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف فیلد تیکت را ندارید.");
         _logger.LogWarning("درخواست حذف فیلد تیکت با شناسه {Id}.", dto.Id);
 
         var existingField = await _ticketFieldRepo.GetByIdAsync(dto.Id);
@@ -164,6 +188,7 @@ public class TicketFieldService : ITicketFieldService
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف گروهی فیلدهای تیکت را ندارید.");
         var idsList = ids.ToList();
         _logger.LogWarning("درخواست حذف گروهی فیلدهای تیکت به تعداد {Count}.", idsList.Count);
 
@@ -187,6 +212,7 @@ public class TicketFieldService : ITicketFieldService
 
     public async Task UpdateTicketFieldsStatusAsync(IEnumerable<int> ids, bool isActive)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای تغییر وضعیت فیلدهای تیکت را ندارید.");
         var idsList = ids.ToList();
         _logger.LogInformation("درخواست تغییر وضعیت {Count} فیلد تیکت به وضعیت فعال={IsActive}.", idsList.Count, isActive);
 

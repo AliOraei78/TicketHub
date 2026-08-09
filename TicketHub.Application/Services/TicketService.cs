@@ -12,6 +12,10 @@ using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException
 using System.Linq; // اضافه شد برای کوئری‌های لیست
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using TicketHub.Application.Enums;
+
 public class TicketService : ITicketService
 {
     private readonly ITicketRepository _ticketRepository;
@@ -20,6 +24,8 @@ public class TicketService : ITicketService
     private readonly IProjectRepository _projectRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly IWorkflowRepository _workflowRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public TicketService(
         ITicketRepository ticketRepository,
@@ -27,7 +33,9 @@ public class TicketService : ITicketService
         IValidator<TicketDto> validator,
         IProjectRepository projectRepository,
         IFileStorageService fileStorageService,
-        IWorkflowRepository workflowRepository)
+        IWorkflowRepository workflowRepository,
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
@@ -35,6 +43,8 @@ public class TicketService : ITicketService
         _projectRepository = projectRepository;
         _fileStorageService = fileStorageService;
         _workflowRepository = workflowRepository;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
     }
 
     private async Task ValidateDtoAsync(TicketDto dto)
@@ -212,6 +222,22 @@ public class TicketService : ITicketService
         if (ticketInDb == null)
             throw new NotFoundException("تیکت", id);
 
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                               ?? user.FindFirst("sub")?.Value;
+            int currentUserId = int.TryParse(userIdString, out var parsedId) ? parsedId : 0;
+
+            bool isSender = (currentUserId > 0 && ticketInDb.UserId == currentUserId);
+            bool hasFullAccess = await _permissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
+
+            if (!isSender && !hasFullAccess)
+            {
+                throw new ForbiddenException("شما دسترسی لازم برای حذف این تیکت را ندارید.");
+            }
+        }
+
         if (ticketInDb.Attachments != null)
         {
             foreach (var attachment in ticketInDb.Attachments)
@@ -243,6 +269,16 @@ public class TicketService : ITicketService
     {
         var idList = ids.ToList();
         _logger.LogWarning("درخواست حذف گروهی تیکت‌ها به تعداد {Count}.", idList.Count);
+
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            bool hasFullAccess = await _permissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
+            if (!hasFullAccess)
+            {
+                throw new ForbiddenException("شما دسترسی لازم برای حذف گروهی تیکت‌ها را ندارید.");
+            }
+        }
 
         foreach (var id in idList)
         {

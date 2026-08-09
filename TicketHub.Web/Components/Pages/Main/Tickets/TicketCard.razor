@@ -23,14 +23,17 @@
             </div>
         </div>
 
-        <label class="cursor-pointer relative z-20 flex-shrink-0" @onclick:stopPropagation="true">
-            <input type="checkbox" class="peer sr-only" checked="@IsSelected" @onchange="ToggleSelection" />
-            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
-                <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-        </label>
+        @if (_canSelect)
+        {
+            <label class="cursor-pointer relative z-20 flex-shrink-0" @onclick:stopPropagation="true">
+                <input type="checkbox" class="peer sr-only" checked="@IsSelected" @onchange="ToggleSelection" />
+                <div class="w-6 h-6 rounded-lg border-2 border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+            </label>
+        }
     </div>
 
     <div class="mt-auto flex items-center justify-between text-xs border-t border-gray-100 pt-3 gap-2">
@@ -95,6 +98,7 @@
     public EventCallback<TicketDto> OnDeleteClick { get; set; }
 
     private bool _canDelete = false;
+    private bool _canSelect = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -108,6 +112,7 @@
         bool hasFullAccess = await PermissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
 
         _canDelete = isSender || hasFullAccess;
+        _canSelect = hasFullAccess;
     }
 
     private async Task HandleClick()

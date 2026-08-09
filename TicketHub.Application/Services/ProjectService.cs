@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using TicketHub.Application.DTOs;
@@ -7,6 +7,9 @@ using TicketHub.Core.Common.Exceptions;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using ValidationException = TicketHub.Core.Common.Exceptions.ValidationException;
+
+using Microsoft.AspNetCore.Http;
+using TicketHub.Application.Enums;
 
 namespace TicketHub.Application.Services;
 
@@ -18,6 +21,8 @@ public class ProjectService : IProjectService
     private readonly IRepository<Role> _roleRepo;
     private readonly ILogger<ProjectService> _logger;
     private readonly IValidator<ProjectDto> _validator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPermissionService _permissionService;
 
     public ProjectService(
             IProjectRepository projectRepo,
@@ -25,7 +30,9 @@ public class ProjectService : IProjectService
             IRepository<RoleProject> roleProjectRepo,
             IRepository<Role> roleRepo,
             ILogger<ProjectService> logger,
-            IValidator<ProjectDto> validator)
+            IValidator<ProjectDto> validator,
+            IHttpContextAccessor httpContextAccessor,
+            IPermissionService permissionService)
     {
         _projectRepo = projectRepo;
         _workflowRepo = workflowRepo;
@@ -33,6 +40,8 @@ public class ProjectService : IProjectService
         _roleRepo = roleRepo;
         _logger = logger;
         _validator = validator;
+        _httpContextAccessor = httpContextAccessor;
+        _permissionService = permissionService;
     }
 
     private async Task ValidateDtoAsync(ProjectDto dto)
@@ -65,8 +74,21 @@ public class ProjectService : IProjectService
         return workflows.Adapt<IEnumerable<WorkflowDto>>();
     }
 
+    private async Task EnsurePermissionAsync(PermissionType minType, string message)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user != null && user.Identity?.IsAuthenticated == true)
+        {
+            if (!await _permissionService.HasAccessAsync(user, "/projects", minType))
+            {
+                throw new ForbiddenException(message);
+            }
+        }
+    }
+
     public async Task AddProjectAsync(ProjectDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ایجاد پروژه را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ایجاد پروژه جدید.");
@@ -96,6 +118,7 @@ public class ProjectService : IProjectService
 
     public async Task UpdateProjectAsync(ProjectDto dto)
     {
+        await EnsurePermissionAsync(PermissionType.SystemSection, "شما دسترسی لازم برای ویرایش پروژه را ندارید.");
         await ValidateDtoAsync(dto);
 
         _logger.LogInformation("شروع ویرایش پروژه با شناسه {ProjectId}.", dto.Id);
@@ -137,6 +160,7 @@ public class ProjectService : IProjectService
 
     public async Task DeleteProjectAsync(int id)
     {
+        await EnsurePermissionAsync(PermissionType.Full, "شما دسترسی لازم برای حذف پروژه را ندارید.");
         _logger.LogWarning("درخواست حذف پروژه با شناسه {ProjectId}.", id);
 
         var existingProject = await _projectRepo.GetByIdAsync(id);
