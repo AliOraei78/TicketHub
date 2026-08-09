@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Web.Store;
@@ -118,15 +118,21 @@ public partial class Users : IDisposable
         {
             deletingUserIds = new HashSet<int>(selectedUserIds);
             Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(selectedUserIds), "Delete"));
+            selectedUserIds.Clear();
         }
         else if (userToDelete != null)
         {
             deletingUserIds.Add(userToDelete.Id);
+            if (selectedUserIds.Contains(userToDelete.Id))
+            {
+                selectedUserIds.Remove(userToDelete.Id);
+                selectedUserIds = new HashSet<int>(selectedUserIds);
+            }
             Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(), "SingleDelete", userToDelete.Id));
         }
 
-        selectedUserIds.Clear();
         _ = Task.Delay(400).ContinueWith(_ => InvokeAsync(() => deletingUserIds.Clear()));
+
     }
 
     private void ClearSelection() => selectedUserIds.Clear();
@@ -134,12 +140,12 @@ public partial class Users : IDisposable
     private void BulkDeactivateUsers()
     {
         Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(selectedUserIds), "Deactivate"));
-        ClearSelection();
+        selectedUserIds.Clear();
     }
 
     private void BulkActivateUsers()
     {
         Dispatcher.Dispatch(new ExecuteUserBulkAction(new HashSet<int>(selectedUserIds), "Activate"));
-        ClearSelection();
+        selectedUserIds.Clear();
     }
 }

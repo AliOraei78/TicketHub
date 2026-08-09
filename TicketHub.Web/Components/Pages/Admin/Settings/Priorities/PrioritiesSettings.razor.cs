@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -91,13 +91,17 @@ public partial class PrioritiesSettings
     {
         if (isBulkDelete)
         {
-            Dispatcher.Dispatch(new DeleteMultiplePrioritiesAction(selectedIds));
+            Dispatcher.Dispatch(new DeleteMultiplePrioritiesAction(selectedIds.ToList()));
             ClearSelection();
         }
         else if (itemToDelete != null)
         {
             Dispatcher.Dispatch(new DeletePriorityAction(itemToDelete.Id));
-            selectedIds.Remove(itemToDelete.Id);
+            if (selectedIds.Contains(itemToDelete.Id))
+            {
+                selectedIds.Remove(itemToDelete.Id);
+                selectedIds = new HashSet<int>(selectedIds);
+            }
             if (isEditing && editingId == itemToDelete.Id) CancelEdit();
         }
         CancelDelete();
@@ -108,7 +112,7 @@ public partial class PrioritiesSettings
 
     private void UpdatePrioritiesStatus(bool isActive)
     {
-        Dispatcher.Dispatch(new UpdatePriorityStatusAction(selectedIds, isActive));
+        Dispatcher.Dispatch(new UpdatePriorityStatusAction(selectedIds.ToList(), isActive));
         ClearSelection();
     }
 }

@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -37,30 +37,13 @@ public partial class TicketFieldsSettings
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        FieldState.StateChanged += OnFirstStateLoaded;
         Dispatcher.Dispatch(new LoadTicketFieldInitialDataAction());
-    }
-
-    private async void OnFirstStateLoaded(object? sender, EventArgs e)
-    {
-        if (!FieldState.Value.IsLoading)
-        {
-            FieldState.StateChanged -= OnFirstStateLoaded;
-
-            // فراخوانی اول
-            Dispatcher.Dispatch(new LoadFieldTypesAction());
-
-            // ایجاد یک وقفه کوتاه برای آزادسازی Thread دیتابیس و جلوگیری از تداخل
-            await Task.Delay(150);
-
-            // فراخوانی دوم پس از اتمام قبلی
-            Dispatcher.Dispatch(new LoadCategoriesAction());
-        }
+        Dispatcher.Dispatch(new LoadFieldTypesAction());
+        Dispatcher.Dispatch(new LoadCategoriesAction());
     }
 
     private void HandleSubmitField()
     {
-        if (string.IsNullOrWhiteSpace(fieldModel.Name)) return;
 
         if (isEditing && editingFieldId.HasValue)
             fieldModel.Id = editingFieldId.Value;

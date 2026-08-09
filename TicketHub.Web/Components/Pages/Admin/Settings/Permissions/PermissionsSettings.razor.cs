@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -48,14 +48,22 @@ public partial class PermissionsSettings
     protected void OnSelectionChanged(HashSet<int> keys) => selectedIds = keys;
     protected void ClearSelection() => selectedIds.Clear();
 
-    protected void OpenBulkDeleteModal() { isBulkDelete = true; deleteModalDesc = $"حذف {selectedIds.Count} مورد؟"; showDeleteModal = true; }
-    protected void OpenDeleteModal(PermissionDto p) { toDelete = p; isBulkDelete = false; deleteModalDesc = $"حذف {p.Title}؟"; showDeleteModal = true; }
+    protected void OpenBulkDeleteModal() { isBulkDelete = true; deleteModalDesc = $"آیا از حذف {selectedIds.Count} دسترسی انتخاب شده مطمئن هستید؟"; showDeleteModal = true; }
+    protected void OpenDeleteModal(PermissionDto p) { toDelete = p; isBulkDelete = false; deleteModalDesc = $"آیا از حذف دسترسی «{p.Title}» مطمئن هستید؟"; showDeleteModal = true; }
     protected void CancelDelete() { showDeleteModal = false; toDelete = null; isBulkDelete = false; }
 
     protected void ConfirmDelete()
     {
         if (isBulkDelete) { Dispatcher.Dispatch(new DeleteMultiplePermissionsAction(selectedIds.ToList())); ClearSelection(); }
-        else if (toDelete != null) { Dispatcher.Dispatch(new DeletePermissionAction(toDelete.Id)); selectedIds.Remove(toDelete.Id); }
+        else if (toDelete != null)
+        {
+            Dispatcher.Dispatch(new DeletePermissionAction(toDelete.Id));
+            if (selectedIds.Contains(toDelete.Id))
+            {
+                selectedIds.Remove(toDelete.Id);
+                selectedIds = new HashSet<int>(selectedIds);
+            }
+        }
         CancelDelete();
     }
 

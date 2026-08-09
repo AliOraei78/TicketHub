@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using TicketHub.Application.DTOs;

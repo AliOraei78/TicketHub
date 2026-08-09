@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -92,25 +92,29 @@ public partial class StatusesSettings
     {
         if (isBulkDelete)
         {
-            Dispatcher.Dispatch(new DeleteMultipleStatusesAction(selectedStatusIds));
+            Dispatcher.Dispatch(new DeleteMultipleStatusesAction(selectedStatusIds.ToList()));
             ClearSelection();
         }
         else if (statusToDelete != null)
         {
             Dispatcher.Dispatch(new DeleteStatusAction(statusToDelete.Id));
-            selectedStatusIds.Remove(statusToDelete.Id);
+            if (selectedStatusIds.Contains(statusToDelete.Id))
+            {
+                selectedStatusIds.Remove(statusToDelete.Id);
+                selectedStatusIds = new HashSet<int>(selectedStatusIds);
+            }
             if (isEditing && editingStatusId == statusToDelete.Id) CancelEdit();
         }
 
         CancelDelete();
     }
 
-    protected void BulkActivateStatuses() => UpdateStatusesStatus(true);
-    protected void BulkDeactivateStatuses() => UpdateStatusesStatus(false);
+    protected void BulkActivateStatuses() => BulkUpdateStatus(true);
+    protected void BulkDeactivateStatuses() => BulkUpdateStatus(false);
 
-    private void UpdateStatusesStatus(bool isActive)
+    protected void BulkUpdateStatus(bool isActive)
     {
-        Dispatcher.Dispatch(new UpdateStatusesStatusAction(selectedStatusIds, isActive));
+        Dispatcher.Dispatch(new UpdateStatusesStatusAction(selectedStatusIds.ToList(), isActive));
         ClearSelection();
     }
 }

@@ -71,7 +71,6 @@ public partial class Tickets : IDisposable
         Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
     }
 
-    // متد مربوط به پاکسازی حافظه هنگام خروج از صفحه
     public void Dispose()
     {
         ActionSubscriber.UnsubscribeFromAllActions(this);

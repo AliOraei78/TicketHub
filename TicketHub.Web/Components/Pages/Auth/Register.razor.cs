@@ -1,4 +1,4 @@
-﻿using DNTCaptcha.Core;
+using DNTCaptcha.Core;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -17,12 +17,17 @@ public partial class Register : ComponentBase
     [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
     [SupplyParameterFromForm]
-    protected RegisterViewModel registerModel { get; set; } = new();
+    protected RegisterViewModel registerModel { get; set; }
 
     protected bool isCaptchaValid = false;
     protected string? errorMessage;
     protected bool showSuccessMessage = false;
     protected bool isLoading = false;
+
+    protected override void OnInitialized()
+    {
+        registerModel ??= new();
+    }
 
     protected async Task HandleRegister()
     {

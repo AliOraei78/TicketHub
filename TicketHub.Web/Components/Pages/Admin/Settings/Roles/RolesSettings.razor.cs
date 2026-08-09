@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -87,13 +87,17 @@ public partial class RolesSettings
     {
         if (isBulkDelete)
         {
-            Dispatcher.Dispatch(new DeleteMultipleRolesAction(selectedRoleIds));
+            Dispatcher.Dispatch(new DeleteMultipleRolesAction(selectedRoleIds.ToList()));
             ClearSelection();
         }
         else if (roleToDelete != null)
         {
             Dispatcher.Dispatch(new DeleteRoleAction(roleToDelete.Id));
-            selectedRoleIds.Remove(roleToDelete.Id);
+            if (selectedRoleIds.Contains(roleToDelete.Id))
+            {
+                selectedRoleIds.Remove(roleToDelete.Id);
+                selectedRoleIds = new HashSet<int>(selectedRoleIds);
+            }
             if (isEditing && editingRoleId == roleToDelete.Id) CancelEdit();
         }
 
@@ -105,7 +109,7 @@ public partial class RolesSettings
 
     private void UpdateRolesStatus(bool isActive)
     {
-        Dispatcher.Dispatch(new UpdateRoleStatusAction(selectedRoleIds, isActive));
+        Dispatcher.Dispatch(new UpdateRoleStatusAction(selectedRoleIds.ToList(), isActive));
         ClearSelection();
     }
 }

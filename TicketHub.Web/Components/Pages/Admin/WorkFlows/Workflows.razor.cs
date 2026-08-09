@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
 using TicketHub.Web.Store;
@@ -85,6 +85,7 @@ public partial class Workflows : IDisposable
             if (selectedWorkflowIds.Contains(workflowToDelete.Id))
             {
                 selectedWorkflowIds.Remove(workflowToDelete.Id);
+                selectedWorkflowIds = new HashSet<int>(selectedWorkflowIds);
             }
 
             Dispatcher.Dispatch(new DeleteWorkflowAction(workflowToDelete.Id, workflowToDelete.Name));
