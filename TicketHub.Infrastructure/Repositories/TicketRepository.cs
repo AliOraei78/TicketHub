@@ -18,6 +18,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .Include(t => t.FieldValues)
                 .ThenInclude(fv => fv.Attachments)
             .Include(t => t.Project)
+                .ThenInclude(p => p.RoleProjects)
             .Include(t => t.Category)
             .Include(t => t.Status)
             .Include(t => t.Priority)
@@ -27,7 +28,8 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
     }
 
     public async Task<(List<Ticket> Tickets, int TotalCount)> GetFilteredTicketsAsync(
-        string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId, int page, int pageSize)
+        string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId,
+        int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize)
     {
         using var context = await _factory.CreateDbContextAsync();
 
@@ -35,6 +37,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .Include(t => t.Attachments)
             .Include(t => t.TicketHistories)
             .Include(t => t.Project)
+                .ThenInclude(p => p.RoleProjects)
             .Include(t => t.Category)
             .Include(t => t.Status)
             .Include(t => t.Priority)
@@ -42,6 +45,27 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .AsSplitQuery()
             .AsQueryable();
 
+        // 1. Security Scoping: Admin / Staff / Customer
+        if (!isAdmin)
+        {
+            if (!isStaffOrAdmin)
+            {
+                // Customer Mode (Menu level): strictly own tickets
+                query = query.Where(t => t.UserId == currentUserId);
+            }
+            else
+            {
+                // Staff / Agent Mode (SystemSection/Full level): own tickets + tickets in assigned project roles
+                var validRoleIds = userRoleIds ?? new List<int>();
+                query = query.Where(t =>
+                    t.UserId == currentUserId ||
+                    !t.Project.RoleProjects.Any() ||
+                    t.Project.RoleProjects.Any(rp => validRoleIds.Contains(rp.RoleId))
+                );
+            }
+        }
+
+        // 2. User-Selected Filters
         if (!string.IsNullOrWhiteSpace(searchTerm))
             query = query.Where(t => t.Title.Contains(searchTerm) || t.Description.Contains(searchTerm));
 

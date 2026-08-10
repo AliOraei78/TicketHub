@@ -1,4 +1,4 @@
-﻿@typeparam TItem
+@typeparam TItem
 @typeparam TKey
 
 @if (IsLoading || Items == null)
@@ -14,7 +14,7 @@ else
                     <tr class="table w-full table-fixed">
                         @if (ShowSelection)
                         {
-                            <th class="px-6 py-2 w-[5%]">
+                            <th class="px-3 py-2 w-[5%] text-center">
                                 <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                                        checked="@IsAllSelected" @onchange="ToggleAll" />
                             </th>
@@ -41,7 +41,7 @@ else
                             <tr @key="key" class="table w-full table-fixed hover:bg-gray-50/50 smooth-transition group/row @RowClassSelector?.Invoke(item)">
                                 @if (ShowSelection)
                                 {
-                                    <td class="px-6 py-2 w-[5%]">
+                                    <td class="px-3 py-2 w-[5%] text-center">
                                         <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                                                checked="@SelectedKeys.Contains(key)"
                                                @onchange="@(e => ToggleSelection(key, e.Value))" />
@@ -87,20 +87,24 @@ else
     private async Task ToggleAll(ChangeEventArgs e)
     {
         bool isChecked = (bool)(e.Value ?? false);
+        var newSet = new HashSet<TKey>(SelectedKeys);
         if (isChecked)
-            foreach (var item in Items) SelectedKeys.Add(KeySelector(item));
+            foreach (var item in Items) newSet.Add(KeySelector(item));
         else
-            foreach (var item in Items) SelectedKeys.Remove(KeySelector(item));
+            foreach (var item in Items) newSet.Remove(KeySelector(item));
 
-        await SelectedKeysChanged.InvokeAsync(SelectedKeys);
+        SelectedKeys = newSet;
+        await SelectedKeysChanged.InvokeAsync(newSet);
     }
 
     private async Task ToggleSelection(TKey key, object? value)
     {
         bool isChecked = (bool)(value ?? false);
-        if (isChecked) SelectedKeys.Add(key);
-        else SelectedKeys.Remove(key);
+        var newSet = new HashSet<TKey>(SelectedKeys);
+        if (isChecked) newSet.Add(key);
+        else newSet.Remove(key);
 
-        await SelectedKeysChanged.InvokeAsync(SelectedKeys);
+        SelectedKeys = newSet;
+        await SelectedKeysChanged.InvokeAsync(newSet);
     }
 }

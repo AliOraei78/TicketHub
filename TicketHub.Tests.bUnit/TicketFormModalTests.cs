@@ -101,7 +101,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.Model, model)
                 .Add(p => p.Projects, new List<ProjectDto>())
                 .Add(p => p.Priorities, new List<PriorityDto>())
-                .Add(p => p.Categories, new List<CategoryDto>())
+                .Add(p => p.Categories, new List<CategoryDto> { new CategoryDto { Id = 1, Name = "Cat 1", ProjectIds = new List<int> { 1 } } })
                 .Add(p => p.DynamicFields, new List<TicketFieldDto>())
                 .Add(p => p.OnSubmit, () => { submitted = true; })
             );

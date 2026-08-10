@@ -1,4 +1,4 @@
-﻿// TicketHub.Core/Entities/Role.cs
+// TicketHub.Core/Entities/Role.cs
 namespace TicketHub.Core.Entities
 {
     public class Role
@@ -12,7 +12,6 @@ namespace TicketHub.Core.Entities
         public ICollection<TransitionRole> TransitionRoles { get; set; } = new List<TransitionRole>();
         public ICollection<RoleProject> RoleProjects { get; set; } = new List<RoleProject>();
         public ICollection<TicketHistory> Histories { get; set; } = new List<TicketHistory>();
-        public ICollection<CategoryRole> CategoryRoles { get; set; } = new List<CategoryRole>();
         public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
     }
 }

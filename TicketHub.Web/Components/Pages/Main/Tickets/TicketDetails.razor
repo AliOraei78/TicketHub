@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using TicketHub.Core.Common
+@using TicketHub.Core.Common.Exceptions
 @using TicketHub.Web.Components.Layout.Shared
 @using TicketHub.Application.Enums
 @using TicketHub.Application.DTOs
@@ -445,7 +446,28 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ticket = await TicketService.GetByIdAsync(TicketId);
+        try
+        {
+            ticket = await TicketService.GetByIdAsync(TicketId);
+        }
+        catch (ForbiddenException ex)
+        {
+            ToastService.ShowWarning(ex.Message, "عدم دسترسی");
+            Navigation.NavigateTo("/tickets");
+            return;
+        }
+        catch (NotFoundException ex)
+        {
+            ToastService.ShowWarning(ex.Message, "یافت نشد");
+            Navigation.NavigateTo("/tickets");
+            return;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("خطا در بارگذاری تیکت: " + ex.Message);
+            Navigation.NavigateTo("/tickets");
+            return;
+        }
 
         if (ticket == null)
         {

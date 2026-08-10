@@ -17,7 +17,6 @@ public class CategoryService : ICategoryService
 {
     private readonly IRepository<Category> _categoryRepo;
     private readonly IRepository<CategoryProject> _categoryProjectRepo;
-    private readonly IRepository<CategoryRole> _categoryRoleRepo;
     private readonly IRepository<Role> _roleRepo;
     private readonly ILogger<CategoryService> _logger;
     private readonly IValidator<CategoryDto> _validator;
@@ -27,7 +26,6 @@ public class CategoryService : ICategoryService
     public CategoryService(
         IRepository<Category> categoryRepo,
         IRepository<CategoryProject> categoryProjectRepo,
-        IRepository<CategoryRole> categoryRoleRepo,
         IRepository<Role> roleRepo,
         ILogger<CategoryService> logger,
         IValidator<CategoryDto> validator,
@@ -36,7 +34,6 @@ public class CategoryService : ICategoryService
     {
         _categoryRepo = categoryRepo;
         _categoryProjectRepo = categoryProjectRepo;
-        _categoryRoleRepo = categoryRoleRepo;
         _roleRepo = roleRepo;
         _logger = logger;
         _validator = validator;
@@ -76,9 +73,7 @@ public class CategoryService : ICategoryService
     {
         _logger.LogInformation("شروع دریافت تمامی دسته‌بندی‌ها از دیتابیس.");
 
-        var categories = await _categoryRepo.GetAllWithIncludesAsync(
-            c => c.CategoryProjects,
-            c => c.CategoryRoles);
+        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryProjects);
 
         _logger.LogInformation("تعداد {Count} دسته‌بندی با موفقیت دریافت شد.", categories.Count());
         return categories.Adapt<List<CategoryDto>>();
@@ -88,9 +83,7 @@ public class CategoryService : ICategoryService
     {
         _logger.LogInformation("جستجوی دسته‌بندی با شناسه: {Id}", id);
 
-        var categories = await _categoryRepo.GetAllWithIncludesAsync(
-            c => c.CategoryProjects,
-            c => c.CategoryRoles);
+        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryProjects);
 
         var category = categories.FirstOrDefault(c => c.Id == id);
 
@@ -123,19 +116,6 @@ public class CategoryService : ICategoryService
                 {
                     CategoryId = entity.Id,
                     ProjectId = projectId
-                });
-            }
-        }
-
-        if (dto.RoleIds?.Any() == true)
-        {
-            _logger.LogInformation("افزودن {Count} نقش به دسته‌بندی {Id}.", dto.RoleIds.Count, entity.Id);
-            foreach (var roleId in dto.RoleIds)
-            {
-                await _categoryRoleRepo.AddAsync(new CategoryRole
-                {
-                    CategoryId = entity.Id,
-                    RoleId = roleId
                 });
             }
         }
@@ -181,29 +161,6 @@ public class CategoryService : ICategoryService
             }
         }
 
-        // نقش‌ها
-        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
-        var oldRoles = allCategoryRoles.Where(cr => cr.CategoryId == entity.Id).ToList();
-
-        if (oldRoles.Any())
-        {
-            _logger.LogInformation("حذف {Count} نقش قدیمی از دسته‌بندی {Id}.", oldRoles.Count, entity.Id);
-            await _categoryRoleRepo.DeleteRangeAsync(oldRoles);
-        }
-
-        if (dto.RoleIds?.Any() == true)
-        {
-            _logger.LogInformation("ثبت {Count} نقش جدید برای دسته‌بندی {Id}.", dto.RoleIds.Count, entity.Id);
-            foreach (var roleId in dto.RoleIds)
-            {
-                await _categoryRoleRepo.AddAsync(new CategoryRole
-                {
-                    CategoryId = entity.Id,
-                    RoleId = roleId
-                });
-            }
-        }
-
         _logger.LogInformation("بروزرسانی دسته‌بندی {Id} با موفقیت انجام شد.", entity.Id);
     }
 
@@ -224,15 +181,7 @@ public class CategoryService : ICategoryService
             _logger.LogInformation("تعداد {Count} پروژه مرتبط با دسته‌بندی {Id} حذف شد.", projectsToDelete.Count, categoryDto.Id);
         }
 
-        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
-        var rolesToDelete = allCategoryRoles.Where(cr => cr.CategoryId == categoryDto.Id).ToList();
-        if (rolesToDelete.Any())
-        {
-            await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
-            _logger.LogInformation("تعداد {Count} نقش مرتبط با دسته‌بندی {Id} حذف شد.", rolesToDelete.Count, categoryDto.Id);
-        }
-
-        await _categoryRepo.DeleteAsync(categoryDto.Id); // کلا حذف بشه (Hard Delete)
+        await _categoryRepo.DeleteAsync(categoryDto.Id);
         _logger.LogWarning("دسته‌بندی با شناسه {Id} با موفقیت به طور کامل حذف شد.", categoryDto.Id);
     }
 
@@ -255,14 +204,7 @@ public class CategoryService : ICategoryService
             await _categoryProjectRepo.DeleteRangeAsync(projectsToDelete);
         }
 
-        var allCategoryRoles = await _categoryRoleRepo.GetAllAsync();
-        var rolesToDelete = allCategoryRoles.Where(cr => idsList.Contains(cr.CategoryId)).ToList();
-        if (rolesToDelete.Any())
-        {
-            await _categoryRoleRepo.DeleteRangeAsync(rolesToDelete);
-        }
-
-        await _categoryRepo.DeleteRangeAsync(toDelete); // کلا حذف بشه (Hard Delete)
+        await _categoryRepo.DeleteRangeAsync(toDelete);
         _logger.LogWarning("{Count} دسته‌بندی با موفقیت به صورت گروهی حذف شدند.", toDelete.Count);
     }
 
@@ -287,34 +229,23 @@ public class CategoryService : ICategoryService
         _logger.LogInformation("وضعیت دسته‌بندی‌ها با موفقیت تغییر کرد.");
     }
 
+    public async Task<List<CategoryDto>> GetCategoriesByProjectIdAsync(int projectId)
+    {
+        _logger.LogInformation("دریافت دسته‌بندی‌های فعال برای پروژه با شناسه: {ProjectId}", projectId);
+        if (projectId <= 0) return new List<CategoryDto>();
+
+        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryProjects);
+        var filtered = categories
+            .Where(c => c.IsActive && c.CategoryProjects.Any(cp => cp.ProjectId == projectId))
+            .ToList();
+
+        return filtered.Adapt<List<CategoryDto>>();
+    }
+
     public async Task<List<CategoryDto>> GetCategoriesByUserRolesAsync(IEnumerable<string> userRoles)
     {
-        var rolesList = userRoles.ToList();
-        _logger.LogInformation("جستجوی دسته‌بندی‌ها بر اساس {Count} نقش کاربر.", rolesList.Count);
-
-        bool isAdmin = rolesList.Any(r => r == "مدیر سیستم" || r == "ادمین");
-        if (isAdmin)
-        {
-            var allCategories = await GetAllAsync();
-            return allCategories.Where(c => c.IsActive).ToList();
-        }
-
-
-        var allRoles = await _roleRepo.GetAllAsync();
-        var userRoleIds = allRoles
-            .Where(r => rolesList.Contains(r.Name))
-            .Select(r => r.Id)
-            .ToList();
-
-        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryRoles);
-
-        var filteredCategories = categories
-            .Where(c => c.IsActive && (!c.CategoryRoles.Any() || c.CategoryRoles.Any(cr => userRoleIds.Contains(cr.RoleId))))
-            .ToList();
-
-
-        _logger.LogInformation("تعداد {Count} دسته‌بندی منطبق با نقش‌های کاربر یافت شد.", filteredCategories.Count);
-
-        return filteredCategories.Adapt<List<CategoryDto>>();
+        _logger.LogInformation("دریافت تمامی دسته‌بندی‌های فعال.");
+        var categories = await _categoryRepo.GetAllWithIncludesAsync(c => c.CategoryProjects);
+        return categories.Where(c => c.IsActive).Adapt<List<CategoryDto>>();
     }
 }

@@ -31,7 +31,6 @@ namespace TicketHub.Tests.bUnit
                 new List<TicketHub.Application.DTOs.CategoryDto>(),
                 string.Empty,
                 null,
-                new List<int>(),
                 new List<int>()
             ));
             Services.AddSingleton(mockCatState.Object);

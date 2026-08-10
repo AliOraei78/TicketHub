@@ -74,8 +74,8 @@ public partial class TicketFieldsSettings
     private void FilterByType(List<int> typeIds)
             => Dispatcher.Dispatch(new SetTicketFieldTypeFilterAction(typeIds));
 
-    private void OnSelectionChanged(HashSet<int> newKeys) => selectedFieldIds = newKeys;
-    private void ClearSelection() => selectedFieldIds.Clear();
+    private void OnSelectionChanged(HashSet<int> newKeys) => selectedFieldIds = new HashSet<int>(newKeys);
+    private void ClearSelection() => selectedFieldIds = new HashSet<int>();
 
     private void OpenBulkDeleteModal()
     {

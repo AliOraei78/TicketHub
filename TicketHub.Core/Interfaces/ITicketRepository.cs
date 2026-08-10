@@ -12,7 +12,8 @@ public interface ITicketRepository : IRepository<Ticket>
 {
     new Task<Ticket?> GetByIdAsync(int id);
     Task<(List<Ticket> Tickets, int TotalCount)> GetFilteredTicketsAsync(
-            string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId, int page, int pageSize);
+            string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId,
+            int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize);
     Task<Ticket?> GetTicketWithProjectAndStatusAsync(int id);
     Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history);
 }

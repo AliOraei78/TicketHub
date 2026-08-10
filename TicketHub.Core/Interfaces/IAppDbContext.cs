@@ -25,7 +25,6 @@ public interface IAppDbContext
     DbSet<FieldType> FieldTypes { get; set; }
     DbSet<TransitionField> TransitionFields { get; set; }
     DbSet<CategoryProject> CategoryProjects { get; set; }
-    DbSet<CategoryRole> CategoryRoles { get; set; }
     DbSet<TicketField> TicketFields { get; set; }
     DbSet<FieldCategory> FieldCategories { get; set; }
     DbSet<TicketFieldValue> TicketFieldValues { get; set; }

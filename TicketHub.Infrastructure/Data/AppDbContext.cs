@@ -30,7 +30,6 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<FieldType> FieldTypes { get; set; }
         public DbSet<TransitionField> TransitionFields { get; set; }
         public DbSet<CategoryProject> CategoryProjects { get; set; }
-        public DbSet<CategoryRole> CategoryRoles { get; set; }
         public DbSet<TicketField> TicketFields { get; set; }
         public DbSet<FieldCategory> FieldCategories { get; set; }
         public DbSet<TicketFieldValue> TicketFieldValues { get; set; }
@@ -163,24 +162,6 @@ namespace TicketHub.Infrastructure.Data
                 .HasOne(cp => cp.Project)
                 .WithMany(p => p.CategoryProjects)
                 .HasForeignKey(cp => cp.ProjectId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // تنظیمات CategoryRole
-            modelBuilder.Entity<CategoryRole>().HasKey(cr => cr.Id);
-            modelBuilder.Entity<CategoryRole>()
-                .HasIndex(cr => new { cr.CategoryId, cr.RoleId })
-                .IsUnique();
-
-            modelBuilder.Entity<CategoryRole>()
-                .HasOne(cr => cr.Category)
-                .WithMany(c => c.CategoryRoles)
-                .HasForeignKey(cr => cr.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<CategoryRole>()
-                .HasOne(cr => cr.Role)
-                .WithMany(r => r.CategoryRoles)
-                .HasForeignKey(cr => cr.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // تنظیمات FieldCategory

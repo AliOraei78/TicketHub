@@ -1,4 +1,4 @@
-﻿
+
 <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
     <FluentValidationValidator />
 
@@ -15,14 +15,6 @@
                          Items="AvailableProjects" @bind-SelectedValues="Model.ProjectIds"
                          ValueSelector="p => p.Id" DisplaySelector="p => p.Name"
                          BadgeBgClass="bg-blue-100" BadgeTextClass="text-blue-700" BadgeButtonClass="text-blue-500" />
-        </div>
-
-        <div>
-            <MultiSelectDropdown TItem="RoleDto" TValue="int"
-                         Label="نقش‌های مجاز" Placeholder="انتخاب نقش..."
-                         Items="AvailableRoles" @bind-SelectedValues="Model.RoleIds"
-                         ValueSelector="r => r.Id" DisplaySelector="r => r.Name"
-                         BadgeBgClass="bg-indigo-100" BadgeTextClass="text-indigo-700" BadgeButtonClass="text-indigo-500" />
         </div>
 
         <div class="flex items-center mt-3">
@@ -48,5 +40,4 @@
     [Parameter] public EventCallback OnValidSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public IEnumerable<ProjectDto> AvailableProjects { get; set; } = new List<ProjectDto>();
-    [Parameter] public IEnumerable<RoleDto> AvailableRoles { get; set; } = new List<RoleDto>();
 }

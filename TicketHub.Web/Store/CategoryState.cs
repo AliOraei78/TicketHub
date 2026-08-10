@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
@@ -15,10 +15,9 @@ public record CategoryState(
     IEnumerable<CategoryDto> Categories,
     string SearchTerm,
     bool? SelectedFilterStatus,
-    List<int> SelectedFilterProjectIds,
-    List<int> SelectedFilterRoleIds)
+    List<int> SelectedFilterProjectIds)
 {
-    private CategoryState() : this(true, Array.Empty<CategoryDto>(), string.Empty, null, new(), new()) { }
+    private CategoryState() : this(true, Array.Empty<CategoryDto>(), string.Empty, null, new()) { }
 }
 
 // 2. Actions
@@ -31,7 +30,6 @@ public record UpdateCategoryStatusAction(IEnumerable<int> Ids, bool IsActive);
 public record SetCategoryFilterStatusAction(bool? Status);
 public record SetCategorySearchAction(string Term);
 public record SetCategoryProjectFilterAction(List<int> ProjectIds);
-public record SetCategoryRoleFilterAction(List<int> RoleIds);
 public record LoadCategoryInitialDataAction();
 
 // 3. Reducers
@@ -56,10 +54,6 @@ public static class CategoryReducers
     [ReducerMethod]
     public static CategoryState ReduceSetProjectFilter(CategoryState state, SetCategoryProjectFilterAction action) =>
         state with { SelectedFilterProjectIds = action.ProjectIds };
-
-    [ReducerMethod]
-    public static CategoryState ReduceSetRoleFilter(CategoryState state, SetCategoryRoleFilterAction action) =>
-        state with { SelectedFilterRoleIds = action.RoleIds };
 }
 
 // 4. Effects

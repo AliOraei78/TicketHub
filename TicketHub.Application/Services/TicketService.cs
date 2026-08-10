@@ -28,6 +28,7 @@ public class TicketService : ITicketService
     private readonly IPermissionService _permissionService;
     private readonly IRepository<TicketHistory> _historyRepo;
     private readonly IRepository<Attachment> _attachmentRepo;
+    private readonly IRepository<Role> _roleRepo;
 
     public TicketService(
         ITicketRepository ticketRepository,
@@ -39,7 +40,8 @@ public class TicketService : ITicketService
         IHttpContextAccessor httpContextAccessor,
         IPermissionService permissionService,
         IRepository<TicketHistory> historyRepo,
-        IRepository<Attachment> attachmentRepo)
+        IRepository<Attachment> attachmentRepo,
+        IRepository<Role> roleRepo)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
@@ -51,9 +53,40 @@ public class TicketService : ITicketService
         _permissionService = permissionService;
         _historyRepo = historyRepo;
         _attachmentRepo = attachmentRepo;
+        _roleRepo = roleRepo;
     }
 
+    private async Task<(int CurrentUserId, List<int> UserRoleIds, bool IsAdmin, bool IsStaffOrAdmin)> GetCurrentUserSecurityContextAsync()
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user == null || user.Identity?.IsAuthenticated != true)
+        {
+            return (0, new List<int>(), false, false);
+        }
 
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
+        int currentUserId = int.TryParse(userIdString, out var parsedId) ? parsedId : 0;
+
+        var roleNames = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+        bool isAdmin = roleNames.Any(r => r == "مدیر سیستم" || r == "ادمین")
+                       || await _permissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
+
+        if (isAdmin)
+        {
+            return (currentUserId, new List<int>(), true, true);
+        }
+
+        bool isStaff = await _permissionService.HasAccessAsync(user, "/tickets", PermissionType.SystemSection);
+
+        var allRoles = await _roleRepo.GetAllAsync();
+        var userRoleIds = allRoles
+            .Where(r => r.IsActive && roleNames.Contains(r.Name))
+            .Select(r => r.Id)
+            .ToList();
+
+        return (currentUserId, userRoleIds, false, isStaff);
+    }
 
     private async Task ValidateDtoAsync(TicketDto dto)
     {
@@ -80,6 +113,28 @@ public class TicketService : ITicketService
         if (ticket == null)
             throw new NotFoundException("تیکت", id);
 
+        var (currentUserId, userRoleIds, isAdmin, isStaffOrAdmin) = await GetCurrentUserSecurityContextAsync();
+
+        if (!isAdmin && currentUserId > 0)
+        {
+            bool isSender = ticket.UserId == currentUserId;
+            if (!isSender)
+            {
+                if (!isStaffOrAdmin)
+                {
+                    throw new ForbiddenException("شما دسترسی لازم برای مشاهده این تیکت را ندارید.");
+                }
+
+                bool isOpenProject = ticket.Project != null && (!ticket.Project.RoleProjects.Any());
+                bool hasProjectAccess = isOpenProject || (ticket.Project != null && ticket.Project.RoleProjects.Any(rp => userRoleIds.Contains(rp.RoleId)));
+
+                if (!hasProjectAccess)
+                {
+                    throw new ForbiddenException("شما دسترسی لازم برای مشاهده این تیکت را ندارید.");
+                }
+            }
+        }
+
         return ticket.Adapt<TicketDto>();
     }
 
@@ -88,8 +143,10 @@ public class TicketService : ITicketService
     {
         _logger.LogInformation("دریافت لیست تیکت‌ها با فیلتر. صفحه: {Page}، تعداد در صفحه: {PageSize}.", page, pageSize);
 
+        var (currentUserId, userRoleIds, isAdmin, isStaffOrAdmin) = await GetCurrentUserSecurityContextAsync();
+
         var (tickets, totalCount) = await _ticketRepository.GetFilteredTicketsAsync(
-            searchTerm, projectIds, statusIds, userId, page, pageSize);
+            searchTerm, projectIds, statusIds, userId, currentUserId, userRoleIds, isAdmin, isStaffOrAdmin, page, pageSize);
 
         _logger.LogInformation("تعداد {TotalCount} تیکت منطبق با فیلترها یافت شد.", totalCount);
 

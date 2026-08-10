@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +13,4 @@ public class CategoryDto
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public List<int> ProjectIds { get; set; } = new();
-    public List<int> RoleIds { get; set; } = new();
 }

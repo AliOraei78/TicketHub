@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +17,6 @@ public interface ICategoryService
     Task DeleteAsync(CategoryDto category);
     Task DeleteRangeAsync(IEnumerable<int> ids);
     Task UpdateCategoriesStatusAsync(IEnumerable<int> ids, bool isActive);
+    Task<List<CategoryDto>> GetCategoriesByProjectIdAsync(int projectId);
     Task<List<CategoryDto>> GetCategoriesByUserRolesAsync(IEnumerable<string> userRoles);
 }

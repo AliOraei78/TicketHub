@@ -37,6 +37,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
     .EnableSensitiveDataLogging()
     .EnableDetailedErrors());
 

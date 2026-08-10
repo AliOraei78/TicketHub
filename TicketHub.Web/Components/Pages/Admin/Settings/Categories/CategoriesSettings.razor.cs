@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -27,8 +27,7 @@ public partial class CategoriesSettings
         CatState.Value.Categories
             .Where(c => string.IsNullOrWhiteSpace(CatState.Value.SearchTerm) || c.Name.Contains(CatState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
             .Where(c => CatState.Value.SelectedFilterStatus == null || c.IsActive == CatState.Value.SelectedFilterStatus)
-            .Where(c => !CatState.Value.SelectedFilterProjectIds.Any() || (c.ProjectIds != null && c.ProjectIds.Any(p => CatState.Value.SelectedFilterProjectIds.Contains(p))))
-            .Where(c => !CatState.Value.SelectedFilterRoleIds.Any() || (c.RoleIds != null && c.RoleIds.Any(r => CatState.Value.SelectedFilterRoleIds.Contains(r))));
+            .Where(c => !CatState.Value.SelectedFilterProjectIds.Any() || (c.ProjectIds != null && c.ProjectIds.Any(p => CatState.Value.SelectedFilterProjectIds.Contains(p))));
 
     protected override void OnInitialized()
     {
@@ -64,10 +63,9 @@ public partial class CategoriesSettings
     private void HandleSearch(string term) => Dispatcher.Dispatch(new SetCategorySearchAction(term));
     private void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetCategoryFilterStatusAction(status));
     private void FilterByProjects(List<int> projectIds) => Dispatcher.Dispatch(new SetCategoryProjectFilterAction(projectIds));
-    private void FilterByRoles(List<int> roleIds) => Dispatcher.Dispatch(new SetCategoryRoleFilterAction(roleIds));
 
-    private void OnSelectionChanged(HashSet<int> newKeys) => selectedCategoryIds = newKeys;
-    private void ClearSelection() => selectedCategoryIds.Clear();
+    private void OnSelectionChanged(HashSet<int> newKeys) => selectedCategoryIds = new HashSet<int>(newKeys);
+    private void ClearSelection() => selectedCategoryIds = new HashSet<int>();
 
     private void OpenBulkDeleteModal()
     {
@@ -103,11 +101,9 @@ public partial class CategoriesSettings
         {
             Dispatcher.Dispatch(new DeleteCategoryAction(categoryToDelete.Id));
 
-            if (selectedCategoryIds.Contains(categoryToDelete.Id))
-            {
-                selectedCategoryIds.Remove(categoryToDelete.Id);
-                selectedCategoryIds = new HashSet<int>(selectedCategoryIds);
-            }
+            var newSelection = new HashSet<int>(selectedCategoryIds);
+            newSelection.Remove(categoryToDelete.Id);
+            selectedCategoryIds = newSelection;
 
             if (isEditing && editingCategoryId == categoryToDelete.Id) CancelEdit();
         }

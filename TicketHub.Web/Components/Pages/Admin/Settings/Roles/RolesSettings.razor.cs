@@ -58,8 +58,8 @@ public partial class RolesSettings
     protected void HandleSearch(string term) => Dispatcher.Dispatch(new SetRoleSearchAction(term));
     protected void FilterByStatus(bool? status) => Dispatcher.Dispatch(new SetRoleFilterStatusAction(status));
 
-    protected void OnSelectionChanged(HashSet<int> newKeys) => selectedRoleIds = newKeys;
-    protected void ClearSelection() => selectedRoleIds.Clear();
+    protected void OnSelectionChanged(HashSet<int> newKeys) => selectedRoleIds = new HashSet<int>(newKeys);
+    protected void ClearSelection() => selectedRoleIds = new HashSet<int>();
 
     protected void OpenBulkDeleteModal()
     {
@@ -93,11 +93,9 @@ public partial class RolesSettings
         else if (roleToDelete != null)
         {
             Dispatcher.Dispatch(new DeleteRoleAction(roleToDelete.Id));
-            if (selectedRoleIds.Contains(roleToDelete.Id))
-            {
-                selectedRoleIds.Remove(roleToDelete.Id);
-                selectedRoleIds = new HashSet<int>(selectedRoleIds);
-            }
+            var newSelection = new HashSet<int>(selectedRoleIds);
+            newSelection.Remove(roleToDelete.Id);
+            selectedRoleIds = newSelection;
             if (isEditing && editingRoleId == roleToDelete.Id) CancelEdit();
         }
 

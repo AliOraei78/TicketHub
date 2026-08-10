@@ -45,8 +45,8 @@ public partial class PermissionsSettings
     protected void FilterByStatus(bool? s) => Dispatcher.Dispatch(new SetPermissionFilterStatusAction(s));
     protected void FilterByRoles(List<int> r) => Dispatcher.Dispatch(new SetPermissionRoleFilterAction(r));
 
-    protected void OnSelectionChanged(HashSet<int> keys) => selectedIds = keys;
-    protected void ClearSelection() => selectedIds.Clear();
+    protected void OnSelectionChanged(HashSet<int> keys) => selectedIds = new HashSet<int>(keys);
+    protected void ClearSelection() => selectedIds = new HashSet<int>();
 
     protected void OpenBulkDeleteModal() { isBulkDelete = true; deleteModalDesc = $"آیا از حذف {selectedIds.Count} دسترسی انتخاب شده مطمئن هستید؟"; showDeleteModal = true; }
     protected void OpenDeleteModal(PermissionDto p) { toDelete = p; isBulkDelete = false; deleteModalDesc = $"آیا از حذف دسترسی «{p.Title}» مطمئن هستید؟"; showDeleteModal = true; }
@@ -58,11 +58,9 @@ public partial class PermissionsSettings
         else if (toDelete != null)
         {
             Dispatcher.Dispatch(new DeletePermissionAction(toDelete.Id));
-            if (selectedIds.Contains(toDelete.Id))
-            {
-                selectedIds.Remove(toDelete.Id);
-                selectedIds = new HashSet<int>(selectedIds);
-            }
+            var newSelection = new HashSet<int>(selectedIds);
+            newSelection.Remove(toDelete.Id);
+            selectedIds = newSelection;
         }
         CancelDelete();
     }

@@ -64,9 +64,6 @@ public class MapsterConfig : IRegister
         config.NewConfig<Category, CategoryDto>()
               .Map(dest => dest.ProjectIds, src => src.CategoryProjects != null
                                                 ? src.CategoryProjects.Select(cp => cp.ProjectId).ToList()
-                                                : new List<int>())
-              .Map(dest => dest.RoleIds, src => src.CategoryRoles != null
-                                                ? src.CategoryRoles.Select(cr => cr.RoleId).ToList()
                                                 : new List<int>());
 
         config.NewConfig<TicketField, TicketFieldDto>()

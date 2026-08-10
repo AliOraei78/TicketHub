@@ -94,7 +94,7 @@
                         <HeaderTemplate>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">عنوان فیلد</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[10%]">ترتیب</th>
-                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">نوع فیلد</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">نوع فیلد</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[20%]">انواع تیکت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-right w-[15%]">وضعیت</th>
                             <th class="px-6 py-4 text-sm font-semibold text-gray-700 text-center w-[15%]">عملیات</th>
@@ -121,7 +121,7 @@
                                 </span>
                             </td>
 
-                            <td class="px-6 py-4 w-[20%]">
+                            <td class="px-6 py-4 w-[15%]">
                                 @{
                                     var fType = TypeState.Value.FieldTypes?.FirstOrDefault(t => t.Id == field.FieldTypeId);
                                     if (fType != null)
