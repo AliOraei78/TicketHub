@@ -22,6 +22,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .Include(t => t.Category)
             .Include(t => t.Status)
             .Include(t => t.Priority)
+            .Include(t => t.WorkflowStatus)
             .Include(t => t.User)
             .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -41,6 +42,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .Include(t => t.Category)
             .Include(t => t.Status)
             .Include(t => t.Priority)
+            .Include(t => t.WorkflowStatus)
             .Include(t => t.User)
             .AsSplitQuery()
             .AsQueryable();

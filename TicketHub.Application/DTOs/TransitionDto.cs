@@ -1,4 +1,4 @@
-﻿using TicketHub.Core.Entities;
+using TicketHub.Core.Entities;
 
 namespace TicketHub.Application.DTOs;
 
@@ -16,6 +16,7 @@ public class TransitionDto
     public int IsAutomated { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? ActivateAt { get; set; }
+    public int? DeadlineMinutes { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public Guid FromNodeId { get; set; }

@@ -1,4 +1,4 @@
-﻿// TicketHub.Core/Entities/Ticket.cs
+// TicketHub.Core/Entities/Ticket.cs
 namespace TicketHub.Core.Entities
 {
     public class Ticket
@@ -26,6 +26,8 @@ namespace TicketHub.Core.Entities
 
         public int? WorkflowStatusId { get; set; }
         public WorkflowStatus? WorkflowStatus { get; set; }
+
+        public DateTime? DueDate { get; set; }
 
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
         public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();

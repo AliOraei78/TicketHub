@@ -100,6 +100,7 @@ public class MapsterConfig : IRegister
 
 
         config.NewConfig<Ticket, TicketDto>()
+              .Map(dest => dest.Attachments, src => src.Attachments)
               .Map(dest => dest.AttachmentIds, src => src.Attachments != null
                                                 ? src.Attachments.Select(a => a.Id).ToList()
                                                 : new List<int>())

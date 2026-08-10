@@ -20,6 +20,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IPermissionService PermissionService
 @inject NavigationManager Navigation
+@inject ITicketEventBroker EventBroker
 
 
 <div class="w-full space-y-4" dir="rtl">
@@ -496,8 +497,11 @@
         // Populate attachments
         LoadAttachments();
 
-        // Subscribe to live comments
-        CommentService.OnCommentAdded += HandleCommentAdded;
+        // Subscribe to live ticket events across all circuits
+        EventBroker.OnCommentAdded += HandleCommentAddedAsync;
+        EventBroker.OnCommentDeleted += HandleCommentDeletedAsync;
+        EventBroker.OnTicketUpdated += HandleTicketUpdatedAsync;
+        EventBroker.OnTransitionOccurred += HandleTransitionOccurredAsync;
     }
 
     private void LoadAttachments()
@@ -506,7 +510,13 @@
 
         if (ticket != null)
         {
-            // Direct ticket attachments can be populated if present in DTO or service
+            // 1. Direct ticket attachments
+            if (ticket.Attachments != null && ticket.Attachments.Any())
+            {
+                allAttachments.AddRange(ticket.Attachments);
+            }
+
+            // 2. Field Value attachments
             if (ticket.FieldValues != null)
             {
                 foreach (var fv in ticket.FieldValues)
@@ -517,24 +527,70 @@
                     }
                 }
             }
+
+            allAttachments = allAttachments.DistinctBy(a => a.Id).ToList();
         }
     }
 
-    private async void HandleCommentAdded(int tId, CommentDto commentDto)
+    private async Task HandleCommentAddedAsync(int tId, CommentDto commentDto)
     {
         if (tId == TicketId)
         {
-            if (!comments.Any(c => c.Id == commentDto.Id))
+            await InvokeAsync(() =>
             {
-                comments.Add(commentDto);
-                await InvokeAsync(StateHasChanged);
-            }
+                if (!comments.Any(c => c.Id == commentDto.Id))
+                {
+                    comments.Add(commentDto);
+                    StateHasChanged();
+                }
+            });
+        }
+    }
+
+    private async Task HandleCommentDeletedAsync(int tId, int commentId)
+    {
+        if (tId == TicketId)
+        {
+            await InvokeAsync(() =>
+            {
+                comments.RemoveAll(c => c.Id == commentId);
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task HandleTicketUpdatedAsync(int tId)
+    {
+        if (tId == TicketId)
+        {
+            await InvokeAsync(async () =>
+            {
+                ticket = await TicketService.GetByIdAsync(TicketId);
+                LoadAttachments();
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task HandleTransitionOccurredAsync(int tId)
+    {
+        if (tId == TicketId)
+        {
+            await InvokeAsync(async () =>
+            {
+                ticket = await TicketService.GetByIdAsync(TicketId);
+                transitions = await TicketService.GetTransitionsByTicketIdAsync(TicketId);
+                StateHasChanged();
+            });
         }
     }
 
     public void Dispose()
     {
-        CommentService.OnCommentAdded -= HandleCommentAdded;
+        EventBroker.OnCommentAdded -= HandleCommentAddedAsync;
+        EventBroker.OnCommentDeleted -= HandleCommentDeletedAsync;
+        EventBroker.OnTicketUpdated -= HandleTicketUpdatedAsync;
+        EventBroker.OnTransitionOccurred -= HandleTransitionOccurredAsync;
     }
 
     private void EnableTitleEdit()

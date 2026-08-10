@@ -29,6 +29,8 @@ public class TicketService : ITicketService
     private readonly IRepository<TicketHistory> _historyRepo;
     private readonly IRepository<Attachment> _attachmentRepo;
     private readonly IRepository<Role> _roleRepo;
+    private readonly ITicketEventBroker _eventBroker;
+    private readonly IWorkflowAutomationService? _workflowAutomationService;
 
     public TicketService(
         ITicketRepository ticketRepository,
@@ -41,7 +43,9 @@ public class TicketService : ITicketService
         IPermissionService permissionService,
         IRepository<TicketHistory> historyRepo,
         IRepository<Attachment> attachmentRepo,
-        IRepository<Role> roleRepo)
+        IRepository<Role> roleRepo,
+        ITicketEventBroker eventBroker,
+        IWorkflowAutomationService? workflowAutomationService = null)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
@@ -54,6 +58,8 @@ public class TicketService : ITicketService
         _historyRepo = historyRepo;
         _attachmentRepo = attachmentRepo;
         _roleRepo = roleRepo;
+        _eventBroker = eventBroker;
+        _workflowAutomationService = workflowAutomationService;
     }
 
     private async Task<(int CurrentUserId, List<int> UserRoleIds, bool IsAdmin, bool IsStaffOrAdmin)> GetCurrentUserSecurityContextAsync()
@@ -212,6 +218,11 @@ public class TicketService : ITicketService
 
         await _ticketRepository.AddAsync(ticket);
         _logger.LogInformation("تیکت با موفقیت ایجاد شد.");
+
+        if (_workflowAutomationService != null)
+        {
+            _ = _workflowAutomationService.TriggerImmediateAutomaticTransitionsAsync(ticket.Id);
+        }
     }
 
     public async Task UpdateAsync(TicketDto dto)
@@ -277,6 +288,8 @@ public class TicketService : ITicketService
         await _ticketRepository.UpdateAsync(ticketInDb);
 
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);
+
+        await _eventBroker.PublishTicketUpdatedAsync(dto.Id);
     }
 
     public async Task DeleteAsync(int id)
@@ -434,6 +447,29 @@ public class TicketService : ITicketService
 
         await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, nextStatusId, nextWorkflowStatusId, ticketHistory);
         _logger.LogInformation("عملیات با موفقیت انجام شد.");
+
+        // Update DueDate based on destination transition DeadlineMinutes
+        var updateTicket = await _ticketRepository.GetByIdAsync(ticketInDb.Id);
+        if (updateTicket != null)
+        {
+            if (transition.DeadlineMinutes.HasValue && transition.DeadlineMinutes.Value > 0)
+            {
+                updateTicket.DueDate = DateTime.UtcNow.AddMinutes(transition.DeadlineMinutes.Value);
+            }
+            else
+            {
+                updateTicket.DueDate = null;
+            }
+            await _ticketRepository.UpdateAsync(updateTicket);
+        }
+
+        await _eventBroker.PublishTransitionOccurredAsync(ticketInDb.Id);
+        await _eventBroker.PublishTicketUpdatedAsync(ticketInDb.Id);
+
+        if (_workflowAutomationService != null)
+        {
+            _ = _workflowAutomationService.TriggerImmediateAutomaticTransitionsAsync(ticketInDb.Id);
+        }
     }
 
     public async Task<List<TicketHistoryDto>> GetTransitionsByTicketIdAsync(int ticketId)
@@ -466,15 +502,16 @@ public class TicketService : ITicketService
     {
         _logger.LogWarning("درخواست حذف فایل ضمیمه با شناسه {AttachmentId}.", attachmentId);
 
-        var attachments = await _attachmentRepo.GetAllWithIncludesAsync(a => a.Ticket);
+        var attachments = await _attachmentRepo.GetAllWithIncludesAsync(a => a.Ticket, a => a.TicketFieldValue!.Ticket);
         var attachment = attachments.FirstOrDefault(a => a.Id == attachmentId);
 
         if (attachment == null)
             throw new NotFoundException("فایل ضمیمه", attachmentId);
 
-        if (attachment.Ticket != null)
+        var ticketOwnerId = attachment.Ticket?.UserId ?? attachment.TicketFieldValue?.Ticket?.UserId ?? 0;
+        if (ticketOwnerId > 0)
         {
-            bool isSender = (currentUserId > 0 && attachment.Ticket.UserId == currentUserId);
+            bool isSender = (currentUserId > 0 && ticketOwnerId == currentUserId);
             if (!isSender && !hasFullAccess)
             {
                 throw new ForbiddenException("شما دسترسی لازم برای حذف این فایل را ندارید.");

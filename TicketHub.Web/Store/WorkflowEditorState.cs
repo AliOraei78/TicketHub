@@ -139,6 +139,7 @@ public class WorkflowEditorEffects
                             IsAutomatic = t.IsAutomated == 1,
                             IsActive = t.IsActive,
                             ActivateAt = t.ActivateAt,
+                            DeadlineMinutes = t.DeadlineMinutes,
                             AllowedRoleIds = t.AllowedRoleIds.ToHashSet(),
                             CustomFields = t.TransitionFields.Select(tf => new CanvasTransitionField
                             {
@@ -212,6 +213,7 @@ public class WorkflowEditorEffects
                                 dbTrans.IsAutomated = conn.IsAutomatic ? 1 : 0;
                                 dbTrans.IsActive = conn.IsActive;
                                 dbTrans.ActivateAt = conn.ActivateAt;
+                                dbTrans.DeadlineMinutes = conn.DeadlineMinutes;
                                 dbTrans.AllowedRoleIds = conn.AllowedRoleIds.ToList();
 
                                 dbTrans.TransitionFields = conn.CustomFields.Select(f => new TransitionFieldDto
@@ -242,6 +244,7 @@ public class WorkflowEditorEffects
                                 IsAutomated = conn.IsAutomatic ? 1 : 0,
                                 IsActive = conn.IsActive,
                                 ActivateAt = conn.ActivateAt,
+                                DeadlineMinutes = conn.DeadlineMinutes,
                                 AllowedRoleIds = conn.AllowedRoleIds.ToList(),
 
                                 TransitionFields = conn.CustomFields.Select(f => new TransitionFieldDto
@@ -285,6 +288,7 @@ public class WorkflowEditorEffects
                             IsAutomated = c.IsAutomatic ? 1 : 0,
                             IsActive = c.IsActive,
                             ActivateAt = c.ActivateAt,
+                            DeadlineMinutes = c.DeadlineMinutes,
                             AllowedRoleIds = c.AllowedRoleIds.ToList(),
 
                             TransitionFields = c.CustomFields.Select(f => new TransitionFieldDto

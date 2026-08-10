@@ -1,4 +1,4 @@
-﻿// TicketHub.Infrastructure/Repositories/GenericRepository.cs
+// TicketHub.Infrastructure/Repositories/GenericRepository.cs
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -44,14 +44,14 @@ namespace TicketHub.Infrastructure.Repositories
             return await query.AsNoTracking().AsSplitQuery().ToListAsync();
         }
 
-        public async Task AddAsync(T entity)
+        public virtual async Task AddAsync(T entity)
         {
             using var context = await _factory.CreateDbContextAsync();
             await context.Set<T>().AddAsync(entity);
             await context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(T entity)
+        public virtual async Task UpdateAsync(T entity)
         {
             using var context = await _factory.CreateDbContextAsync();
             context.Set<T>().Update(entity);

@@ -24,6 +24,9 @@ using TicketHub.Infrastructure.Repositories;
 using TicketHub.Infrastructure.Services;
 using TicketHub.Web.Components;
 using TicketHub.Web.Middlewares;
+using TicketHub.Web.Security;
+using Hangfire;
+using Hangfire.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -117,6 +120,29 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ISystemLogService, SystemLogService>();
+builder.Services.AddScoped<IWorkflowAutomationService, WorkflowAutomationService>();
+
+// --------- تنظیمات Hangfire ---------
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.Zero,
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true
+    }));
+
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = Math.Max(Environment.ProcessorCount, 2);
+});
+// ------------------------------------
+
+builder.Services.AddSingleton<ITicketEventBroker, TicketEventBroker>();
 builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddHttpContextAccessor();
 
@@ -239,6 +265,28 @@ app.UseAntiforgery();
 // این دو خط حتماً قبل از MapRazorComponents باشند
 app.UseAuthentication();
 app.UseAuthorization();
+
+// داشبورد و کارهای پس‌زمینه Hangfire
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new TicketHub.Web.Security.HangfireDashboardAuthFilter() },
+    DashboardTitle = "مدیریت کارهای پس‌زمینه TicketHub"
+});
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    recurringJobManager.AddOrUpdate<IWorkflowAutomationService>(
+        "workflow-automatic-transitions",
+        service => service.ProcessAutomaticTransitionsAsync(),
+        "*/1 * * * *" // هر ۱ دقیقه
+    );
+    recurringJobManager.AddOrUpdate<IWorkflowAutomationService>(
+        "workflow-deadline-checker",
+        service => service.ProcessDeadlinesAsync(),
+        "*/2 * * * *" // هر ۲ دقیقه
+    );
+}
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

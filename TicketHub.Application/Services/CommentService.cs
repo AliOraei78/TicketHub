@@ -11,15 +11,18 @@ using TicketHub.Core.Interfaces;
 public class CommentService : ICommentService
 {
     private readonly IRepository<Comment> _commentRepo;
+    private readonly ITicketEventBroker _eventBroker;
     private readonly ILogger<CommentService> _logger;
 
     public event Action<int, CommentDto>? OnCommentAdded;
 
     public CommentService(
         IRepository<Comment> commentRepo,
+        ITicketEventBroker eventBroker,
         ILogger<CommentService> logger)
     {
         _commentRepo = commentRepo;
+        _eventBroker = eventBroker;
         _logger = logger;
     }
 
@@ -60,8 +63,11 @@ public class CommentService : ICommentService
 
         var resultDto = (savedComment ?? comment).Adapt<CommentDto>();
 
-        // انتشار ایونت زنده بر روی سرور
+        // انتشار ایونت محلی
         OnCommentAdded?.Invoke(dto.TicketId.Value, resultDto);
+
+        // انتشار ایونت سراسری روی تمام مدارها و کاربران آنلاین
+        await _eventBroker.PublishCommentAddedAsync(dto.TicketId.Value, resultDto);
 
         return resultDto;
     }
@@ -78,8 +84,15 @@ public class CommentService : ICommentService
         if (comment.UserId != currentUserId && !hasFullAccess)
             throw new ForbiddenException("شما دسترسی لازم برای حذف این نظر را ندارید.");
 
+        int? ticketId = comment.TicketId;
         await _commentRepo.DeleteAsync(id);
 
         _logger.LogInformation("نظر با شناسه {CommentId} با موفقیت حذف شد.", id);
+
+        if (ticketId.HasValue)
+        {
+            // انتشار ایونت حذف روی تمام مدارها و کاربران آنلاین
+            await _eventBroker.PublishCommentDeletedAsync(ticketId.Value, id);
+        }
     }
 }

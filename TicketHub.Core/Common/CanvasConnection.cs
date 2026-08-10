@@ -1,4 +1,4 @@
-﻿namespace TicketHub.Core.Common;
+namespace TicketHub.Core.Common;
 
 public class CanvasConnection
 {
@@ -12,6 +12,7 @@ public class CanvasConnection
     public bool IsAutomatic { get; set; } = false;
     public bool IsActive { get; set; } = true;
     public DateTime? ActivateAt { get; set; }
+    public int? DeadlineMinutes { get; set; }
     public HashSet<int> AllowedRoleIds { get; set; } = new();
 
     public List<CanvasTransitionField> CustomFields { get; set; } = new();

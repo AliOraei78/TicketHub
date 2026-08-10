@@ -27,6 +27,7 @@ public class Transition
     public int IsAutomated { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? ActivateAt { get; set; }
+    public int? DeadlineMinutes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid FromNodeId { get; set; }
