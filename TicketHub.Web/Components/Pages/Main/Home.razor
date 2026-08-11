@@ -19,31 +19,16 @@
         <!-- Live Full Background EKG Telemetry & Heartbeat Canvas -->
         <canvas class="hero-ekg-canvas absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
         
-        <!-- Animated Scanline & Ambient Laser Atmosphere -->
-        <div class="scanline-glow"></div>
+        <!-- Animated Ambient Laser Atmosphere -->
         <div class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
         
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-                <div class="flex flex-wrap items-center gap-3 mb-3">
-                    <span class="hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span class="font-mono">💚 VITALS: STABLE [78 BPM]</span>
-                    </span>
-                    <span class="px-3.5 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 backdrop-blur-md flex items-center gap-2 shadow-xs">
-                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-                        مرکز فرماندهی بازی
-                    </span>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <div class="flex flex-wrap items-center gap-3 mb-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5 backdrop-blur-md">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         سرور آنلاین // پچ ۱.۰
-                    </span>
-                    <span class="text-xs text-indigo-200/70 font-medium flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        @CurrentPersianDate
                     </span>
                 </div>
                 <h1 class="text-3xl md:text-4xl font-black tracking-tight leading-tight text-white drop-shadow-md flex items-center gap-3">

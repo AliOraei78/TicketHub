@@ -376,73 +376,61 @@
         constructor(canvas) {
             this.canvas = canvas;
             this.ctx = canvas.getContext('2d', { alpha: true });
-            this.points = [];
             this.scanX = 0;
-            this.speed = 3.0;
+            this.speed = 1.35; // Smooth slow sweep speed
             this.history = [];
-            this.state = 'normal';
-            this.stateTime = performance.now();
-            this.normalDuration = 6500;
-            this.criticalDuration = 4500;
-            this.beatInterval = 850;
             this.lastBeat = performance.now();
+            this.nextBeatInterval = 520;
             this.heartbeatPhase = 0;
+            this.currentSpikeScale = 0.16;
+            this.currentPScale = 0.035;
+            this.currentTScale = 0.055;
             this.isVisible = true;
         }
 
         generateNextY(now) {
             const h = this.canvas.height;
+            const w = this.canvas.width;
             const midY = h * 0.58;
+            const midPoint = w * 0.48;
 
-            const elapsed = now - this.stateTime;
-            if (this.state === 'normal' && elapsed > this.normalDuration) {
-                this.state = 'critical';
-                this.stateTime = now;
+            // When scan crosses center of card, heart flatlines (Red zone)
+            const isFlatline = this.scanX >= midPoint;
+
+            if (isFlatline) {
                 this.updateDomStatus('critical');
-            } else if (this.state === 'critical' && elapsed > this.criticalDuration) {
-                this.state = 'normal';
-                this.stateTime = now;
+                // Red Flatline: zero amplitude with tiny electrical baseline hum
+                return midY + (Math.random() - 0.5) * 0.4;
+            } else {
                 this.updateDomStatus('normal');
-            }
 
-            if (this.state === 'normal') {
+                // Green Active Cardiac Zone: Organic & subtle medical ECG beats
                 const timeSinceBeat = now - this.lastBeat;
-                if (timeSinceBeat > this.beatInterval) {
+                if (timeSinceBeat > this.nextBeatInterval) {
                     this.lastBeat = now;
                     this.heartbeatPhase = 1;
+                    // Randomize subtle amplitude and interval for organic non-repeating beats
+                    this.nextBeatInterval = 420 + Math.random() * 280; // 420ms - 700ms rhythm
+                    this.currentSpikeScale = 0.13 + Math.random() * 0.05; // 13% to 18% max height
+                    this.currentPScale = 0.025 + Math.random() * 0.02; // Subtle P-wave
+                    this.currentTScale = 0.04 + Math.random() * 0.03; // Smooth T-wave
                 }
 
                 if (this.heartbeatPhase > 0) {
                     this.heartbeatPhase++;
-                    if (this.heartbeatPhase === 2) return midY - 14;
-                    if (this.heartbeatPhase === 3) return midY + 10;
-                    if (this.heartbeatPhase === 4) return midY - (h * 0.42);
-                    if (this.heartbeatPhase === 5) return midY + (h * 0.28);
-                    if (this.heartbeatPhase === 6) return midY - 18;
-                    if (this.heartbeatPhase === 7) return midY - 8;
+                    if (this.heartbeatPhase === 2) return midY - (h * this.currentPScale); // P wave
+                    if (this.heartbeatPhase === 3) return midY + (h * (this.currentPScale * 0.5)); // Q dip
+                    if (this.heartbeatPhase === 4) return midY - (h * this.currentSpikeScale); // R spike (sleek peak)
+                    if (this.heartbeatPhase === 5) return midY + (h * (this.currentSpikeScale * 0.55)); // S dip
+                    if (this.heartbeatPhase === 6) return midY - (h * this.currentTScale); // T wave
+                    if (this.heartbeatPhase === 7) return midY - (h * 0.015); // U wave
                     if (this.heartbeatPhase > 7) {
                         this.heartbeatPhase = 0;
                         return midY;
                     }
                 }
-                return midY + (Math.random() - 0.5) * 2;
-            } else {
-                const timeSinceBeat = now - this.lastBeat;
-                if (timeSinceBeat > 1200) {
-                    this.lastBeat = now;
-                    this.heartbeatPhase = 1;
-                }
-
-                if (this.heartbeatPhase > 0) {
-                    this.heartbeatPhase++;
-                    if (this.heartbeatPhase === 2) return midY - (h * 0.35);
-                    if (this.heartbeatPhase === 3) return midY + (h * 0.22);
-                    if (this.heartbeatPhase > 3) {
-                        this.heartbeatPhase = 0;
-                        return midY;
-                    }
-                }
-                return midY + (Math.random() - 0.5) * 1.5;
+                // Organic biological baseline wave
+                return midY + Math.sin(this.scanX * 0.08) * 0.8 + (Math.random() - 0.5) * 1.0;
             }
         }
 
@@ -451,13 +439,30 @@
             if (!badge) return;
             if (state === 'normal') {
                 badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300';
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
-                                   <span>سیستم پایدار (VITAL NORMAL)</span>`;
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shadow-[0_0_8px_#34d399]"></span>
+                                   <span class="font-mono">💚 VITALS: STABLE [78 BPM]</span>`;
             } else {
                 badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300 animate-pulse';
                 badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e]"></span>
-                                   <span>اضطرار SLA (CRITICAL ALERT)</span>`;
+                                   <span class="font-mono">🚨 VITALS: FLATLINE DETECTED [0 BPM]</span>`;
             }
+        }
+
+        drawSmoothPath(ctx, points) {
+            if (points.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            if (points.length === 2) {
+                ctx.lineTo(points[1].x, points[1].y);
+            } else {
+                for (let i = 1; i < points.length - 1; i++) {
+                    const xc = (points[i].x + points[i + 1].x) / 2;
+                    const yc = (points[i].y + points[i + 1].y) / 2;
+                    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+                }
+                ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+            }
+            ctx.stroke();
         }
 
         render(now) {
@@ -471,72 +476,65 @@
             if (this.scanX > w) {
                 this.scanX = 0;
                 this.history = [];
+                this.lastBeat = now;
             }
 
             this.history.push({ x: this.scanX, y: nextY });
 
             ctx.clearRect(0, 0, w, h);
 
-            // Technical Grid Background
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
-            ctx.lineWidth = 1;
-            const gridSpacing = 24;
-            for (let gx = 0; gx < w; gx += gridSpacing) {
-                ctx.beginPath();
-                ctx.moveTo(gx, 0);
-                ctx.lineTo(gx, h);
-                ctx.stroke();
-            }
-            for (let gy = 0; gy < h; gy += gridSpacing) {
-                ctx.beginPath();
-                ctx.moveTo(0, gy);
-                ctx.lineTo(w, gy);
-                ctx.stroke();
-            }
-            ctx.restore();
-
             if (this.history.length < 2) return;
 
-            const isCrit = this.state === 'critical';
-            const mainColor = isCrit ? '#f43f5e' : '#10b981';
+            const midPoint = w * 0.48;
+
+            // Separate points into Green (First half organic ECG) and Red (Second half Flatline)
+            const greenPoints = [];
+            const redPoints = [];
+
+            for (let i = 0; i < this.history.length; i++) {
+                const pt = this.history[i];
+                if (pt.x <= midPoint) {
+                    greenPoints.push(pt);
+                } else {
+                    if (redPoints.length === 0 && greenPoints.length > 0) {
+                        redPoints.push(greenPoints[greenPoints.length - 1]);
+                    }
+                    redPoints.push(pt);
+                }
+            }
 
             ctx.save();
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
 
-            // Wide Laser Glow Pass
-            ctx.strokeStyle = mainColor;
-            ctx.lineWidth = 4;
-            ctx.globalAlpha = 0.45;
-            ctx.beginPath();
-            ctx.moveTo(this.history[0].x, this.history[0].y);
-            for (let i = 1; i < this.history.length; i++) {
-                ctx.lineTo(this.history[i].x, this.history[i].y);
+            // 1. Draw Green Organic ECG Path (First Half)
+            if (greenPoints.length >= 2) {
+                // Outer Emerald Glow
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3.5;
+                ctx.globalAlpha = 0.4;
+                this.drawSmoothPath(ctx, greenPoints);
+
+                // White-Hot Core Laser Line
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.4;
+                ctx.globalAlpha = 0.95;
+                this.drawSmoothPath(ctx, greenPoints);
             }
-            ctx.stroke();
 
-            // White-Hot Core Laser
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.6;
-            ctx.globalAlpha = 0.95;
-            ctx.stroke();
+            // 2. Draw Red Organic Flatline Path (Second Half)
+            if (redPoints.length >= 2) {
+                // Outer Crimson Glow
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 3.5;
+                ctx.globalAlpha = 0.4;
+                this.drawSmoothPath(ctx, redPoints);
 
-            // Leading Scan Cursor Dot
-            const latest = this.history[this.history.length - 1];
-            if (latest) {
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(latest.x, latest.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.strokeStyle = mainColor;
-                ctx.lineWidth = 1;
-                ctx.globalAlpha = 0.25;
-                ctx.beginPath();
-                ctx.moveTo(latest.x, 0);
-                ctx.lineTo(latest.x, h);
-                ctx.stroke();
+                // White-Hot Core Laser Line
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.4;
+                ctx.globalAlpha = 0.95;
+                this.drawSmoothPath(ctx, redPoints);
             }
 
             ctx.restore();
