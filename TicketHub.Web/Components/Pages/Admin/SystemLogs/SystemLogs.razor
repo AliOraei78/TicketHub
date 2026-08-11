@@ -1,19 +1,11 @@
 @page "/system-logs"
-@using System.Globalization
-@using System.Text.RegularExpressions
-@using TicketHub.Application.Common
-@using TicketHub.Application.Interfaces
-@using TicketHub.Application.Models
-@using TicketHub.Core.Common
-@inject ISystemLogService LogService
-@inject IToastService ToastService
-@inject IJSRuntime JSRuntime
-@implements IDisposable
+@namespace TicketHub.Web.Components.Pages.Admin.SystemLogs
+@using TicketHub.Web.Components.Shared
 @rendermode InteractiveServer
 
 <PageTitle>لاگ‌های زنده سیستم | سامانه تیکت‌هاب</PageTitle>
 
-<div class="w-full space-y-6 relative pb-16" dir="rtl">
+<div class="w-full space-y-6 relative pb-16 select-none" dir="rtl">
     <!-- Header -->
     <PageHeader Title="لاگ‌های سیستم"
                 Description="مشاهده زنده، بررسی خطاهای رخ‌داده و ردیابی رویدادهای سیستمی با امکان فیلتر پیشرفته."
@@ -21,24 +13,24 @@
                 ButtonThemeClass="bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black text-white shadow-lg border-0"
                 OnActionClick="() => LoadLogsAsync(false)">
         <Icon>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 drop-shadow-2xs" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
         </Icon>
     </PageHeader>
 
     <!-- Filter Bar -->
-    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
             
             <!-- جستجو -->
             <div class="lg:col-span-3">
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">جستجو در متن یا خطا</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">جستجو در متن یا خطا</label>
                 <div class="relative">
                     <input type="text" @bind="searchTerm" @bind:event="oninput" @bind:after="ApplyFilters"
                            placeholder="جستجوی متن، خطا، منبع، مسیر یا کاربر..."
-                           class="w-full h-[42px] pr-9 pl-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           class="w-full h-[42px] pr-9 pl-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all shadow-2xs" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
@@ -46,9 +38,9 @@
 
             <!-- سطح لاگ -->
             <div class="lg:col-span-2">
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">سطح لاگ</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">سطح لاگ</label>
                 <select @bind="selectedLevel" @bind:after="ApplyFilters"
-                        class="w-full h-[42px] px-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-700">
+                        class="w-full h-[42px] px-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 shadow-2xs">
                     <option value="">همه سطح‌ها</option>
                     <option value="Information">Information</option>
                     <option value="Warning">Warning</option>
@@ -77,11 +69,11 @@
                                          ShowTimePicker="true" />
             </div>
 
-            <!-- دکمه‌های کنترل (پخش زنده و پاکسازی) -->
+            <!-- دکمه‌های کنترل -->
             <div class="lg:col-span-3 flex items-center gap-2">
                 <button type="button" @onclick="ToggleLiveStream"
-                        class="flex-1 h-[42px] px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer @(isLive ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20 animate-pulse" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
-                    <span class="w-2.5 h-2.5 rounded-full @(isLive ? "bg-white" : "bg-gray-400")"></span>
+                        class="flex-1 h-[42px] px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer focus-ring @(isLive ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 animate-pulse" : "bg-slate-100 text-slate-700 hover:bg-slate-200")">
+                    <span class="w-2.5 h-2.5 rounded-full @(isLive ? "bg-white" : "bg-slate-400")"></span>
                     @(isLive ? "پخش زنده فعال است" : "فعالسازی زنده")
                 </button>
 
@@ -89,7 +81,7 @@
                 {
                     <button type="button" @onclick="ClearFilters"
                             title="پاکسازی تمام فیلترها"
-                            class="h-[42px] px-3 rounded-xl text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer">
+                            class="h-[42px] px-3 rounded-2xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/60 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer focus-ring">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -101,7 +93,7 @@
 
         @if (isDateRangeInvalid)
         {
-            <div class="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
+            <div class="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200/60 text-rose-700 text-xs rounded-2xl font-bold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-rose-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -110,20 +102,20 @@
         }
 
         <!-- نوار وضعیت فیلترها و تعداد -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-50 text-xs text-gray-500">
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-500">
             <div class="flex items-center gap-2">
                 <span class="font-medium">تعداد کل رکوردها:</span>
-                <span class="font-bold font-mono text-gray-800 bg-gray-100 px-2 py-0.5 rounded-md">@allFilteredLogs.Count</span>
+                <span class="font-bold font-mono text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">@allFilteredLogs.Count</span>
                 @if (isLive)
                 {
-                    <span class="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md font-medium text-[11px]">
+                    <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg font-bold text-[11px] border border-emerald-200/60">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
                         به‌روزرسانی خودکار هر ۳ ثانیه
                     </span>
                 }
                 @if (selectedLogs.Any())
                 {
-                    <span class="inline-flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md font-medium text-[11px]">
+                    <span class="inline-flex items-center gap-1 text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg font-bold text-[11px] border border-indigo-200/60">
                         @selectedLogs.Count لاگ انتخاب شده
                     </span>
                 }
@@ -132,22 +124,22 @@
             @if (HasActiveFilters)
             {
                 <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="text-gray-400">فیلترهای فعال:</span>
+                    <span class="text-slate-400">فیلترهای فعال:</span>
                     @if (!string.IsNullOrWhiteSpace(searchTerm))
                     {
-                        <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-medium">متن: @searchTerm</span>
+                        <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-bold">متن: @searchTerm</span>
                     }
                     @if (!string.IsNullOrWhiteSpace(selectedLevel))
                     {
-                        <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">سطح: @selectedLevel</span>
+                        <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg font-bold">سطح: @selectedLevel</span>
                     }
                     @if (!string.IsNullOrWhiteSpace(fromDateStr))
                     {
-                        <span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium">از: @fromDateStr</span>
+                        <span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg font-bold">از: @fromDateStr</span>
                     }
                     @if (!string.IsNullOrWhiteSpace(toDateStr))
                     {
-                        <span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium">تا: @toDateStr</span>
+                        <span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg font-bold">تا: @toDateStr</span>
                     }
                 </div>
             }
@@ -155,18 +147,18 @@
     </div>
 
     <!-- جدول نمایش لاگ‌ها -->
-    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+    <div class="bg-white border border-slate-200/80 rounded-3xl shadow-2xs overflow-hidden">
         @if (isLoading)
         {
-            <div class="p-12 text-center text-gray-500 text-sm flex flex-col items-center justify-center gap-3">
-                <div class="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="p-12 text-center text-slate-500 text-sm flex flex-col items-center justify-center gap-3 font-medium">
+                <div class="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                 <span>در حال دریافت و پردازش لاگ‌های سیستم...</span>
             </div>
         }
         else if (!PagedLogs.Any())
         {
-            <div class="p-12 text-center text-gray-400 text-sm space-y-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="p-12 text-center text-slate-400 text-sm space-y-2 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <div>هیچ لاگی با فیلترهای مشخص‌شده یافت نشد.</div>
@@ -176,15 +168,14 @@
         {
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-sm">
-                    <thead class="bg-gray-50/80 border-b border-gray-100 text-gray-600 font-semibold text-xs">
+                    <thead class="bg-slate-50/80 border-b border-slate-100 text-slate-700 font-bold text-xs">
                         <tr>
-                            <!-- چک‌باکس انتخاب همه صفحه -->
                             <th class="p-3.5 pr-4 w-10 text-center">
                                 <input type="checkbox"
                                        checked="@IsAllCurrentPageSelected"
                                        @onchange="ToggleSelectAllOnPage"
                                        title="انتخاب همه لاگ‌های این صفحه"
-                                       class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                                       class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" />
                             </th>
                             <th class="p-3.5 w-12 text-center">#</th>
                             <th class="p-3.5 whitespace-nowrap">زمان ثبت</th>
@@ -194,7 +185,7 @@
                             <th class="p-3.5 w-24 text-center">عملیات</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 font-mono text-xs">
+                    <tbody class="divide-y divide-slate-100 font-mono text-xs">
                         @for (int i = 0; i < PagedLogs.Count; i++)
                         {
                             var log = PagedLogs[i];
@@ -203,29 +194,28 @@
                             var isSelected = selectedLogs.Contains(log);
                             var isCopied = recentlyCopiedRowId == rowId;
 
-                            <tr class="hover:bg-slate-50/70 transition-colors @(isSelected ? "bg-blue-50/40" : (isExpanded ? "bg-slate-50/90" : ""))">
-                                <!-- چک‌باکس انتخاب ردیف -->
+                            <tr class="hover:bg-slate-50/70 transition-colors @(isSelected ? "bg-indigo-50/40" : (isExpanded ? "bg-slate-50/90" : ""))">
                                 <td class="p-3.5 pr-4 text-center">
                                     <input type="checkbox"
                                            checked="@isSelected"
                                            @onchange="(e) => ToggleSelectLog(log, (bool)(e.Value ?? false))"
-                                           class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                                           class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" />
                                 </td>
-                                <td class="p-3.5 text-center text-gray-400 font-sans font-medium text-[11px]">
+                                <td class="p-3.5 text-center text-slate-400 font-sans font-bold text-[11px]">
                                     @(rowId + 1)
                                 </td>
-                                <td class="p-3.5 whitespace-nowrap text-gray-500 dir-ltr text-right">
+                                <td class="p-3.5 whitespace-nowrap text-slate-500 dir-ltr text-right font-medium">
                                     @GetPersianFormattedDate(log.Timestamp)
                                 </td>
                                 <td class="p-3.5 whitespace-nowrap">
-                                    <span class="px-2.5 py-1 rounded-lg text-[11px] font-sans font-bold border shadow-2xs @GetLevelBadgeClass(log.Level)">
+                                    <span class="px-2.5 py-1 rounded-xl text-[11px] font-sans font-bold border shadow-2xs @GetLevelBadgeClass(log.Level)">
                                         @log.Level
                                     </span>
                                 </td>
-                                <td class="p-3.5 text-gray-600 font-sans truncate max-w-[180px]" title="@log.SourceContext">
+                                <td class="p-3.5 text-slate-600 font-sans truncate max-w-[180px]" title="@log.SourceContext">
                                     @(log.SourceContext ?? "-")
                                 </td>
-                                <td class="p-3.5 text-gray-800 font-sans">
+                                <td class="p-3.5 text-slate-800 font-sans">
                                     <div class="break-words leading-relaxed select-text">
                                         @log.Message
                                     </div>
@@ -233,7 +223,7 @@
                                     @if (!string.IsNullOrEmpty(log.Exception))
                                     {
                                         <div class="mt-1.5 flex items-center gap-2">
-                                            <span class="inline-flex items-center gap-1 text-rose-600 font-semibold text-[11px]">
+                                            <span class="inline-flex items-center gap-1 text-rose-600 font-bold text-[11px]">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                                 </svg>
@@ -242,12 +232,10 @@
                                         </div>
                                     }
                                 </td>
-                                <!-- ستون عملیات (کپی سریع + باز کردن جزئیات) -->
                                 <td class="p-3.5 text-center whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-1">
-                                        <!-- دکمه کپی تکی -->
                                         <button type="button" @onclick="() => CopySingleLog(log, rowId)"
-                                                class="p-1.5 rounded-lg transition-all cursor-pointer @(isCopied ? "bg-emerald-100 text-emerald-700" : "text-gray-400 hover:text-emerald-600 hover:bg-emerald-50")"
+                                                class="p-1.5 rounded-xl transition-all cursor-pointer focus-ring @(isCopied ? "bg-emerald-100 text-emerald-700" : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50")"
                                                 title="کپی متن کامل این لاگ و خطا در کلیپ‌بورد">
                                             @if (isCopied)
                                             {
@@ -263,11 +251,10 @@
                                             }
                                         </button>
 
-                                        <!-- دکمه باز کردن جزئیات -->
                                         <button type="button" @onclick="() => ToggleRowExpand(rowId)"
-                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                                class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors cursor-pointer focus-ring"
                                                 title="@(isExpanded ? "بستن جزئیات" : "مشاهده جزئیات کامل لاگ")">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 @(isExpanded ? "rotate-180 text-blue-600" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 @(isExpanded ? "rotate-180 text-indigo-600" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
@@ -278,21 +265,19 @@
                             @if (isExpanded)
                             {
                                 <tr class="bg-slate-900/5">
-                                    <td colspan="7" class="p-4 bg-slate-900 text-slate-100 rounded-xl my-2 shadow-inner border border-slate-800">
+                                    <td colspan="7" class="p-4 bg-slate-900 text-slate-100 rounded-2xl my-2 shadow-inner border border-slate-800">
                                         <div class="space-y-4 text-xs font-sans">
-                                            
-                                            <!-- هدر جزئیات لاگ -->
                                             <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-bold text-sm text-white">جزئیات کامل رخداد</span>
-                                                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold border @GetLevelBadgeClass(log.Level)">@log.Level</span>
+                                                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold border @GetLevelBadgeClass(log.Level)">@log.Level</span>
                                                 </div>
                                                 <div class="flex items-center gap-3">
-                                                    <div class="text-slate-400 font-mono text-[11px] dir-ltr">
+                                                    <div class="text-slate-400 font-mono text-[11px] dir-ltr font-medium">
                                                         @log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")
                                                     </div>
                                                     <button type="button" @onclick="() => CopySingleLog(log, rowId)"
-                                                            class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-sans transition-colors flex items-center gap-1 cursor-pointer">
+                                                            class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-sans font-bold transition-colors flex items-center gap-1 cursor-pointer focus-ring">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                         </svg>
@@ -301,52 +286,49 @@
                                                 </div>
                                             </div>
 
-                                            <!-- شناسه ردیاب‌ها -->
                                             @if (!string.IsNullOrEmpty(log.TraceId) || !string.IsNullOrEmpty(log.SpanId) || !string.IsNullOrEmpty(log.CorrelationId))
                                             {
-                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-[11px] font-mono dir-ltr text-left">
+                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-[11px] font-mono dir-ltr text-left">
                                                     @if (!string.IsNullOrEmpty(log.CorrelationId))
                                                     {
                                                         <div>
                                                             <span class="text-slate-400 font-sans">CorrelationId:</span>
-                                                            <span class="text-emerald-400 ml-1">@log.CorrelationId</span>
+                                                            <span class="text-emerald-400 ml-1 font-bold">@log.CorrelationId</span>
                                                         </div>
                                                     }
                                                     @if (!string.IsNullOrEmpty(log.TraceId))
                                                     {
                                                         <div>
                                                             <span class="text-slate-400 font-sans">TraceId:</span>
-                                                            <span class="text-sky-400 ml-1">@log.TraceId</span>
+                                                            <span class="text-sky-400 ml-1 font-bold">@log.TraceId</span>
                                                         </div>
                                                     }
                                                     @if (!string.IsNullOrEmpty(log.SpanId))
                                                     {
                                                         <div>
                                                             <span class="text-slate-400 font-sans">SpanId:</span>
-                                                            <span class="text-indigo-400 ml-1">@log.SpanId</span>
+                                                            <span class="text-indigo-400 ml-1 font-bold">@log.SpanId</span>
                                                         </div>
                                                     }
                                                 </div>
                                             }
 
-                                            <!-- خصوصیات غنی لاگ (Properties) -->
                                             @if (log.Properties != null && log.Properties.Any())
                                             {
                                                 <div class="space-y-1.5">
-                                                    <div class="text-slate-300 font-semibold text-xs">متادیتا و مشخصات درخواست (Properties):</div>
+                                                    <div class="text-slate-300 font-bold text-xs">متادیتا و مشخصات درخواست (Properties):</div>
                                                     <div class="flex flex-wrap gap-2 dir-ltr text-left font-mono text-[11px]">
                                                         @foreach (var kvp in log.Properties)
                                                         {
-                                                            <div class="bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                                                            <div class="bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
                                                                 <span class="text-slate-400 font-sans">@kvp.Key:</span>
-                                                                <span class="text-amber-300 font-semibold">@kvp.Value</span>
+                                                                <span class="text-amber-300 font-bold">@kvp.Value</span>
                                                             </div>
                                                         }
                                                     </div>
                                                 </div>
                                             }
 
-                                            <!-- استک تریس کامل خطا -->
                                             @if (!string.IsNullOrEmpty(log.Exception))
                                             {
                                                 <div class="space-y-1.5 pt-2">
@@ -358,14 +340,14 @@
                                                             استک تریس و جزئیات خطا (Exception Stack Trace):
                                                         </span>
                                                         <button type="button" @onclick="() => CopyToClipboard(log.Exception)"
-                                                                class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-sans transition-colors flex items-center gap-1 cursor-pointer">
+                                                                class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-sans font-bold transition-colors flex items-center gap-1 cursor-pointer focus-ring">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                             </svg>
                                                             <span>کپی خطا</span>
                                                         </button>
                                                     </div>
-                                                    <pre class="p-3 bg-black/70 text-rose-300 rounded-xl overflow-x-auto dir-ltr text-left text-[11px] font-mono border border-rose-900/40 select-all leading-relaxed whitespace-pre-wrap max-h-96">@log.Exception</pre>
+                                                    <pre class="p-3 bg-black/70 text-rose-300 rounded-2xl overflow-x-auto dir-ltr text-left text-[11px] font-mono border border-rose-900/40 select-all leading-relaxed whitespace-pre-wrap max-h-96">@log.Exception</pre>
                                                 </div>
                                             }
                                         </div>
@@ -378,7 +360,7 @@
             </div>
 
             <!-- بخش صفحه‌بندی -->
-            <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50">
                 <Pagination CurrentPage="currentPage"
                             PageSize="pageSize"
                             ItemName="لاگ"
@@ -389,46 +371,42 @@
         }
     </div>
 
-    <!-- Floating Bulk Actions Bar (نوار عملیات دسته‌جمعی شناور) -->
+    <!-- Floating Bulk Actions Bar -->
     @if (selectedLogs.Any())
     {
         <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-900/95 text-white shadow-2xl backdrop-blur-xl border border-slate-700/80 text-xs font-medium animate-fadeIn">
             <div class="flex items-center gap-2 pl-3 border-l border-slate-700">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
-                <span class="font-bold font-mono text-sm text-blue-400">@selectedLogs.Count</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
+                <span class="font-bold font-mono text-sm text-indigo-400">@selectedLogs.Count</span>
                 <span>لاگ انتخاب شده</span>
             </div>
 
-            <!-- کپی متنی دسته‌جمعی -->
             <button type="button" @onclick="CopySelectedLogsAsText"
-                    class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/30 cursor-pointer font-bold">
+                    class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/30 cursor-pointer font-bold focus-ring">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
                 <span>کپی متنی (Text)</span>
             </button>
 
-            <!-- کپی ساختاریافته JSON -->
             <button type="button" @onclick="CopySelectedLogsAsJson"
-                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer font-medium">
+                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer font-bold focus-ring">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
                 <span>کپی JSON</span>
             </button>
 
-            <!-- دانلود فایل متنی لاگ‌ها -->
             <button type="button" @onclick="DownloadSelectedLogs"
-                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer font-medium">
+                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer font-bold focus-ring">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 <span>دانلود لاگ‌ها</span>
             </button>
 
-            <!-- لغو انتخاب همه -->
             <button type="button" @onclick="ClearSelection"
-                    class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                    class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer focus-ring"
                     title="لغو انتخاب">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -437,410 +415,3 @@
         </div>
     }
 </div>
-
-@code {
-    private List<LogEntry> allFilteredLogs = new();
-    private HashSet<int> expandedRowIndexes = new();
-    private HashSet<LogEntry> selectedLogs = new();
-    private int? recentlyCopiedRowId;
-
-    private string searchTerm = string.Empty;
-    private string selectedLevel = string.Empty;
-    private string fromDateStr = string.Empty;
-    private string toDateStr = string.Empty;
-
-    private bool isDateRangeInvalid = false;
-    private string dateRangeErrorMessage = string.Empty;
-
-    private bool isLoading = true;
-    private bool isLive = false;
-    private PeriodicTimer? timer;
-    private CancellationTokenSource? cts;
-
-    private int currentPage = 1;
-    private int pageSize = 15;
-
-    private bool HasActiveFilters =>
-        !string.IsNullOrWhiteSpace(searchTerm) ||
-        !string.IsNullOrWhiteSpace(selectedLevel) ||
-        !string.IsNullOrWhiteSpace(fromDateStr) ||
-        !string.IsNullOrWhiteSpace(toDateStr);
-
-    private List<LogEntry> PagedLogs => allFilteredLogs
-        .Skip((currentPage - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
-
-    private bool IsAllCurrentPageSelected =>
-        PagedLogs.Any() && PagedLogs.All(log => selectedLogs.Contains(log));
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadLogsAsync(false);
-    }
-
-    private bool ValidateDateRange(out DateTime? fromDate, out DateTime? toDate)
-    {
-        fromDate = ParsePersianToGregorian(fromDateStr, isEndOfDay: false);
-        toDate = ParsePersianToGregorian(toDateStr, isEndOfDay: true);
-
-        if (fromDate.HasValue && toDate.HasValue && fromDate.Value > toDate.Value)
-        {
-            isDateRangeInvalid = true;
-            dateRangeErrorMessage = "تاریخ «از تاریخ» نمی‌تواند بزرگتر از «تا تاریخ» باشد. لطفاً بازه انتخابی را اصلاح نمایید.";
-            return false;
-        }
-
-        isDateRangeInvalid = false;
-        dateRangeErrorMessage = string.Empty;
-        return true;
-    }
-
-    private async Task LoadLogsAsync(bool isBackgroundRefresh = false)
-    {
-        if (!ValidateDateRange(out var fromDate, out var toDate))
-        {
-            if (!isBackgroundRefresh)
-            {
-                ToastService.ShowWarning(dateRangeErrorMessage);
-                isLoading = false;
-                StateHasChanged();
-            }
-            return;
-        }
-
-        if (!isBackgroundRefresh)
-        {
-            isLoading = true;
-            StateHasChanged();
-        }
-
-        allFilteredLogs = await LogService.GetLogsAsync(fromDate, toDate, selectedLevel, searchTerm);
-
-        if (!isBackgroundRefresh)
-        {
-            isLoading = false;
-        }
-
-        StateHasChanged();
-    }
-
-    private async Task ApplyFilters()
-    {
-        currentPage = 1;
-        expandedRowIndexes.Clear();
-        await LoadLogsAsync(false);
-    }
-
-    private async Task ClearFilters()
-    {
-        searchTerm = string.Empty;
-        selectedLevel = string.Empty;
-        fromDateStr = string.Empty;
-        toDateStr = string.Empty;
-        isDateRangeInvalid = false;
-        dateRangeErrorMessage = string.Empty;
-        currentPage = 1;
-        expandedRowIndexes.Clear();
-        selectedLogs.Clear();
-        await LoadLogsAsync(false);
-        ToastService.ShowInfo("تمامی فیلترها پاکسازی شدند.");
-    }
-
-    private void ToggleRowExpand(int index)
-    {
-        if (expandedRowIndexes.Contains(index))
-            expandedRowIndexes.Remove(index);
-        else
-            expandedRowIndexes.Add(index);
-    }
-
-    private void ToggleSelectLog(LogEntry log, bool isChecked)
-    {
-        if (isChecked)
-            selectedLogs.Add(log);
-        else
-            selectedLogs.Remove(log);
-    }
-
-    private void ToggleSelectAllOnPage(ChangeEventArgs e)
-    {
-        bool isChecked = (bool)(e.Value ?? false);
-        if (isChecked)
-        {
-            foreach (var log in PagedLogs)
-                selectedLogs.Add(log);
-        }
-        else
-        {
-            foreach (var log in PagedLogs)
-                selectedLogs.Remove(log);
-        }
-    }
-
-    private void ClearSelection()
-    {
-        selectedLogs.Clear();
-    }
-
-    private async Task CopySingleLog(LogEntry log, int rowId)
-    {
-        var formatted = LogExportFormatter.ToFormattedText(log);
-        bool success = await InvokeCopyAsync(formatted);
-
-        if (success)
-        {
-            recentlyCopiedRowId = rowId;
-            ToastService.ShowSuccess("اطلاعات و خطای لاگ با موفقیت کپی شد.");
-            StateHasChanged();
-
-            _ = Task.Delay(1500).ContinueWith(_ =>
-            {
-                InvokeAsync(() =>
-                {
-                    if (recentlyCopiedRowId == rowId)
-                    {
-                        recentlyCopiedRowId = null;
-                        StateHasChanged();
-                    }
-                });
-            });
-        }
-        else
-        {
-            ToastService.ShowWarning("امکان دسترسی به کلیپ‌بورد وجود ندارد.");
-        }
-    }
-
-    private async Task CopySelectedLogsAsText()
-    {
-        if (!selectedLogs.Any()) return;
-
-        var formatted = LogExportFormatter.ToBatchFormattedText(selectedLogs);
-        bool success = await InvokeCopyAsync(formatted);
-
-        if (success)
-        {
-            ToastService.ShowSuccess($"اطلاعات {selectedLogs.Count} لاگ انتخاب‌شده به صورت متنی کپی شد.");
-        }
-        else
-        {
-            ToastService.ShowWarning("امکان دسترسی به کلیپ‌بورد وجود ندارد.");
-        }
-    }
-
-    private async Task CopySelectedLogsAsJson()
-    {
-        if (!selectedLogs.Any()) return;
-
-        var json = LogExportFormatter.ToJson(selectedLogs);
-        bool success = await InvokeCopyAsync(json);
-
-        if (success)
-        {
-            ToastService.ShowSuccess($"اطلاعات {selectedLogs.Count} لاگ انتخاب‌شده در قالب JSON کپی شد.");
-        }
-        else
-        {
-            ToastService.ShowWarning("امکان دسترسی به کلیپ‌بورد وجود ندارد.");
-        }
-    }
-
-    private async Task DownloadSelectedLogs()
-    {
-        if (!selectedLogs.Any()) return;
-
-        var formatted = LogExportFormatter.ToBatchFormattedText(selectedLogs);
-        var fileName = $"TicketHub_Logs_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("downloadFileFromText", fileName, formatted, "text/plain;charset=utf-8");
-            ToastService.ShowSuccess($"فایل لاگ‌های انتخابی ({fileName}) دانلود شد.");
-        }
-        catch
-        {
-            ToastService.ShowWarning("خطا در ایجاد و دانلود فایل لاگ.");
-        }
-    }
-
-    private async Task<bool> InvokeCopyAsync(string text)
-    {
-        try
-        {
-            return await JSRuntime.InvokeAsync<bool>("copyTextToClipboard", text);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private async Task CopyToClipboard(string text)
-    {
-        bool success = await InvokeCopyAsync(text);
-        if (success)
-            ToastService.ShowSuccess("متن خطا در کلیپ‌بورد کپی شد.");
-        else
-            ToastService.ShowWarning("امکان دسترسی به کلیپ‌بورد وجود ندارد.");
-    }
-
-    private async Task ToggleLiveStream()
-    {
-        isLive = !isLive;
-
-        if (isLive)
-        {
-            cts = new CancellationTokenSource();
-            timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
-            _ = StartLivePollingAsync(cts.Token);
-            ToastService.ShowSuccess("پخش زنده لاگ‌ها فعال شد.");
-        }
-        else
-        {
-            cts?.Cancel();
-            timer?.Dispose();
-            cts = null;
-            timer = null;
-            ToastService.ShowInfo("پخش زنده لاگ‌ها غیرفعال شد.");
-        }
-    }
-
-    private async Task StartLivePollingAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (timer != null && await timer.WaitForNextTickAsync(cancellationToken))
-            {
-                await InvokeAsync(async () =>
-                {
-                    await LoadLogsAsync(isBackgroundRefresh: true);
-                });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // لغو عمدی بدون نیاز به پرتاب خطا
-        }
-    }
-
-    private string GetPersianFormattedDate(DateTime dt)
-    {
-        var pc = new PersianCalendar();
-        return $"{pc.GetYear(dt)}/{pc.GetMonth(dt):D2}/{pc.GetDayOfMonth(dt):D2} {dt:HH:mm:ss}";
-    }
-
-    private DateTime? ParsePersianToGregorian(string persianDateStr, bool isEndOfDay = false)
-    {
-        if (string.IsNullOrWhiteSpace(persianDateStr)) return null;
-
-        try
-        {
-            var normalized = NormalizeDigits(persianDateStr.Trim());
-            var parts = normalized.Split(new[] { ' ', 'T' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0) return null;
-
-            var datePart = parts[0];
-            var dateSplit = datePart.Split(new[] { '/', '-' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (dateSplit.Length != 3)
-            {
-                if (DateTime.TryParse(normalized, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedGregorian))
-                {
-                    return isEndOfDay ? parsedGregorian.Date.AddDays(1).AddTicks(-1) : parsedGregorian;
-                }
-                return null;
-            }
-
-            if (!int.TryParse(dateSplit[0], out int year) ||
-                !int.TryParse(dateSplit[1], out int month) ||
-                !int.TryParse(dateSplit[2], out int day))
-            {
-                return null;
-            }
-
-            if (year < 1300 || year > 1500 || month < 1 || month > 12 || day < 1 || day > 31)
-            {
-                return null;
-            }
-
-            int hour = 0, minute = 0, second = 0, millisecond = 0;
-
-            if (parts.Length > 1)
-            {
-                var timeSplit = parts[1].Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                if (timeSplit.Length >= 1) int.TryParse(timeSplit[0], out hour);
-                if (timeSplit.Length >= 2) int.TryParse(timeSplit[1], out minute);
-                if (timeSplit.Length >= 3) int.TryParse(timeSplit[2], out second);
-            }
-            else if (isEndOfDay)
-            {
-                hour = 23;
-                minute = 59;
-                second = 59;
-                millisecond = 999;
-            }
-
-            var pc = new PersianCalendar();
-            return pc.ToDateTime(year, month, day, hour, minute, second, millisecond);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static string NormalizeDigits(string input)
-    {
-        if (string.IsNullOrEmpty(input)) return input;
-
-        return input
-            .Replace('۰', '0').Replace('۱', '1').Replace('۲', '2').Replace('۳', '3').Replace('۴', '4')
-            .Replace('۵', '5').Replace('۶', '6').Replace('۷', '7').Replace('۸', '8').Replace('۹', '9')
-            .Replace('٠', '0').Replace('١', '1').Replace('٢', '2').Replace('٣', '3').Replace('٤', '4')
-            .Replace('٥', '5').Replace('٦', '6').Replace('٧', '7').Replace('٨', '8').Replace('٩', '9');
-    }
-
-    private string GetLevelBadgeClass(string level) => level?.Trim().ToLowerInvariant() switch
-    {
-        "fatal" => "bg-red-950 text-red-200 border-red-800",
-        "error" => "bg-rose-50 text-rose-700 border-rose-200",
-        "warning" or "warn" => "bg-amber-50 text-amber-700 border-amber-200",
-        "information" or "info" => "bg-sky-50 text-sky-700 border-sky-200",
-        "debug" => "bg-indigo-50 text-indigo-700 border-indigo-200",
-        "verbose" or "trace" => "bg-slate-100 text-slate-600 border-slate-200",
-        _ => "bg-gray-50 text-gray-600 border-gray-200"
-    };
-
-    public void Dispose()
-    {
-        cts?.Cancel();
-        timer?.Dispose();
-    }
-
-    private async Task OnFromDateChanged(string val)
-    {
-        fromDateStr = val;
-        if (!ValidateDateRange(out _, out _))
-        {
-            ToastService.ShowWarning(dateRangeErrorMessage);
-            StateHasChanged();
-            return;
-        }
-        await ApplyFilters();
-    }
-
-    private async Task OnToDateChanged(string val)
-    {
-        toDateStr = val;
-        if (!ValidateDateRange(out _, out _))
-        {
-            ToastService.ShowWarning(dateRangeErrorMessage);
-            StateHasChanged();
-            return;
-        }
-        await ApplyFilters();
-    }
-}
-
-

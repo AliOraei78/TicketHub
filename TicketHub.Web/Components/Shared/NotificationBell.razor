@@ -1,58 +1,53 @@
+@namespace TicketHub.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using TicketHub.Application.DTOs
 @using TicketHub.Application.Interfaces
 @using TicketHub.Core.Common
 @using TicketHub.Core.Enums
-@implements IDisposable
-@inject INotificationService NotificationService
-@inject ITicketEventBroker EventBroker
-@inject AuthenticationStateProvider AuthStateProvider
-@inject IJSRuntime JSRuntime
-@inject IToastService ToastService
 
-<div class="relative inline-block text-right">
+<div class="relative inline-block text-right select-none @Class">
     <!-- Bell Icon Trigger Button -->
     <button type="button" 
             @onclick="ToggleDropdown" 
-            class="relative w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center smooth-transition cursor-pointer border border-slate-200/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            class="relative w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition-all cursor-pointer border border-slate-200/80 shadow-2xs focus-ring"
             title="اعلانات">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
 
-        @if (unreadCount > 0)
+        @if (UnreadCount > 0)
         {
             <span class="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-md shadow-rose-500/30 animate-pulse">
-                @(unreadCount > 9 ? "9+" : unreadCount.ToString())
+                @(UnreadCount > 9 ? "9+" : UnreadCount.ToString())
             </span>
         }
     </button>
 
     <!-- Popover Dropdown -->
-    @if (isDropdownOpen)
+    @if (IsDropdownOpen)
     {
         <div class="fixed inset-0 z-40" @onclick="CloseDropdown"></div>
 
-        <div class="absolute left-0 mt-2 w-80 sm:w-96 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-zoom-modal text-right"
+        <div class="absolute left-0 mt-2 w-80 sm:w-96 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/80 z-50 overflow-hidden modal-content-animate text-right"
              @onclick:stopPropagation>
             <!-- Dropdown Header -->
             <div class="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
                 <div class="flex items-center gap-2">
-                    <span class="font-bold text-sm text-slate-800">مرکز اعلانات</span>
-                    @if (unreadCount > 0)
+                    <span class="font-bold text-sm text-slate-800 dark:text-slate-100">مرکز اعلانات</span>
+                    @if (UnreadCount > 0)
                     {
-                        <span class="bg-blue-100 text-blue-700 text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                            @unreadCount جدید
+                        <span class="bg-indigo-100 text-indigo-700 text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                            @UnreadCount جدید
                         </span>
                     }
                 </div>
 
-                @if (unreadCount > 0)
+                @if (UnreadCount > 0)
                 {
                     <button type="button" 
                             @onclick="MarkAllAsRead" 
-                            class="text-[11px] text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center gap-1">
+                            class="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium hover:underline flex items-center gap-1 focus-ring rounded-md">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         خوانده شدن همه
                     </button>
@@ -63,22 +58,22 @@
             <div class="flex border-b border-slate-100 text-xs font-semibold bg-slate-50/50">
                 <button type="button" 
                         @onclick="() => SetFilter(false)" 
-                        class="flex-1 py-2 text-center smooth-transition @(!filterUnreadOnly ? "text-blue-600 border-b-2 border-blue-600 bg-white" : "text-slate-500 hover:text-slate-700")">
-                    همه (@notifications.Count)
+                        class="flex-1 py-2 text-center transition-colors @(!FilterUnreadOnly ? "text-indigo-600 border-b-2 border-indigo-600 bg-white font-bold" : "text-slate-500 hover:text-slate-700")">
+                    همه (@Notifications.Count)
                 </button>
                 <button type="button" 
                         @onclick="() => SetFilter(true)" 
-                        class="flex-1 py-2 text-center smooth-transition @(filterUnreadOnly ? "text-blue-600 border-b-2 border-blue-600 bg-white" : "text-slate-500 hover:text-slate-700")">
-                    خوانده‌نشده (@unreadCount)
+                        class="flex-1 py-2 text-center transition-colors @(FilterUnreadOnly ? "text-indigo-600 border-b-2 border-indigo-600 bg-white font-bold" : "text-slate-500 hover:text-slate-700")">
+                    خوانده‌نشده (@UnreadCount)
                 </button>
             </div>
 
             <!-- Notification List -->
             <div class="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
-                @if (isLoading)
+                @if (IsLoading)
                 {
                     <div class="p-8 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-                        <div class="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                         در حال بارگذاری اعلانات...
                     </div>
                 }
@@ -98,17 +93,15 @@
                     @foreach (var notif in FilteredNotifications)
                     {
                         <div @onclick="() => OpenNotificationDetails(notif)" 
-                             class="p-3.5 hover:bg-slate-50/80 cursor-pointer smooth-transition relative flex items-start gap-3 @(!notif.IsRead ? "bg-blue-50/30" : "")">
+                             class="p-3.5 hover:bg-slate-50/80 cursor-pointer transition-colors relative flex items-start gap-3 @(!notif.IsRead ? "bg-indigo-50/30" : "")">
                             
-                            <!-- Severity Dot / Icon -->
                             <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 @GetSeverityIconContainerClass(notif.Severity)">
                                 @GetSeverityIcon(notif.Severity)
                             </div>
 
-                            <!-- Content -->
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between gap-1 mb-1">
-                                    <h4 class="text-xs font-bold text-slate-800 truncate @(!notif.IsRead ? "text-blue-900" : "")">
+                                    <h4 class="text-xs font-bold text-slate-800 truncate @(!notif.IsRead ? "text-indigo-950" : "")">
                                         @notif.Title
                                     </h4>
                                     <span class="text-[10px] text-slate-400 flex-shrink-0 font-normal">
@@ -122,7 +115,7 @@
 
                             @if (!notif.IsRead)
                             {
-                                <span class="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0 mt-2"></span>
+                                <span class="w-2 h-2 rounded-full bg-indigo-600 flex-shrink-0 mt-2"></span>
                             }
                         </div>
                     }
@@ -131,7 +124,7 @@
 
             <!-- Dropdown Footer -->
             <div class="p-2 border-t border-slate-100 text-center bg-slate-50/60">
-                <button type="button" @onclick="CloseDropdown" class="text-[11px] text-slate-500 hover:text-slate-800 font-medium">
+                <button type="button" @onclick="CloseDropdown" class="text-[11px] text-slate-500 hover:text-slate-800 font-medium focus-ring rounded-md px-2 py-0.5">
                     بستن منو
                 </button>
             </div>
@@ -140,265 +133,7 @@
 </div>
 
 <!-- Details Modal -->
-<NotificationDetailsModal IsOpen="@isModalOpen" 
-                          Notification="@selectedNotification" 
+<NotificationDetailsModal IsOpen="@IsModalOpen" 
+                          Notification="@SelectedNotification" 
                           OnClose="@CloseDetailsModal" 
                           OnDelete="@HandleDeleteNotification" />
-
-@code {
-    private int currentUserId = 0;
-    private int unreadCount = 0;
-    private bool isDropdownOpen = false;
-    private bool isLoading = false;
-    private bool filterUnreadOnly = false;
-    private List<NotificationDto> notifications = new();
-
-    private bool isModalOpen = false;
-    private NotificationDto? selectedNotification;
-
-    private IEnumerable<NotificationDto> FilteredNotifications => 
-        filterUnreadOnly ? notifications.Where(n => !n.IsRead) : notifications;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value;
-            if (int.TryParse(userIdStr, out var id))
-            {
-                currentUserId = id;
-                await LoadInitialUnreadCountAsync();
-            }
-        }
-
-        EventBroker.OnNotificationReceived += HandleNotificationReceivedAsync;
-    }
-
-    private async Task LoadInitialUnreadCountAsync()
-    {
-        if (currentUserId > 0)
-        {
-            try
-            {
-                unreadCount = await NotificationService.GetUnreadCountAsync(currentUserId);
-            }
-            catch
-            {
-                unreadCount = 0;
-            }
-        }
-    }
-
-    private async Task LoadNotificationsListAsync()
-    {
-        if (currentUserId <= 0) return;
-
-        isLoading = true;
-        try
-        {
-            var summary = await NotificationService.GetSummaryAsync(currentUserId, limit: 30);
-            unreadCount = summary.UnreadCount;
-            notifications = summary.RecentNotifications;
-        }
-        catch
-        {
-            // Suppress background errors safely
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task ToggleDropdown()
-    {
-        isDropdownOpen = !isDropdownOpen;
-        if (isDropdownOpen)
-        {
-            await LoadNotificationsListAsync();
-        }
-    }
-
-    private void CloseDropdown()
-    {
-        isDropdownOpen = false;
-    }
-
-    private void SetFilter(bool unreadOnly)
-    {
-        filterUnreadOnly = unreadOnly;
-    }
-
-    private async Task MarkAllAsRead()
-    {
-        if (currentUserId <= 0) return;
-
-        await NotificationService.MarkAllAsReadAsync(currentUserId);
-        unreadCount = 0;
-        foreach (var n in notifications)
-        {
-            n.IsRead = true;
-        }
-        StateHasChanged();
-    }
-
-    private async Task OpenNotificationDetails(NotificationDto notif)
-    {
-        selectedNotification = notif;
-        isModalOpen = true;
-        isDropdownOpen = false;
-
-        if (!notif.IsRead && currentUserId > 0)
-        {
-            notif.IsRead = true;
-            unreadCount = Math.Max(0, unreadCount - 1);
-            await NotificationService.MarkAsReadAsync(notif.Id, currentUserId);
-        }
-    }
-
-    private void CloseDetailsModal()
-    {
-        isModalOpen = false;
-        selectedNotification = null;
-    }
-
-    private async Task HandleDeleteNotification(int notificationId)
-    {
-        if (currentUserId <= 0) return;
-
-        try
-        {
-            await NotificationService.DeleteNotificationAsync(notificationId, currentUserId);
-            var item = notifications.FirstOrDefault(n => n.Id == notificationId);
-            if (item != null)
-            {
-                if (!item.IsRead)
-                {
-                    unreadCount = Math.Max(0, unreadCount - 1);
-                }
-                notifications.Remove(item);
-            }
-            ToastService.ShowSuccess("اعلان با موفقیت حذف شد.");
-        }
-        catch (Exception ex)
-        {
-            ToastService.ShowError("خطا در حذف اعلان: " + ex.Message);
-        }
-    }
-
-    private async Task HandleNotificationReceivedAsync(int targetUserId, NotificationDto notification)
-    {
-        if (targetUserId == currentUserId && currentUserId > 0)
-        {
-            await InvokeAsync(async () =>
-            {
-                unreadCount++;
-                notifications.Insert(0, notification);
-                if (notifications.Count > 30)
-                {
-                    notifications.RemoveAt(notifications.Count - 1);
-                }
-
-                // Play soft Web Audio synthesizer chime
-                await PlayChimeSoundAsync();
-
-                StateHasChanged();
-            });
-        }
-    }
-
-    private async Task PlayChimeSoundAsync()
-    {
-        try
-        {
-            // Web Audio API pure synthesized gentle chime (no external audio assets needed)
-            const string chimeScript = @"
-                (function() {
-                    try {
-                        var AudioCtx = window.AudioContext || window.webkitAudioContext;
-                        if (!AudioCtx) return;
-                        var ctx = new AudioCtx();
-                        var now = ctx.currentTime;
-
-                        // Tone 1
-                        var osc1 = ctx.createOscillator();
-                        var gain1 = ctx.createGain();
-                        osc1.type = 'sine';
-                        osc1.frequency.setValueAtTime(587.33, now); // D5
-                        gain1.gain.setValueAtTime(0.08, now);
-                        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                        osc1.connect(gain1);
-                        gain1.connect(ctx.destination);
-                        osc1.start(now);
-                        osc1.stop(now + 0.35);
-
-                        // Tone 2 (higher harmonic chime)
-                        var osc2 = ctx.createOscillator();
-                        var gain2 = ctx.createGain();
-                        osc2.type = 'sine';
-                        osc2.frequency.setValueAtTime(880.00, now + 0.1); // A5
-                        gain2.gain.setValueAtTime(0.06, now + 0.1);
-                        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-                        osc2.connect(gain2);
-                        gain2.connect(ctx.destination);
-                        osc2.start(now + 0.1);
-                        osc2.stop(now + 0.5);
-                    } catch(e) {}
-                })();";
-            await JSRuntime.InvokeVoidAsync("eval", chimeScript);
-        }
-        catch
-        {
-            // Audio context autoplay restriction fallback
-        }
-    }
-
-    private string GetTimeAgo(DateTime createdAt)
-    {
-        var span = DateTime.UtcNow - createdAt;
-        if (span.TotalMinutes < 1) return "هم‌اکنون";
-        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} دقیقه پیش";
-        if (span.TotalHours < 24) return $"{(int)span.TotalHours} ساعت پیش";
-        if (span.TotalDays < 7) return $"{(int)span.TotalDays} روز پیش";
-        return createdAt.ToPersianDateString();
-    }
-
-    private string GetSeverityIconContainerClass(NotificationSeverity severity) => severity switch
-    {
-        NotificationSeverity.Success => "bg-emerald-50 text-emerald-600 border border-emerald-100",
-        NotificationSeverity.Warning => "bg-amber-50 text-amber-600 border border-amber-100",
-        NotificationSeverity.Danger => "bg-rose-50 text-rose-600 border border-rose-100",
-        _ => "bg-blue-50 text-blue-600 border border-blue-100"
-    };
-
-    private RenderFragment GetSeverityIcon(NotificationSeverity severity) => builder =>
-    {
-        builder.OpenElement(0, "svg");
-        builder.AddAttribute(1, "class", "w-4 h-4");
-        builder.AddAttribute(2, "fill", "none");
-        builder.AddAttribute(3, "stroke", "currentColor");
-        builder.AddAttribute(4, "viewBox", "0 0 24 24");
-        builder.OpenElement(5, "path");
-        builder.AddAttribute(6, "stroke-linecap", "round");
-        builder.AddAttribute(7, "stroke-linejoin", "round");
-        builder.AddAttribute(8, "stroke-width", "2");
-
-        var d = severity switch
-        {
-            NotificationSeverity.Success => "M5 13l4 4L19 7",
-            NotificationSeverity.Warning => "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
-            NotificationSeverity.Danger => "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-            _ => "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        };
-        builder.AddAttribute(9, "d", d);
-        builder.CloseElement();
-        builder.CloseElement();
-    };
-
-    public void Dispose()
-    {
-        EventBroker.OnNotificationReceived -= HandleNotificationReceivedAsync;
-    }
-}

@@ -6,62 +6,63 @@ using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Main.Tickets;
 
-// الان فقط از IDisposable ارث‌بری می‌کند
-public partial class Tickets : IDisposable
+public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDisposable
 {
-    [Inject] private IState<TicketState> TicketState { get; set; } = default!;
-    [Inject] private IDispatcher Dispatcher { get; set; } = default!;
-
-    // اضافه شدن سابسکرایبر برای گوش دادن به رویدادها
-    [Inject] public IActionSubscriber ActionSubscriber { get; set; } = default!;
+    [Inject] protected IState<TicketState> TicketState { get; set; } = default!;
+    [Inject] protected IDispatcher Dispatcher { get; set; } = default!;
+    [Inject] protected IActionSubscriber ActionSubscriber { get; set; } = default!;
+    [Inject] protected NavigationManager Navigation { get; set; } = default!;
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
 
-    [Inject]
-    private NavigationManager Navigation { get; set; } = default!;
+    protected bool IsCreateModalOpen { get; set; } = false;
+    protected TicketDto NewTicket { get; set; } = new TicketDto();
 
-    private bool isCreateModalOpen = false;
-    private TicketDto newTicket = new TicketDto();
-
-    private string SearchQuery
+    protected string SearchQuery
     {
         get => TicketState.Value.SearchTerm;
         set => Dispatcher.Dispatch(new SetTicketFiltersAction(value, null, null, null, null));
     }
 
-    private int PageSize
+    protected int PageSize
     {
         get => TicketState.Value.PageSize;
         set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, value, null, null, null));
     }
 
-    private List<int> SelectedProjectIds
+    protected List<int> SelectedProjectIds
     {
         get => TicketState.Value.SelectedFilterProjectIds;
         set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, value, null));
     }
 
-    private List<int> SelectedStatusIds
+    protected List<int> SelectedStatusIds
     {
         get => TicketState.Value.SelectedFilterStatusIds;
         set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, null, value));
     }
 
-    private IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets;
+    protected IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets;
+
+    protected TicketTransitionModal TransitionModal { get; set; } = default!;
+
+    protected HashSet<int> SelectedTicketIds { get; set; } = new();
+    protected bool IsDeleteModalOpen { get; set; } = false;
+    protected string DeleteModalDescription { get; set; } = string.Empty;
+    protected TicketDto? TicketToDelete { get; set; } = null;
+    protected bool IsBulkDelete { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        // گوش دادن به اکشن موفقیت برای بستن خودکار مودال تیکت
         ActionSubscriber.SubscribeToAction<SaveTicketSuccessAction>(this, action =>
         {
-            isCreateModalOpen = false;
+            IsCreateModalOpen = false;
             InvokeAsync(StateHasChanged);
         });
 
-        // شرط if حذف شد تا با هر بار ورود به صفحه، پروژه‌ها و دسته‌بندی‌های مجاز کاربر واکشی شوند
         var authState = await AuthState;
         var roles = authState.User.Claims
             .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
@@ -76,7 +77,7 @@ public partial class Tickets : IDisposable
         ActionSubscriber.UnsubscribeFromAllActions(this);
     }
 
-    private async Task OpenCreateModal()
+    protected async Task OpenCreateModal()
     {
         var authState = await AuthState;
         var user = authState.User;
@@ -84,7 +85,7 @@ public partial class Tickets : IDisposable
                            ?? user.FindFirst("sub")?.Value;
         int currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
 
-        newTicket = new TicketDto
+        NewTicket = new TicketDto
         {
             StatusId = 1,
             PriorityId = 2,
@@ -94,30 +95,28 @@ public partial class Tickets : IDisposable
 
         Dispatcher.Dispatch(new ClearTicketMessagesAction());
         Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
-        isCreateModalOpen = true;
+        IsCreateModalOpen = true;
     }
 
-    private void CloseCreateModal()
+    protected void CloseCreateModal()
     {
-        isCreateModalOpen = false;
+        IsCreateModalOpen = false;
     }
 
-    private void HandleCreateTicket()
+    protected void HandleCreateTicket()
     {
-        if (newTicket.ProjectId == 0) return;
-
-        Dispatcher.Dispatch(new SaveTicketAction(newTicket));
-        // خط بستن مودال از اینجا حذف شد چون به صورت خودکار در OnInitialized مدیریت می‌شود
+        if (NewTicket.ProjectId == 0) return;
+        Dispatcher.Dispatch(new SaveTicketAction(NewTicket));
     }
 
-    private void NavigateToDetails(int id)
+    protected void NavigateToDetails(int id)
     {
         Navigation.NavigateTo($"/tickets/{id}");
     }
 
-    private void HandleCategoryChanged(int? categoryId)
+    protected void HandleCategoryChanged(int? categoryId)
     {
-        newTicket.CategoryId = categoryId;
+        NewTicket.CategoryId = categoryId;
 
         if (categoryId.HasValue)
         {
@@ -125,93 +124,81 @@ public partial class Tickets : IDisposable
         }
         else
         {
-            // اگر دسته‌بندی خالی شد، فیلدهای داینامیک هم پاک شوند
             Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
         }
     }
 
-    private TicketTransitionModal transitionModal = default!;
+    protected void ClearSelection() => SelectedTicketIds.Clear();
 
-    // UI Transient Selection & Delete States
-    private HashSet<int> selectedTicketIds = new();
-    private bool isDeleteModalOpen = false;
-    private string deleteModalDescription = string.Empty;
-    private TicketDto? ticketToDelete = null;
-    private bool isBulkDelete = false;
-
-    private void ClearSelection() => selectedTicketIds.Clear();
-
-    private void ToggleTicketSelection(int ticketId, bool isSelected)
+    protected void ToggleTicketSelection(int ticketId, bool isSelected)
     {
         if (isSelected)
-            selectedTicketIds.Add(ticketId);
+            SelectedTicketIds.Add(ticketId);
         else
-            selectedTicketIds.Remove(ticketId);
+            SelectedTicketIds.Remove(ticketId);
 
-        selectedTicketIds = new HashSet<int>(selectedTicketIds);
+        SelectedTicketIds = new HashSet<int>(SelectedTicketIds);
     }
 
-    private void HandleSingleDelete(TicketDto ticket)
+    protected void HandleSingleDelete(TicketDto ticket)
     {
-        ticketToDelete = ticket;
-        isBulkDelete = false;
-        deleteModalDescription = $"آیا از حذف تیکت '{ticket.Title}' اطمینان دارید؟";
-        isDeleteModalOpen = true;
+        TicketToDelete = ticket;
+        IsBulkDelete = false;
+        DeleteModalDescription = $"آیا از حذف تیکت '{ticket.Title}' اطمینان دارید؟";
+        IsDeleteModalOpen = true;
     }
 
-    private void OpenBulkDeleteModal()
+    protected void OpenBulkDeleteModal()
     {
-        isBulkDelete = true;
-        ticketToDelete = null;
-        deleteModalDescription = $"آیا از حذف {selectedTicketIds.Count} تیکت انتخاب شده اطمینان دارید؟";
-        isDeleteModalOpen = true;
+        IsBulkDelete = true;
+        TicketToDelete = null;
+        DeleteModalDescription = $"آیا از حذف {SelectedTicketIds.Count} تیکت انتخاب شده اطمینان دارید؟";
+        IsDeleteModalOpen = true;
     }
 
-    private void ConfirmDeleteAsync()
+    protected void ConfirmDeleteAsync()
     {
-        isDeleteModalOpen = false;
+        IsDeleteModalOpen = false;
 
-        if (isBulkDelete)
+        if (IsBulkDelete)
         {
             var selectedTitles = TicketState.Value.Tickets
-                .Where(t => selectedTicketIds.Contains(t.Id))
+                .Where(t => SelectedTicketIds.Contains(t.Id))
                 .Select(t => t.Title)
                 .ToList();
 
-            Dispatcher.Dispatch(new DeleteMultipleTicketsAction(selectedTicketIds.ToList(), selectedTitles));
-            selectedTicketIds.Clear();
+            Dispatcher.Dispatch(new DeleteMultipleTicketsAction(SelectedTicketIds.ToList(), selectedTitles));
+            SelectedTicketIds.Clear();
         }
-        else if (ticketToDelete != null)
+        else if (TicketToDelete != null)
         {
-            if (selectedTicketIds.Contains(ticketToDelete.Id))
+            if (SelectedTicketIds.Contains(TicketToDelete.Id))
             {
-                selectedTicketIds.Remove(ticketToDelete.Id);
-                selectedTicketIds = new HashSet<int>(selectedTicketIds);
+                SelectedTicketIds.Remove(TicketToDelete.Id);
+                SelectedTicketIds = new HashSet<int>(SelectedTicketIds);
             }
 
-            Dispatcher.Dispatch(new DeleteTicketAction(ticketToDelete.Id, ticketToDelete.Title));
-            ticketToDelete = null;
+            Dispatcher.Dispatch(new DeleteTicketAction(TicketToDelete.Id, TicketToDelete.Title));
+            TicketToDelete = null;
         }
     }
 
-    private void CancelDelete()
+    protected void CancelDelete()
     {
-        isDeleteModalOpen = false;
-        ticketToDelete = null;
+        IsDeleteModalOpen = false;
+        TicketToDelete = null;
     }
 
-    private async Task HandleActionClick(TicketDto ticket)
+    protected async Task HandleActionClick(TicketDto ticket)
     {
         if (ticket.Project != null && ticket.Project.WorkflowId.HasValue)
         {
-            await transitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value, ticket.WorkflowStatusId);
+            await TransitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value, ticket.WorkflowStatusId);
         }
     }
 
-
-    private void HandleTransitionSaved()
+    protected void HandleTransitionSaved()
     {
-        // Reload tickets to reflect the status change
         var authState = AuthState.Result;
         var roles = authState.User.Claims
             .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)

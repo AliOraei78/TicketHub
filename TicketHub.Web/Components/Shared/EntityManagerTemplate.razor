@@ -1,6 +1,7 @@
+@namespace TicketHub.Web.Components.Shared
 @typeparam TItem
 
-<div class="w-full flex flex-col gap-3 flex-1" dir="rtl">
+<div class="w-full flex flex-col gap-3 flex-1 @Class" dir="rtl">
     @if (HeaderTemplate is not null)
     {
         @HeaderTemplate
@@ -22,7 +23,7 @@
 
     @if (PaginationTemplate is not null)
     {
-        <div class="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+        <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-2xs">
             @PaginationTemplate
         </div>
     }
@@ -32,13 +33,3 @@
         @ModalTemplate
     }
 </div>
-
-@code {
-    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
-    [Parameter] public RenderFragment? ToolbarTemplate { get; set; }
-    [Parameter] public RenderFragment? ListTemplate { get; set; }
-    [Parameter] public RenderFragment? PaginationTemplate { get; set; }
-    [Parameter] public RenderFragment? ModalTemplate { get; set; }
-
-    [Parameter] public IEnumerable<TItem>? Items { get; set; }
-}

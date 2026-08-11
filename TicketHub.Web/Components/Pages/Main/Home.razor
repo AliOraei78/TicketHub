@@ -9,81 +9,41 @@
 @using TicketHub.Web.Store
 @using TicketHub.Web.Components.Pages.Main.Tickets
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
-@inject ITicketService TicketService
-@inject IProjectService ProjectService
-@inject IPriorityService PriorityService
-@inject IStatusService StatusService
-@inject NavigationManager Navigation
-@inject IState<TicketState> TicketState
-@inject IDispatcher Dispatcher
-@inject IActionSubscriber ActionSubscriber
-@inject ITicketEventBroker EventBroker
-@implements IDisposable
 @rendermode InteractiveServer
 
 <PageTitle>داشبورد | سامانه تیکتینگ</PageTitle>
 
-<style>
-    @@keyframes zoomModalIn {
-        0% {
-            opacity: 0;
-            transform: scale(0.88) translateY(18px);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-    @@keyframes backdropFadeIn {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-    }
-    .animate-zoom-modal {
-        animation: zoomModalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .animate-backdrop-fade {
-        animation: backdropFadeIn 0.25s ease-out forwards;
-    }
-    .card-zoom-hover {
-        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
-    }
-    .card-zoom-hover:hover {
-        transform: translateY(-6px) scale(1.015);
-    }
-</style>
-
-<div class="w-full space-y-8" dir="rtl">
-    <!-- Welcome Glassmorphism Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-900 p-8 md:p-10 text-white shadow-2xl border border-white/10">
-        <!-- Background Ambient Glow & Patterns -->
-        <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="w-full space-y-8 select-none" dir="rtl">
+    <!-- Welcome Banner -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 md:p-10 text-white shadow-2xl border border-white/10">
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-3">
-                    <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
+                    <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 backdrop-blur-md flex items-center gap-1.5 shadow-xs">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         میز کار اختصاصی
                     </span>
-                    <span class="text-xs text-blue-200/70 font-medium flex items-center gap-1.5">
+                    <span class="text-xs text-indigo-200/70 font-medium flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        @currentPersianDate
+                        @CurrentPersianDate
                     </span>
                 </div>
-                <h1 class="text-3xl md:text-4xl font-black tracking-tight leading-tight text-white drop-shadow-sm">
-                    خوش آمدید، @userName
+                <h1 class="text-3xl md:text-4xl font-black tracking-tight leading-tight text-white drop-shadow-xs">
+                    خوش آمدید، @UserName
                 </h1>
-                <p class="text-blue-100/80 text-sm md:text-base mt-2 max-w-2xl leading-relaxed">
+                <p class="text-indigo-100/80 text-sm md:text-base mt-2 max-w-2xl leading-relaxed font-normal">
                     سیستم یکپارچه مدیریت درخواست‌ها و پشتیبانی. در زیر وضعیت تحلیلی تیکت‌ها و کارکرد پروژه قرار دارد.
                 </p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
                 <button @onclick="OpenCreateModal"
-                        class="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-95 smooth-transition flex items-center gap-2">
+                        class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 focus-ring">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -95,128 +55,113 @@
 
     <!-- Quick Metrics Bar -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Total Tickets -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md smooth-transition group">
-            <div>
-                <span class="text-xs font-bold text-gray-400 block mb-1">کل تیکت‌های دسترس</span>
-                <h3 class="text-3xl font-black text-gray-900 group-hover:text-blue-600 smooth-transition">@totalTickets</h3>
-                <span class="text-[11px] text-gray-400 mt-1 block">بر اساس دسترسی شما</span>
-            </div>
-            <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 smooth-transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        <QuickStatsCard Title="کل تیکت‌های دسترس" 
+                        Value="@TotalTickets.ToString()" 
+                        ValueColorClass="text-slate-900 group-hover:text-indigo-600" 
+                        IconThemeClass="bg-indigo-50 text-indigo-600">
+            <Icon>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 02 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-            </div>
-        </div>
+            </Icon>
+        </QuickStatsCard>
 
-        <!-- Unacted Tickets -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md smooth-transition group">
-            <div>
-                <span class="text-xs font-bold text-gray-400 block mb-1">اقدام نشده (جدید)</span>
-                <h3 class="text-3xl font-black text-blue-600">@newTicketsCount</h3>
-                <span class="text-[11px] text-blue-500 font-medium mt-1 block">نیازمند بررسی اولیه</span>
-            </div>
-            <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 smooth-transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <QuickStatsCard Title="اقدام نشده (جدید)" 
+                        Value="@NewTicketsCount.ToString()" 
+                        ValueColorClass="text-indigo-600" 
+                        IconThemeClass="bg-indigo-50 text-indigo-600">
+            <Icon>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-            </div>
-        </div>
+            </Icon>
+        </QuickStatsCard>
 
-        <!-- In Progress Tickets -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md smooth-transition group">
-            <div>
-                <span class="text-xs font-bold text-gray-400 block mb-1">در حال بررسی</span>
-                <h3 class="text-3xl font-black text-amber-600">@inProgressCount</h3>
-                <span class="text-[11px] text-amber-500 font-medium mt-1 block">در جریان فرآیند</span>
-            </div>
-            <div class="p-4 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 smooth-transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <QuickStatsCard Title="در حال بررسی" 
+                        Value="@InProgressCount.ToString()" 
+                        ValueColorClass="text-amber-600" 
+                        IconThemeClass="bg-amber-50 text-amber-600">
+            <Icon>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-            </div>
-        </div>
+            </Icon>
+        </QuickStatsCard>
 
-        <!-- Critical & Overdue -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md smooth-transition group">
-            <div>
-                <span class="text-xs font-bold text-gray-400 block mb-1">بحرانی / منقضی‌ شده</span>
-                <h3 class="text-3xl font-black text-rose-600">@criticalAndOverdueCount</h3>
-                <span class="text-[11px] text-rose-500 font-medium mt-1 block">نیازمند اقدام فوری</span>
-            </div>
-            <div class="p-4 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 smooth-transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <QuickStatsCard Title="بحرانی / منقضی‌ شده" 
+                        Value="@CriticalAndOverdueCount.ToString()" 
+                        ValueColorClass="text-rose-600" 
+                        IconThemeClass="bg-rose-50 text-rose-600">
+            <Icon>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-            </div>
-        </div>
+            </Icon>
+        </QuickStatsCard>
     </div>
 
-    <!-- Interactive Expandable Chart Cards Grid -->
+    <!-- Charts Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         <!-- Chart Card 1: 7-Day Tickets Trend -->
         <div @onclick='() => OpenChartModal("trend")'
-             class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-blue-200 cursor-pointer card-zoom-hover relative group overflow-hidden">
+             class="bg-white rounded-3xl p-6 shadow-2xs border border-slate-200/80 hover:shadow-xl hover:border-indigo-200 cursor-pointer transition-all relative group overflow-hidden">
             <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h3 class="font-bold text-gray-800 text-lg group-hover:text-blue-600 smooth-transition">
+                    <h3 class="font-bold text-slate-800 text-lg group-hover:text-indigo-600 transition-colors">
                         روند ورودی تیکت‌ها (۷ روز گذشته)
                     </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">برای مشاهده جزئیات و بزرگ‌نمایی کلیک کنید</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">برای مشاهده جزئیات و بزرگ‌نمایی کلیک کنید</p>
                 </div>
-                <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white smooth-transition">
+                <div class="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>
                 </div>
             </div>
 
-            <!-- Mini SVG Area Chart -->
             <div class="h-44 w-full flex items-end pt-4">
-                @if (trendData != null && trendData.Any())
+                @if (TrendData != null && TrendData.Any())
                 {
                     <svg viewBox="0 0 400 120" class="w-full h-full overflow-visible">
                         <defs>
                             <linearGradient id="miniTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.35" />
-                                <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.0" />
+                                <stop offset="0%" stop-color="#4F46E5" stop-opacity="0.35" />
+                                <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.0" />
                             </linearGradient>
                         </defs>
-                        <path d="@BuildSvgAreaPath(trendData, 400, 120)" fill="url(#miniTrendGrad)" />
-                        <path d="@BuildSvgLinePath(trendData, 400, 120)" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="@BuildSvgAreaPath(TrendData, 400, 120)" fill="url(#miniTrendGrad)" />
+                        <path d="@BuildSvgLinePath(TrendData, 400, 120)" fill="none" stroke="#4F46E5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                 }
             </div>
 
-            <div class="flex justify-between items-center border-t border-gray-50 pt-3 mt-2 text-xs text-gray-400">
+            <div class="flex justify-between items-center border-t border-slate-100 pt-3 mt-2 text-xs text-slate-400">
                 <span>۷ روز قبل</span>
-                <span class="font-bold text-blue-600">امروز (@(trendData?.LastOrDefault().Count ?? 0) تیکت)</span>
+                <span class="font-bold text-indigo-600">امروز (@(TrendData?.LastOrDefault()?.Count ?? 0) تیکت)</span>
             </div>
         </div>
 
-        <!-- Chart Card 2: Priority Distribution (Dynamic from DB) -->
+        <!-- Chart Card 2: Priority Distribution -->
         <div @onclick='() => OpenChartModal("priority")'
-             class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-indigo-200 cursor-pointer card-zoom-hover relative group">
+             class="bg-white rounded-3xl p-6 shadow-2xs border border-slate-200/80 hover:shadow-xl hover:border-indigo-200 cursor-pointer transition-all relative group">
             <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h3 class="font-bold text-gray-800 text-lg group-hover:text-indigo-600 smooth-transition">
+                    <h3 class="font-bold text-slate-800 text-lg group-hover:text-indigo-600 transition-colors">
                         توزیع تیکت‌ها بر اساس اولویت
                     </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">بر اساس اولویت‌های فعال در دیتابیس</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">بر اساس اولویت‌های فعال در دیتابیس</p>
                 </div>
-                <div class="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white smooth-transition">
+                <div class="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                     </svg>
                 </div>
             </div>
 
-            <!-- Priority Progress Bars (Dynamic from DB) -->
             <div class="space-y-3.5 my-3">
-                @if (priorityStats != null && priorityStats.Any())
+                @if (PriorityStats != null && PriorityStats.Any())
                 {
-                    @foreach (var pri in priorityStats.Take(4))
+                    @foreach (var pri in PriorityStats.Take(4))
                     {
                         <div>
                             <div class="flex justify-between text-xs font-bold mb-1">
@@ -226,30 +171,30 @@
                                 </span>
                                 <span class="font-bold" style="color: @pri.ColorCode;">@pri.Count تیکت (@pri.Percentage%)</span>
                             </div>
-                            <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full smooth-transition" style="width: @pri.Percentage%; background-color: @pri.ColorCode;"></div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all" style="width: @pri.Percentage%; background-color: @pri.ColorCode;"></div>
                             </div>
                         </div>
                     }
                 }
                 else
                 {
-                    <p class="text-xs text-gray-400 text-center py-4">اولویت فعالی تعریف نشده است.</p>
+                    <p class="text-xs text-slate-400 text-center py-4">اولویت فعالی تعریف نشده است.</p>
                 }
             </div>
         </div>
 
-        <!-- Chart Card 3: Project Workload Distribution -->
+        <!-- Chart Card 3: Project Workload -->
         <div @onclick='() => OpenChartModal("project")'
-             class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-purple-200 cursor-pointer card-zoom-hover relative group">
+             class="bg-white rounded-3xl p-6 shadow-2xs border border-slate-200/80 hover:shadow-xl hover:border-purple-200 cursor-pointer transition-all relative group">
             <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h3 class="font-bold text-gray-800 text-lg group-hover:text-purple-600 smooth-transition">
+                    <h3 class="font-bold text-slate-800 text-lg group-hover:text-purple-600 transition-colors">
                         سهم پروژه‌ها از کل تیکت‌ها
                     </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">پروژه‌های پرحجم و لود کاری</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">پروژه‌های پرحجم و لود کاری</p>
                 </div>
-                <div class="p-2.5 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white smooth-transition">
+                <div class="p-2.5 bg-purple-50 text-purple-600 rounded-2xl group-hover:bg-purple-600 group-hover:text-white transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
@@ -257,39 +202,39 @@
             </div>
 
             <div class="space-y-3.5 my-2">
-                @if (projectStats != null && projectStats.Any())
+                @if (ProjectStats != null && ProjectStats.Any())
                 {
-                    @foreach (var proj in projectStats.Take(3))
+                    @foreach (var proj in ProjectStats.Take(3))
                     {
                         <div>
                             <div class="flex justify-between text-xs font-bold mb-1">
-                                <span class="text-gray-800">@proj.ProjectName</span>
+                                <span class="text-slate-800">@proj.ProjectName</span>
                                 <span class="text-purple-600">@proj.TicketCount تیکت (@proj.Percentage%)</span>
                             </div>
                             <div class="w-full bg-purple-50 h-2.5 rounded-full overflow-hidden">
-                                <div class="bg-purple-600 h-full rounded-full smooth-transition" style="width: @proj.Percentage%"></div>
+                                <div class="bg-purple-600 h-full rounded-full transition-all" style="width: @proj.Percentage%"></div>
                             </div>
                         </div>
                     }
                 }
                 else
                 {
-                    <p class="text-xs text-gray-400 text-center py-4">اطلاعاتی موجود نیست.</p>
+                    <p class="text-xs text-slate-400 text-center py-4">اطلاعاتی موجود نیست.</p>
                 }
             </div>
         </div>
 
-        <!-- Chart Card 4: SLA & Deadline Health Gauge -->
+        <!-- Chart Card 4: SLA Health Gauge -->
         <div @onclick='() => OpenChartModal("sla")'
-             class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 cursor-pointer card-zoom-hover relative group">
+             class="bg-white rounded-3xl p-6 shadow-2xs border border-slate-200/80 hover:shadow-xl hover:border-emerald-200 cursor-pointer transition-all relative group">
             <div class="flex justify-between items-center mb-2">
                 <div>
-                    <h3 class="font-bold text-gray-800 text-lg group-hover:text-emerald-600 smooth-transition">
+                    <h3 class="font-bold text-slate-800 text-lg group-hover:text-emerald-600 transition-colors">
                         شاخص پاسخگویی به موقع (SLA)
                     </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">پایش انقضا و زمان‌بندی مهلت‌ها</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">پایش انقضا و زمان‌بندی مهلت‌ها</p>
                 </div>
-                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white smooth-transition">
+                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -297,42 +242,40 @@
             </div>
 
             <div class="flex items-center justify-around py-3">
-                <!-- SVG Circular Gauge -->
                 <div class="relative w-28 h-28 flex items-center justify-center">
                     <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                        <path class="text-gray-100" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path class="text-emerald-500 smooth-transition" stroke-dasharray="@(slaOnTimePercentage), 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="text-slate-100" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="text-emerald-500 transition-all" stroke-dasharray="@(SlaOnTimePercentage), 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
                     <div class="absolute text-center">
-                        <span class="text-xl font-black text-gray-800">@slaOnTimePercentage%</span>
-                        <span class="text-[9px] text-gray-400 block font-medium">پاسخ به موقع</span>
+                        <span class="text-xl font-black text-slate-800">@SlaOnTimePercentage%</span>
+                        <span class="text-[9px] text-slate-400 block font-medium">پاسخ به موقع</span>
                     </div>
                 </div>
 
                 <div class="space-y-2">
                     <div class="flex items-center gap-2 text-xs">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        <span class="text-gray-600">در مهلت تعیین شده: <b class="text-gray-900">@(totalTickets - overdueCount)</b></span>
+                        <span class="text-slate-600">در مهلت تعیین شده: <b class="text-slate-900">@(TotalTickets - OverdueCount)</b></span>
                     </div>
                     <div class="flex items-center gap-2 text-xs">
                         <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                        <span class="text-gray-600">سررسید گذشته (Overdue): <b class="text-rose-600">@overdueCount</b></span>
+                        <span class="text-slate-600">سررسید گذشته (Overdue): <b class="text-rose-600">@OverdueCount</b></span>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Recent Tickets Stream Section -->
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+    <div class="bg-white rounded-3xl shadow-2xs border border-slate-200/80 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full bg-blue-600 animate-ping"></div>
-                <h2 class="text-xl font-bold text-gray-800">آخرین تیکت‌های فعال در سیستم</h2>
+                <div class="w-3 h-3 rounded-full bg-indigo-600 animate-ping"></div>
+                <h2 class="text-xl font-bold text-slate-800">آخرین تیکت‌های فعال در سیستم</h2>
             </div>
             <button @onclick='() => Navigation.NavigateTo("/tickets")'
-                    class="text-sm font-bold text-blue-600 hover:text-blue-800 smooth-transition flex items-center gap-1">
+                    class="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 focus-ring rounded-lg px-2 py-1">
                 مشاهده تمام تیکت‌ها
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -341,36 +284,36 @@
         </div>
 
         <div class="p-0">
-            @if (isLoading)
+            @if (IsLoading)
             {
                 <div class="flex justify-center items-center py-16">
-                    <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-600"></div>
+                    <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-indigo-600"></div>
                 </div>
             }
-            else if (recentTickets == null || !recentTickets.Any())
+            else if (RecentTickets == null || !RecentTickets.Any())
             {
-                <div class="text-center py-16 text-gray-400 text-sm">
+                <div class="text-center py-16 text-slate-400 text-sm">
                     تیکتی برای نمایش یافت نشد.
                 </div>
             }
             else
             {
-                <div class="divide-y divide-gray-50">
-                    @foreach (var ticket in recentTickets)
+                <div class="divide-y divide-slate-100">
+                    @foreach (var ticket in RecentTickets)
                     {
                         <div @onclick="() => NavigateToDetails(ticket.Id)"
-                             class="p-5 hover:bg-slate-50/80 cursor-pointer smooth-transition flex flex-col md:flex-row justify-between md:items-center gap-4 group">
+                             class="p-5 hover:bg-slate-50/80 cursor-pointer transition-colors flex flex-col md:flex-row justify-between md:items-center gap-4 group">
                             
                             <div class="flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5"
-                                     style="background-color: @(ticket.Status?.ColorCode ?? "#3B82F6")20; color: @(ticket.Status?.ColorCode ?? "#3B82F6");">
+                                <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-2xs border border-black/5"
+                                     style="background-color: @(ticket.Status?.ColorCode ?? "#4F46E5")20; color: @(ticket.Status?.ColorCode ?? "#4F46E5");">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                     </svg>
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <h4 class="font-bold text-gray-800 group-hover:text-blue-600 smooth-transition">@ticket.Title</h4>
+                                        <h4 class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">@ticket.Title</h4>
                                         @if (ticket.IsOverdue)
                                         {
                                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
@@ -378,11 +321,11 @@
                                             </span>
                                         }
                                     </div>
-                                    <div class="flex items-center gap-3 mt-1 text-xs text-gray-400 font-medium">
+                                    <div class="flex items-center gap-3 mt-1 text-xs text-slate-400 font-medium">
                                         <span>پروژه: @(ticket.Project?.Name ?? "عمومی")</span>
-                                        <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
                                         <span>کاربر: @(ticket.User?.Name ?? "نامشخص")</span>
-                                        <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
                                         <span>@ticket.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
                                     </div>
                                 </div>
@@ -390,7 +333,7 @@
 
                             <div class="flex items-center gap-2.5 border-t md:border-none pt-3 md:pt-0">
                                 <span class="px-3 py-1 rounded-xl text-xs font-bold"
-                                      style="background-color: @(ticket.Status?.ColorCode ?? "#6B7280")20; color: @(ticket.Status?.ColorCode ?? "#6B7280");">
+                                      style="background-color: @(ticket.Status?.ColorCode ?? "#64748B")20; color: @(ticket.Status?.ColorCode ?? "#64748B");">
                                     @(ticket.Status?.Name ?? "نامشخص")
                                 </span>
 
@@ -406,32 +349,27 @@
     </div>
 </div>
 
-<!-- Glassmorphism Animated Chart Zoom Modal -->
-@if (isChartModalOpen)
+<!-- Chart Zoom Modal -->
+@if (IsChartModalOpen)
 {
     <SectionContent SectionName="RootModal">
-        <style>
-            main { overflow: hidden !important; }
-            body { overflow: hidden !important; }
-        </style>
-
-        <div class="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-8 md:pt-12 bg-slate-950/70 backdrop-blur-md animate-backdrop-fade" dir="rtl">
-            <div class="relative w-full max-w-3xl max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-zoom-modal my-0">
+        <div class="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-8 md:pt-12 bg-slate-950/70 backdrop-blur-md fade-in-item" dir="rtl">
+            <div class="relative w-full max-w-3xl max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col modal-content-animate my-0">
                 
-                <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center flex-shrink-0">
+                <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-shrink-0">
                     <div class="flex items-center gap-3">
-                        <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                        <div class="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-900 text-xl">@activeModalTitle</h3>
-                            <p class="text-xs text-gray-400 mt-0.5">تحلیل جامع و آمار تفکیکی جزئیات</p>
+                            <h3 class="font-bold text-slate-900 text-xl">@ActiveModalTitle</h3>
+                            <p class="text-xs text-slate-400 mt-0.5 font-normal">تحلیل جامع و آمار تفکیکی جزئیات</p>
                         </div>
                     </div>
 
-                    <button @onclick="CloseChartModal" class="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full smooth-transition">
+                    <button @onclick="CloseChartModal" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all focus-ring">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -439,104 +377,100 @@
                 </div>
 
                 <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
-                    @if (activeModalType == "trend")
+                    @if (ActiveModalType == "trend")
                     {
                         <div class="space-y-6">
                             <div class="h-64 w-full bg-slate-50 rounded-2xl p-4 border border-slate-100">
                                 <svg viewBox="0 0 600 200" class="w-full h-full">
                                     <defs>
                                         <linearGradient id="modalTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stop-color="#2563EB" stop-opacity="0.4" />
-                                            <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0" />
+                                            <stop offset="0%" stop-color="#4F46E5" stop-opacity="0.4" />
+                                            <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.0" />
                                         </linearGradient>
                                     </defs>
-                                    <path d="@BuildSvgAreaPath(trendData, 600, 200)" fill="url(#modalTrendGrad)" />
-                                    <path d="@BuildSvgLinePath(trendData, 600, 200)" fill="none" stroke="#2563EB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="@BuildSvgAreaPath(TrendData, 600, 200)" fill="url(#modalTrendGrad)" />
+                                    <path d="@BuildSvgLinePath(TrendData, 600, 200)" fill="none" stroke="#4F46E5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
 
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                @foreach (var day in trendData ?? Enumerable.Empty<DailyTrendDto>())
+                                @foreach (var day in TrendData ?? Enumerable.Empty<DailyTrendDto>())
                                 {
-                                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
-                                        <span class="text-xs text-gray-400 block font-medium">@day.DayLabel</span>
-                                        <b class="text-lg text-blue-600 block mt-1">@day.Count تیکت</b>
+                                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
+                                        <span class="text-xs text-slate-400 block font-medium">@day.DayLabel</span>
+                                        <b class="text-lg text-indigo-600 block mt-1">@day.Count تیکت</b>
                                     </div>
                                 }
                             </div>
                         </div>
                     }
-                    else if (activeModalType == "priority")
+                    else if (ActiveModalType == "priority")
                     {
                         <div class="space-y-4">
-                            @if (priorityStats != null && priorityStats.Any())
+                            @if (PriorityStats != null && PriorityStats.Any())
                             {
-                                @foreach (var pri in priorityStats)
+                                @foreach (var pri in PriorityStats)
                                 {
-                                    <div class="p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm" style="background-color: @(pri.ColorCode)10; border-color: @(pri.ColorCode)30;">
+                                    <div class="p-4 rounded-2xl border border-slate-100 flex items-center justify-between shadow-2xs" style="background-color: @(pri.ColorCode)10; border-color: @(pri.ColorCode)30;">
                                         <div class="flex items-center gap-3">
                                             <span class="w-4 h-4 rounded-full flex-shrink-0" style="background-color: @pri.ColorCode;"></span>
                                             <div>
-                                                <span class="font-bold text-gray-900 block text-base">@pri.Name</span>
-                                                <span class="text-xs text-gray-400 font-medium">سطح اولویت: @pri.Level</span>
+                                                <span class="font-bold text-slate-900 block text-base">@pri.Name</span>
+                                                <span class="text-xs text-slate-400 font-medium">سطح اولویت: @pri.Level</span>
                                             </div>
                                         </div>
                                         <div class="text-left">
                                             <span class="text-xl font-black block" style="color: @pri.ColorCode;">@pri.Count تیکت</span>
-                                            <span class="text-xs text-gray-500 font-bold block">@pri.Percentage% از کل تیکت‌ها</span>
+                                            <span class="text-xs text-slate-500 font-bold block">@pri.Percentage% از کل تیکت‌ها</span>
                                         </div>
                                     </div>
                                 }
                             }
-                            else
-                            {
-                                <p class="text-xs text-gray-400 text-center py-4">اولویت تعریف‌شده‌ای در سیستم یافت نشد.</p>
-                            }
                         </div>
                     }
-                    else if (activeModalType == "project")
+                    else if (ActiveModalType == "project")
                     {
                         <div class="space-y-4">
-                            @foreach (var proj in projectStats ?? Enumerable.Empty<ProjectWorkloadDto>())
+                            @foreach (var proj in ProjectStats ?? Enumerable.Empty<ProjectWorkloadDto>())
                             {
-                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2">
+                                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
                                     <div class="flex justify-between items-center font-bold">
-                                        <span class="text-gray-800 text-base">@proj.ProjectName</span>
+                                        <span class="text-slate-800 text-base">@proj.ProjectName</span>
                                         <span class="text-purple-600">@proj.TicketCount تیکت ثبت شده</span>
                                     </div>
-                                    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-                                        <div class="bg-purple-600 h-full rounded-full smooth-transition" style="width: @proj.Percentage%"></div>
+                                    <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                                        <div class="bg-purple-600 h-full rounded-full transition-all" style="width: @proj.Percentage%"></div>
                                     </div>
-                                    <span class="text-xs text-gray-400 block font-medium">@proj.Percentage% از کل حجم تیکت‌های سیستم</span>
+                                    <span class="text-xs text-slate-400 block font-medium">@proj.Percentage% از کل حجم تیکت‌های سیستم</span>
                                 </div>
                             }
                         </div>
                     }
-                    else if (activeModalType == "sla")
+                    else if (ActiveModalType == "sla")
                     {
                         <div class="space-y-6 text-center">
                             <div class="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
                                 <span class="text-xs text-emerald-700 font-bold block mb-1">میزان پایبندی به زمان‌بندی (SLA)</span>
-                                <h2 class="text-5xl font-black text-emerald-600">@slaOnTimePercentage%</h2>
+                                <h2 class="text-5xl font-black text-emerald-600">@SlaOnTimePercentage%</h2>
                                 <p class="text-xs text-emerald-800 mt-2">تیکت‌های که پیش از اتمام موعد بررسی به سرانجام رسیده‌اند.</p>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
-                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <span class="text-xs text-gray-400 block">پاسخ‌داده شده به موقع</span>
-                                    <b class="text-2xl text-emerald-600 block mt-1">@(totalTickets - overdueCount)</b>
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <span class="text-xs text-slate-400 block">پاسخ‌داده شده به موقع</span>
+                                    <b class="text-2xl text-emerald-600 block mt-1">@(TotalTickets - OverdueCount)</b>
                                 </div>
                                 <div class="p-4 bg-rose-50 rounded-2xl border border-rose-100">
                                     <span class="text-xs text-rose-700 block">تخلف زمان‌بندی (Overdue)</span>
-                                    <b class="text-2xl text-rose-600 block mt-1">@overdueCount</b>
+                                    <b class="text-2xl text-rose-600 block mt-1">@OverdueCount</b>
                                 </div>
                             </div>
                         </div>
                     }
                 </div>
 
-                <div class="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0">
-                    <button @onclick="CloseChartModal" class="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl smooth-transition">
+                <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end flex-shrink-0">
+                    <button @onclick="CloseChartModal" class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition-all focus-ring">
                         بستن
                     </button>
                 </div>
@@ -545,9 +479,9 @@
     </SectionContent>
 }
 
-<!-- Animated Create Ticket Modal -->
-<TicketFormModal IsOpen="isCreateModalOpen"
-                 Model="newTicket"
+<!-- Create Ticket Modal -->
+<TicketFormModal IsOpen="IsCreateModalOpen"
+                 Model="NewTicket"
                  Projects="TicketState.Value.AvailableProjects"
                  Priorities="TicketState.Value.AvailablePriorities"
                  Categories="TicketState.Value.AvailableCategories"
@@ -555,301 +489,3 @@
                  OnCategoryChanged="HandleCategoryChanged"
                  OnSubmit="HandleCreateTicket"
                  OnCancel="CloseCreateModal" />
-
-@code {
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthState { get; set; } = default!;
-
-    private bool isLoading = true;
-    private string userName = "کاربر گرامی";
-    private string currentPersianDate = string.Empty;
-
-    // Create Modal State
-    private bool isCreateModalOpen = false;
-    private TicketDto newTicket = new TicketDto();
-
-    private int totalTickets = 0;
-    private int newTicketsCount = 0;
-    private int inProgressCount = 0;
-    private int criticalAndOverdueCount = 0;
-    private int overdueCount = 0;
-    private int slaOnTimePercentage = 100;
-
-    private List<DailyTrendDto>? trendData;
-    private List<PriorityStatDto>? priorityStats;
-    private List<ProjectWorkloadDto>? projectStats;
-    private IEnumerable<TicketDto>? recentTickets;
-
-    // Modal state
-    private bool isChartModalOpen = false;
-    private string activeModalType = string.Empty;
-    private string activeModalTitle = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        currentPersianDate = GetPersianDate(DateTime.UtcNow);
-
-        // گوش دادن به اکشن موفقیت ثبت تیکت برای بستن مودال و رفرش درجا
-        ActionSubscriber.SubscribeToAction<SaveTicketSuccessAction>(this, async action =>
-        {
-            isCreateModalOpen = false;
-            await LoadDashboardDataAsync();
-            await InvokeAsync(StateHasChanged);
-        });
-
-        // گوش دادن به رویدادهای زنده سیستم برای رفرش آنی و زنده داشبورد
-        EventBroker.OnTicketUpdated += HandleLiveTicketEventAsync;
-        EventBroker.OnTransitionOccurred += HandleLiveTicketEventAsync;
-
-        var authState = await AuthState;
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            userName = user.FindFirst(ClaimTypes.Name)?.Value
-                       ?? user.FindFirst("name")?.Value
-                       ?? user.Identity.Name
-                       ?? "کاربر محترم";
-
-            var roles = user.Claims
-                .Where(c => c.Type == ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ToList();
-
-            Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
-        }
-
-        await LoadDashboardDataAsync();
-        isLoading = false;
-    }
-
-    private async Task HandleLiveTicketEventAsync(int ticketId)
-    {
-        await InvokeAsync(async () =>
-        {
-            await LoadDashboardDataAsync();
-            StateHasChanged();
-        });
-    }
-
-    public void Dispose()
-    {
-        ActionSubscriber.UnsubscribeFromAllActions(this);
-        EventBroker.OnTicketUpdated -= HandleLiveTicketEventAsync;
-        EventBroker.OnTransitionOccurred -= HandleLiveTicketEventAsync;
-    }
-
-    private async Task LoadDashboardDataAsync()
-    {
-        var authState = await AuthState;
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated != true) return;
-
-        // Fetch filtered tickets according to security scoping automatically handled by TicketService
-        var (tickets, total) = await TicketService.GetFilteredTicketsAsync(
-            searchTerm: null,
-            projectIds: null,
-            statusIds: null,
-            userId: null,
-            page: 1,
-            pageSize: 100);
-
-        totalTickets = total;
-        newTicketsCount = tickets.Count(t => t.WorkflowStatus?.IsInitial == true || (t.WorkflowStatusId == null && t.Status?.Name == "Open"));
-        inProgressCount = tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial);
-        overdueCount = tickets.Count(t => t.IsOverdue);
-        criticalAndOverdueCount = tickets.Count(t => (t.Priority != null && t.Priority.Level > 4) || t.IsOverdue);
-
-        slaOnTimePercentage = totalTickets > 0 ? (int)Math.Round((double)(totalTickets - overdueCount) * 100 / totalTickets) : 100;
-
-        recentTickets = tickets.Take(6);
-
-        // محاسبه داینامیک آمار اولویت‌ها از دیتابیس
-        var dbPriorities = (await PriorityService.GetAllAsync()).Where(p => p.IsActive).OrderByDescending(p => p.Level).ToList();
-        priorityStats = dbPriorities.Select(p =>
-        {
-            int count = tickets.Count(t => t.PriorityId == p.Id);
-            int pct = totalTickets > 0 ? (int)Math.Round((double)count * 100 / totalTickets) : 0;
-            return new PriorityStatDto
-            {
-                PriorityId = p.Id,
-                Name = p.Name,
-                ColorCode = string.IsNullOrWhiteSpace(p.ColorCode) ? "#3B82F6" : p.ColorCode,
-                Level = p.Level.GetValueOrDefault(),
-                Count = count,
-                Percentage = pct
-            };
-        }).ToList();
-
-        // محاسبه روند ۷ روزه
-        var now = DateTime.UtcNow.Date;
-        trendData = Enumerable.Range(0, 7)
-            .Select(i => now.AddDays(-6 + i))
-            .Select(date => new DailyTrendDto
-            {
-                Date = date,
-                DayLabel = GetPersianDayName(date),
-                Count = tickets.Count(t => t.CreatedAt.Date == date)
-            })
-            .ToList();
-
-        // محاسبه لود کاری پروژه‌ها
-        var projGroups = tickets
-            .Where(t => t.Project != null)
-            .GroupBy(t => t.Project!.Name)
-            .Select(g => new ProjectWorkloadDto
-            {
-                ProjectName = g.Key,
-                TicketCount = g.Count(),
-                Percentage = totalTickets > 0 ? (int)Math.Round((double)g.Count() * 100 / totalTickets) : 0
-            })
-            .OrderByDescending(p => p.TicketCount)
-            .ToList();
-
-        projectStats = projGroups;
-    }
-
-    private async Task OpenCreateModal()
-    {
-        var authState = await AuthState;
-        var user = authState.User;
-        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                           ?? user.FindFirst("sub")?.Value;
-        int currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
-
-        newTicket = new TicketDto
-        {
-            StatusId = 1,
-            PriorityId = 2,
-            UserId = currentUserId,
-            ProjectId = 0
-        };
-
-        var roles = user.Claims
-            .Where(c => c.Type == ClaimTypes.Role)
-            .Select(c => c.Value)
-            .ToList();
-
-        Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
-        Dispatcher.Dispatch(new ClearTicketMessagesAction());
-        Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
-        isCreateModalOpen = true;
-    }
-
-    private void CloseCreateModal()
-    {
-        isCreateModalOpen = false;
-    }
-
-    private void HandleCreateTicket()
-    {
-        if (newTicket.ProjectId == 0) return;
-        Dispatcher.Dispatch(new SaveTicketAction(newTicket));
-    }
-
-    private void HandleCategoryChanged(int? categoryId)
-    {
-        newTicket.CategoryId = categoryId;
-
-        if (categoryId.HasValue)
-        {
-            Dispatcher.Dispatch(new LoadDynamicFieldsAction(categoryId.Value));
-        }
-        else
-        {
-            Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
-        }
-    }
-
-    private void OpenChartModal(string type)
-    {
-        activeModalType = type;
-        activeModalTitle = type switch
-        {
-            "trend" => "تحلیل جامع روند ورودی تیکت‌ها",
-            "priority" => "توزیع تفکیکی اولویت‌های سیستم",
-            "project" => "سهم پروژه‌ها از لود کاری سیستم",
-            "sla" => "پایش دقیق شاخص زمان‌بندی (SLA)",
-            _ => "آمار تفکیکی"
-        };
-        isChartModalOpen = true;
-    }
-
-    private void CloseChartModal() => isChartModalOpen = false;
-
-    private void NavigateToDetails(int id) => Navigation.NavigateTo($"/tickets/{id}");
-
-    private string BuildSvgLinePath(List<DailyTrendDto>? data, double width, double height)
-    {
-        if (data == null || !data.Any()) return string.Empty;
-        int max = Math.Max(data.Max(d => d.Count), 1);
-        double stepX = width / Math.Max(data.Count - 1, 1);
-        var points = data.Select((d, i) =>
-        {
-            double x = i * stepX;
-            double y = height - (d.Count * (height - 20) / max) - 10;
-            return $"{x:F1},{y:F1}";
-        });
-        return "M " + string.Join(" L ", points);
-    }
-
-    private string BuildSvgAreaPath(List<DailyTrendDto>? data, double width, double height)
-    {
-        var linePath = BuildSvgLinePath(data, width, height);
-        if (string.IsNullOrEmpty(linePath)) return string.Empty;
-        return $"{linePath} L {width:F1},{height:F1} L 0,{height:F1} Z";
-    }
-
-    private string GetPriorityClass(string priority) => priority switch
-    {
-        "Low" => "bg-blue-50 text-blue-600",
-        "Medium" => "bg-amber-50 text-amber-600",
-        "High" => "bg-orange-50 text-orange-600",
-        "Critical" => "bg-rose-50 text-rose-600",
-        _ => "bg-gray-50 text-gray-600"
-    };
-
-    private string GetPersianDate(DateTime dt)
-    {
-        var pc = new System.Globalization.PersianCalendar();
-        return $"{pc.GetYear(dt)}/{pc.GetMonth(dt):00}/{pc.GetDayOfMonth(dt):00}";
-    }
-
-    private string GetPersianDayName(DateTime dt) => dt.DayOfWeek switch
-    {
-        DayOfWeek.Saturday => "شنبه",
-        DayOfWeek.Sunday => "۱شنبه",
-        DayOfWeek.Monday => "۲شنبه",
-        DayOfWeek.Tuesday => "۳شنبه",
-        DayOfWeek.Wednesday => "۴شنبه",
-        DayOfWeek.Thursday => "۵شنبه",
-        DayOfWeek.Friday => "جمعه",
-        _ => string.Empty
-    };
-
-    private record PriorityStatDto
-    {
-        public int PriorityId { get; init; }
-        public string Name { get; init; } = string.Empty;
-        public string ColorCode { get; init; } = "#3B82F6";
-        public int Level { get; init; }
-        public int Count { get; init; }
-        public int Percentage { get; init; }
-    }
-
-    private record DailyTrendDto
-    {
-        public DateTime Date { get; init; }
-        public string DayLabel { get; init; } = string.Empty;
-        public int Count { get; init; }
-    }
-
-    private record ProjectWorkloadDto
-    {
-        public string ProjectName { get; init; } = string.Empty;
-        public int TicketCount { get; init; }
-        public int Percentage { get; init; }
-    }
-}

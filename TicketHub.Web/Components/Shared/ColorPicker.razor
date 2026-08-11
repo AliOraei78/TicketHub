@@ -1,26 +1,14 @@
-﻿@namespace TicketHub.Web.Components.Shared
+@namespace TicketHub.Web.Components.Shared
 
-<div class="h-[46px] flex items-center gap-3">
-    <label class="relative cursor-pointer hover:scale-105 transition-transform inline-block w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-gray-200 shrink-0">
+<div class="h-[46px] flex items-center gap-3 @Class">
+    <label class="relative cursor-pointer hover:scale-105 transition-transform inline-block w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-200 shrink-0 focus-ring">
         <input type="color"
                value="@Value"
                @onchange="OnColorChanged"
                class="absolute -inset-2 w-16 h-16 cursor-pointer bg-transparent border-0 p-0" />
     </label>
 
-    <span class="text-sm text-gray-600 font-mono mt-1" dir="ltr">
-        @(string.IsNullOrWhiteSpace(Value) ? "#######" : Value)
+    <span class="text-sm text-slate-600 font-mono select-all" dir="ltr">
+        @(string.IsNullOrWhiteSpace(Value) ? "#000000" : Value)
     </span>
 </div>
-
-@code {
-    [Parameter] public string Value { get; set; } = "#3b82f6";
-    [Parameter] public EventCallback<string> ValueChanged { get; set; }
-    [Parameter] public string Placeholder { get; set; } = string.Empty;
-
-    private async Task OnColorChanged(ChangeEventArgs e)
-    {
-        var newColor = e.Value?.ToString() ?? "#3b82f6";
-        await ValueChanged.InvokeAsync(newColor);
-    }
-}

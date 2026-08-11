@@ -3,14 +3,47 @@
 
 @theme {
     --font-sans: Vazirmatn, sans-serif;
+
+    /* Extended Color Tokens */
+    --color-brand-50: #eef2ff;
+    --color-brand-100: #e0e7ff;
+    --color-brand-500: #6366f1;
+    --color-brand-600: #4f46e5;
+    --color-brand-700: #4338ca;
+
+    --color-surface-card: #ffffff;
+    --color-surface-bg: #f8fafc;
+}
+
+/* Base Glassmorphism & Elevation Tokens */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-panel-dark {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Focus and Accessibility Ring Utility */
+.focus-ring {
+    outline: none !important;
+}
+.focus-ring:focus-visible {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
 }
 
 /* انیمیشن ورود به صفحه */
 @keyframes pageFadeInUp {
     0% {
         opacity: 0;
-        transform: translateY(20px) scale(0.98);
-        filter: blur(8px);
+        transform: translateY(16px) scale(0.99);
+        filter: blur(4px);
     }
 
     100% {
@@ -21,7 +54,7 @@
 }
 
 .page-transition-enter {
-    animation: pageFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: pageFadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* حذف کادر مزاحم از دور عناوین صفحات هنگام لود اولیه در بلیزور */
@@ -45,11 +78,11 @@ h1:focus-visible {
     }
 }
 
-/* انیمیشن پاپ‌آپ (بدون تغییر) */
+/* انیمیشن پاپ‌آپ */
 @keyframes modalScaleUp {
     0% {
         opacity: 0;
-        transform: scale(0.95) translateY(15px);
+        transform: scale(0.96) translateY(12px);
     }
 
     100% {
@@ -60,20 +93,19 @@ h1:focus-visible {
 
 .modal-backdrop-animate {
     animation: backdropFadeIn 0.3s ease-out forwards;
-    /* یک هاله بسیار کم‌رنگ برای ایجاد کنتراست بهتر بین مودال و پس‌زمینه */
-    background-color: rgba(15, 23, 42, 0.2);
+    background-color: rgba(15, 23, 42, 0.4);
 }
 
 .modal-content-animate {
-    animation: modalScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: modalScaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .row-enter {
-    animation: slideInFromLeft 0.4s ease-out forwards;
+    animation: slideInFromLeft 0.35s ease-out forwards;
 }
 
 .row-exit {
-    animation: slideOutToLeft 0.4s ease-in forwards;
+    animation: slideOutToLeft 0.35s ease-in forwards;
 }
 
 @keyframes slideInFromLeft {
@@ -102,6 +134,7 @@ h1:focus-visible {
 
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -109,16 +142,15 @@ h1:focus-visible {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1; /* رنگ طوسی ملایم */
+    background-color: #cbd5e1;
     border-radius: 10px;
 }
 
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background-color: #94a3b8;
-    }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
 
 /* Floating toolbar slide up animation */
-/* Slide up and keep centered without jumping */
 @keyframes slideUpPopup {
     0% {
         transform: translate(-50%, 40px) scale(0.95);
@@ -131,11 +163,10 @@ h1:focus-visible {
     }
 }
 
-/* انیمیشن ورود (Fade In) */
 @keyframes itemFadeIn {
     0% {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.97);
     }
 
     100% {
@@ -144,7 +175,6 @@ h1:focus-visible {
     }
 }
 
-/* انیمیشن خروج (Fade Out) */
 @keyframes itemFadeOut {
     0% {
         opacity: 1;
@@ -153,16 +183,16 @@ h1:focus-visible {
 
     100% {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.97);
     }
 }
 
 .fade-in-item {
-    animation: itemFadeIn 0.4s ease-out forwards;
+    animation: itemFadeIn 0.3s ease-out forwards;
 }
 
 .fade-out-item {
-    animation: itemFadeOut 0.4s ease-in forwards;
+    animation: itemFadeOut 0.3s ease-in forwards;
 }
 
 .loading-dot {

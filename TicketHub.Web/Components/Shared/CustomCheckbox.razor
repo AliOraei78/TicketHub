@@ -1,30 +1,15 @@
-﻿<div>
-    <!-- این لیبل مخفی، فضای خالی معادل لیبل‌های بالای سایر فیلدها را ایجاد می‌کند تا چک‌باکس هم‌تراز شود -->
-    <label class="block text-sm mb-2 invisible">Spacer</label>
+@namespace TicketHub.Web.Components.Shared
 
-    <div class="flex items-center gap-3 h-[46px]">
-        <input type="checkbox" id="@Id" @bind="CurrentValue" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 shadow-sm cursor-pointer" />
-        <label for="@Id" class="text-sm font-medium text-gray-700 cursor-pointer select-none">@Label</label>
-    </div>
-</div>
-
-@code {
-    [Parameter] public string Label { get; set; } = string.Empty;
-    [Parameter] public bool Value { get; set; }
-    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
-
-    private string Id { get; set; } = Guid.NewGuid().ToString("N");
-
-    private bool CurrentValue
+<div class="flex items-center gap-3 h-[46px] select-none @Class">
+    <input type="checkbox"
+           id="@Id"
+           @bind="CurrentValue"
+           disabled="@Disabled"
+           class="w-5 h-5 text-indigo-600 border-slate-300 rounded-md focus:ring-indigo-500 shadow-sm cursor-pointer disabled:opacity-50 focus-ring transition-all" />
+    @if (!string.IsNullOrWhiteSpace(Label))
     {
-        get => Value;
-        set
-        {
-            if (Value != value)
-            {
-                Value = value;
-                ValueChanged.InvokeAsync(value);
-            }
-        }
+        <label for="@Id" class="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer select-none">
+            @Label
+        </label>
     }
-}
+</div>

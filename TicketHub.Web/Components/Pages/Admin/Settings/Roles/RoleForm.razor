@@ -1,28 +1,30 @@
-﻿
-<div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
-    <h3 class="font-bold text-gray-800 mb-4 text-lg">@(IsEditing ? "ویرایش نقش" : "ایجاد نقش جدید")</h3>
+@namespace TicketHub.Web.Components.Pages.Admin.Settings.Roles
+@using TicketHub.Application.DTOs
+@using TicketHub.Web.Components.Shared
+
+<div class="bg-white rounded-3xl p-6 shadow-2xs border border-slate-200/80 sticky top-24 select-none">
+    <h3 class="font-bold text-slate-800 mb-4 text-lg tracking-tight">@(IsEditing ? "ویرایش نقش" : "ایجاد نقش جدید")</h3>
 
     <EditForm Model="Model" OnValidSubmit="OnValidSubmit">
         <FluentValidationValidator />
-        <div class="space-y-4">
+        <div class="space-y-5">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">عنوان نقش (انگلیسی یا فارسی)</label>
-                <InputText @bind-Value="Model.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: Support" />
-                <ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-xs mt-1" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">عنوان نقش (انگلیسی یا فارسی)</label>
+                <InputText @bind-Value="Model.Name" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="مثال: Support" />
+                <ValidationMessage For="@(() => Model.Name)" class="text-rose-500 text-red-500 text-xs mt-1" />
             </div>
 
             <div class="flex items-center mt-3">
-                <InputCheckbox @bind-Value="Model.IsActive" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" id="roleIsActive" />
-                <label for="roleIsActive" class="mr-2 block text-sm font-medium text-gray-700">نقش فعال است؟</label>
+                <CustomCheckbox Label="نقش فعال است؟" @bind-Value="Model.IsActive" />
             </div>
 
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+            <div class="flex gap-2 pt-2">
+                <button type="submit" class="flex-1 flex justify-center py-3 px-4 rounded-2xl shadow-lg shadow-indigo-500/20 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus-ring transition-all">
                     @(IsEditing ? "ذخیره تغییرات" : "ثبت نقش")
                 </button>
                 @if (IsEditing)
                 {
-                    <button type="button" @onclick="OnCancel" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">
+                    <button type="button" @onclick="OnCancel" class="py-3 px-4 rounded-2xl text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors focus-ring">
                         انصراف
                     </button>
                 }
@@ -32,15 +34,6 @@
 
     @if (!string.IsNullOrEmpty(SuccessMessage))
     {
-        <div class="mt-4 p-3 @(IsError ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600") rounded-xl text-sm font-medium text-center transition-all">@SuccessMessage</div>
+        <div class="mt-4 p-3 @(IsError ? "bg-rose-50 text-rose-600 border border-rose-200/60" : "bg-emerald-50 text-emerald-600 border border-emerald-200/60") rounded-2xl text-xs font-bold text-center transition-all">@SuccessMessage</div>
     }
 </div>
-
-@code {
-    [Parameter] public RoleDto Model { get; set; } = new();
-    [Parameter] public bool IsEditing { get; set; }
-    [Parameter] public string? SuccessMessage { get; set; }
-    [Parameter] public bool IsError { get; set; }
-    [Parameter] public EventCallback OnValidSubmit { get; set; }
-    [Parameter] public EventCallback OnCancel { get; set; }
-}

@@ -1,22 +1,25 @@
-﻿
+@namespace TicketHub.Web.Components.Pages.Admin.Projects
+@using TicketHub.Application.DTOs
+@using TicketHub.Web.Components.Shared
+
 <ModalDialog IsOpen="IsOpen"
              Title="@Title"
              OnClose="OnCancel"
              MaxWidthClass="max-w-md">
 
-    <EditForm Model="@Model" OnValidSubmit="OnSave" class="flex flex-col max-h-[85vh]">
+    <EditForm Model="@Model" OnValidSubmit="OnSave" class="flex flex-col max-h-[85vh] select-none">
         <FluentValidationValidator />
-        <div class="p-8 space-y-6 overflow-y-auto flex-1">
+        <div class="p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">نام پروژه</label>
-                <InputText @bind-Value="Model.Name" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500 text-sm smooth-transition" placeholder="نام پروژه را وارد کنید" />
-                <ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-xs mt-1" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">نام پروژه</label>
+                <InputText @bind-Value="Model.Name" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="نام پروژه را وارد کنید" />
+                <ValidationMessage For="@(() => Model.Name)" class="text-rose-500 text-red-500 text-xs mt-1" />
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">توضیحات</label>
-                <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:border-indigo-500 text-sm smooth-transition" placeholder="درباره این پروژه بنویسید..." />
-                <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-xs mt-1" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">توضیحات</label>
+                <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="درباره این پروژه بنویسید..." />
+                <ValidationMessage For="@(() => Model.Description)" class="text-rose-500 text-red-500 text-xs mt-1" />
             </div>
 
             <SlideSelect TItem="WorkflowDto"
@@ -29,37 +32,26 @@
                          @bind-Value="Model.WorkflowId"
                          AllowClear="true"
                          ClearText="بدون جریان کاری" />
-            
+
             <MultiSelectDropdown TItem="RoleDto"
-             TValue="int"
-             Label="نقش‌های پروژه"
-             Placeholder="انتخاب نقش‌ها..."
-             Items="@Roles"
-             DisplaySelector="r => r.Name"
-             ValueSelector="r => r.Id"
-             @bind-SelectedValues="Model.RoleIds" />
+                                 TValue="int"
+                                 Label="نقش‌های پروژه"
+                                 Placeholder="انتخاب نقش‌ها..."
+                                 Items="@Roles"
+                                 DisplaySelector="r => r.Name"
+                                 ValueSelector="r => r.Id"
+                                 @bind-SelectedValues="Model.RoleIds" />
 
             <div class="flex items-center mt-4 gap-2">
-                <label for="projectIsActive" class="block text-sm font-medium text-gray-700">پروژه فعال است؟</label>
-                <InputCheckbox @bind-Value="Model.IsActive" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" id="projectIsActive" />
+                <CustomCheckbox Label="پروژه فعال است؟" @bind-Value="Model.IsActive" />
             </div>
         </div>
 
-        <div class="px-8 py-6 border-t bg-gray-50 flex gap-3">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3.5 rounded-2xl smooth-transition shadow-lg shadow-indigo-500/10">
+        <div class="px-8 py-6 border-t border-slate-100 bg-slate-50 flex gap-3 rounded-b-3xl">
+            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all focus-ring">
                 @(Model.Id == 0 ? "ثبت پروژه" : "ذخیره تغییرات")
             </button>
-            <button type="button" @onclick="OnCancel" class="flex-1 border border-gray-300 hover:bg-gray-100 font-medium py-3.5 rounded-2xl smooth-transition text-gray-700">انصراف</button>
+            <button type="button" @onclick="OnCancel" class="flex-1 border border-slate-200 hover:bg-slate-100 font-bold text-sm text-slate-700 py-3.5 rounded-2xl transition-colors focus-ring">انصراف</button>
         </div>
     </EditForm>
 </ModalDialog>
-
-@code {
-    [Parameter] public bool IsOpen { get; set; }
-    [Parameter] public ProjectDto Model { get; set; } = new();
-    [Parameter] public string Title { get; set; } = "";
-    [Parameter] public IEnumerable<WorkflowDto> Workflows { get; set; } = Array.Empty<WorkflowDto>();
-    [Parameter] public IEnumerable<RoleDto> Roles { get; set; } = Array.Empty<RoleDto>();
-    [Parameter] public EventCallback OnSave { get; set; }
-    [Parameter] public EventCallback OnCancel { get; set; }
-}

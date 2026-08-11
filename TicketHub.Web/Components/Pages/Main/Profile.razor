@@ -1,40 +1,34 @@
 @page "/profile"
-@using System.ComponentModel.DataAnnotations
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@using TicketHub.Infrastructure.Data
+@namespace TicketHub.Web.Components.Pages.Main
 @using TicketHub.Web.Components.Pages.Auth.Shared
-@using TicketHub.Application.Validations
 @using TicketHub.Web.Components.Shared
-@inject AppDbContext DbContext
-@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
-<PageTitle>پروفایل کاربری</PageTitle>
+<PageTitle>پروفایل کاربری | سامانه تیکتینگ</PageTitle>
 
-<div class="w-full space-y-6" dir="rtl">
+<div class="w-full space-y-6 select-none" dir="rtl">
     <div>
-        <h1 class="text-2xl font-bold text-slate-800">پروفایل کاربری</h1>
-        <p class="text-sm text-slate-500 mt-1">مدیریت اطلاعات شخصی و رمز عبور حساب شما.</p>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">پروفایل کاربری</h1>
+        <p class="text-xs text-slate-400 mt-1 font-normal">مدیریت اطلاعات شخصی و رمز عبور حساب شما.</p>
     </div>
 
-    @if (isLoading)
+    @if (IsLoading)
     {
-        <div class="flex justify-center p-8"><span class="text-slate-400">در حال بارگذاری...</span></div>
+        <div class="flex justify-center p-8"><span class="text-slate-400 text-xs">در حال بارگذاری...</span></div>
     }
     else
     {
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <EditForm Model="profileModel" OnValidSubmit="UpdateProfile" FormName="profileForm">
+        <div class="bg-white rounded-3xl shadow-2xs border border-slate-200/80 overflow-hidden">
+            <EditForm Model="ProfileModel" OnValidSubmit="UpdateProfile" FormName="profileForm">
                 <DataAnnotationsValidator />
 
                 <div class="p-6 space-y-6">
-                    <AlertMessage Message="@statusMessage" Type="@(isSuccess ? AlertMessage.AlertType.Success : AlertMessage.AlertType.Error)" IsDark="false" />
-                    <!-- نمایش خطاهای تجمیع شده با کنترل کامل عرض و شکست خطوط -->
+                    <AlertMessage Message="@StatusMessage" Type="@(IsSuccess ? AlertMessage.AlertType.Success : AlertMessage.AlertType.Error)" IsDark="false" />
+                    
                     @if (context.GetValidationMessages().Any())
                     {
-                        <div class="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100 w-full overflow-hidden">
-                            <ul class="text-rose-600 text-sm list-disc list-inside flex flex-col gap-1.5 w-full">
+                        <div class="mt-4 p-4 bg-rose-50 rounded-2xl border border-rose-100 w-full overflow-hidden">
+                            <ul class="text-rose-600 text-xs list-disc list-inside flex flex-col gap-1.5 w-full">
                                 @foreach (var message in context.GetValidationMessages())
                                 {
                                     <li class="break-words whitespace-normal leading-relaxed text-justify pe-2">
@@ -44,9 +38,10 @@
                             </ul>
                         </div>
                     }
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                            <CustomAuthInput @bind-Value="profileModel.Email"
+                            <CustomAuthInput @bind-Value="ProfileModel.Email"
                                              Label="آدرس ایمیل (شناسه ورود)"
                                              Disabled="true"
                                              HelperText="ایمیل قابل تغییر نمی‌باشد."
@@ -54,54 +49,53 @@
                         </div>
 
                         <div>
-                            <CustomAuthInput @bind-Value="profileModel.Name"
-                                         Label="نام و نام خانوادگی"
-                                         ValidationFor="() => profileModel.Name"
+                            <CustomAuthInput @bind-Value="ProfileModel.Name"
+                                             Label="نام و نام خانوادگی"
+                                             ValidationFor="() => ProfileModel.Name"
                                              IsDark="false" HideInlineError="true" />
                         </div>
 
                         <div>
-                            <CustomAuthInput @bind-Value="profileModel.PhoneNumber"
-                                         Label="شماره تماس"
-                                         Dir="ltr"
+                            <CustomAuthInput @bind-Value="ProfileModel.PhoneNumber"
+                                             Label="شماره تماس"
+                                             Dir="ltr"
                                              IsDark="false" HideInlineError="true" />
                         </div>
                     </div>
 
                     <hr class="border-slate-100" />
 
-                    <!-- بخش تغییر رمز عبور (اختیاری) -->
                     <div>
-                        <h3 class="text-base font-semibold text-slate-800 mb-4">تغییر رمز عبور (اختیاری)</h3>
+                        <h3 class="text-sm font-bold text-slate-800 mb-4">تغییر رمز عبور (اختیاری)</h3>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div>
-                                <CustomAuthInput @bind-Value="profileModel.CurrentPassword"
+                                <CustomAuthInput @bind-Value="ProfileModel.CurrentPassword"
                                                  Label="رمز عبور فعلی"
                                                  Type="password"
                                                  IsDark="false" />
                             </div>
 
                             <div>
-                                <CustomAuthInput @bind-Value="profileModel.NewPassword"
-                                             Label="رمز عبور جدید"
-                                             Type="password"
-                                             ValidationFor="() => profileModel.NewPassword"
+                                <CustomAuthInput @bind-Value="ProfileModel.NewPassword"
+                                                 Label="رمز عبور جدید"
+                                                 Type="password"
+                                                 ValidationFor="() => ProfileModel.NewPassword"
                                                  IsDark="false" HideInlineError="true" />
                             </div>
 
                             <div>
-                                <CustomAuthInput @bind-Value="profileModel.ConfirmNewPassword"
-                                             Label="تکرار رمز عبور جدید"
-                                             Type="password"
-                                             ValidationFor="() => profileModel.ConfirmNewPassword"
+                                <CustomAuthInput @bind-Value="ProfileModel.ConfirmNewPassword"
+                                                 Label="تکرار رمز عبور جدید"
+                                                 Type="password"
+                                                 ValidationFor="() => ProfileModel.ConfirmNewPassword"
                                                  IsDark="false" HideInlineError="true" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-                    <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/20 smooth-transition shadow-sm">
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-indigo-500/20 focus-ring">
                         ذخیره تغییرات
                     </button>
                 </div>
@@ -109,94 +103,3 @@
         </div>
     }
 </div>
-
-@code {
-    private ProfileViewModel profileModel = new();
-    private bool isLoading = true;
-    private int currentUserId;
-    private string? statusMessage;
-    private bool isSuccess;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var userClaims = authState.User;
-
-        if (userClaims.Identity?.IsAuthenticated == true)
-        {
-            var userIdStr = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdStr, out currentUserId))
-            {
-                var dbUser = await DbContext.Users.FindAsync(currentUserId);
-                if (dbUser != null)
-                {
-                    profileModel.Email = dbUser.Email;
-                    profileModel.Name = dbUser.Name;
-                    profileModel.PhoneNumber = dbUser.PhoneNumber;
-                }
-            }
-        }
-        isLoading = false;
-    }
-
-    private async Task UpdateProfile()
-    {
-        statusMessage = null;
-
-        var dbUser = await DbContext.Users.FindAsync(currentUserId);
-        if (dbUser == null) return;
-
-        // بروزرسانی اطلاعات پایه
-        dbUser.Name = profileModel.Name;
-        dbUser.PhoneNumber = profileModel.PhoneNumber;
-
-        // بررسی تغییر رمز عبور
-        if (!string.IsNullOrWhiteSpace(profileModel.NewPassword))
-        {
-            if (string.IsNullOrWhiteSpace(profileModel.CurrentPassword))
-            {
-                isSuccess = false;
-                statusMessage = "برای تغییر رمز، وارد کردن رمز عبور فعلی الزامی است.";
-                return;
-            }
-
-            if (!BCrypt.Net.BCrypt.Verify(profileModel.CurrentPassword, dbUser.Password))
-            {
-                isSuccess = false;
-                statusMessage = "رمز عبور فعلی اشتباه است.";
-                return;
-            }
-
-            dbUser.Password = BCrypt.Net.BCrypt.HashPassword(profileModel.NewPassword);
-        }
-
-        await DbContext.SaveChangesAsync();
-
-        isSuccess = true;
-        statusMessage = "پروفایل شما با موفقیت بروزرسانی شد.";
-
-        // پاک کردن فیلدهای رمز عبور پس از موفقیت
-        profileModel.CurrentPassword = null;
-        profileModel.NewPassword = null;
-        profileModel.ConfirmNewPassword = null;
-    }
-
-    public class ProfileViewModel
-    {
-        public string Email { get; set; } = ""; // این خط اضافه شود
-
-        [Required(ErrorMessage = "وارد کردن نام الزامی است.")]
-        public string Name { get; set; } = "";
-
-        [ValidPhoneNumber]
-        public string PhoneNumber { get; set; }
-
-        public string? CurrentPassword { get; set; }
-
-        [StrongPassword]
-        public string? NewPassword { get; set; }
-
-        [Compare(nameof(NewPassword), ErrorMessage = "رمز عبور جدید و تکرار آن مطابقت ندارند.")]
-        public string? ConfirmNewPassword { get; set; }
-    }
-    }

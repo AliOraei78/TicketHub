@@ -1,17 +1,22 @@
-<EditForm Model="Model" OnValidSubmit="OnValidSubmit">
+@namespace TicketHub.Web.Components.Pages.Admin.Settings.TicketFields
+@using TicketHub.Application.DTOs
+@using TicketHub.Application.Enums
+@using TicketHub.Web.Components.Shared
+
+<EditForm Model="Model" OnValidSubmit="OnValidSubmit" class="select-none">
     <FluentValidationValidator />
 
     <div class="space-y-4">
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان فیلد</label>
-            <InputText @bind-Value="Model.Name" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مثال: شماره موبایل" />
-            <ValidationMessage For="() => Model.Name" class="text-xs text-rose-500 mt-1" />
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">عنوان فیلد</label>
+            <InputText @bind-Value="Model.Name" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="مثال: شماره موبایل" />
+            <ValidationMessage For="() => Model.Name" class="text-xs text-rose-500 text-red-500 mt-1" />
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">شماره ترتیب</label>
-            <InputNumber @bind-Value="Model.SortOrder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" />
-            <ValidationMessage For="() => Model.SortOrder" class="text-xs text-rose-500 mt-1" />
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">شماره ترتیب</label>
+            <InputNumber @bind-Value="Model.SortOrder" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" />
+            <ValidationMessage For="() => Model.SortOrder" class="text-xs text-rose-500 text-red-500 mt-1" />
         </div>
 
         <div>
@@ -22,37 +27,37 @@
                          ValueSelector="t => t.Id"
                          TextSelector="t => t.Type"
                          AllowClear="true" ClearText="بدون انتخاب" />
-            <ValidationMessage For="() => Model.FieldTypeId" class="text-xs text-rose-500 mt-1" />
+            <ValidationMessage For="() => Model.FieldTypeId" class="text-xs text-rose-500 text-red-500 mt-1" />
         </div>
 
         @if (Model.FieldTypeId == (int)FieldTypeEnum.Text || Model.FieldTypeId == (int)FieldTypeEnum.TextArea || Model.FieldTypeId == (int)FieldTypeEnum.Number)
         {
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">متن جایگیر</label>
-                <InputText @bind-Value="Model.Placeholder" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="متن جایگیر..." />
-                <ValidationMessage For="() => Model.Placeholder" class="text-xs text-rose-500 mt-1" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">متن جایگیر</label>
+                <InputText @bind-Value="Model.Placeholder" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="متن جایگیر..." />
+                <ValidationMessage For="() => Model.Placeholder" class="text-xs text-rose-500 text-red-500 mt-1" />
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">مقدار پیش‌فرض</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">مقدار پیش‌فرض</label>
                 @if (Model.FieldTypeId == (int)FieldTypeEnum.Number)
                 {
-                    <input type="number" @bind="Model.DefaultValue" @bind:event="oninput" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+                    <input type="number" @bind="Model.DefaultValue" @bind:event="oninput" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="مقدار پیش‌فرض (اختیاری)" />
                 }
                 else
                 {
-                    <InputText @bind-Value="Model.DefaultValue" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="مقدار پیش‌فرض (اختیاری)" />
+                    <InputText @bind-Value="Model.DefaultValue" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="مقدار پیش‌فرض (اختیاری)" />
                 }
-                <ValidationMessage For="() => Model.DefaultValue" class="text-xs text-rose-500 mt-1" />
+                <ValidationMessage For="() => Model.DefaultValue" class="text-xs text-rose-500 text-red-500 mt-1" />
             </div>
         }
 
         @if (Model.FieldTypeId == (int)FieldTypeEnum.Dropdown || Model.FieldTypeId == (int)FieldTypeEnum.MultipleDropdown)
         {
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">گزینه‌ها (با کاما از هم جدا کنید)</label>
-                <InputText @bind-Value="Model.Options" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all" placeholder="گزینه ۱، گزینه ۲، گزینه ۳" />
-                <ValidationMessage For="() => Model.Options" class="text-xs text-rose-500 mt-1" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">گزینه‌ها (با کاما از هم جدا کنید)</label>
+                <InputText @bind-Value="Model.Options" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="گزینه ۱، گزینه ۲، گزینه ۳" />
+                <ValidationMessage For="() => Model.Options" class="text-xs text-rose-500 text-red-500 mt-1" />
             </div>
         }
 
@@ -61,37 +66,22 @@
                                  Label="انواع تیکت مرتبط (دسته‌بندی‌ها)" Placeholder="انتخاب نوع تیکت..."
                                  Items="AvailableCategories" @bind-SelectedValues="Model.CategoryIds"
                                  ValueSelector="c => c.Id" DisplaySelector="c => c.Name"
-                                 BadgeBgClass="bg-blue-100" BadgeTextClass="text-blue-700" BadgeButtonClass="text-blue-500" />
+                                 BadgeBgClass="bg-indigo-100" BadgeTextClass="text-indigo-700" BadgeButtonClass="text-indigo-500 hover:text-indigo-900" />
         </div>
 
-        <div class="flex items-center mt-3">
-            <InputCheckbox @bind-Value="Model.IsRequired" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" id="fieldIsRequired" />
-            <label for="fieldIsRequired" class="mr-2 block text-sm font-medium text-gray-700">فیلد اجباری است؟</label>
-        </div>
-
-        <div class="flex items-center mt-3">
-            <InputCheckbox @bind-Value="Model.IsActive" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" id="fieldIsActive" />
-            <label for="fieldIsActive" class="mr-2 block text-sm font-medium text-gray-700">فیلد فعال است؟</label>
+        <div class="space-y-3 pt-1">
+            <CustomCheckbox Label="فیلد اجباری است؟" @bind-Value="Model.IsRequired" />
+            <CustomCheckbox Label="فیلد فعال است؟" @bind-Value="Model.IsActive" />
         </div>
 
         <div class="flex gap-2 pt-2">
-            <button type="submit" class="flex-1 flex justify-center py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-transition">
+            <button type="submit" class="flex-1 flex justify-center py-3 px-4 rounded-2xl shadow-lg shadow-indigo-500/20 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus-ring transition-all">
                 @(IsEditing ? "ذخیره تغییرات" : "ثبت فیلد")
             </button>
             @if (IsEditing)
             {
-                <button type="button" @onclick="OnCancel" class="py-2.5 px-4 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 smooth-transition">انصراف</button>
+                <button type="button" @onclick="OnCancel" class="py-3 px-4 rounded-2xl text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors focus-ring">انصراف</button>
             }
         </div>
     </div>
 </EditForm>
-
-@code {
-    [Parameter] public TicketFieldDto Model { get; set; } = new();
-    [Parameter] public bool IsEditing { get; set; }
-    [Parameter] public EventCallback OnValidSubmit { get; set; }
-    [Parameter] public EventCallback OnCancel { get; set; }
-
-    [Parameter] public IEnumerable<CategoryDto> AvailableCategories { get; set; } = new List<CategoryDto>();
-    [Parameter] public IEnumerable<FieldTypeDto> AvailableFieldTypes { get; set; } = new List<FieldTypeDto>();
-}

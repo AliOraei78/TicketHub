@@ -1,373 +1,130 @@
+@namespace TicketHub.Web.Components.Pages.Main.Tickets
 @using TicketHub.Application.DTOs
-@using TicketHub.Application.Interfaces
 @using TicketHub.Core.Entities
-@using TicketHub.Core.Interfaces
 @using TicketHub.Web.Components.Shared
-
-@using FluentValidation
-@using Microsoft.AspNetCore.Components.Authorization
-@inject ITicketService TicketService
-@inject IWorkflowRepository WorkflowRepository
-@inject IRoleService RoleService
-@inject IToastService ToastService
-@inject AuthenticationStateProvider AuthStateProvider
-@inject IValidator<ExecuteTransitionDto> Validator
-
 @using Microsoft.AspNetCore.Components.Sections
 
 @if (IsVisible)
 {
     <SectionContent SectionName="RootModal">
-        <style>
-            main { overflow: hidden !important; }
-            body { overflow: hidden !important; }
-            .animate-backdrop-fade { animation: fadeIn 0.3s ease-out; }
-            .animate-zoom-modal { animation: zoomIn 0.3s ease-out; }
-            @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-            @@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        </style>
-
-        <div class="fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-slate-950/70 backdrop-blur-md animate-backdrop-fade">
+        <div class="fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-slate-950/70 backdrop-blur-md fade-in-item">
             <div class="absolute inset-0" @onclick="CloseAsync"></div>
 
-            <div class="relative z-[99999] w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl flex flex-col animate-zoom-modal border border-gray-100 my-0" dir="rtl">
+            <div class="relative z-[99999] w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl flex flex-col modal-content-animate border border-slate-200/80 my-0 select-none" dir="rtl">
                 @if (IsLoading)
                 {
-                    <div class="p-8 flex justify-center items-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        <span class="mr-3 text-gray-600">در حال بارگذاری...</span>
+                    <div class="p-8 flex justify-center items-center gap-3">
+                        <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-indigo-600"></div>
+                        <span class="text-slate-600 text-sm font-medium">در حال بارگذاری...</span>
                     </div>
                 }
                 else
                 {
-                    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
-                        <h2 class="text-xl font-bold text-gray-800">ثبت عملیات برای تیکت: @TicketTitle</h2>
-                        <button type="button" @onclick="CloseAsync" class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
+                    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+                        <h2 class="text-xl font-bold text-slate-800">ثبت عملیات برای تیکت: @TicketTitle</h2>
+                        <button type="button" @onclick="CloseAsync" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors focus-ring">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
 
                     <EditForm Model="Model" OnValidSubmit="HandleValidSubmitAsync" class="flex flex-col overflow-hidden flex-1">
                         <div class="overflow-y-auto p-6 pb-28 space-y-4 custom-scrollbar max-h-[70vh]">
-                        @if (ValidationErrors.Any())
-                        {
-                            <div class="rounded-2xl bg-red-50 p-4 mb-4 border border-red-100">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div class="mr-3">
-                                        <h3 class="text-sm font-medium text-red-800">لطفا خطاهای زیر را برطرف کنید:</h3>
-                                        <div class="mt-2 text-sm text-red-700">
-                                            <ul role="list" class="list-disc space-y-1 pr-5">
-                                                @foreach (var error in ValidationErrors)
-                                                {
-                                                    <li>@error</li>
-                                                }
-                                            </ul>
+                            @if (ValidationErrors.Any())
+                            {
+                                <div class="rounded-2xl bg-rose-50 p-4 border border-rose-100">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-rose-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="mr-3">
+                                            <h3 class="text-xs font-bold text-rose-800">لطفا خطاهای زیر را برطرف کنید:</h3>
+                                            <div class="mt-2 text-xs text-rose-700">
+                                                <ul role="list" class="list-disc space-y-1 pr-5">
+                                                    @foreach (var error in ValidationErrors)
+                                                    {
+                                                        <li>@error</li>
+                                                    }
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        }
+                            }
 
-                        <!-- Transition Selector -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">انتخاب عملیات</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                @foreach (var transition in AvailableTransitions)
-                                {
-                                    <div class="relative flex items-center p-3 border rounded-xl cursor-pointer transition-colors
-                                        @(Model.TransitionId == transition.Id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-200 bg-gray-50 hover:bg-white")"
-                                         @onclick="() => SelectTransition(transition.Id)">
-                                        
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm font-bold @(Model.TransitionId == transition.Id ? "text-blue-900" : "text-gray-900")">
-                                                @transition.Name
-                                            </p>
-                                            <p class="text-xs text-gray-500 mt-1">
-                                                به: @(transition.ToStatus?.Status?.Name ?? "نامشخص")
-                                            </p>
+                            <!-- Transition Selector -->
+                            <div class="mb-6">
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">انتخاب عملیات</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    @foreach (var transition in AvailableTransitions)
+                                    {
+                                        <div class="relative flex items-center p-3 border rounded-2xl cursor-pointer transition-all
+                                            @(Model.TransitionId == transition.Id ? "border-indigo-500 bg-indigo-50/50" : "border-slate-200/80 hover:border-indigo-200 bg-slate-50/50 hover:bg-white")"
+                                             @onclick="() => SelectTransition(transition.Id)">
+                                            
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-xs font-bold @(Model.TransitionId == transition.Id ? "text-indigo-900" : "text-slate-900")">
+                                                    @transition.Name
+                                                </p>
+                                                <p class="text-[11px] text-slate-500 mt-0.5">
+                                                    به: @(transition.ToStatus?.Status?.Name ?? "نامشخص")
+                                                </p>
+                                            </div>
+                                            @if (Model.TransitionId == transition.Id)
+                                            {
+                                                <svg class="h-5 w-5 text-indigo-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            }
                                         </div>
-                                        @if (Model.TransitionId == transition.Id)
-                                        {
-                                            <svg class="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        }
-                                    </div>
+                                    }
+                                </div>
+                                @if (!AvailableTransitions.Any())
+                                {
+                                    <p class="text-xs text-slate-500 text-center py-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                                        عملیاتی برای وضعیت فعلی این تیکت و نقش‌های شما یافت نشد.
+                                    </p>
                                 }
                             </div>
-                            @if (!AvailableTransitions.Any())
+
+                            @if (Model.TransitionId > 0)
                             {
-                                <p class="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                    عملیاتی برای وضعیت فعلی این تیکت و نقش‌های شما یافت نشد.
-                                </p>
+                                <div class="mb-6 border-t border-slate-100 pt-6">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-2">توضیحات (اختیاری)</label>
+                                    <textarea @bind="Model.Comment" rows="3" class="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="توضیحات خود را در مورد این عملیات وارد کنید..."></textarea>
+                                </div>
+
+                                @if (DynamicFields.Any())
+                                {
+                                    <DynamicFields Fields="DynamicFields" ValidationErrors="FieldValidationErrors" />
+                                }
                             }
                         </div>
 
-                        @if (Model.TransitionId > 0)
-                        {
-                            <!-- Comments -->
-                            <div class="mb-6 border-t border-gray-100 pt-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">توضیحات (اختیاری)</label>
-                                <textarea @bind="Model.Comment" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-sm bg-gray-50 hover:bg-white focus:bg-white text-sm" placeholder="توضیحات خود را در مورد این عملیات وارد کنید..."></textarea>
-                            </div>
-
-                            <!-- Dynamic Fields -->
-                            @if (DynamicFields.Any())
-                            {
-                                <DynamicFields Fields="DynamicFields" ValidationErrors="FieldValidationErrors" />
-                            }
-                        }
-                    </div>
-
-                    <!-- Footer -->
-                    <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
-                        <button type="button" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors shadow-sm" @onclick="CloseAsync">
-                            انصراف
-                        </button>
-                        <button type="submit" disabled="@(IsSubmitting || Model.TransitionId == 0)"
-                                class="px-6 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center justify-center">
-                            @if (IsSubmitting)
-                            {
-                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>در حال ثبت...</span>
-                            }
-                            else
-                            {
-                                <span>ثبت عملیات</span>
-                            }
-                        </button>
-                    </div>
-                </EditForm>
-            }
+                        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
+                            <button type="button" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shadow-2xs focus-ring" @onclick="CloseAsync">
+                                انصراف
+                            </button>
+                            <button type="submit" disabled="@(IsSubmitting || Model.TransitionId == 0)"
+                                    class="px-6 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 flex items-center justify-center focus-ring">
+                                @if (IsSubmitting)
+                                {
+                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>در حال ثبت...</span>
+                                }
+                                else
+                                {
+                                    <span>ثبت عملیات</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+            </div>
         </div>
-    </div>
-</SectionContent>
-}
-
-@code {
-    [Parameter]
-    public EventCallback OnSaved { get; set; }
-
-    public bool IsVisible { get; private set; }
-    private bool IsLoading = false;
-    private bool IsSubmitting = false;
-
-    private string TicketTitle { get; set; } = "";
-    private int TicketId { get; set; }
-    private int CurrentStatusId { get; set; }
-
-    private ExecuteTransitionDto Model { get; set; } = new();
-    private List<TicketHub.Core.Entities.Transition> AvailableTransitions { get; set; } = new();
-    private List<DynamicFieldModel> DynamicFields { get; set; } = new();
-
-    private List<string> ValidationErrors { get; set; } = new();
-    private Dictionary<string, string> FieldValidationErrors { get; set; } = new();
-
-    public async Task OpenAsync(int ticketId, string title, int currentStatusId, int workflowId, int? currentWorkflowStatusId = null)
-    {
-        IsVisible = true;
-        IsLoading = true;
-        ValidationErrors.Clear();
-        FieldValidationErrors.Clear();
-        
-        TicketId = ticketId;
-        TicketTitle = title;
-        CurrentStatusId = currentStatusId;
-
-        Model = new ExecuteTransitionDto
-        {
-            TicketId = ticketId
-        };
-        DynamicFields = new List<DynamicFieldModel>();
-        AvailableTransitions = new List<TicketHub.Core.Entities.Transition>();
-
-        try
-        {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            var userRoles = user.Claims
-                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ToList();
-
-            bool isAdmin = userRoles.Any(r => r == "مدیر سیستم" || r == "ادمین");
-
-            List<int> userRoleIds = new();
-            if (!isAdmin && userRoles.Any())
-            {
-                var allRoles = await RoleService.GetAllRolesAsync();
-                userRoleIds = allRoles
-                    .Where(r => userRoles.Contains(r.Name))
-                    .Select(r => r.Id)
-                    .ToList();
-            }
-
-            // Get available transitions from the current workflow state matching user roles
-            var workflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
-            if (workflow != null && workflow.Transitions != null && workflow.WorkflowStatuses != null)
-            {
-                WorkflowStatus? currentWorkflowStatus = null;
-                if (currentWorkflowStatusId.HasValue && currentWorkflowStatusId.Value > 0)
-                {
-                    currentWorkflowStatus = workflow.WorkflowStatuses
-                        .FirstOrDefault(ws => ws.Id == currentWorkflowStatusId.Value);
-                }
-
-                if (currentWorkflowStatus == null)
-                {
-                    currentWorkflowStatus = workflow.WorkflowStatuses
-                        .FirstOrDefault(ws => ws.StatusId == currentStatusId);
-                }
-
-                if (currentWorkflowStatus != null)
-                {
-                    AvailableTransitions = workflow.Transitions
-                        .Where(t => t.IsActive)
-                        .Where(t => t.FromState == currentWorkflowStatus.Id)
-                        .Where(t => isAdmin 
-                                 || !t.AllowedRoles.Any() 
-                                 || t.AllowedRoles.Any(ar => userRoleIds.Contains(ar.RoleId)))
-                        .ToList();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ToastService.ShowError("خطا در دریافت لیست عملیات‌ها");
-        }
-        finally
-        {
-            IsLoading = false;
-            StateHasChanged();
-        }
-    }
-
-    public Task CloseAsync()
-    {
-        IsVisible = false;
-        return Task.CompletedTask;
-    }
-
-    private void SelectTransition(int transitionId)
-    {
-        if (Model.TransitionId == transitionId) return;
-
-        Model.TransitionId = transitionId;
-        ValidationErrors.Clear();
-        FieldValidationErrors.Clear();
-
-        var selectedTransition = AvailableTransitions.FirstOrDefault(t => t.Id == transitionId);
-        if (selectedTransition != null && selectedTransition.TransitionFields != null)
-        {
-            // Map active transition fields to dynamic field view models
-            DynamicFields = selectedTransition.TransitionFields
-                .Where(f => f.IsActive)
-                .OrderBy(f => f.SortOrder)
-                .Select(f => new DynamicFieldModel
-                {
-                    OriginalFieldId = f.Id,
-                    Name = f.FieldName,
-                    Placeholder = f.Placeholder ?? "",
-                    SortOrder = f.SortOrder,
-                    DefaultValue = f.DefaultValue,
-                    FieldTypeId = f.FieldTypeId,
-                    Options = f.Options,
-                    IsRequired = f.IsRequired,
-                    Value = f.DefaultValue ?? "",
-                    PendingUploads = new()
-                }).ToList();
-        }
-
-        else
-        {
-            DynamicFields = new List<DynamicFieldModel>();
-        }
-    }
-
-    private async Task HandleValidSubmitAsync()
-    {
-        if (IsSubmitting) return;
-
-        ValidationErrors.Clear();
-        FieldValidationErrors.Clear();
-
-        // Populate field values back to DTO
-        Model.FieldValues = DynamicFields.Select(f => new TransitionFieldValueDto
-        {
-            TransitionFieldId = f.OriginalFieldId,
-            Value = f.Value,
-            PendingUploads = f.PendingUploads,
-            IsRequired = f.IsRequired,
-            FieldName = f.Name
-        }).ToList();
-
-        // Validate
-        var validationResult = await Validator.ValidateAsync(Model);
-        if (!validationResult.IsValid)
-        {
-            foreach (var error in validationResult.Errors)
-            {
-                if (error.PropertyName.StartsWith("FieldValues["))
-                {
-                    // Basic property mapping for dynamic fields
-                    // Need to extract the index
-                    var startIndex = error.PropertyName.IndexOf('[') + 1;
-                    var endIndex = error.PropertyName.IndexOf(']');
-                    if (startIndex > 0 && endIndex > startIndex && int.TryParse(error.PropertyName.Substring(startIndex, endIndex - startIndex), out int index))
-                    {
-                        if (index >= 0 && index < DynamicFields.Count)
-                        {
-                            var fieldName = DynamicFields[index].Name;
-                            FieldValidationErrors[fieldName] = error.ErrorMessage;
-                        }
-                    }
-                }
-                else
-                {
-                    ValidationErrors.Add(error.ErrorMessage);
-                }
-            }
-            return;
-        }
-
-        try
-        {
-            IsSubmitting = true;
-            StateHasChanged();
-            await Task.Yield();
-            
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var userIdStr = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                await TicketService.ExecuteTransitionAsync(Model, userId);
-                ToastService.ShowSuccess("عملیات با موفقیت انجام شد.");
-                await CloseAsync();
-                if (OnSaved.HasDelegate)
-                {
-                    await OnSaved.InvokeAsync();
-                }
-            }
-            else
-            {
-                ValidationErrors.Add("کاربر نامعتبر است.");
-            }
-        }
-        catch (Exception ex)
-        {
-            ValidationErrors.Add(ex.Message);
-        }
-        finally
-        {
-            IsSubmitting = false;
-        }
-    }
+    </SectionContent>
 }

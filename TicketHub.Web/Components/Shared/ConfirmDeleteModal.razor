@@ -1,3 +1,4 @@
+@namespace TicketHub.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Sections
 
 @if (IsOpen)
@@ -8,33 +9,24 @@
             body { overflow: hidden !important; }
         </style>
 
-        <div class="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-16 sm:pt-24 md:pt-28 bg-slate-950/70 backdrop-blur-md animate-backdrop-fade" dir="rtl">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center animate-zoom-modal border border-gray-100 my-0">
-                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div class="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-16 sm:pt-24 md:pt-28 bg-slate-950/70 backdrop-blur-md modal-backdrop-animate select-none" dir="rtl">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center modal-content-animate border border-slate-200/80 my-0 @Class">
+                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-200/50 shadow-2xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">@Title</h3>
-                <p class="text-gray-500 mb-6 text-sm">@Description</p>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">@Title</h3>
+                <p class="text-slate-500 mb-6 text-sm">@Description</p>
                 @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
-                    <div class="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-medium">@ErrorMessage</div>
+                    <div class="mb-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">@ErrorMessage</div>
                 }
                 <div class="flex gap-3 justify-center">
-                    <button @onclick="OnConfirm" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-xl hover:bg-rose-700 smooth-transition shadow-lg shadow-rose-500/20">بله، حذف کن</button>
-                    <button @onclick="OnCancel" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 smooth-transition">انصراف</button>
+                    <button @onclick="OnConfirm" class="flex-1 px-4 py-2.5 bg-rose-600 text-white text-sm font-semibold rounded-xl hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20 focus-ring">بله، حذف کن</button>
+                    <button @onclick="OnCancel" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all focus-ring">انصراف</button>
                 </div>
             </div>
         </div>
     </SectionContent>
-}
-
-@code {
-    [Parameter] public bool IsOpen { get; set; }
-    [Parameter] public string Title { get; set; } = "حذف اطلاعات";
-    [Parameter] public string Description { get; set; } = string.Empty;
-    [Parameter] public string? ErrorMessage { get; set; }
-    [Parameter] public EventCallback OnConfirm { get; set; }
-    [Parameter] public EventCallback OnCancel { get; set; }
 }

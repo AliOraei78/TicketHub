@@ -1,7 +1,12 @@
-﻿<div class="w-8 h-8 text-sm bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold shadow-sm shrink-0">
-    @(string.IsNullOrEmpty(Text) ? "U" : Text.Substring(0, 1).ToUpper())
+@namespace TicketHub.Web.Components.Shared
+
+<div class="w-8 h-8 text-sm bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center font-bold shadow-2xs shrink-0 border border-indigo-200/50 select-none @Class">
+    @DisplayInitial
 </div>
 
 @code {
     [Parameter] public string Text { get; set; } = string.Empty;
+    [Parameter] public string Class { get; set; } = string.Empty;
+
+    private string DisplayInitial => string.IsNullOrWhiteSpace(Text) ? "U" : Text.Trim().Substring(0, 1).ToUpper();
 }

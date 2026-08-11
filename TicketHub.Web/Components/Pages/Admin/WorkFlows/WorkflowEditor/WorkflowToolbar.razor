@@ -1,55 +1,23 @@
-﻿<!-- WorkflowToolbar.razor -->
-<div class="h-[90px] bg-white border-b border-slate-200 px-6 py-3 z-20 shadow-sm flex-shrink-0 flex items-center">
+@namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
+
+<div class="h-[90px] bg-white border-b border-slate-200/80 px-6 py-3 z-20 shadow-2xs flex-shrink-0 flex items-center select-none">
     <div class="flex justify-between items-center max-w-5xl mx-auto w-full gap-4">
         <div class="flex flex-col gap-1 flex-1">
-            <input type="text" value="@Name" @oninput="OnNameInput" placeholder="نام جریان کاری..." class="text-xl font-bold text-slate-800 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
-            <input type="text" value="@Description" @oninput="OnDescriptionInput" placeholder="توضیحات جریان کاری (اختیاری)..." class="text-sm text-slate-500 outline-none bg-transparent border-b-2 border-transparent focus:border-blue-500 transition-colors w-full pb-0.5 placeholder:text-slate-300" />
+            <input type="text" value="@Name" @oninput="OnNameInput" placeholder="نام جریان کاری..." class="text-xl font-bold text-slate-800 outline-none bg-transparent border-b-2 border-transparent focus:border-indigo-500 transition-colors w-full pb-0.5 placeholder:text-slate-300 tracking-tight" />
+            <input type="text" value="@Description" @oninput="OnDescriptionInput" placeholder="توضیحات جریان کاری (اختیاری)..." class="text-xs text-slate-500 outline-none bg-transparent border-b-2 border-transparent focus:border-indigo-500 transition-colors w-full pb-0.5 placeholder:text-slate-300 font-normal" />
         </div>
-        <div class="flex gap-4 items-center">
-            <label class="relative inline-flex items-center cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">
-                <span class="text-sm font-bold text-slate-700 ml-3 whitespace-nowrap">جریان‌کار فعال:</span>
+        <div class="flex gap-3 items-center">
+            <label class="relative inline-flex items-center cursor-pointer bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-2xl">
+                <span class="text-xs font-bold text-slate-700 ml-3 whitespace-nowrap">جریان‌کار فعال:</span>
                 <div class="relative flex items-center w-11 h-6">
                     <input type="checkbox" checked="@IsActive" @onchange="OnIsActiveChanged" class="sr-only peer">
-                    <!-- پس‌زمینه دکمه -->
-                    <div class="absolute inset-0 bg-slate-300 rounded-full peer-checked:bg-blue-600 transition-colors duration-300"></div>
-                    <!-- دایره متحرک (شروع از راست در RTL و حرکت به چپ) -->
-                    <div class="absolute right-[2px] w-5 h-5 bg-white border border-slate-300 rounded-full transition-transform duration-300 peer-checked:-translate-x-[20px] peer-checked:border-white z-10 shadow-sm"></div>
+                    <div class="absolute inset-0 bg-slate-300 rounded-full peer-checked:bg-indigo-600 transition-colors duration-300"></div>
+                    <div class="absolute right-[2px] w-5 h-5 bg-white border border-slate-300 rounded-full transition-transform duration-300 peer-checked:-translate-x-[20px] peer-checked:border-white z-10 shadow-2xs"></div>
                 </div>
             </label>
 
-            <a href="/workflows" class="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 text-sm font-medium transition-colors">انصراف و بازگشت</a>
-            <button type="button" @onclick="() => OnSave.InvokeAsync()" class="px-5 py-2.5 rounded-xl text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium transition-colors shadow-lg shadow-blue-500/30">ذخیره جریان کار</button>
+            <a href="/workflows" class="px-5 py-2.5 rounded-2xl text-slate-700 bg-slate-100 hover:bg-slate-200 text-xs font-bold transition-colors focus-ring">انصراف و بازگشت</a>
+            <button type="button" @onclick="() => OnSave.InvokeAsync()" class="px-5 py-2.5 rounded-2xl text-white bg-indigo-600 bg-blue-600 hover:bg-indigo-700 text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 focus-ring">ذخیره جریان کار</button>
         </div>
     </div>
 </div>
-
-@code {
-    [Parameter] public string Name { get; set; } = "";
-    [Parameter] public EventCallback<string> NameChanged { get; set; }
-
-    [Parameter] public string Description { get; set; } = "";
-    [Parameter] public EventCallback<string> DescriptionChanged { get; set; }
-
-    [Parameter] public EventCallback OnSave { get; set; }
-
-    [Parameter] public bool IsActive { get; set; } = true;
-    [Parameter] public EventCallback<bool> IsActiveChanged { get; set; }
-
-    private async Task OnIsActiveChanged(ChangeEventArgs e)
-    {
-        IsActive = (bool)(e.Value ?? false);
-        await IsActiveChanged.InvokeAsync(IsActive);
-    }
-
-    private async Task OnNameInput(ChangeEventArgs e)
-    {
-        Name = e.Value?.ToString() ?? "";
-        await NameChanged.InvokeAsync(Name);
-    }
-
-    private async Task OnDescriptionInput(ChangeEventArgs e)
-    {
-        Description = e.Value?.ToString() ?? "";
-        await DescriptionChanged.InvokeAsync(Description);
-    }
-}

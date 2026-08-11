@@ -1,64 +1,36 @@
-﻿@inject IToastService ToastService
-@implements IDisposable
+@namespace TicketHub.Web.Components.Shared
+@using TicketHub.Application.Interfaces
 
-<div class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 min-w-[300px] max-w-sm" dir="rtl">
+<div class="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] flex flex-col gap-3 min-w-[300px] max-w-sm select-none @Class" dir="rtl">
     @foreach (var toast in ToastService.Toasts)
     {
-        <div @key="toast.Id" class="p-4 rounded-2xl shadow-lg border backdrop-blur-md flex items-center gap-3 animate-[fadeIn_0.3s_ease-out] @GetCssClass(toast.Type)">
-            <!-- آیکون‌ها -->
+        <div @key="toast.Id" class="p-4 rounded-2xl shadow-xl border backdrop-blur-md flex items-center gap-3 fade-in-item @GetCssClass(toast.Type)">
             <div class="flex-shrink-0">
                 @if (toast.Type == ToastType.Error || toast.Type == ToastType.Warning)
                 {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 }
                 else
                 {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 }
             </div>
 
-            <!-- متن -->
             <div class="flex-1">
                 @if (!string.IsNullOrEmpty(toast.Title))
                 {
-                    <h4 class="text-sm font-bold mb-1">@toast.Title</h4>
+                    <h4 class="text-xs font-bold mb-0.5">@toast.Title</h4>
                 }
-                <p class="text-sm font-medium whitespace-pre-line opacity-90">@toast.Message</p>
+                <p class="text-xs font-medium whitespace-pre-line opacity-90">@toast.Message</p>
             </div>
 
-            <!-- دکمه بستن -->
-            <button @onclick="() => ToastService.RemoveToast(toast.Id)" class="flex-shrink-0 ml-auto opacity-70 hover:opacity-100 transition-opacity">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button @onclick="() => ToastService.RemoveToast(toast.Id)" class="flex-shrink-0 ml-auto opacity-70 hover:opacity-100 transition-opacity focus-ring rounded-lg p-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
     }
 </div>
-
-@code {
-    protected override void OnInitialized()
-    {
-        ToastService.OnChanged += StateHasChangedWrapper;
-    }
-
-    private void StateHasChangedWrapper()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    private string GetCssClass(ToastType type) => type switch
-    {
-        ToastType.Success => "bg-emerald-50 border-emerald-200 text-emerald-800",
-        ToastType.Error => "bg-rose-50 border-rose-200 text-rose-800",
-        ToastType.Warning => "bg-amber-50 border-amber-200 text-amber-800",
-        _ => "bg-blue-50 border-blue-200 text-blue-800"
-    };
-
-    public void Dispose()
-    {
-        ToastService.OnChanged -= StateHasChangedWrapper;
-    }
-}

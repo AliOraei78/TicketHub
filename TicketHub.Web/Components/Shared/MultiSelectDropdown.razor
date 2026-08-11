@@ -1,147 +1,70 @@
+@namespace TicketHub.Web.Components.Shared
 @typeparam TItem
 @typeparam TValue
-@inject IJSRuntime JSRuntime
 
-<div id="@elementId">
-    <label class="block text-sm font-medium text-gray-700 mb-2">@Label</label>
-    <div class="relative @(showDropdown ? "z-[60]" : "")">
+<div id="@ElementId">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">@Label</label>
+    }
+    <div class="relative @(ShowDropdown ? "z-[60]" : "")">
         <div class="relative w-full">
-            <input type="text" @bind="searchTerm" @bind:event="oninput" @onclick="OpenDropdown" placeholder="@Placeholder" class="w-full h-[46px] px-4 border border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-gray-50 hover:bg-white focus:bg-white text-sm" />
+            <input type="text"
+                   @bind="SearchTerm"
+                   @bind:event="oninput"
+                   @onclick="OpenDropdown"
+                   placeholder="@Placeholder"
+                   class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-slate-50 hover:bg-white focus:bg-white text-sm focus-ring" />
             <div class="absolute inset-y-0 left-4 flex items-center cursor-pointer z-10" @onclick="ToggleDropdown" @onclick:stopPropagation>
-                <svg class="w-4 h-4 text-gray-400 hover:text-indigo-500 transition-transform duration-300 @(showDropdown ? "rotate-180" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 hover:text-indigo-600 transition-transform duration-300 @(ShowDropdown ? "rotate-180" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </div>
         </div>
 
-        <div class="dropdown-menu-container absolute top-full mt-2 z-50 w-full bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 @(showDropdown ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
-
-            <div class="max-h-60 overflow-y-auto pt-2 pb-3 overscroll-contain">
+        <div class="dropdown-menu-container absolute top-full mt-2 z-50 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 @(ShowDropdown ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+            <div class="max-h-60 overflow-y-auto pt-2 pb-3 overscroll-contain custom-scrollbar">
                 @if (!FilteredItems.Any())
                 {
-                    <div class="px-4 py-3 text-sm text-gray-400 text-center">
-                        نتیجه ‌ای یافت نشد
+                    <div class="px-4 py-3 text-sm text-slate-400 text-center">
+                        نتیجه‌ای یافت نشد
                     </div>
                 }
                 else
                 {
                     @if (FilteredItems.Count() > 2)
                     {
-                        <div @onclick="ToggleSelectAll" class="px-3 py-2.5 mx-2 my-1 hover:bg-gray-100 rounded-xl cursor-pointer flex items-center justify-between transition-colors border-b border-gray-100 mb-2 pb-3">
-                            <span class="text-sm font-bold text-gray-800">انتخاب / لغو همه</span>
-                            <input type="checkbox" checked="@AreAllSelected" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-colors" />
+                        <div @onclick="ToggleSelectAll" class="px-3 py-2.5 mx-2 my-1 hover:bg-slate-100 rounded-xl cursor-pointer flex items-center justify-between transition-colors border-b border-slate-100 mb-2 pb-3 select-none">
+                            <span class="text-sm font-bold text-slate-800">انتخاب / لغو همه</span>
+                            <input type="checkbox" checked="@AreAllSelected" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-colors focus-ring" />
                         </div>
                     }
                     @foreach (var item in FilteredItems)
                     {
                         var val = ValueSelector(item);
                         var display = DisplaySelector(item);
-                        <div @onclick="() => ToggleSelection(val)" class="px-3 py-2.5 mx-2 my-1 hover:bg-indigo-50/80 rounded-xl cursor-pointer flex items-center justify-between group transition-colors">
-                            <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700 truncate block max-w-[85%]" title="@display">@display</span>
-                            <input type="checkbox" checked="@SelectedValues.Contains(val)" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-colors" />
+                        <div @onclick="() => ToggleSelection(val)" class="px-3 py-2.5 mx-2 my-1 hover:bg-indigo-50/80 rounded-xl cursor-pointer flex items-center justify-between group transition-colors select-none">
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-indigo-700 truncate block max-w-[85%]" title="@display">@display</span>
+                            <input type="checkbox" checked="@SelectedValues.Contains(val)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-colors focus-ring" />
                         </div>
                     }
                 }
             </div>
         </div>
-    </div>    <div class="flex flex-wrap gap-2 mt-3">
-    @foreach (var val in SelectedValues)
-    {
-        var item = Items.FirstOrDefault(i => EqualityComparer<TValue>.Default.Equals(ValueSelector(i), val));
-        if (item != null)
+    </div>
+    <div class="flex flex-wrap gap-2 mt-3">
+        @foreach (var val in SelectedValues)
         {
-            <!-- جایگزین تگ span مربوط به نمایش Badgeها -->
-            <span class="@BadgeBgClass @BadgeTextClass px-3 py-1 rounded-xl text-sm flex items-center gap-2 max-w-full">
-                <span class="truncate block max-w-[150px]" title="@DisplaySelector(item)">@DisplaySelector(item)</span>
-                <button type="button" @onclick="() => RemoveSelection(val)" class="@BadgeButtonClass text-lg font-bold leading-none shrink-0">
-                    &times;
-                </button>
-            </span>
+            var item = Items.FirstOrDefault(i => EqualityComparer<TValue>.Default.Equals(ValueSelector(i), val));
+            if (item != null)
+            {
+                <span class="@BadgeBgClass @BadgeTextClass px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-2 max-w-full border border-indigo-200/50">
+                    <span class="truncate block max-w-[150px]" title="@DisplaySelector(item)">@DisplaySelector(item)</span>
+                    <button type="button" @onclick="() => RemoveSelection(val)" class="@BadgeButtonClass text-base font-bold leading-none shrink-0 focus-ring">
+                        &times;
+                    </button>
+                </span>
+            }
         }
-    }
+    </div>
 </div>
-</div>
-
-@code {
-    [Parameter] public string Label { get; set; } = string.Empty;
-    [Parameter] public string Placeholder { get; set; } = string.Empty;
-    [Parameter] public IEnumerable<TItem> Items { get; set; } = Array.Empty<TItem>();
-    [Parameter] public List<TValue> SelectedValues { get; set; } = new();
-    [Parameter] public EventCallback<List<TValue>> SelectedValuesChanged { get; set; }
-    [Parameter] public Func<TItem, TValue> ValueSelector { get; set; } = default!;
-    [Parameter] public Func<TItem, string> DisplaySelector { get; set; } = default!;
-    [Parameter] public string BadgeBgClass { get; set; } = "bg-indigo-100";
-    [Parameter] public string BadgeTextClass { get; set; } = "text-indigo-700";
-    [Parameter] public string BadgeButtonClass { get; set; } = "text-indigo-500 hover:text-indigo-900";
-
-    private string searchTerm = string.Empty;
-    private bool showDropdown = false;
-    private string elementId = "multi-select-" + Guid.NewGuid().ToString("N");
-    private bool AreAllSelected => FilteredItems.Any() && FilteredItems.All(i => SelectedValues.Contains(ValueSelector(i)));
-
-    private async Task OpenDropdown()
-    {
-        if (!showDropdown)
-        {
-            showDropdown = true;
-            await JSRuntime.InvokeVoidAsync("initClickOutside", elementId, DotNetObjectReference.Create(this));
-        }
-    }
-
-    private async Task ToggleDropdown()
-    {
-        showDropdown = !showDropdown;
-        if (showDropdown)
-        {
-            await JSRuntime.InvokeVoidAsync("initClickOutside", elementId, DotNetObjectReference.Create(this));
-        }
-    }
-
-    [JSInvokable]
-    public void CloseDropdown()
-    {
-        showDropdown = false;
-        StateHasChanged();
-    }
-
-    private IEnumerable<TItem> FilteredItems => string.IsNullOrEmpty(searchTerm)
-        ? Items
-        : Items.Where(i => DisplaySelector(i).Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-
-    private async Task ToggleSelection(TValue value)
-    {
-        var newValues = new List<TValue>(SelectedValues);
-        if (newValues.Contains(value))
-            newValues.Remove(value);
-        else
-            newValues.Add(value);
-
-        await SelectedValuesChanged.InvokeAsync(newValues);
-    }
-
-    private async Task RemoveSelection(TValue value)
-    {
-        var newValues = new List<TValue>(SelectedValues);
-        newValues.Remove(value);
-        await SelectedValuesChanged.InvokeAsync(newValues);
-    }
-
-    private async Task ToggleSelectAll()
-    {
-        var newValues = new List<TValue>(SelectedValues);
-        if (AreAllSelected)
-        {
-            // اگر همه انتخاب شده‌اند، فقط آیتم‌های فیلتر شده فعلی را از لیست پاک کن
-            var filteredValues = FilteredItems.Select(ValueSelector).ToHashSet();
-            newValues.RemoveAll(v => filteredValues.Contains(v));
-        }
-        else
-        {
-            // انتخاب همه آیتم‌های فیلتر شده فعلی
-            var valuesToAdd = FilteredItems.Select(ValueSelector).Where(v => !newValues.Contains(v));
-            newValues.AddRange(valuesToAdd);
-        }
-
-        await SelectedValuesChanged.InvokeAsync(newValues);
-    }
-}

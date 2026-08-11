@@ -1,11 +1,11 @@
-﻿<!-- Empty state message centered inside the fixed-height table body -->
-<tr class="flex items-center justify-center h-full w-full">
-    <td class="text-center text-sm text-gray-500">
+@namespace TicketHub.Web.Components.Shared
+
+<tr class="flex items-center justify-center h-full w-full py-12">
+    <td class="text-center text-sm font-medium text-slate-400">
         @Value در سیستم یافت نشد.
     </td>
 </tr>
 
 @code {
-    [Parameter]
-    public string Value { get; set; } = "رکوردی";
+    [Parameter] public string Value { get; set; } = "رکوردی";
 }

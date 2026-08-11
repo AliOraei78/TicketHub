@@ -1,10 +1,6 @@
-
-@using Microsoft.AspNetCore.Components.Authorization
-@using TicketHub.Application.Interfaces
-@using TicketHub.Application.Enums
-
-@inject AuthenticationStateProvider AuthStateProvider
-@inject IPermissionService PermissionService
+@namespace TicketHub.Web.Components.Pages.Admin.Users
+@using TicketHub.Application.DTOs
+@using TicketHub.Web.Components.Shared
 
 <DataGrid TItem="UserDto" TKey="int"
           Items="Users"
@@ -16,42 +12,40 @@
           SelectedKeys="SelectedIds"
           SelectedKeysChanged="OnSelectionChanged"
           EmptyStateValue="کاربری"
-          ShowSelection="_canManage">
+          ShowSelection="CanManage">
 
     <HeaderTemplate>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">نام کاربر</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[20%]">ایمیل</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[15%]">نقش‌ها</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[15%]">پروژه‌ها</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 w-[15%]">وضعیت</th>
-        <th class="px-6 py-2 text-sm font-semibold text-gray-700 text-center w-[10%]">عملیات</th>
+        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[20%]">نام کاربر</th>
+        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[20%]">ایمیل</th>
+        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[15%]">نقش‌ها</th>
+        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[15%]">پروژه‌ها</th>
+        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[15%]">وضعیت</th>
+        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 text-center w-[10%]">عملیات</th>
     </HeaderTemplate>
 
     <RowTemplate Context="user">
-        <td class="px-6 py-2 w-[20%]">
+        <td class="px-6 py-2.5 w-[20%]">
             <div class="flex items-center gap-3">
                 <TextAvatar Text="@user.Name" />
-                <span class="font-medium text-gray-800 truncate block max-w-[150px]" title="@user.Name">@user.Name</span>
+                <span class="font-bold text-xs text-slate-800 truncate block max-w-[150px]" title="@user.Name">@user.Name</span>
             </div>
         </td>
-        <td class="px-6 py-2 text-sm text-gray-500 w-[20%] truncate max-w-[150px]" dir="ltr" title="@user.Email">@user.Email</td>
-        <!-- ستون نقش ها -->
-        <td class="px-6 py-2 w-[15%]">
+        <td class="px-6 py-2.5 text-xs text-slate-500 font-medium w-[20%] truncate max-w-[150px]" dir="ltr" title="@user.Email">@user.Email</td>
+        <td class="px-6 py-2.5 w-[15%]">
             <div class="flex flex-wrap gap-1">
                 @foreach (var userRole in user.UserRoles)
                 {
-                    <Badge>
+                    <Badge Variant="BadgeVariant.Primary">
                         <span class="block truncate max-w-[100px]" title="@userRole.Role?.Name">@userRole.Role?.Name</span>
                     </Badge>
                 }
                 @if (!user.UserRoles.Any())
                 {
-                    <span class="text-gray-400 text-xs">بدون نقش</span>
+                    <span class="text-slate-400 text-xs font-normal">بدون نقش</span>
                 }
             </div>
         </td>
-        <!-- ستون پروژه ها -->
-        <td class="px-6 py-2 w-[15%]">
+        <td class="px-6 py-2.5 w-[15%]">
             <div class="flex flex-wrap gap-1">
                 @{
                     var userProjects = user.UserRoles
@@ -64,63 +58,34 @@
                 }
                 @foreach (var project in userProjects)
                 {
-                    <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 truncate max-w-[120px] align-middle" title="@project.Name">
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 truncate max-w-[120px] align-middle" title="@project.Name">
                         @project.Name
                     </span>
                 }
                 @if (!userProjects.Any())
                 {
-                    <span class="text-gray-400 text-xs">بدون پروژه</span>
+                    <span class="text-slate-400 text-xs font-normal">بدون پروژه</span>
                 }
             </div>
         </td>
-        <td class="px-6 py-2 w-[15%]">
+        <td class="px-6 py-2.5 w-[15%]">
             @if (user.IsActive)
             {
-                <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-medium">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]"></span>
+                <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs"></span>
                     فعال
                 </span>
             }
             else
             {
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 text-xs font-medium">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium">
                     غیرفعال
                 </span>
             }
         </td>
-        <td class="px-6 py-2 text-center w-[10%]">
+        <td class="px-6 py-2.5 text-center w-[10%]">
             <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" ResourceKey="@ResourceKey" />
         </td>
     </RowTemplate>
 
 </DataGrid>
-
-@code {
-    [Parameter] public List<UserDto> Users { get; set; } = new();
-    [Parameter] public bool IsLoading { get; set; }
-    [Parameter] public EventCallback<UserDto> OnEdit { get; set; }
-    [Parameter] public EventCallback<UserDto> OnDelete { get; set; }
-
-    [Parameter] public int CurrentPage { get; set; } = 1;
-    [Parameter] public int PageSize { get; set; } = 10;
-
-    [Parameter] public HashSet<int> SelectedIds { get; set; } = new();
-    [Parameter] public EventCallback<HashSet<int>> SelectedIdsChanged { get; set; }
-    [Parameter] public HashSet<int> DeletingIds { get; set; } = new();
-    [Parameter] public string ResourceKey { get; set; } = "/users";
-
-    private bool _canManage = false;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        _canManage = await PermissionService.HasAccessAsync(authState.User, ResourceKey, PermissionType.SystemSection);
-    }
-
-    private async Task OnSelectionChanged(HashSet<int> newKeys)
-    {
-        SelectedIds = newKeys;
-        await SelectedIdsChanged.InvokeAsync(SelectedIds);
-    }
-}
