@@ -27,6 +27,9 @@ using TicketHub.Web.Middlewares;
 using TicketHub.Web.Security;
 using Hangfire;
 using Hangfire.SqlServer;
+using MassTransit;
+using TicketHub.Application.Behaviors;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -51,6 +54,32 @@ builder.Services.AddScoped<AppDbContext>(provider =>
 
 builder.Services.AddScoped<IAppDbContext>(provider =>
     provider.GetRequiredService<AppDbContext>());
+
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = "TicketHubCache_";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+builder.Services.AddScoped<ICacheService, DistributedCacheService>();
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(ICacheService).Assembly);
+    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
+});
+
+builder.Services.AddSignalR();
+
+
 
 var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
 typeAdapterConfig.Scan(typeof(MapsterConfig).Assembly);
@@ -123,6 +152,40 @@ builder.Services.AddScoped<ISystemLogService, SystemLogService>();
 builder.Services.AddScoped<IWorkflowAutomationService, WorkflowAutomationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// --------- تنظیمات MassTransit + Transactional Outbox ---------
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<TicketHub.Infrastructure.Consumers.SendEmailConsumer>();
+
+    x.AddEntityFrameworkOutbox<AppDbContext>(o =>
+    {
+        o.UseSqlServer();
+        o.UseBusOutbox();
+    });
+
+    var rabbitHost = builder.Configuration["RabbitMQ:Host"];
+    if (!string.IsNullOrEmpty(rabbitHost))
+    {
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            cfg.Host(rabbitHost, "/", h =>
+            {
+                h.Username(builder.Configuration["RabbitMQ:Username"] ?? "guest");
+                h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+            });
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+    else
+    {
+        x.UsingInMemory((context, cfg) =>
+        {
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+});
+// -----------------------------------------------------------
 
 // --------- تنظیمات Hangfire ---------
 builder.Services.AddHangfire(configuration => configuration
@@ -293,6 +356,7 @@ using (var scope = app.Services.CreateScope())
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+app.MapHub<TicketHub.Web.Hubs.TicketHubHub>("/hubs/tickethub");
 app.MapControllers();
 app.MapDefaultControllerRoute();
 

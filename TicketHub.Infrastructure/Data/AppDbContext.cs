@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 
+using MassTransit;
+
 namespace TicketHub.Infrastructure.Data
 {
     public class AppDbContext : AuditDbContext, IAppDbContext
@@ -38,12 +40,11 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
-        // این نسخه نهایی، تمام جداول واسط، کلیدهای ترکیبی و تداخل‌های آبشاری (Cascade Delete) را بدون هیچ خطایی مدیریت می‌کند[cite: 18].
-        // کل متد OnModelCreating را با این کد جایگزین کن:
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.AddTransactionalOutboxEntities();
 
             modelBuilder.Entity<UserRole>().HasKey(ur => ur.Id);
             modelBuilder.Entity<UserRole>()
