@@ -126,15 +126,14 @@
         }
     `;
 
-    // --- B. PHOTOREALISTIC OCEAN WATER CAUSTICS SHADER (LOCALIZED CENTER) ---
+    // --- B. PHOTOREALISTIC OCEAN WATER CAUSTICS SHADER (LOCALIZED BOTTOM) ---
     const FRAGMENT_WATER_SRC = GLSL_COMMON_FUNCTIONS + `
         void main() {
             vec2 uv = v_uv;
             float t = u_time * 0.9;
 
-            // Center Vignette / Mask (Confine effect gracefully to card center)
-            vec2 centerDist = (uv - vec2(0.5, 0.5)) * vec2(1.2, 1.7);
-            float centerMask = 1.0 - smoothstep(0.18, 0.48, length(centerDist));
+            // Bottom Vignette / Mask (Confine water effect to bottom section of card like Fire)
+            float bottomMask = 1.0 - smoothstep(0.1, 0.65, uv.y);
 
             // Mouse displacement ripple
             vec2 mouseUv = u_mouse / u_resolution;
@@ -161,101 +160,123 @@
             col += causticHighlights * (1.0 - caustic) * 0.95;
 
             // Shimmering water crest
-            float waveSurface = sin(uv.x * 12.0 + t * 2.0) * 0.03 + 0.55;
+            float waveSurface = sin(uv.x * 12.0 + t * 2.0) * 0.03 + 0.35;
             if (uv.y > waveSurface && uv.y < waveSurface + 0.1) {
                 float crest = smoothstep(waveSurface, waveSurface + 0.05, uv.y);
                 col = mix(col, sunGlint, crest * 0.5);
             }
 
-            float alpha = clamp((0.35 + (1.0 - caustic) * 0.5) * centerMask, 0.0, 0.85);
+            float alpha = clamp((0.35 + (1.0 - caustic) * 0.5) * bottomMask, 0.0, 0.85);
             gl_FragColor = vec4(col * alpha, alpha);
         }
     `;
 
-    // --- C. PULSING DIELECTRIC PLASMA & SCATTERED SPARKS LIGHTNING SHADER ---
+    // --- C. PULSING DIELECTRIC PLASMA & SCATTERED SPARKS LIGHTNING SHADER (LOCALIZED BOTTOM) ---
     const FRAGMENT_LIGHTNING_SRC = GLSL_COMMON_FUNCTIONS + `
         void main() {
             vec2 uv = v_uv;
-            float t = u_time * 2.2;
+            float t = u_time * 2.5;
 
-            // Rhythmic pulse (نبض) and intermittent lightning discharge
-            float pulseWave = pow(max(0.0, sin(t * 3.2)), 14.0);
-            float erraticFlash = pow(fract(sin(floor(t * 6.5) * 43758.5453)), 18.0) * 1.5;
-            float totalPulse = clamp(pulseWave + erraticFlash, 0.0, 1.8);
+            // Bottom Y mask (Confine lightning discharges to bottom portion of card like Fire)
+            float bottomMask = 1.0 - smoothstep(0.1, 0.65, uv.y);
 
-            // Thin, dynamic, branching plasma discharge paths
+            // Stochastic pulse bursts & random discharge triggers
+            float burstSeed = floor(t * 6.5);
+            float randPulse = fract(sin(burstSeed * 143.51) * 43758.5453);
+            float randY1 = fract(sin(burstSeed * 291.17) * 23421.1231) * 0.35 + 0.1;
+            float randY2 = fract(sin(burstSeed * 517.89) * 19283.4561) * 0.35 + 0.1;
+            
+            float flash = (randPulse > 0.42) ? pow(1.0 - fract(t * 6.5), 3.0) * 2.2 : 0.0;
+
+            if (flash <= 0.01) {
+                gl_FragColor = vec4(0.0);
+                return;
+            }
+
+            // Original dielectric organic plasma bolt noise math
             float boltNoise1 = fbm(vec2(uv.x * 5.0, t * 2.2));
             float boltNoise2 = fbm(vec2(uv.x * 8.0 + 15.0, t * 3.0));
-            float bolt1 = abs(uv.y - 0.5 + boltNoise1 * 0.35);
-            float bolt2 = abs(uv.y - 0.45 + boltNoise2 * 0.4);
 
-            // High-voltage thin plasma core (thinner, sharp)
-            float intensity1 = (0.007 / (bolt1 + 0.006)) * totalPulse;
-            float intensity2 = (0.004 / (bolt2 + 0.006)) * totalPulse;
+            // Randomized Y origins restricted to bottom of card face
+            float bolt1 = abs(uv.y - randY1 + boltNoise1 * 0.32);
+            float bolt2 = abs(uv.y - randY2 + boltNoise2 * 0.38);
+
+            // High-voltage thin plasma core
+            float intensity1 = (0.0018 / (bolt1 + 0.0012)) * flash;
+            float intensity2 = (0.0012 / (bolt2 + 0.0012)) * flash * step(0.4, randPulse);
+
+            float totalIntensity = intensity1 + intensity2;
+
+            if (totalIntensity <= 0.05) {
+                gl_FragColor = vec4(0.0);
+                return;
+            }
 
             vec3 coreWhite = vec3(1.0, 1.0, 1.0);
             vec3 cyanPlasma = vec3(0.25, 0.8, 1.0);
             vec3 amberElectric = vec3(0.95, 0.75, 0.2);
 
-            vec3 col = coreWhite * pow(intensity1 + intensity2, 1.6);
-            col += cyanPlasma * (intensity1 * 1.4 + intensity2);
+            vec3 col = coreWhite * pow(totalIntensity * 0.6, 1.5);
+            col += cyanPlasma * (intensity1 * 1.5 + intensity2 * 1.2);
+            col += amberElectric * (intensity2 * 0.9);
 
-            // Distributed scattered electrical micro-sparks across the entire card
-            vec2 sparkGrid = uv * vec2(16.0, 10.0);
-            float sparkSeed = fract(sin(dot(floor(sparkGrid) + floor(t * 8.0), vec2(12.9898, 78.233))) * 43758.5453);
-            vec2 sparkLocal = fract(sparkGrid) - 0.5;
-            float sparkDist = length(sparkLocal);
-
-            if (sparkSeed > 0.82 && sparkDist < 0.3) {
-                float sparkGlow = (1.0 - sparkDist / 0.3) * (sparkSeed - 0.82) * 5.5;
-                vec3 sparkCol = (fract(sparkSeed * 10.0) > 0.4) ? cyanPlasma : amberElectric;
-                col += sparkCol * sparkGlow;
-                col += coreWhite * (sparkGlow * 0.6);
-            }
-
-            float alpha = clamp(intensity1 + intensity2 + (totalPulse * 0.25) + length(col) * 0.3, 0.0, 0.9);
+            float alpha = clamp(totalIntensity * 0.8 * bottomMask, 0.0, 0.92);
             gl_FragColor = vec4(col * alpha, alpha);
         }
     `;
 
-    // --- D. VIBRANT VISCOUS TOXIC ACID & FUMES SHADER ---
+    // --- D. VIBRANT VISCOUS TOXIC ACID, SMOKE & DROPLETS SHADER ---
     const FRAGMENT_TOXIC_SRC = GLSL_COMMON_FUNCTIONS + `
         void main() {
             vec2 uv = v_uv;
-            float t = u_time * 0.95;
+            float t = u_time * 1.1;
 
-            // Rich organic swirling acidic fluid cells
-            vec2 p = uv * vec2(3.0, 2.5);
+            // Base Y masks for bottom fluid pool and rising fumes
+            float poolMask = 1.0 - smoothstep(0.05, 0.55, uv.y);
+            float fumeFade = 1.0 - smoothstep(0.2, 0.9, uv.y);
+
+            // Layer 1: Swirling Viscous Acidic Slime Pool at Bottom
+            vec2 p = uv * vec2(2.8, 2.2);
             float n1 = fbm(p + vec2(0.0, t * 0.7));
             float n2 = fbm(p * 1.8 + vec2(n1, -t * 0.5));
-            float n3 = fbm(p * 2.4 + vec2(n2 * 0.6, n1 * 0.6 + t * 0.4));
-            float acidFluid = fbm(p + vec2(n2 * 0.8, n3 * 0.7));
+            float acidFluid = fbm(p + vec2(n2 * 0.8, n1 * 0.6 + t * 0.4));
+            float depth = smoothstep(0.12, 0.75, acidFluid);
 
-            // Acidic slime vibrant color spectrum
-            vec3 darkAcid = vec3(0.05, 0.25, 0.08);
-            vec3 vibrantGreen = vec3(0.35, 0.95, 0.18);
-            vec3 bioGlow = vec3(0.75, 1.0, 0.25);
-            vec3 hotYellowGreen = vec3(0.9, 1.0, 0.4);
+            // Layer 2: Rising Turbulent Toxic Green Smoke & Fumes
+            vec2 smokeUv = uv * vec2(1.6, 1.2);
+            smokeUv.y += t * 0.85;
+            float smokeNoise1 = fbm(smokeUv * 2.2);
+            float smokeNoise2 = fbm(smokeUv * 3.8 + vec2(smokeNoise1, -t * 0.6));
+            float toxicFumes = smoothstep(0.25, 0.75, smokeNoise2) * fumeFade * 0.7;
 
-            float depth = smoothstep(0.15, 0.75, acidFluid);
+            // Acidic color palette
+            vec3 darkAcid = vec3(0.04, 0.22, 0.06);
+            vec3 vibrantGreen = vec3(0.35, 0.98, 0.15);
+            vec3 bioGlow = vec3(0.78, 1.0, 0.2);
+            vec3 hotYellowGreen = vec3(0.95, 1.0, 0.35);
+            vec3 toxicSmokeCol = vec3(0.2, 0.75, 0.15);
+
+            // Base fluid color
             vec3 col = mix(darkAcid, vibrantGreen, depth);
 
-            // Rich rising effervescent bubbles across multiple scales
-            float bubbleNoise1 = noise2D(uv * vec2(12.0, 14.0) + vec2(0.0, -t * 2.2));
-            float bubbleNoise2 = noise2D(uv * vec2(20.0, 24.0) + vec2(t * 0.5, -t * 3.0));
+            // Add rising toxic smoke
+            col = mix(col, toxicSmokeCol, toxicFumes * 0.65);
+            col += bioGlow * (toxicFumes * 0.4);
 
-            if (bubbleNoise1 > 0.74) {
-                col = mix(col, bioGlow, (bubbleNoise1 - 0.74) * 4.5);
+            // Layer 3: Splattering Acidic Droplets & Effervescent Micro-Bubbles
+            vec2 dropUv = uv * vec2(14.0, 16.0) + vec2(0.0, -t * 3.2);
+            float dropNoise = noise2D(dropUv);
+            if (dropNoise > 0.76 && uv.y < 0.88) {
+                float dropGlow = (dropNoise - 0.76) * 6.0;
+                col = mix(col, hotYellowGreen, dropGlow);
+                col += vec3(0.9, 1.0, 0.4) * dropGlow;
             }
-            if (bubbleNoise2 > 0.80) {
-                col = mix(col, hotYellowGreen, (bubbleNoise2 - 0.80) * 5.5);
-            }
 
-            // Glowing corrosive acid edge highlights
-            float edgeGlow = smoothstep(0.65, 0.85, acidFluid);
-            col += bioGlow * edgeGlow * 0.55;
+            // Corrosive acid edge highlights
+            float edgeGlow = smoothstep(0.6, 0.85, acidFluid) * poolMask;
+            col += bioGlow * edgeGlow * 0.6;
 
-            float alpha = clamp(0.42 + depth * 0.52, 0.0, 0.92);
+            float alpha = clamp((depth * 0.55 * poolMask) + (toxicFumes * 0.45) + (length(col) * 0.25), 0.0, 0.92);
             gl_FragColor = vec4(col * alpha, alpha);
         }
     `;
@@ -391,7 +412,7 @@
         generateNextY(now) {
             const h = this.canvas.height;
             const w = this.canvas.width;
-            const midY = h * 0.58;
+            const midY = h * 0.84;
             const midPoint = w * 0.48;
 
             // When scan crosses center of card, heart flatlines (Red zone)
