@@ -31,7 +31,11 @@ else
                 <tbody class="divide-y divide-slate-100 block overflow-y-auto h-[450px] w-full custom-scrollbar">
                     @if (!Items.Any())
                     {
-                        <EmptyStateTable Value="@EmptyStateValue" />
+                        <tr class="flex items-center justify-center h-full w-full py-12">
+                            <td class="text-center text-sm font-medium text-slate-400">
+                                @EmptyStateValue در سیستم یافت نشد.
+                            </td>
+                        </tr>
                     }
                     else
                     {

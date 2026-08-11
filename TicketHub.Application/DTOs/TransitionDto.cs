@@ -1,5 +1,3 @@
-using TicketHub.Core.Entities;
-
 namespace TicketHub.Application.DTOs;
 
 public class TransitionDto
@@ -10,7 +8,11 @@ public class TransitionDto
     public string TargetPort { get; set; } = "Left";
 
     public int FromState { get; set; }
+    public WorkflowStatusDto? FromStatus { get; set; }
+
     public int ToState { get; set; }
+    public WorkflowStatusDto? ToStatus { get; set; }
+
     public int WorkflowId { get; set; }
 
     public int IsAutomated { get; set; }
@@ -24,5 +26,4 @@ public class TransitionDto
 
     public List<int> AllowedRoleIds { get; set; } = new();
     public List<TransitionFieldDto> TransitionFields { get; set; } = new();
-
 }

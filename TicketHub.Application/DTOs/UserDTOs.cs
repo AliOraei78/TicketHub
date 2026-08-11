@@ -1,8 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TicketHub.Core.Entities;
 
 namespace TicketHub.Application.DTOs;
@@ -16,7 +13,7 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsConfirmed { get; set; }
+    public DateTime? TokenExpiration { get; set; }
     public List<string> RoleNames { get; set; } = new();
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-
 }

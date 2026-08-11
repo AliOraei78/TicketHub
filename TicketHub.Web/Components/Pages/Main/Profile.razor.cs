@@ -2,14 +2,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using TicketHub.Application.Interfaces;
 using TicketHub.Application.Validations;
-using TicketHub.Infrastructure.Data;
 
 namespace TicketHub.Web.Components.Pages.Main;
 
 public partial class Profile : ComponentBase
 {
-    [Inject] public AppDbContext DbContext { get; set; } = default!;
+    [Inject] public IUserService UserService { get; set; } = default!;
     [Inject] public AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
     protected ProfileViewModel ProfileModel { get; set; } = new();
@@ -29,12 +29,12 @@ public partial class Profile : ComponentBase
             if (int.TryParse(userIdStr, out var id))
             {
                 CurrentUserId = id;
-                var dbUser = await DbContext.Users.FindAsync(CurrentUserId);
-                if (dbUser != null)
+                var userDto = await UserService.GetByIdAsync(CurrentUserId);
+                if (userDto != null)
                 {
-                    ProfileModel.Email = dbUser.Email;
-                    ProfileModel.Name = dbUser.Name;
-                    ProfileModel.PhoneNumber = dbUser.PhoneNumber ?? string.Empty;
+                    ProfileModel.Email = userDto.Email;
+                    ProfileModel.Name = userDto.Name;
+                    ProfileModel.PhoneNumber = userDto.PhoneNumber ?? string.Empty;
                 }
             }
         }
@@ -45,39 +45,34 @@ public partial class Profile : ComponentBase
     {
         StatusMessage = null;
 
-        var dbUser = await DbContext.Users.FindAsync(CurrentUserId);
-        if (dbUser == null) return;
-
-        dbUser.Name = ProfileModel.Name;
-        dbUser.PhoneNumber = ProfileModel.PhoneNumber;
-
-        if (!string.IsNullOrWhiteSpace(ProfileModel.NewPassword))
+        try
         {
-            if (string.IsNullOrWhiteSpace(ProfileModel.CurrentPassword))
+            var (success, errorMessage) = await UserService.UpdateProfileAsync(
+                CurrentUserId,
+                ProfileModel.Name,
+                ProfileModel.PhoneNumber,
+                ProfileModel.CurrentPassword,
+                ProfileModel.NewPassword);
+
+            if (!success)
             {
                 IsSuccess = false;
-                StatusMessage = "برای تغییر رمز، وارد کردن رمز عبور فعلی الزامی است.";
+                StatusMessage = errorMessage;
                 return;
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(ProfileModel.CurrentPassword, dbUser.Password))
-            {
-                IsSuccess = false;
-                StatusMessage = "رمز عبور فعلی اشتباه است.";
-                return;
-            }
+            IsSuccess = true;
+            StatusMessage = "پروفایل شما با موفقیت بروزرسانی شد.";
 
-            dbUser.Password = BCrypt.Net.BCrypt.HashPassword(ProfileModel.NewPassword);
+            ProfileModel.CurrentPassword = null;
+            ProfileModel.NewPassword = null;
+            ProfileModel.ConfirmNewPassword = null;
         }
-
-        await DbContext.SaveChangesAsync();
-
-        IsSuccess = true;
-        StatusMessage = "پروفایل شما با موفقیت بروزرسانی شد.";
-
-        ProfileModel.CurrentPassword = null;
-        ProfileModel.NewPassword = null;
-        ProfileModel.ConfirmNewPassword = null;
+        catch (Exception ex)
+        {
+            IsSuccess = false;
+            StatusMessage = ex.Message;
+        }
     }
 
     public class ProfileViewModel

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
+using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
 using Microsoft.AspNetCore.Components.Forms;
@@ -7,7 +8,7 @@ namespace TicketHub.Web.Components.Pages.Auth;
 
 public partial class ConfirmEmail : ComponentBase
 {
-    [Inject] protected IUserRepository UserRepository { get; set; } = default!;
+    [Inject] protected IUserService UserService { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected IEmailService EmailService { get; set; } = default!;
     [Inject] protected ILogger<ConfirmEmail> Logger { get; set; } = default!;
@@ -39,7 +40,7 @@ public partial class ConfirmEmail : ComponentBase
             return;
         }
 
-        var user = await UserRepository.GetByEmailAsync(Email);
+        var user = await UserService.GetByEmailAsync(Email);
         if (user == null || user.IsConfirmed)
         {
             Navigation.NavigateTo("/login", forceLoad: true);
@@ -85,7 +86,7 @@ public partial class ConfirmEmail : ComponentBase
 
         try
         {
-            var user = await UserRepository.GetByEmailAsync(Email!);
+            var user = await UserService.GetByEmailAsync(Email!);
 
             if (user == null)
             {
@@ -107,19 +108,14 @@ public partial class ConfirmEmail : ComponentBase
                 return;
             }
 
-            if (string.IsNullOrEmpty(user.ConfirmationToken) ||
-                !BCrypt.Net.BCrypt.Verify(verifyModel.Code, user.ConfirmationToken))
+            bool isConfirmed = await UserService.ConfirmUserAsync(user.Id, verifyModel.Code);
+            if (!isConfirmed)
             {
                 Logger.LogWarning("کد تایید نامعتبر برای ایمیل {Email} وارد شد.", Email);
                 errorMessage = "کد وارد شده نامعتبر است.";
                 isProcessing = false;
                 return;
             }
-
-            user.IsConfirmed = true;
-            user.ConfirmationToken = null;
-            user.TokenExpiration = null;
-            await UserRepository.SaveChangesAsync();
 
             Logger.LogInformation("حساب کاربری {Email} با موفقیت تایید و فعال شد.", Email);
 
@@ -157,29 +153,14 @@ public partial class ConfirmEmail : ComponentBase
 
         try
         {
-            var user = await UserRepository.GetByEmailAsync(Email!);
+            var user = await UserService.GetByEmailAsync(Email!);
             if (user == null || user.IsConfirmed)
             {
                 Navigation.NavigateTo("/login", forceLoad: true);
                 return;
             }
 
-            string rawCode = new Random().Next(100000, 999999).ToString();
-            string hashedCode = BCrypt.Net.BCrypt.HashPassword(rawCode);
-
-            user.ConfirmationToken = hashedCode;
-            user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
-            await UserRepository.SaveChangesAsync();
-
-            string emailBody = $@"
-                <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
-                    <h2>کد تایید جدید</h2>
-                    <p>کد تایید حساب کاربری شما:</p>
-                    <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
-                    <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
-                </div>";
-
-            await EmailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
+            await UserService.ResendConfirmationCodeAsync(Email!);
             Logger.LogInformation("کد تایید جدید برای ایمیل {Email} ارسال شد.", Email);
 
             verifyModel.Code = string.Empty;

@@ -4,15 +4,13 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
-using TicketHub.Core.Entities;
-using TicketHub.Core.Interfaces;
 
 namespace TicketHub.Web.Components.Pages.Main.Tickets;
 
 public partial class TicketTransitionModal : ComponentBase
 {
     [Inject] public ITicketService TicketService { get; set; } = default!;
-    [Inject] public IWorkflowRepository WorkflowRepository { get; set; } = default!;
+    [Inject] public IWorkflowService WorkflowService { get; set; } = default!;
     [Inject] public IRoleService RoleService { get; set; } = default!;
     [Inject] public IToastService ToastService { get; set; } = default!;
     [Inject] public AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
@@ -29,7 +27,7 @@ public partial class TicketTransitionModal : ComponentBase
     protected int CurrentStatusId { get; set; }
 
     protected ExecuteTransitionDto Model { get; set; } = new();
-    protected List<Transition> AvailableTransitions { get; set; } = new();
+    protected List<TransitionDto> AvailableTransitions { get; set; } = new();
     protected List<DynamicFieldModel> DynamicFields { get; set; } = new();
 
     protected List<string> ValidationErrors { get; set; } = new();
@@ -41,7 +39,7 @@ public partial class TicketTransitionModal : ComponentBase
         IsLoading = true;
         ValidationErrors.Clear();
         FieldValidationErrors.Clear();
-        
+
         TicketId = ticketId;
         TicketTitle = title;
         CurrentStatusId = currentStatusId;
@@ -51,7 +49,7 @@ public partial class TicketTransitionModal : ComponentBase
             TicketId = ticketId
         };
         DynamicFields = new List<DynamicFieldModel>();
-        AvailableTransitions = new List<Transition>();
+        AvailableTransitions = new List<TransitionDto>();
 
         try
         {
@@ -74,10 +72,10 @@ public partial class TicketTransitionModal : ComponentBase
                     .ToList();
             }
 
-            var workflow = await WorkflowRepository.GetWorkflowWithDetailsAsync(workflowId);
+            var workflow = await WorkflowService.GetByIdWithDetailsAsync(workflowId);
             if (workflow != null && workflow.Transitions != null && workflow.WorkflowStatuses != null)
             {
-                WorkflowStatus? currentWorkflowStatus = null;
+                WorkflowStatusDto? currentWorkflowStatus = null;
                 if (currentWorkflowStatusId.HasValue && currentWorkflowStatusId.Value > 0)
                 {
                     currentWorkflowStatus = workflow.WorkflowStatuses
@@ -95,9 +93,9 @@ public partial class TicketTransitionModal : ComponentBase
                     AvailableTransitions = workflow.Transitions
                         .Where(t => t.IsActive)
                         .Where(t => t.FromState == currentWorkflowStatus.Id)
-                        .Where(t => isAdmin 
-                                 || !t.AllowedRoles.Any() 
-                                 || t.AllowedRoles.Any(ar => userRoleIds.Contains(ar.RoleId)))
+                        .Where(t => isAdmin
+                                 || !t.AllowedRoleIds.Any()
+                                 || t.AllowedRoleIds.Any(roleId => userRoleIds.Contains(roleId)))
                         .ToList();
                 }
             }
@@ -200,7 +198,7 @@ public partial class TicketTransitionModal : ComponentBase
             IsSubmitting = true;
             StateHasChanged();
             await Task.Yield();
-            
+
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userIdStr = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdStr, out int userId))

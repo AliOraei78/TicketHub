@@ -105,6 +105,45 @@ public class UserService : IUserService
         return user.Adapt<UserDto>();
     }
 
+    public async Task<UserDto?> GetByEmailAsync(string email)
+    {
+        _logger.LogInformation("جستجوی کاربر با ایمیل {Email}.", email);
+        var user = await _userRepository.GetByEmailAsync(email);
+        return user?.Adapt<UserDto>();
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> UpdateProfileAsync(
+        int userId, string name, string phoneNumber, string? currentPassword, string? newPassword)
+    {
+        var userInDb = await _userRepository.GetByIdAsync(userId);
+        if (userInDb == null)
+            throw new NotFoundException("کاربر", userId);
+
+        userInDb.Name = name;
+        userInDb.PhoneNumber = phoneNumber;
+
+        if (!string.IsNullOrWhiteSpace(newPassword))
+        {
+            if (string.IsNullOrWhiteSpace(currentPassword))
+            {
+                return (false, "برای تغییر رمز، وارد کردن رمز عبور فعلی الزامی است.");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, userInDb.Password))
+            {
+                return (false, "رمز عبور فعلی اشتباه است.");
+            }
+
+            ValidatePasswordStrict(newPassword);
+            userInDb.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        }
+
+        await _userRepository.UpdateAsync(userInDb);
+        _logger.LogInformation("پروفایل کاربر با شناسه {UserId} با موفقیت ویرایش شد.", userId);
+        return (true, null);
+    }
+
+
     private async Task EnsurePermissionAsync(PermissionType minType, string message)
     {
         var user = _httpContextAccessor.HttpContext?.User;
@@ -262,6 +301,29 @@ public class UserService : IUserService
         _logger.LogInformation("حساب کاربری با شناسه {UserId} با موفقیت تایید شد.", userId);
         return true;
     }
+
+    public async Task ResendConfirmationCodeAsync(string email)
+    {
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null || user.IsConfirmed) return;
+
+        string rawCode = new Random().Next(100000, 999999).ToString();
+        user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);
+        user.TokenExpiration = DateTime.UtcNow.AddMinutes(2);
+
+        await _userRepository.UpdateAsync(user);
+
+        string emailBody = $@"
+        <div style='font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;'>
+            <h2>کد تایید جدید</h2>
+            <p>کد تایید حساب کاربری شما:</p>
+            <h1 style='letter-spacing: 5px; color: #2563eb;'>{rawCode}</h1>
+            <p style='margin-top: 20px; font-size: 12px; color: #666;'>این کد تا ۲ دقیقه معتبر است.</p>
+        </div>";
+
+        await _emailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
+    }
+
 
     public async Task<AuthServiceResponse> LoginAsync(LoginViewModel model)
     {

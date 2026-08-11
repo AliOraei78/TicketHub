@@ -104,7 +104,7 @@
     }
     else
     {
-        <DataList Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد.">
+        <StatefulDataView Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد." ContainerClass="grid grid-cols-1 gap-4">
             <ItemTemplate Context="ticket">
                 <TicketCard Ticket="ticket"
                             OnClick="NavigateToDetails"
@@ -113,7 +113,7 @@
                             IsSelected="SelectedTicketIds.Contains(ticket.Id)"
                             IsSelectedChanged="@(val => ToggleTicketSelection(ticket.Id, val))" />
             </ItemTemplate>
-        </DataList>
+        </StatefulDataView>
     }
 </div>
 
