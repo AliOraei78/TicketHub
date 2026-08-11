@@ -89,7 +89,48 @@
                 document.addEventListener('pointerdown', handler);
             }, 0);
         };
+
+        window.copyTextToClipboard = async (text) => {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } else {
+                    var textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-999999px";
+                    textArea.style.top = "-999999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    var successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return successful;
+                }
+            } catch (e) {
+                console.error("Copy failed:", e);
+                return false;
+            }
+        };
+
+        window.downloadFileFromText = (fileName, text, mimeType) => {
+            try {
+                var blob = new Blob([text], { type: mimeType || 'text/plain;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error("Download failed:", e);
+            }
+        };
     </script>
+
     <style>
         .dropdown-menu-container.drop-up {
             top: auto !important;

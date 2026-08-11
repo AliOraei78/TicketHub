@@ -3,13 +3,21 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Sections
+@using Fluxor
 @using TicketHub.Application.DTOs
 @using TicketHub.Application.Interfaces
+@using TicketHub.Web.Store
+@using TicketHub.Web.Components.Pages.Main.Tickets
 @inject ITicketService TicketService
 @inject IProjectService ProjectService
 @inject IPriorityService PriorityService
 @inject IStatusService StatusService
 @inject NavigationManager Navigation
+@inject IState<TicketState> TicketState
+@inject IDispatcher Dispatcher
+@inject IActionSubscriber ActionSubscriber
+@inject ITicketEventBroker EventBroker
+@implements IDisposable
 @rendermode InteractiveServer
 
 <PageTitle>داشبورد | سامانه تیکتینگ</PageTitle>
@@ -53,10 +61,16 @@
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-3">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-md">
-                        @userRoleTitle
+                    <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        میز کار اختصاصی
                     </span>
-                    <span class="text-xs text-blue-200/70 font-medium">@currentPersianDate</span>
+                    <span class="text-xs text-blue-200/70 font-medium flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        @currentPersianDate
+                    </span>
                 </div>
                 <h1 class="text-3xl md:text-4xl font-black tracking-tight leading-tight text-white drop-shadow-sm">
                     خوش آمدید، @userName
@@ -67,7 +81,7 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <button @onclick='() => Navigation.NavigateTo("/tickets")'
+                <button @onclick="OpenCreateModal"
                         class="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-95 smooth-transition flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -530,14 +544,28 @@
     </SectionContent>
 }
 
+<!-- Animated Create Ticket Modal -->
+<TicketFormModal IsOpen="isCreateModalOpen"
+                 Model="newTicket"
+                 Projects="TicketState.Value.AvailableProjects"
+                 Priorities="TicketState.Value.AvailablePriorities"
+                 Categories="TicketState.Value.AvailableCategories"
+                 DynamicFields="TicketState.Value.DynamicFields"
+                 OnCategoryChanged="HandleCategoryChanged"
+                 OnSubmit="HandleCreateTicket"
+                 OnCancel="CloseCreateModal" />
+
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
 
     private bool isLoading = true;
     private string userName = "کاربر گرامی";
-    private string userRoleTitle = "کاربر سیستم";
     private string currentPersianDate = string.Empty;
+
+    // Create Modal State
+    private bool isCreateModalOpen = false;
+    private TicketDto newTicket = new TicketDto();
 
     private int totalTickets = 0;
     private int newTicketsCount = 0;
@@ -560,6 +588,18 @@
     {
         currentPersianDate = GetPersianDate(DateTime.UtcNow);
 
+        // گوش دادن به اکشن موفقیت ثبت تیکت برای بستن مودال و رفرش درجا
+        ActionSubscriber.SubscribeToAction<SaveTicketSuccessAction>(this, async action =>
+        {
+            isCreateModalOpen = false;
+            await LoadDashboardDataAsync();
+            await InvokeAsync(StateHasChanged);
+        });
+
+        // گوش دادن به رویدادهای زنده سیستم برای رفرش آنی و زنده داشبورد
+        EventBroker.OnTicketUpdated += HandleLiveTicketEventAsync;
+        EventBroker.OnTransitionOccurred += HandleLiveTicketEventAsync;
+
         var authState = await AuthState;
         var user = authState.User;
 
@@ -575,91 +615,150 @@
                 .Select(c => c.Value)
                 .ToList();
 
-            if (roles.Contains("Admin"))
-                userRoleTitle = "مدیر ارشد سیستم";
-            else if (roles.Any(r => r == "پشتیبان" || r == "مسئول فنی"))
-                userRoleTitle = "کارشناس پشتیبانی";
-            else
-                userRoleTitle = "کاربر سامانه";
-
-            int userId = 0;
-            var subClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value;
-            int.TryParse(subClaim, out userId);
-
-            bool isAdmin = roles.Contains("Admin");
-            bool isStaffOrAdmin = roles.Any(r => r == "Admin" || r == "پشتیبان" || r == "مسئول فنی");
-
-            var userRoleIds = user.Claims
-                .Where(c => c.Type == "RoleId" || c.Type == ClaimTypes.Role)
-                .Select(c => int.TryParse(c.Value, out var rid) ? rid : 0)
-                .Where(rid => rid > 0)
-                .ToList();
-
-            // Fetch filtered tickets according to security scoping automatically handled by TicketService
-            var (tickets, total) = await TicketService.GetFilteredTicketsAsync(
-                searchTerm: null,
-                projectIds: null,
-                statusIds: null,
-                userId: null,
-                page: 1,
-                pageSize: 100);
-
-            totalTickets = total;
-            newTicketsCount = tickets.Count(t => t.WorkflowStatus?.IsInitial == true || (t.WorkflowStatusId == null && t.Status?.Name == "Open"));
-            inProgressCount = tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial);
-            overdueCount = tickets.Count(t => t.IsOverdue);
-            criticalAndOverdueCount = tickets.Count(t => (t.Priority != null && t.Priority.Level > 4) || t.IsOverdue);
-
-            slaOnTimePercentage = totalTickets > 0 ? (int)Math.Round((double)(totalTickets - overdueCount) * 100 / totalTickets) : 100;
-
-            recentTickets = tickets.Take(6);
-
-            // Dynamically calculate priority stats from DB
-            var dbPriorities = (await PriorityService.GetAllAsync()).Where(p => p.IsActive).OrderByDescending(p => p.Level).ToList();
-            priorityStats = dbPriorities.Select(p =>
-            {
-                int count = tickets.Count(t => t.PriorityId == p.Id);
-                int pct = totalTickets > 0 ? (int)Math.Round((double)count * 100 / totalTickets) : 0;
-                return new PriorityStatDto
-                {
-                    PriorityId = p.Id,
-                    Name = p.Name,
-                    ColorCode = string.IsNullOrWhiteSpace(p.ColorCode) ? "#3B82F6" : p.ColorCode,
-                    Level = p.Level.GetValueOrDefault(),
-                    Count = count,
-                    Percentage = pct
-                };
-            }).ToList();
-
-            // Compute 7-day trend
-            var now = DateTime.UtcNow.Date;
-            trendData = Enumerable.Range(0, 7)
-                .Select(i => now.AddDays(-6 + i))
-                .Select(date => new DailyTrendDto
-                {
-                    Date = date,
-                    DayLabel = GetPersianDayName(date),
-                    Count = tickets.Count(t => t.CreatedAt.Date == date)
-                })
-                .ToList();
-
-            // Compute project workload
-            var projGroups = tickets
-                .Where(t => t.Project != null)
-                .GroupBy(t => t.Project!.Name)
-                .Select(g => new ProjectWorkloadDto
-                {
-                    ProjectName = g.Key,
-                    TicketCount = g.Count(),
-                    Percentage = totalTickets > 0 ? (int)Math.Round((double)g.Count() * 100 / totalTickets) : 0
-                })
-                .OrderByDescending(p => p.TicketCount)
-                .ToList();
-
-            projectStats = projGroups;
+            Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
         }
 
+        await LoadDashboardDataAsync();
         isLoading = false;
+    }
+
+    private async Task HandleLiveTicketEventAsync(int ticketId)
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadDashboardDataAsync();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        ActionSubscriber.UnsubscribeFromAllActions(this);
+        EventBroker.OnTicketUpdated -= HandleLiveTicketEventAsync;
+        EventBroker.OnTransitionOccurred -= HandleLiveTicketEventAsync;
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        var authState = await AuthState;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true) return;
+
+        // Fetch filtered tickets according to security scoping automatically handled by TicketService
+        var (tickets, total) = await TicketService.GetFilteredTicketsAsync(
+            searchTerm: null,
+            projectIds: null,
+            statusIds: null,
+            userId: null,
+            page: 1,
+            pageSize: 100);
+
+        totalTickets = total;
+        newTicketsCount = tickets.Count(t => t.WorkflowStatus?.IsInitial == true || (t.WorkflowStatusId == null && t.Status?.Name == "Open"));
+        inProgressCount = tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial);
+        overdueCount = tickets.Count(t => t.IsOverdue);
+        criticalAndOverdueCount = tickets.Count(t => (t.Priority != null && t.Priority.Level > 4) || t.IsOverdue);
+
+        slaOnTimePercentage = totalTickets > 0 ? (int)Math.Round((double)(totalTickets - overdueCount) * 100 / totalTickets) : 100;
+
+        recentTickets = tickets.Take(6);
+
+        // محاسبه داینامیک آمار اولویت‌ها از دیتابیس
+        var dbPriorities = (await PriorityService.GetAllAsync()).Where(p => p.IsActive).OrderByDescending(p => p.Level).ToList();
+        priorityStats = dbPriorities.Select(p =>
+        {
+            int count = tickets.Count(t => t.PriorityId == p.Id);
+            int pct = totalTickets > 0 ? (int)Math.Round((double)count * 100 / totalTickets) : 0;
+            return new PriorityStatDto
+            {
+                PriorityId = p.Id,
+                Name = p.Name,
+                ColorCode = string.IsNullOrWhiteSpace(p.ColorCode) ? "#3B82F6" : p.ColorCode,
+                Level = p.Level.GetValueOrDefault(),
+                Count = count,
+                Percentage = pct
+            };
+        }).ToList();
+
+        // محاسبه روند ۷ روزه
+        var now = DateTime.UtcNow.Date;
+        trendData = Enumerable.Range(0, 7)
+            .Select(i => now.AddDays(-6 + i))
+            .Select(date => new DailyTrendDto
+            {
+                Date = date,
+                DayLabel = GetPersianDayName(date),
+                Count = tickets.Count(t => t.CreatedAt.Date == date)
+            })
+            .ToList();
+
+        // محاسبه لود کاری پروژه‌ها
+        var projGroups = tickets
+            .Where(t => t.Project != null)
+            .GroupBy(t => t.Project!.Name)
+            .Select(g => new ProjectWorkloadDto
+            {
+                ProjectName = g.Key,
+                TicketCount = g.Count(),
+                Percentage = totalTickets > 0 ? (int)Math.Round((double)g.Count() * 100 / totalTickets) : 0
+            })
+            .OrderByDescending(p => p.TicketCount)
+            .ToList();
+
+        projectStats = projGroups;
+    }
+
+    private async Task OpenCreateModal()
+    {
+        var authState = await AuthState;
+        var user = authState.User;
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
+        int currentUserId = int.TryParse(userIdString, out var id) ? id : 0;
+
+        newTicket = new TicketDto
+        {
+            StatusId = 1,
+            PriorityId = 2,
+            UserId = currentUserId,
+            ProjectId = 0
+        };
+
+        var roles = user.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+        Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
+        Dispatcher.Dispatch(new ClearTicketMessagesAction());
+        Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
+        isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        isCreateModalOpen = false;
+    }
+
+    private void HandleCreateTicket()
+    {
+        if (newTicket.ProjectId == 0) return;
+        Dispatcher.Dispatch(new SaveTicketAction(newTicket));
+    }
+
+    private void HandleCategoryChanged(int? categoryId)
+    {
+        newTicket.CategoryId = categoryId;
+
+        if (categoryId.HasValue)
+        {
+            Dispatcher.Dispatch(new LoadDynamicFieldsAction(categoryId.Value));
+        }
+        else
+        {
+            Dispatcher.Dispatch(new DynamicFieldsLoadedAction(Array.Empty<TicketFieldDto>()));
+        }
     }
 
     private void OpenChartModal(string type)

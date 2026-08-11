@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace TicketHub.Application.Models;
 
 public class LogEntry
@@ -11,4 +7,9 @@ public class LogEntry
     public string Message { get; set; } = string.Empty;
     public string? Exception { get; set; }
     public string? SourceContext { get; set; }
+    public string? TraceId { get; set; }
+    public string? SpanId { get; set; }
+    public string? CorrelationId { get; set; }
+    public Dictionary<string, string> Properties { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
+

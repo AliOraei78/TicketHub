@@ -219,6 +219,8 @@ public class TicketService : ITicketService
         await _ticketRepository.AddAsync(ticket);
         _logger.LogInformation("تیکت با موفقیت ایجاد شد.");
 
+        await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
+
         if (_workflowAutomationService != null)
         {
             _ = _workflowAutomationService.TriggerImmediateAutomaticTransitionsAsync(ticket.Id);
@@ -368,6 +370,8 @@ public class TicketService : ITicketService
         await _ticketRepository.DeleteAsync(id);
 
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت حذف شد.", id);
+
+        await _eventBroker.PublishTicketUpdatedAsync(id);
     }
 
     public async Task DeleteRangeAsync(IEnumerable<int> ids)
