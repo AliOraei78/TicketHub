@@ -98,7 +98,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
 });
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddMessagePackProtocol();
 
 
 

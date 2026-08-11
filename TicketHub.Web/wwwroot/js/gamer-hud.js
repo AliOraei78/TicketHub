@@ -1,524 +1,377 @@
 /**
- * TicketHub Cinema-Grade Gamer HUD & Elemental VFX Engine (Ultra-Optimized)
- * Zero-lag, 60-120 FPS hardware-accelerated Canvas 2D simulation
+ * TicketHub Cinema-Grade Photorealistic WebGL Elemental Shader Engine
+ * Pure GLSL GPU-accelerated fluid & volumetric simulation (100% natural, zero cartoonish particles)
  * Features:
- *  - IntersectionObserver Viewport Culling (pauses rendering when scrolled off-screen)
- *  - Dual-Stroke Laser Glow (replaces heavy Gaussian shadowBlur for 90% GPU reduction)
- *  - Passive RAF-throttled 3D Tilt physics
+ *  - 3D Simplex Curl Noise & FBM Volumetric Fire with Blackbody Radiation Color Physics
+ *  - Refractive Ocean Caustic Waves & Bioluminescent Depth Gradients
+ *  - Dielectric Breakdown High-Voltage Plasma Lightning Arcs
+ *  - Viscous Bio-Chemical Acid & Fume Fluid Dynamics
+ *  - Interactive Mouse Force Vector Uniforms (u_mouse)
+ *  - IntersectionObserver Viewport Culling & Page Visibility Sleep Mode
  */
 
 (function () {
     // =========================================================================
-    // 1. HIGH-PERFORMANCE PROCEDURAL ELEMENTAL SIMULATORS
+    // 1. VERTEX SHADER & PROCEDURAL GLSL FRAGMENT SHADERS
     // =========================================================================
 
-    // --- A. FIRE & EMBER SIMULATOR ---
-    class FireSimulator {
-        constructor(canvas) {
-            this.canvas = canvas;
-            this.ctx = canvas.getContext('2d', { alpha: true });
-            this.particles = [];
-            this.embers = [];
-            this.maxParticles = 35;
-            this.maxEmbers = 12;
-            this.isVisible = true;
-            this.init();
+    const VERTEX_SHADER_SRC = `
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+        void main() {
+            v_uv = (a_position + 1.0) * 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+
+    // Common GLSL Math Library: Simplex & Fractal Brownian Motion
+    const GLSL_COMMON_FUNCTIONS = `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform vec2 u_mouse;
+
+        // Fast 2D Hash
+        vec2 hash2(vec2 p) {
+            p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+            return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
         }
 
-        init() {
-            for (let i = 0; i < this.maxParticles; i++) this.particles.push(this.createFlame(true));
-            for (let i = 0; i < this.maxEmbers; i++) this.embers.push(this.createEmber(true));
+        // 2D Simplex Gradient Noise
+        float noise2D(vec2 p) {
+            const float K1 = 0.366025404; // (sqrt(3)-1)/2
+            const float K2 = 0.211324865; // (3-sqrt(3))/6
+            vec2 i = floor(p + (p.x + p.y) * K1);
+            vec2 a = p - i + (i.x + i.y) * K2;
+            vec2 o = (a.x > a.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+            vec2 b = a - o + K2;
+            vec2 c = a - 1.0 + 2.0 * K2;
+            vec3 h = max(0.5 - vec3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
+            vec3 n = h * h * h * h * vec3(dot(a, hash2(i)), dot(b, hash2(i + o)), dot(c, hash2(i + 1.0)));
+            return dot(n, vec3(70.0));
         }
 
-        createFlame(initial = false) {
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            return {
-                x: w * 0.15 + Math.random() * (w * 0.7),
-                y: initial ? h - Math.random() * (h * 0.4) : h + 4,
-                vx: (Math.random() - 0.5) * 1.2,
-                vy: -2.2 - Math.random() * 3.0,
-                size: 12 + Math.random() * 18,
-                life: initial ? Math.random() * 40 : 0,
-                maxLife: 30 + Math.random() * 25,
-                wobbleSpeed: 0.05 + Math.random() * 0.08,
-                seed: Math.random() * 100
-            };
-        }
-
-        createEmber(initial = false) {
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            return {
-                x: Math.random() * w,
-                y: initial ? Math.random() * h : h + 4,
-                vx: (Math.random() - 0.5) * 1.8,
-                vy: -2.8 - Math.random() * 3.5,
-                size: 1.5 + Math.random() * 2.5,
-                life: initial ? Math.random() * 50 : 0,
-                maxLife: 45 + Math.random() * 35,
-                color: Math.random() > 0.3 ? '#fef08a' : '#f97316'
-            };
-        }
-
-        updateAndDraw() {
-            if (!this.isVisible) return;
-            const ctx = this.ctx;
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            ctx.clearRect(0, 0, w, h);
-
-            ctx.globalCompositeOperation = 'lighter';
-
-            // Draw Flame Particles
-            for (let i = 0; i < this.particles.length; i++) {
-                const p = this.particles[i];
-                p.life++;
-                p.x += p.vx + Math.sin(p.life * p.wobbleSpeed + p.seed) * 0.7;
-                p.y += p.vy;
-                p.size *= 0.965;
-
-                const progress = p.life / p.maxLife;
-                if (progress >= 1 || p.size < 1) {
-                    this.particles[i] = this.createFlame();
-                    continue;
-                }
-
-                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-                if (progress < 0.25) {
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-                    grad.addColorStop(0.35, 'rgba(254, 240, 138, 0.8)');
-                    grad.addColorStop(0.7, 'rgba(249, 115, 22, 0.45)');
-                    grad.addColorStop(1, 'rgba(239, 68, 68, 0)');
-                } else if (progress < 0.65) {
-                    grad.addColorStop(0, 'rgba(254, 240, 138, 0.75)');
-                    grad.addColorStop(0.4, 'rgba(249, 115, 22, 0.5)');
-                    grad.addColorStop(0.8, 'rgba(225, 29, 72, 0.25)');
-                    grad.addColorStop(1, 'rgba(159, 18, 57, 0)');
-                } else {
-                    grad.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
-                    grad.addColorStop(0.6, 'rgba(136, 19, 55, 0.15)');
-                    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                }
-
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
+        // Fractal Brownian Motion (3 Octaves)
+        float fbm(vec2 p) {
+            float v = 0.0;
+            float a = 0.5;
+            vec2 shift = vec2(100.0);
+            mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+            for (int i = 0; i < 3; ++i) {
+                v += a * noise2D(p);
+                p = rot * p * 2.0 + shift;
+                a *= 0.5;
             }
-
-            // Draw Embers
-            for (let i = 0; i < this.embers.length; i++) {
-                const e = this.embers[i];
-                e.life++;
-                e.x += e.vx;
-                e.y += e.vy;
-
-                const progress = e.life / e.maxLife;
-                if (progress >= 1 || e.y < -10) {
-                    this.embers[i] = this.createEmber();
-                    continue;
-                }
-
-                const alpha = Math.sin((1 - progress) * Math.PI);
-                ctx.fillStyle = e.color;
-                ctx.globalAlpha = Math.max(0, alpha);
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.globalAlpha = 1;
-            ctx.globalCompositeOperation = 'source-over';
+            return v;
         }
-    }
+    `;
 
-    // --- B. BRANCHING LIGHTNING SIMULATOR ---
-    class LightningSimulator {
-        constructor(canvas) {
-            this.canvas = canvas;
-            this.ctx = canvas.getContext('2d', { alpha: true });
-            this.bolts = [];
-            this.sparks = [];
-            this.lastStrike = 0;
-            this.strikeInterval = 200;
-            this.isVisible = true;
-        }
+    // --- A. VOLUMETRIC REALISTIC FIRE SHADER ---
+    const FRAGMENT_FIRE_SRC = GLSL_COMMON_FUNCTIONS + `
+        void main() {
+            vec2 uv = v_uv;
+            // Normalized aspect ratio
+            vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
 
-        generateBoltPoints(x1, y1, x2, y2, displace, minDisplace = 3) {
-            const points = [{ x: x1, y: y1 }, { x: x2, y: y2 }];
-            let currDisplace = displace;
+            // Mouse wind interaction
+            vec2 mouseNorm = (u_mouse * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+            float mouseDist = length(p - mouseNorm);
+            vec2 mouseOffset = (p - mouseNorm) * (1.0 - smoothstep(0.0, 0.8, mouseDist)) * 0.25;
 
-            while (currDisplace > minDisplace) {
-                const newPoints = [];
-                for (let i = 0; i < points.length - 1; i++) {
-                    const p1 = points[i];
-                    const p2 = points[i + 1];
-                    const midX = (p1.x + p2.x) / 2;
-                    const midY = (p1.y + p2.y) / 2;
+            // Thermal upward advection & curl noise
+            vec2 flameUv = uv * vec2(1.8, 1.4) + mouseOffset;
+            flameUv.y += u_time * 1.35;
 
-                    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) + Math.PI / 2;
-                    const offset = (Math.random() - 0.5) * currDisplace * 2;
+            // Multiple turbulent noise layers
+            float q1 = fbm(flameUv * 2.2);
+            float q2 = fbm(flameUv * 3.5 + vec2(q1, -u_time * 0.8));
+            float flameIntensity = fbm(vec2(uv.x * 2.5 + q2 * 0.45, uv.y * 1.8 - u_time * 1.5 + q1 * 0.3));
 
-                    newPoints.push(p1);
-                    newPoints.push({
-                        x: midX + Math.cos(angle) * offset,
-                        y: midY + Math.sin(angle) * offset
-                    });
-                }
-                newPoints.push(points[points.length - 1]);
-                points.length = 0;
-                points.push(...newPoints);
-                currDisplace *= 0.55;
-            }
-            return points;
-        }
+            // Shape the flame plume base and top dissipation
+            float flameShape = 1.0 - smoothstep(0.05, 0.95, uv.y);
+            float horizontalTaper = 1.0 - abs(uv.x - 0.5) * 1.6;
+            horizontalTaper = clamp(horizontalTaper, 0.0, 1.0);
 
-        spawnLightning() {
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            const mode = Math.random();
-            let x1, y1, x2, y2;
+            float heat = (flameIntensity * 0.65 + 0.35) * flameShape * horizontalTaper;
+            heat = smoothstep(0.12, 0.75, heat);
 
-            if (mode < 0.45) {
-                x1 = Math.random() * (w * 0.4);
-                y1 = 2 + Math.random() * 4;
-                x2 = x1 + 50 + Math.random() * (w * 0.5);
-                y2 = 2 + Math.random() * 4;
-            } else if (mode < 0.75) {
-                x1 = Math.random() * w;
-                y1 = Math.random() * h;
-                x2 = x1 + (Math.random() - 0.5) * 100;
-                y2 = y1 + (Math.random() - 0.5) * 70;
+            // True Blackbody Radiation Thermal Ramp
+            vec3 whiteHot = vec3(1.0, 0.98, 0.9);
+            vec3 gold = vec3(1.0, 0.7, 0.12);
+            vec3 orange = vec3(0.95, 0.25, 0.04);
+            vec3 crimson = vec3(0.6, 0.05, 0.02);
+            vec3 smoke = vec3(0.1, 0.08, 0.12);
+
+            vec3 col = vec3(0.0);
+            if (heat > 0.65) {
+                col = mix(gold, whiteHot, (heat - 0.65) / 0.35);
+            } else if (heat > 0.35) {
+                col = mix(orange, gold, (heat - 0.35) / 0.3);
+            } else if (heat > 0.15) {
+                col = mix(crimson, orange, (heat - 0.15) / 0.2);
             } else {
-                const corner = Math.floor(Math.random() * 4);
-                x1 = corner % 2 === 0 ? 5 : w - 5;
-                y1 = corner < 2 ? 5 : h - 5;
-                x2 = x1 + (corner % 2 === 0 ? 1 : -1) * (30 + Math.random() * 60);
-                y2 = y1 + (corner < 2 ? 1 : -1) * (25 + Math.random() * 50);
+                col = mix(smoke, crimson, heat / 0.15);
             }
 
-            const mainPoints = this.generateBoltPoints(x1, y1, x2, y2, 20);
-            this.bolts.push({
-                points: mainPoints,
-                life: 0,
-                maxLife: 5 + Math.floor(Math.random() * 4),
-                color: Math.random() > 0.3 ? '#38bdf8' : '#facc15'
-            });
-
-            for (let i = 0; i < 3; i++) {
-                this.sparks.push({
-                    x: x2, y: y2,
-                    vx: (Math.random() - 0.5) * 5,
-                    vy: (Math.random() - 0.5) * 5,
-                    size: 1.5 + Math.random() * 1.5,
-                    life: 0,
-                    maxLife: 12 + Math.random() * 8
-                });
+            // Incandescent micro-spark embers
+            vec2 sparkUv = uv * vec2(12.0, 6.0) + vec2(0.0, u_time * 3.2);
+            float sparks = noise2D(sparkUv);
+            if (sparks > 0.82 && uv.y < 0.9) {
+                col += vec3(1.0, 0.9, 0.4) * (sparks - 0.82) * 8.0;
             }
+
+            float alpha = clamp(heat * 1.6, 0.0, 0.88);
+            gl_FragColor = vec4(col * alpha, alpha);
         }
+    `;
 
-        updateAndDraw(now) {
-            if (!this.isVisible) return;
-            const ctx = this.ctx;
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            ctx.clearRect(0, 0, w, h);
+    // --- B. PHOTOREALISTIC OCEAN WATER CAUSTICS SHADER (LOCALIZED CENTER) ---
+    const FRAGMENT_WATER_SRC = GLSL_COMMON_FUNCTIONS + `
+        void main() {
+            vec2 uv = v_uv;
+            float t = u_time * 0.9;
 
-            if (now - this.lastStrike > this.strikeInterval) {
-                this.spawnLightning();
-                this.lastStrike = now;
-                this.strikeInterval = 140 + Math.random() * 240;
+            // Center Vignette / Mask (Confine effect gracefully to card center)
+            vec2 centerDist = (uv - vec2(0.5, 0.5)) * vec2(1.2, 1.7);
+            float centerMask = 1.0 - smoothstep(0.18, 0.48, length(centerDist));
+
+            // Mouse displacement ripple
+            vec2 mouseUv = u_mouse / u_resolution;
+            float mDist = length(uv - mouseUv);
+            vec2 ripple = (uv - mouseUv) * sin(mDist * 25.0 - t * 4.0) * (1.0 - smoothstep(0.0, 0.35, mDist)) * 0.04;
+            vec2 p = uv * 3.5 + ripple;
+
+            // Voronoi Caustic Waves simulation
+            vec2 p1 = p + vec2(cos(t * 0.7), sin(t * 0.6)) * 0.6;
+            vec2 p2 = p * 1.4 - vec2(sin(t * 0.5), cos(t * 0.8)) * 0.8;
+
+            float c1 = fbm(p1);
+            float c2 = fbm(p2);
+            float caustic = pow(abs(c1 - c2), 0.65);
+            caustic = smoothstep(0.1, 0.7, caustic);
+
+            // Water depth gradient
+            vec3 deepWater = vec3(0.02, 0.08, 0.22);
+            vec3 midWater = vec3(0.05, 0.35, 0.7);
+            vec3 causticHighlights = vec3(0.35, 0.85, 1.0);
+            vec3 sunGlint = vec3(1.0, 1.0, 1.0);
+
+            vec3 col = mix(deepWater, midWater, 1.0 - uv.y);
+            col += causticHighlights * (1.0 - caustic) * 0.95;
+
+            // Shimmering water crest
+            float waveSurface = sin(uv.x * 12.0 + t * 2.0) * 0.03 + 0.55;
+            if (uv.y > waveSurface && uv.y < waveSurface + 0.1) {
+                float crest = smoothstep(waveSurface, waveSurface + 0.05, uv.y);
+                col = mix(col, sunGlint, crest * 0.5);
             }
 
-            ctx.globalCompositeOperation = 'lighter';
-
-            // Draw Bolts using Fast Dual-Stroke (No heavy shadowBlur)
-            for (let b = this.bolts.length - 1; b >= 0; b--) {
-                const bolt = this.bolts[b];
-                bolt.life++;
-                const alpha = 1 - (bolt.life / bolt.maxLife);
-
-                if (alpha <= 0) {
-                    this.bolts.splice(b, 1);
-                    continue;
-                }
-
-                ctx.save();
-                ctx.globalAlpha = alpha;
-
-                // 1. Wide outer neon glow pass (GPU fast)
-                ctx.strokeStyle = bolt.color;
-                ctx.lineWidth = 5 * alpha;
-                ctx.beginPath();
-                ctx.moveTo(bolt.points[0].x, bolt.points[0].y);
-                for (let i = 1; i < bolt.points.length; i++) {
-                    ctx.lineTo(bolt.points[i].x, bolt.points[i].y);
-                }
-                ctx.stroke();
-
-                // 2. White-hot sharp inner core
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.6 * alpha;
-                ctx.stroke();
-
-                ctx.restore();
-            }
-
-            // Draw Sparks
-            for (let s = this.sparks.length - 1; s >= 0; s--) {
-                const spark = this.sparks[s];
-                spark.life++;
-                spark.x += spark.vx;
-                spark.y += spark.vy;
-                spark.vx *= 0.94;
-                spark.vy *= 0.94;
-
-                const alpha = 1 - (spark.life / spark.maxLife);
-                if (alpha <= 0) {
-                    this.sparks.splice(s, 1);
-                    continue;
-                }
-
-                ctx.fillStyle = '#fef08a';
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.globalAlpha = 1;
-            ctx.globalCompositeOperation = 'source-over';
+            float alpha = clamp((0.35 + (1.0 - caustic) * 0.5) * centerMask, 0.0, 0.85);
+            gl_FragColor = vec4(col * alpha, alpha);
         }
-    }
+    `;
 
-    // --- C. TOXIC ACID SIMULATOR ---
-    class ToxicAcidSimulator {
-        constructor(canvas) {
+    // --- C. PULSING DIELECTRIC PLASMA & SCATTERED SPARKS LIGHTNING SHADER ---
+    const FRAGMENT_LIGHTNING_SRC = GLSL_COMMON_FUNCTIONS + `
+        void main() {
+            vec2 uv = v_uv;
+            float t = u_time * 2.2;
+
+            // Rhythmic pulse (نبض) and intermittent lightning discharge
+            float pulseWave = pow(max(0.0, sin(t * 3.2)), 14.0);
+            float erraticFlash = pow(fract(sin(floor(t * 6.5) * 43758.5453)), 18.0) * 1.5;
+            float totalPulse = clamp(pulseWave + erraticFlash, 0.0, 1.8);
+
+            // Thin, dynamic, branching plasma discharge paths
+            float boltNoise1 = fbm(vec2(uv.x * 5.0, t * 2.2));
+            float boltNoise2 = fbm(vec2(uv.x * 8.0 + 15.0, t * 3.0));
+            float bolt1 = abs(uv.y - 0.5 + boltNoise1 * 0.35);
+            float bolt2 = abs(uv.y - 0.45 + boltNoise2 * 0.4);
+
+            // High-voltage thin plasma core (thinner, sharp)
+            float intensity1 = (0.007 / (bolt1 + 0.006)) * totalPulse;
+            float intensity2 = (0.004 / (bolt2 + 0.006)) * totalPulse;
+
+            vec3 coreWhite = vec3(1.0, 1.0, 1.0);
+            vec3 cyanPlasma = vec3(0.25, 0.8, 1.0);
+            vec3 amberElectric = vec3(0.95, 0.75, 0.2);
+
+            vec3 col = coreWhite * pow(intensity1 + intensity2, 1.6);
+            col += cyanPlasma * (intensity1 * 1.4 + intensity2);
+
+            // Distributed scattered electrical micro-sparks across the entire card
+            vec2 sparkGrid = uv * vec2(16.0, 10.0);
+            float sparkSeed = fract(sin(dot(floor(sparkGrid) + floor(t * 8.0), vec2(12.9898, 78.233))) * 43758.5453);
+            vec2 sparkLocal = fract(sparkGrid) - 0.5;
+            float sparkDist = length(sparkLocal);
+
+            if (sparkSeed > 0.82 && sparkDist < 0.3) {
+                float sparkGlow = (1.0 - sparkDist / 0.3) * (sparkSeed - 0.82) * 5.5;
+                vec3 sparkCol = (fract(sparkSeed * 10.0) > 0.4) ? cyanPlasma : amberElectric;
+                col += sparkCol * sparkGlow;
+                col += coreWhite * (sparkGlow * 0.6);
+            }
+
+            float alpha = clamp(intensity1 + intensity2 + (totalPulse * 0.25) + length(col) * 0.3, 0.0, 0.9);
+            gl_FragColor = vec4(col * alpha, alpha);
+        }
+    `;
+
+    // --- D. VIBRANT VISCOUS TOXIC ACID & FUMES SHADER ---
+    const FRAGMENT_TOXIC_SRC = GLSL_COMMON_FUNCTIONS + `
+        void main() {
+            vec2 uv = v_uv;
+            float t = u_time * 0.95;
+
+            // Rich organic swirling acidic fluid cells
+            vec2 p = uv * vec2(3.0, 2.5);
+            float n1 = fbm(p + vec2(0.0, t * 0.7));
+            float n2 = fbm(p * 1.8 + vec2(n1, -t * 0.5));
+            float n3 = fbm(p * 2.4 + vec2(n2 * 0.6, n1 * 0.6 + t * 0.4));
+            float acidFluid = fbm(p + vec2(n2 * 0.8, n3 * 0.7));
+
+            // Acidic slime vibrant color spectrum
+            vec3 darkAcid = vec3(0.05, 0.25, 0.08);
+            vec3 vibrantGreen = vec3(0.35, 0.95, 0.18);
+            vec3 bioGlow = vec3(0.75, 1.0, 0.25);
+            vec3 hotYellowGreen = vec3(0.9, 1.0, 0.4);
+
+            float depth = smoothstep(0.15, 0.75, acidFluid);
+            vec3 col = mix(darkAcid, vibrantGreen, depth);
+
+            // Rich rising effervescent bubbles across multiple scales
+            float bubbleNoise1 = noise2D(uv * vec2(12.0, 14.0) + vec2(0.0, -t * 2.2));
+            float bubbleNoise2 = noise2D(uv * vec2(20.0, 24.0) + vec2(t * 0.5, -t * 3.0));
+
+            if (bubbleNoise1 > 0.74) {
+                col = mix(col, bioGlow, (bubbleNoise1 - 0.74) * 4.5);
+            }
+            if (bubbleNoise2 > 0.80) {
+                col = mix(col, hotYellowGreen, (bubbleNoise2 - 0.80) * 5.5);
+            }
+
+            // Glowing corrosive acid edge highlights
+            float edgeGlow = smoothstep(0.65, 0.85, acidFluid);
+            col += bioGlow * edgeGlow * 0.55;
+
+            float alpha = clamp(0.42 + depth * 0.52, 0.0, 0.92);
+            gl_FragColor = vec4(col * alpha, alpha);
+        }
+    `;
+
+    // =========================================================================
+    // 2. ULTRA-OPTIMIZED WEBGL RENDERER CONTROLLER
+    // =========================================================================
+    class WebGLShaderRenderer {
+        constructor(canvas, fragmentShaderSrc) {
             this.canvas = canvas;
-            this.ctx = canvas.getContext('2d', { alpha: true });
-            this.bubbles = [];
-            this.drips = [];
-            this.maxBubbles = 16;
+            this.gl = canvas.getContext('webgl', { alpha: true, antialias: false, powerPreference: 'low-power' })
+                   || canvas.getContext('experimental-webgl');
             this.isVisible = true;
-            this.init();
-        }
+            this.startTime = performance.now();
+            this.mouseX = 0;
+            this.mouseY = 0;
+            this.program = null;
 
-        init() {
-            for (let i = 0; i < this.maxBubbles; i++) this.bubbles.push(this.createBubble(true));
-            for (let i = 0; i < 3; i++) this.drips.push(this.createDrip(i));
-        }
-
-        createBubble(initial = false) {
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            return {
-                x: Math.random() * w,
-                y: initial ? Math.random() * h : h + 8,
-                vy: -0.7 - Math.random() * 1.5,
-                wobbleSpeed: 0.04 + Math.random() * 0.06,
-                wobbleAmp: 0.7 + Math.random() * 1.2,
-                size: 3 + Math.random() * 6,
-                life: initial ? Math.random() * 70 : 0,
-                maxLife: 55 + Math.random() * 45,
-                seed: Math.random() * 100
-            };
-        }
-
-        createDrip(idx) {
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            return {
-                x: w * (0.25 + idx * 0.28) + (Math.random() - 0.5) * 20,
-                y: h - 2,
-                length: 0,
-                maxLength: 16 + Math.random() * 14,
-                state: 'growing',
-                dropY: 0,
-                dropVy: 0,
-                speed: 0.2 + Math.random() * 0.3
-            };
-        }
-
-        updateAndDraw() {
-            if (!this.isVisible) return;
-            const ctx = this.ctx;
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            ctx.clearRect(0, 0, w, h);
-
-            ctx.globalCompositeOperation = 'lighter';
-
-            // Draw Rising Toxic Bubbles
-            for (let i = 0; i < this.bubbles.length; i++) {
-                const b = this.bubbles[i];
-                b.life++;
-                b.y += b.vy;
-                b.x += Math.sin(b.life * b.wobbleSpeed + b.seed) * b.wobbleAmp;
-
-                const progress = b.life / b.maxLife;
-                if (progress >= 1 || b.y < -10) {
-                    this.bubbles[i] = this.createBubble();
-                    continue;
-                }
-
-                const alpha = progress < 0.2 ? progress / 0.2 : progress > 0.8 ? (1 - progress) / 0.2 : 0.8;
-
-                ctx.save();
-                ctx.strokeStyle = '#a3e635';
-                ctx.lineWidth = 1.6;
-                ctx.globalAlpha = alpha * 0.85;
-                
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
-                ctx.fill();
-
-                ctx.fillStyle = '#ffffff';
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(b.x - b.size * 0.3, b.y - b.size * 0.3, b.size * 0.25, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+            if (!this.gl) {
+                console.warn('WebGL not supported, falling back.');
+                return;
             }
 
-            // Draw Slime Drips
-            for (let i = 0; i < this.drips.length; i++) {
-                const d = this.drips[i];
-                ctx.save();
-                ctx.fillStyle = '#a3e635';
+            this.initGL(fragmentShaderSrc);
+            this.bindEvents();
+        }
 
-                if (d.state === 'growing') {
-                    d.length += d.speed;
-                    if (d.length >= d.maxLength) {
-                        d.state = 'falling';
-                        d.dropY = d.y + d.length;
-                        d.dropVy = 1.5;
-                    }
-                    ctx.beginPath();
-                    ctx.arc(d.x, d.y + d.length, 3, 0, Math.PI);
-                    ctx.lineTo(d.x - 1.5, d.y);
-                    ctx.lineTo(d.x + 1.5, d.y);
-                    ctx.closePath();
-                    ctx.fill();
-                } else if (d.state === 'falling') {
-                    d.dropY += d.dropVy;
-                    d.dropVy += 0.3;
-
-                    ctx.beginPath();
-                    ctx.arc(d.x, d.dropY, 2.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    d.length *= 0.85;
-                    if (d.length > 2) {
-                        ctx.fillRect(d.x - 1.2, d.y, 2.4, d.length);
-                    }
-
-                    if (d.dropY > h + 25) {
-                        this.drips[i] = this.createDrip(i);
-                    }
-                }
-                ctx.restore();
+        compileShader(src, type) {
+            const gl = this.gl;
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, src);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('GLSL Error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
             }
+            return shader;
+        }
 
-            ctx.globalAlpha = 1;
-            ctx.globalCompositeOperation = 'source-over';
+        initGL(fragmentSrc) {
+            const gl = this.gl;
+            const vs = this.compileShader(VERTEX_SHADER_SRC, gl.VERTEX_SHADER);
+            const fs = this.compileShader(fragmentSrc, gl.FRAGMENT_SHADER);
+            if (!vs || !fs) return;
+
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vs);
+            gl.attachShader(prog, fs);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                console.error('Program Link Error:', gl.getProgramInfoLog(prog));
+                return;
+            }
+            this.program = prog;
+
+            // Fullscreen Quad (2 Triangles)
+            const quadVertices = new Float32Array([
+                -1.0, -1.0,
+                 1.0, -1.0,
+                -1.0,  1.0,
+                -1.0,  1.0,
+                 1.0, -1.0,
+                 1.0,  1.0
+            ]);
+
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.STATIC_DRAW);
+
+            const aPos = gl.getAttribLocation(prog, 'a_position');
+            gl.enableVertexAttribArray(aPos);
+            gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+            // Cache Uniform Locations
+            this.uResolutionLoc = gl.getUniformLocation(prog, 'u_resolution');
+            this.uTimeLoc = gl.getUniformLocation(prog, 'u_time');
+            this.uMouseLoc = gl.getUniformLocation(prog, 'u_mouse');
+
+            // Set blend mode
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        }
+
+        bindEvents() {
+            this.canvas.addEventListener('mousemove', (e) => {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = (e.clientX - rect.left);
+                this.mouseY = (rect.height - (e.clientY - rect.top)); // WebGL inverted Y
+            }, { passive: true });
+
+            this.canvas.addEventListener('mouseleave', () => {
+                this.mouseX = -999;
+                this.mouseY = -999;
+            }, { passive: true });
+        }
+
+        render(now) {
+            if (!this.isVisible || !this.gl || !this.program) return;
+            const gl = this.gl;
+            const w = this.canvas.width;
+            const h = this.canvas.height;
+
+            gl.viewport(0, 0, w, h);
+            gl.useProgram(this.program);
+
+            const elapsedSec = (now - this.startTime) * 0.001;
+            gl.uniform2f(this.uResolutionLoc, w, h);
+            gl.uniform1f(this.uTimeLoc, elapsedSec);
+            gl.uniform2f(this.uMouseLoc, this.mouseX, this.mouseY);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
     }
 
-    // --- D. FLUID WATER WAVE SIMULATOR ---
-    class WaterWaveSimulator {
-        constructor(canvas) {
-            this.canvas = canvas;
-            this.ctx = canvas.getContext('2d', { alpha: true });
-            this.step = 0;
-            this.droplets = [];
-            this.maxDroplets = 14;
-            this.isVisible = true;
-            this.init();
-        }
-
-        init() {
-            for (let i = 0; i < this.maxDroplets; i++) {
-                this.droplets.push(this.createDroplet(true));
-            }
-        }
-
-        createDroplet(initial = false) {
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            return {
-                x: Math.random() * w,
-                y: initial ? Math.random() * h : h + 8,
-                vy: -0.5 - Math.random() * 1.2,
-                vx: (Math.random() - 0.5) * 0.5,
-                size: 2.0 + Math.random() * 5,
-                life: initial ? Math.random() * 60 : 0,
-                maxLife: 45 + Math.random() * 35
-            };
-        }
-
-        updateAndDraw() {
-            if (!this.isVisible) return;
-            const ctx = this.ctx;
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            ctx.clearRect(0, 0, w, h);
-            this.step += 0.03;
-
-            ctx.globalCompositeOperation = 'lighter';
-
-            // Fast Wave Layer
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(0, h);
-            for (let x = 0; x <= w; x += 15) {
-                const y = h * 0.74 + Math.sin(x * 0.02 + this.step) * 12 + Math.cos(x * 0.01 + this.step * 0.8) * 6;
-                ctx.lineTo(x, y);
-            }
-            ctx.lineTo(w, h);
-            ctx.closePath();
-            const grad1 = ctx.createLinearGradient(0, h * 0.65, 0, h);
-            grad1.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
-            grad1.addColorStop(1, 'rgba(99, 102, 241, 0.65)');
-            ctx.fillStyle = grad1;
-            ctx.fill();
-            ctx.restore();
-
-            // Floating Water Droplets
-            for (let i = 0; i < this.droplets.length; i++) {
-                const d = this.droplets[i];
-                d.life++;
-                d.y += d.vy;
-                d.x += d.vx;
-
-                const progress = d.life / d.maxLife;
-                if (progress >= 1 || d.y < -10) {
-                    this.droplets[i] = this.createDroplet();
-                    continue;
-                }
-
-                const alpha = Math.sin(progress * Math.PI) * 0.75;
-                ctx.save();
-                ctx.strokeStyle = '#93c5fd';
-                ctx.lineWidth = 1.4;
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            ctx.globalAlpha = 1;
-            ctx.globalCompositeOperation = 'source-over';
-        }
-    }
-
-    // --- E. FULL CARD CYBER EKG SIMULATOR (ZERO-LAG DUAL STROKE) ---
+    // --- EKG MONITOR DUAL-STROKE SIMULATOR ---
     class EkgMonitorSimulator {
         constructor(canvas) {
             this.canvas = canvas;
@@ -598,105 +451,86 @@
             if (!badge) return;
             if (state === 'normal') {
                 badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300';
-                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span class="font-mono">💚 VITALS: STABLE [78 BPM]</span>';
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
+                                   <span>سیستم پایدار (VITAL NORMAL)</span>`;
             } else {
-                badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-rose-500/30 text-rose-300 border border-rose-400/60 backdrop-blur-md flex items-center gap-2 shadow-lg shadow-rose-500/30 animate-pulse transition-all duration-300';
-                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span><span class="font-mono">🚨 CRITICAL FLATLINE [00 BPM]</span>';
+                badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300 animate-pulse';
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e]"></span>
+                                   <span>اضطرار SLA (CRITICAL ALERT)</span>`;
             }
         }
 
-        updateAndDraw(now) {
-            if (!this.isVisible) return;
+        render(now) {
+            if (!this.isVisible || !this.ctx) return;
             const ctx = this.ctx;
             const w = this.canvas.width;
             const h = this.canvas.height;
 
-            this.scanX = (this.scanX + this.speed) % w;
-            const newY = this.generateNextY(now);
-            this.history.push({ x: this.scanX, y: newY, time: now, state: this.state });
-
-            if (this.history.length > w * 1.5) {
-                this.history.shift();
+            const nextY = this.generateNextY(now);
+            this.scanX += this.speed;
+            if (this.scanX > w) {
+                this.scanX = 0;
+                this.history = [];
             }
+
+            this.history.push({ x: this.scanX, y: nextY });
 
             ctx.clearRect(0, 0, w, h);
 
-            const isNormal = this.state === 'normal';
-            const strokeColor = isNormal ? '#22c55e' : '#ef4444';
-            const glowColor = isNormal ? 'rgba(74, 222, 128, 0.4)' : 'rgba(244, 63, 94, 0.4)';
-
-            // Ambient background glow (GPU Fast radial gradient)
+            // Technical Grid Background
             ctx.save();
-            const grad = ctx.createRadialGradient(this.scanX, h * 0.58, 0, this.scanX, h * 0.58, 220);
-            grad.addColorStop(0, isNormal ? 'rgba(34, 197, 94, 0.09)' : 'rgba(239, 68, 68, 0.12)');
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, w, h);
-            ctx.restore();
-
-            // Cyber Telemetry Grid
-            ctx.save();
-            ctx.strokeStyle = 'rgba(99, 102, 241, 0.05)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
             ctx.lineWidth = 1;
-            for (let x = 0; x < w; x += 40) {
+            const gridSpacing = 24;
+            for (let gx = 0; gx < w; gx += gridSpacing) {
                 ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, h);
+                ctx.moveTo(gx, 0);
+                ctx.lineTo(gx, h);
                 ctx.stroke();
             }
-            for (let y = 0; y < h; y += 30) {
+            for (let gy = 0; gy < h; gy += gridSpacing) {
                 ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(w, y);
+                ctx.moveTo(0, gy);
+                ctx.lineTo(w, gy);
                 ctx.stroke();
             }
             ctx.restore();
 
             if (this.history.length < 2) return;
 
-            // Dual-Stroke EKG Waveform (10x faster than shadowBlur)
+            const isCrit = this.state === 'critical';
+            const mainColor = isCrit ? '#f43f5e' : '#10b981';
+
             ctx.save();
-            ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
 
-            // Pass 1: Wide Glowing Halo Stroke
-            ctx.strokeStyle = glowColor;
-            ctx.lineWidth = 6;
+            // Wide Laser Glow Pass
+            ctx.strokeStyle = mainColor;
+            ctx.lineWidth = 4;
+            ctx.globalAlpha = 0.45;
             ctx.beginPath();
-            let first = true;
+            ctx.moveTo(this.history[0].x, this.history[0].y);
             for (let i = 1; i < this.history.length; i++) {
-                const p1 = this.history[i - 1];
-                const p2 = this.history[i];
-                if (Math.abs(p2.x - p1.x) > 25) { first = true; continue; }
-                if (first) { ctx.moveTo(p1.x, p1.y); first = false; }
-                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(this.history[i].x, this.history[i].y);
             }
             ctx.stroke();
 
-            // Pass 2: Sharp Inner Laser Stroke
-            ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = 2.4;
-            ctx.beginPath();
-            first = true;
-            for (let i = 1; i < this.history.length; i++) {
-                const p1 = this.history[i - 1];
-                const p2 = this.history[i];
-                if (Math.abs(p2.x - p1.x) > 25) { first = true; continue; }
-                if (first) { ctx.moveTo(p1.x, p1.y); first = false; }
-                ctx.lineTo(p2.x, p2.y);
-            }
+            // White-Hot Core Laser
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.6;
+            ctx.globalAlpha = 0.95;
             ctx.stroke();
 
-            // Leading Scan Dot
+            // Leading Scan Cursor Dot
             const latest = this.history[this.history.length - 1];
             if (latest) {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(latest.x, latest.y, 4, 0, Math.PI * 2);
+                ctx.arc(latest.x, latest.y, 3, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Scanline guide
-                ctx.strokeStyle = strokeColor;
+                ctx.strokeStyle = mainColor;
                 ctx.lineWidth = 1;
                 ctx.globalAlpha = 0.25;
                 ctx.beginPath();
@@ -710,39 +544,38 @@
     }
 
     // =========================================================================
-    // 2. VIEWPORT INTERSECTION OBSERVER & 60 FPS RENDER LOOP
+    // 3. INTERSECTION OBSERVER & 60 FPS RENDER LOOP
     // =========================================================================
+    const activeRenderers = new Map();
 
-    const activeSimulators = new Map();
-
-    // IntersectionObserver to pause off-screen canvas loops completely
     const viewportObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            const sim = activeSimulators.get(entry.target);
-            if (sim) {
-                sim.isVisible = entry.isIntersecting;
+            const r = activeRenderers.get(entry.target);
+            if (r) {
+                r.isVisible = entry.isIntersecting;
             }
         });
-    }, { rootMargin: '50px' });
+    }, { rootMargin: '60px' });
 
     function initElementalCanvases() {
         const canvases = document.querySelectorAll('.element-vfx-canvas');
         canvases.forEach(canvas => {
-            if (activeSimulators.has(canvas)) return;
+            if (activeRenderers.has(canvas)) return;
 
             const element = canvas.getAttribute('data-element') || 'none';
             const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.max(rect.width, 240);
-            canvas.height = Math.max(rect.height, 140);
+            canvas.width = Math.max(Math.floor(rect.width), 260);
+            canvas.height = Math.max(Math.floor(rect.height), 150);
 
-            let sim = null;
-            if (element === 'fire') sim = new FireSimulator(canvas);
-            else if (element === 'lightning') sim = new LightningSimulator(canvas);
-            else if (element === 'toxic') sim = new ToxicAcidSimulator(canvas);
-            else if (element === 'water') sim = new WaterWaveSimulator(canvas);
+            let shaderSrc = null;
+            if (element === 'fire') shaderSrc = FRAGMENT_FIRE_SRC;
+            else if (element === 'water') shaderSrc = FRAGMENT_WATER_SRC;
+            else if (element === 'lightning') shaderSrc = FRAGMENT_LIGHTNING_SRC;
+            else if (element === 'toxic') shaderSrc = FRAGMENT_TOXIC_SRC;
 
-            if (sim) {
-                activeSimulators.set(canvas, sim);
+            if (shaderSrc) {
+                const renderer = new WebGLShaderRenderer(canvas, shaderSrc);
+                activeRenderers.set(canvas, renderer);
                 viewportObserver.observe(canvas);
             }
         });
@@ -750,18 +583,18 @@
         // Initialize EKG Canvases
         const ekgCanvases = document.querySelectorAll('.hero-ekg-canvas');
         ekgCanvases.forEach(canvas => {
-            if (activeSimulators.has(canvas)) return;
+            if (activeRenderers.has(canvas)) return;
             const parent = canvas.parentElement || canvas;
             const rect = parent.getBoundingClientRect();
-            canvas.width = Math.max(rect.width, 600);
-            canvas.height = Math.max(rect.height, 220);
+            canvas.width = Math.max(Math.floor(rect.width), 600);
+            canvas.height = Math.max(Math.floor(rect.height), 220);
             const sim = new EkgMonitorSimulator(canvas);
-            activeSimulators.set(canvas, sim);
+            activeRenderers.set(canvas, sim);
             viewportObserver.observe(canvas);
         });
     }
 
-    // Main 60-120 FPS Render Loop with Page Visibility Sleep & Viewport Culling
+    // Main Render Loop with Page Visibility Sleep
     let isTabVisible = !document.hidden;
     let animFrameId = null;
 
@@ -778,14 +611,14 @@
             return;
         }
 
-        activeSimulators.forEach((sim, canvas) => {
+        activeRenderers.forEach((renderer, canvas) => {
             if (!document.body.contains(canvas)) {
                 viewportObserver.unobserve(canvas);
-                activeSimulators.delete(canvas);
+                activeRenderers.delete(canvas);
                 return;
             }
-            if (sim.isVisible) {
-                sim.updateAndDraw(now);
+            if (renderer.isVisible) {
+                renderer.render(now);
             }
         });
         animFrameId = requestAnimationFrame(renderVfxLoop);
@@ -793,9 +626,8 @@
     animFrameId = requestAnimationFrame(renderVfxLoop);
 
     // =========================================================================
-    // 3. PASSIVE RAF-THROTTLED 3D TILT
+    // 4. PASSIVE RAF-THROTTLED 3D TILT & INTERACTION
     // =========================================================================
-
     function init3DTilt() {
         const cards = document.querySelectorAll('.gamer-card-3d:not([data-tilt-initialized])');
         cards.forEach(card => {
@@ -812,15 +644,15 @@
                         const rect = card.getBoundingClientRect();
                         const x = lastEvent.clientX - rect.left;
                         const y = lastEvent.clientY - rect.top;
-                        
+
                         const centerX = rect.width / 2;
                         const centerY = rect.height / 2;
-                        
+
                         const rotateX = ((y - centerY) / centerY) * -8;
                         const rotateY = ((x - centerX) / centerX) * 8;
 
                         card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px) scale(1.02)`;
-                        
+
                         const glareX = (x / rect.width) * 100;
                         const glareY = (y / rect.height) * 100;
                         card.style.setProperty('--glare-x', `${glareX.toFixed(1)}%`);
@@ -838,13 +670,13 @@
         });
     }
 
-    // --- 4. Digital Odometer Counter ---
+    // --- 5. Digital Odometer Counter ---
     function initCounters() {
         const counters = document.querySelectorAll('.gamer-counter:not([data-counter-initialized])');
         counters.forEach(counter => {
             const targetText = counter.getAttribute('data-target') || counter.textContent.trim();
             const targetNumber = parseInt(targetText.replace(/[^\d]/g, ''), 10);
-            
+
             if (isNaN(targetNumber)) return;
             counter.setAttribute('data-counter-initialized', 'true');
 
@@ -856,7 +688,7 @@
                 const progress = Math.min(elapsed / duration, 1);
                 const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
                 const currentVal = Math.floor(easeOut * targetNumber);
-                
+
                 counter.textContent = currentVal.toLocaleString('fa-IR');
 
                 if (progress < 1) {
@@ -869,13 +701,13 @@
         });
     }
 
-    // --- 5. Cockpit Aura & Telemetry HUD ---
-    window.setCockpitAura = function(auraName) {
+    // --- 6. Cockpit Aura & Telemetry HUD ---
+    window.setCockpitAura = function (auraName) {
         const root = document.getElementById('cyber-cockpit-root') || document.documentElement;
         root.setAttribute('data-aura', auraName);
         try {
             localStorage.setItem('tickethub_cockpit_aura', auraName);
-        } catch(e) {}
+        } catch (e) { }
 
         document.querySelectorAll('.aura-btn').forEach(btn => {
             if (btn.getAttribute('data-aura-target') === auraName) {
@@ -890,7 +722,7 @@
         let savedAura = 'water';
         try {
             savedAura = localStorage.getItem('tickethub_cockpit_aura') || 'water';
-        } catch(e) {}
+        } catch (e) { }
         window.setCockpitAura(savedAura);
     }
 
@@ -900,7 +732,7 @@
         if (!pingEl || telemetryInterval) return;
 
         telemetryInterval = setInterval(() => {
-            if (document.hidden) return; // Completely pause calculations when tab is hidden
+            if (document.hidden) return;
             const currentPing = document.getElementById('hud-ping-val');
             if (currentPing) {
                 const basePing = 18;
@@ -930,15 +762,15 @@
 
     observer.observe(document.body, { childList: true, subtree: true });
 
-    window.addEventListener('resize', () => {
-        activeSimulators.forEach((sim, canvas) => {
-            const parent = canvas.parentElement || canvas;
-            const rect = parent.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-        });
-    }, { passive: true });
+    // Global ESC Key Listener for Modals
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            const openModalCloseBtn = document.querySelector('.modal-hud-chassis button[class*="hover:text-cyan-300"], .modal-hud-chassis button[class*="group"], .modal-hud-chassis .btn-cyber-ghost');
+            if (openModalCloseBtn) {
+                openModalCloseBtn.click();
+            }
+        }
+    });
 
     window.initGamerHud = initAll;
 })();
-

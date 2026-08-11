@@ -89,6 +89,10 @@ namespace TicketHub.Tests.bUnit
                           .ReturnsAsync(true);
             Services.AddSingleton(mockPermService.Object);
 
+            // Register default Mock ICacheService
+            var mockCacheService = new Mock<TicketHub.Application.Interfaces.ICacheService>();
+            Services.AddSingleton(mockCacheService.Object);
+
             // Register all FluentValidation validators from the Application assembly
             Services.AddValidatorsFromAssembly(typeof(RoleDtoValidator).Assembly);
         }

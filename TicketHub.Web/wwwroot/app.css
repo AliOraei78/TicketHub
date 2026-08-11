@@ -694,4 +694,189 @@ nav a.active svg,
     transform: scale(1.25);
     outline: 2px solid rgba(255, 255, 255, 0.8);
     outline-offset: 2px;
+}
+
+/* ==========================================================================
+   CYBER TACTICAL BUTTONS & QUANTUM WARP MODAL SYSTEM
+   ========================================================================== */
+
+/* 1. Cyber Chamfered 45° Buttons with Hologram Scanline Sheen */
+.btn-cyber-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.6rem;
+    font-weight: 900;
+    font-size: 0.875rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #4f46e5 0%, #2563eb 50%, #06b6d4 100%);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    border: none;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-cyber-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-25deg);
+    transition: all 0.6s ease;
+}
+
+.btn-cyber-primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(6, 182, 212, 0.5), 0 0 15px rgba(255, 255, 255, 0.4);
+    filter: brightness(1.1);
+}
+
+.btn-cyber-primary:hover::before {
+    left: 180%;
+}
+
+.btn-cyber-primary:active {
+    transform: translateY(1px) scale(0.97);
+}
+
+/* Secondary Ghost Cyber Button */
+.btn-cyber-ghost {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.4rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #cbd5e1;
+    background: rgba(9, 14, 29, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-cyber-ghost:hover {
+    background: rgba(15, 23, 42, 0.95);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-cyber-ghost:active {
+    transform: translateY(1px) scale(0.97);
+}
+
+/* 2. Quantum Warp Modal Animations */
+@keyframes modalWarpIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.84) translateY(28px);
+        filter: blur(14px) brightness(1.6);
+    }
+    55% {
+        filter: blur(1px) brightness(1.15);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0px) brightness(1);
+    }
+}
+
+@keyframes modalBackdropIn {
+    0% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    100% {
+        opacity: 1;
+        backdrop-filter: blur(16px);
+    }
+}
+
+.modal-backdrop-quantum {
+    animation: modalBackdropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal-warp-container {
+    animation: modalWarpIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: center center;
+}
+
+/* Tactical HUD Cockpit Chassis */
+.modal-hud-chassis {
+    background: rgba(8, 12, 24, 0.97);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: 
+        0 25px 80px rgba(0, 0, 0, 0.95),
+        0 0 35px var(--cockpit-aura-bg, rgba(56, 189, 248, 0.15)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.modal-hud-chassis::before,
+.modal-hud-chassis::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.modal-hud-chassis::before {
+    top: 0;
+    right: 0;
+    border-top: 2px solid var(--cockpit-aura-primary, #38bdf8);
+    border-right: 2px solid var(--cockpit-aura-primary, #38bdf8);
+}
+
+.modal-hud-chassis::after {
+    bottom: 0;
+    left: 0;
+    border-bottom: 2px solid var(--cockpit-aura-primary, #38bdf8);
+    border-left: 2px solid var(--cockpit-aura-primary, #38bdf8);
+}
+
+/* Modal ESC Key Indicator */
+.esc-key-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.65rem;
+    font-family: monospace;
+    font-weight: 900;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Staggered Content Reveal */
+.stagger-item-1 { animation: staggerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.stagger-item-2 { animation: staggerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both; }
+.stagger-item-3 { animation: staggerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.stagger-item-4 { animation: staggerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+
+@keyframes staggerSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

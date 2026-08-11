@@ -6,29 +6,50 @@
 @if (IsOpen)
 {
     <SectionContent SectionName="RootModal">
-        <div class="fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-slate-950/70 backdrop-blur-md fade-in-item">
+        <div class="modal-backdrop-quantum fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-black/80 backdrop-blur-xl">
             <div class="absolute inset-0" @onclick="HandleCancel"></div>
 
-            <div class="relative z-[99999] w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl flex flex-col modal-content-animate border border-slate-200/80 my-0 select-none" dir="rtl">
+            <div class="modal-warp-container modal-hud-chassis relative z-[99999] w-full max-w-3xl max-h-[85vh] bg-[#090e1d]/98 rounded-3xl flex flex-col border border-cyan-500/40 my-0 select-none text-slate-200" dir="rtl">
 
-                <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
-                    <h2 class="text-xl font-bold text-slate-800">ایجاد تیکت پشتیبانی جدید</h2>
-                    <button type="button" @onclick="HandleCancel" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors focus-ring">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+                <div class="flex items-center justify-between px-6 py-5 border-b border-white/[0.08] bg-[#050811]/90 flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 rounded-2xl shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
+                                    [SYS // NEW_QUEST]
+                                </span>
+                                <h2 class="text-xl font-bold text-slate-100">ایجاد تیکت پشتیبانی جدید</h2>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5 font-normal">ثبت درخواست، گزارش باگ یا کوئست پشتیبانی</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="esc-key-badge hidden sm:inline-flex">ESC</span>
+                        <button type="button" @onclick="HandleCancel" class="group p-2 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 rounded-full transition-all focus-ring">
+                            <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <EditForm Model="@Model" OnSubmit="HandleSubmit" novalidate class="flex flex-col overflow-hidden flex-1">
                     <FluentValidationValidator />
 
                     <div class="overflow-y-auto p-6 pb-28 space-y-4 custom-scrollbar max-h-[70vh]">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">عنوان تیکت</label>
-                            <InputText @bind-Value="Model.Title" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="یک عنوان کوتاه بنویسید" />
-                            <ValidationMessage For="@(() => Model.Title)" class="text-red-500 text-rose-500 text-xs mt-1" />
+                        <div class="stagger-item-1">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">عنوان تیکت</label>
+                            <InputText @bind-Value="Model.Title" class="w-full h-[46px] px-4 border border-white/[0.1] rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="یک عنوان کوتاه بنویسید" />
+                            <ValidationMessage For="@(() => Model.Title)" class="text-red-500 text-rose-400 text-xs mt-1" />
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4 stagger-item-2">
                             <div>
                                 <SlideSelect TItem="PriorityDto" TValue="int?"
                                              Label="اولویت"
@@ -38,7 +59,7 @@
                                              ValueSelector="p => (int?)p.Id"
                                              TextSelector="p => p.Name"
                                              AllowClear="false" />
-                                <ValidationMessage For="@(() => Model.PriorityId)" class="text-red-500 text-rose-500 text-xs mt-1" />
+                                <ValidationMessage For="@(() => Model.PriorityId)" class="text-red-500 text-rose-400 text-xs mt-1" />
                             </div>
 
                             <div>
@@ -51,7 +72,7 @@
                                              ValueSelector="p => p.Id"
                                              TextSelector="p => p.Name"
                                              AllowClear="false" />
-                                <ValidationMessage For="@(() => Model.ProjectId)" class="text-red-500 text-rose-500 text-xs mt-1" />
+                                <ValidationMessage For="@(() => Model.ProjectId)" class="text-red-500 text-rose-400 text-xs mt-1" />
                             </div>
 
                             <div>
@@ -64,25 +85,32 @@
                                              ValueSelector="c => c.Id"
                                              TextSelector="c => c.Name"
                                              AllowClear="false" />
-                                <ValidationMessage For="@(() => Model.CategoryId)" class="text-red-500 text-rose-500 text-xs mt-1" />
+                                <ValidationMessage For="@(() => Model.CategoryId)" class="text-red-500 text-rose-400 text-xs mt-1" />
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">توضیحات تیکت</label>
-                            <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." />
-                            <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-rose-500 text-xs mt-1" />
+                        <div class="mt-4 stagger-item-3">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">توضیحات تیکت</label>
+                            <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-white/[0.1] rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." />
+                            <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-rose-400 text-xs mt-1" />
                         </div>
 
                         @if (DynamicFieldModels.Any())
                         {
-                            <DynamicFields Fields="DynamicFieldModels" ValidationErrors="DynamicValidationErrors" />
+                            <div class="stagger-item-4">
+                                <DynamicFields Fields="DynamicFieldModels" ValidationErrors="DynamicValidationErrors" />
+                            </div>
                         }
                     </div>
 
-                    <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
-                        <button type="button" @onclick="HandleCancel" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shadow-2xs focus-ring">انصراف</button>
-                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all focus-ring">ثبت تیکت</button>
+                    <div class="p-5 border-t border-white/[0.08] bg-[#050811]/90 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
+                        <button type="button" @onclick="HandleCancel" class="btn-cyber-ghost focus-ring">انصراف</button>
+                        <button type="submit" class="btn-cyber-primary focus-ring">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>ثبت تیکت</span>
+                        </button>
                     </div>
                 </EditForm>
             </div>

@@ -21,6 +21,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     [Inject] public IDispatcher Dispatcher { get; set; } = default!;
     [Inject] public IActionSubscriber ActionSubscriber { get; set; } = default!;
     [Inject] public ITicketEventBroker EventBroker { get; set; } = default!;
+    [Inject] public ICacheService CacheService { get; set; } = default!;
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
@@ -64,7 +65,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         ActionSubscriber.SubscribeToAction<SaveTicketSuccessAction>(this, async action =>
         {
             IsCreateModalOpen = false;
-            await LoadDashboardDataAsync();
+            await LoadDashboardDataAsync(forceRefresh: true);
             await InvokeAsync(StateHasChanged);
         });
 
@@ -97,7 +98,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     {
         await InvokeAsync(async () =>
         {
-            await LoadDashboardDataAsync();
+            await LoadDashboardDataAsync(forceRefresh: true);
             StateHasChanged();
         });
     }
@@ -109,12 +110,42 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         EventBroker.OnTransitionOccurred -= HandleLiveTicketEventAsync;
     }
 
-    protected async Task LoadDashboardDataAsync()
+    protected async Task LoadDashboardDataAsync(bool forceRefresh = false)
     {
         var authState = await AuthState;
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated != true) return;
+
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value
+                           ?? "0";
+
+        var cacheKey = $"dashboard_summary_{userIdString}";
+
+        if (!forceRefresh)
+        {
+            var cachedSummary = await CacheService.GetAsync<DashboardSummaryDto>(cacheKey);
+            if (cachedSummary != null)
+            {
+                TotalTickets = cachedSummary.TotalTickets;
+                NewTicketsCount = cachedSummary.NewTicketsCount;
+                InProgressCount = cachedSummary.InProgressCount;
+                OverdueCount = cachedSummary.OverdueCount;
+                CriticalAndOverdueCount = cachedSummary.CriticalAndOverdueCount;
+                SlaOnTimePercentage = cachedSummary.SlaOnTimePercentage;
+                TrendData = cachedSummary.TrendData;
+                PriorityStats = cachedSummary.PriorityStats;
+                ProjectStats = cachedSummary.ProjectStats;
+                RecentTickets = cachedSummary.RecentTickets;
+
+                CachedTrendLinePath = BuildSvgLinePath(TrendData, 400, 120);
+                CachedTrendAreaPath = BuildSvgAreaPath(TrendData, 400, 120);
+                CachedModalTrendLinePath = BuildSvgLinePath(TrendData, 600, 200);
+                CachedModalTrendAreaPath = BuildSvgAreaPath(TrendData, 600, 200);
+                return;
+            }
+        }
 
         var (tickets, total) = await TicketService.GetFilteredTicketsAsync(
             searchTerm: null,
@@ -132,7 +163,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
 
         SlaOnTimePercentage = TotalTickets > 0 ? (int)Math.Round((double)(TotalTickets - OverdueCount) * 100 / TotalTickets) : 100;
 
-        RecentTickets = tickets.Take(6);
+        RecentTickets = tickets.Take(6).ToList();
 
         var dbPriorities = (await PriorityService.GetAllAsync()).Where(p => p.IsActive).OrderByDescending(p => p.Level).ToList();
         PriorityStats = dbPriorities.Select(p =>
@@ -180,6 +211,23 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         CachedTrendAreaPath = BuildSvgAreaPath(TrendData, 400, 120);
         CachedModalTrendLinePath = BuildSvgLinePath(TrendData, 600, 200);
         CachedModalTrendAreaPath = BuildSvgAreaPath(TrendData, 600, 200);
+
+        // Store in sliding cache for 30 seconds
+        var summaryToCache = new DashboardSummaryDto
+        {
+            TotalTickets = TotalTickets,
+            NewTicketsCount = NewTicketsCount,
+            InProgressCount = InProgressCount,
+            OverdueCount = OverdueCount,
+            CriticalAndOverdueCount = CriticalAndOverdueCount,
+            SlaOnTimePercentage = SlaOnTimePercentage,
+            TrendData = TrendData,
+            PriorityStats = PriorityStats,
+            ProjectStats = ProjectStats,
+            RecentTickets = RecentTickets.ToList()
+        };
+
+        await CacheService.SetAsync(cacheKey, summaryToCache, TimeSpan.FromSeconds(30));
     }
 
     protected async Task OpenCreateModal()
