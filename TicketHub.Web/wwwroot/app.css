@@ -283,6 +283,7 @@ h1:focus-visible {
     padding: 2.5px;
     background: conic-gradient(from var(--border-angle), transparent 30%, #38bdf8 60%, #6366f1 85%, #93c5fd 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     animation: rotateBorderAngle 5s linear infinite;
@@ -312,6 +313,7 @@ h1:focus-visible {
     padding: 2.5px;
     background: conic-gradient(from var(--border-angle), transparent 35%, #06b6d4 65%, #38bdf8 85%, #fef08a 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     animation: rotateBorderAngle 2.5s linear infinite;
@@ -341,6 +343,7 @@ h1:focus-visible {
     padding: 2.5px;
     background: conic-gradient(from var(--border-angle), transparent 35%, #10b981 65%, #22c55e 85%, #a3e635 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     animation: rotateBorderAngle 3.5s linear infinite;
@@ -370,6 +373,7 @@ h1:focus-visible {
     padding: 2.5px;
     background: conic-gradient(from var(--border-angle), transparent 25%, #f97316 55%, #ef4444 80%, #fef08a 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     animation: rotateBorderAngle 2.2s linear infinite;
@@ -879,4 +883,249 @@ nav a.active svg,
         opacity: 1;
         transform: translateY(0);
     }
-}
+}
+
+/* ==========================================================================
+   MICRO-SPARK IONIZATION & TACTICAL CYBER CHECKBOX
+   ========================================================================== */
+
+/* 1. Field Electric Micro-Spark on Focus */
+@keyframes sparkJitter {
+    0%, 100% {
+        opacity: 0.95;
+        transform: scale(1);
+        filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9)) drop-shadow(0 0 12px rgba(99, 102, 241, 0.8));
+    }
+    25% {
+        opacity: 0.35;
+        transform: scale(0.9);
+        filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.6));
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 10px rgba(56, 189, 248, 1)) drop-shadow(0 0 18px rgba(34, 211, 238, 0.9));
+    }
+    75% {
+        opacity: 0.55;
+        transform: scale(0.95);
+        filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.7));
+    }
+}
+
+.field-spark-wrap {
+    position: relative;
+}
+
+.field-spark-wrap:focus-within::before,
+.field-spark-wrap:focus-within::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8, 0 0 14px #6366f1, 0 0 20px #22d3ee;
+    pointer-events: none;
+    z-index: 25;
+    animation: sparkJitter 0.5s infinite ease-in-out;
+}
+
+.field-spark-wrap:focus-within::before {
+    top: -2px;
+    right: 14px;
+}
+
+.field-spark-wrap:focus-within::after {
+    bottom: -2px;
+    left: 14px;
+    animation-delay: 0.25s;
+}
+
+/* 2. Tactical Cyber Checkbox */
+.cyber-checkbox-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cyber-checkbox-box {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    background: #050811;
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+    flex-shrink: 0;
+}
+
+.cyber-checkbox-container:hover .cyber-checkbox-box {
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25), inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.cyber-checkbox-box.checked {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(79, 70, 229, 0.45));
+    border-color: #38bdf8;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.55), inset 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+.cyber-checkbox-icon {
+    width: 14px;
+    height: 14px;
+    color: #38bdf8;
+    filter: drop-shadow(0 0 4px #38bdf8);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+
+/* 3. Jalali DatePicker Dark Cockpit Overrides */
+jdp-container {
+    z-index: 999999 !important;
+    background: #090e1d !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 25px rgba(56, 189, 248, 0.25) !important;
+    color: #f8fafc !important;
+    backdrop-filter: blur(20px) !important;
+    font-family: inherit !important;
+}
+
+jdp-container .jdp-years,
+jdp-container .jdp-months {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #050811 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 2px !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+
+jdp-container .jdp-months {
+    width: 52% !important;
+    margin-right: 2.5% !important;
+}
+
+jdp-container .jdp-years {
+    width: 42% !important;
+    margin-left: 2.5% !important;
+}
+
+jdp-container .jdp-month,
+jdp-container .jdp-year {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+jdp-container .jdp-icon-plus,
+jdp-container .jdp-icon-minus {
+    background: transparent !important;
+    color: #38bdf8 !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 0 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.2s ease !important;
+}
+
+jdp-container .jdp-icon-plus:hover,
+jdp-container .jdp-icon-minus:hover {
+    background: rgba(56, 189, 248, 0.18) !important;
+}
+
+jdp-container .jdp-icon-plus svg,
+jdp-container .jdp-icon-minus svg {
+    fill: #38bdf8 !important;
+}
+
+jdp-container .jdp-year select,
+jdp-container .jdp-year input,
+jdp-container .jdp-month select,
+jdp-container .jdp-month input,
+jdp-container .jdp-time select,
+jdp-container .jdp-time input {
+    background: transparent !important;
+    color: #38bdf8 !important;
+    border: none !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    text-align-last: center !important;
+    padding: 2px 0 !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+jdp-container select option,
+jdp-container input option {
+    background: #090e1d !important;
+    color: #f8fafc !important;
+    padding: 4px 8px !important;
+}
+
+jdp-container .jdp-days-header {
+    background-color: rgba(6, 182, 212, 0.12) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin-top: 0.5rem !important;
+}
+
+jdp-container .jdp-day-name {
+    color: #94a3b8 !important;
+}
+
+jdp-container .jdp-day-name.last-week,
+jdp-container .jdp-day-name.holiday-day,
+jdp-container .jdp-day-name.holly-day {
+    color: #f87171 !important;
+}
+
+jdp-container .jdp-day {
+    color: #e2e8f0 !important;
+}
+
+jdp-container .jdp-day.last-week,
+jdp-container .jdp-day.holiday-day,
+jdp-container .jdp-day.holly-day {
+    color: #f87171 !important;
+}
+
+jdp-container .jdp-day:not(.disabled-day):hover {
+    background: rgba(6, 182, 212, 0.35) !important;
+    color: #38bdf8 !important;
+    border-radius: 8px !important;
+}
+
+jdp-container .jdp-day.selected {
+    background: linear-gradient(135deg, #06b6d4, #4f46e5) !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.6) !important;
+    border-radius: 8px !important;
+}
+
+jdp-container .jdp-btn {
+    background: #050811 !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    border-radius: 8px !important;
+}
+
+
+

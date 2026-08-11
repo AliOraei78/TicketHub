@@ -43,13 +43,18 @@
                     <FluentValidationValidator />
 
                     <div class="overflow-y-auto p-6 pb-28 space-y-4 custom-scrollbar max-h-[70vh]">
-                        <div class="stagger-item-1">
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">عنوان تیکت</label>
-                            <InputText @bind-Value="Model.Title" class="w-full h-[46px] px-4 border border-white/[0.1] rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="یک عنوان کوتاه بنویسید" />
+                        <div class="stagger-item-1 relative z-20">
+                            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                <span class="text-cyan-400 text-[9px]">◆</span>
+                                <span>عنوان تیکت</span>
+                            </label>
+                            <div class="field-spark-wrap w-full">
+                                <InputText @bind-Value="Model.Title" class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="یک عنوان کوتاه بنویسید" />
+                            </div>
                             <ValidationMessage For="@(() => Model.Title)" class="text-red-500 text-rose-400 text-xs mt-1" />
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4 stagger-item-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4 stagger-item-2 relative z-30">
                             <div>
                                 <SlideSelect TItem="PriorityDto" TValue="int?"
                                              Label="اولویت"
@@ -89,9 +94,19 @@
                             </div>
                         </div>
 
-                        <div class="mt-4 stagger-item-3">
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">توضیحات تیکت</label>
-                            <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-white/[0.1] rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." />
+                        <div class="mt-4 stagger-item-3 relative z-10">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                                    <span class="text-cyan-400 text-[9px]">◆</span>
+                                    <span>توضیحات تیکت</span>
+                                </label>
+                                <span class="text-[10px] font-mono text-slate-500">
+                                    [CHARS: @(Model.Description?.Length ?? 0)]
+                                </span>
+                            </div>
+                            <div class="field-spark-wrap w-full">
+                                <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="جزئیات مشکل یا درخواست خود را بنویسید..." />
+                            </div>
                             <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-rose-400 text-xs mt-1" />
                         </div>
 

@@ -3,21 +3,29 @@
 <div class="w-full">
     @if (!string.IsNullOrWhiteSpace(Label))
     {
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
-            @Label
-        </label>
+        <div class="flex justify-between items-center mb-1.5">
+            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                <span class="text-cyan-400 text-[9px]">◆</span>
+                <span>@Label</span>
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">
+                [CHARS: @(CurrentValue?.Length ?? 0)]
+            </span>
+        </div>
     }
-    <textarea @bind="CurrentValue"
-              @bind:event="oninput"
-              placeholder="@Placeholder"
-              dir="@Dir"
-              rows="@Rows"
-              disabled="@Disabled"
-              class="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-slate-50 hover:bg-white focus:bg-white disabled:bg-slate-100 disabled:text-slate-400 text-sm text-slate-900 focus-ring custom-scrollbar @(string.IsNullOrWhiteSpace(ErrorText) ? "" : "border-rose-400 focus:border-rose-500 focus:ring-rose-100") @Class"></textarea>
+    <div class="field-spark-wrap w-full">
+        <textarea @bind="CurrentValue"
+                  @bind:event="oninput"
+                  placeholder="@Placeholder"
+                  dir="@Dir"
+                  rows="@Rows"
+                  disabled="@Disabled"
+                  class="w-full px-4 py-3 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] disabled:bg-slate-900 disabled:text-slate-500 text-sm text-slate-100 placeholder-slate-500 focus-ring custom-scrollbar @(string.IsNullOrWhiteSpace(ErrorText) ? "" : "border-rose-500 focus:border-rose-400 focus:ring-rose-500/20") @Class"></textarea>
+    </div>
 
     @if (!string.IsNullOrWhiteSpace(ErrorText))
     {
-        <p class="text-xs text-rose-500 mt-1 font-medium">@ErrorText</p>
+        <p class="text-xs text-rose-400 mt-1 font-medium">@ErrorText</p>
     }
 </div>
 

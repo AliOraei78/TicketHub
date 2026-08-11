@@ -3,20 +3,24 @@
 <div class="relative w-full @Class" dir="rtl">
     @if (!string.IsNullOrWhiteSpace(Label))
     {
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">@Label</label>
+        <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+            <span class="text-cyan-400 text-[9px]">◆</span>
+            <span>@Label</span>
+        </label>
     }
-    <div class="relative">
+    <div class="field-spark-wrap relative w-full">
         <input id="@InputId"
                data-jdp
                type="text"
                value="@Value"
                @onchange="HandleManualChange"
-               class="w-full h-[46px] pl-4 pr-10 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm bg-slate-50 hover:bg-white focus:bg-white text-sm focus-ring text-slate-900"
+               @onclick="OpenPicker"
+               class="w-full h-[46px] pl-4 pr-11 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-sm focus-ring text-slate-100 placeholder-slate-500 cursor-pointer"
                placeholder="@(!string.IsNullOrWhiteSpace(Placeholder) ? Placeholder : (ShowTimePicker ? "انتخاب تاریخ و زمان..." : "انتخاب تاریخ..."))"
                autocomplete="off" />
 
-        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-cyan-400 cursor-pointer z-10" @onclick="OpenPicker">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
         </div>

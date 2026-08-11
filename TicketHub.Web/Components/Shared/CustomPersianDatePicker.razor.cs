@@ -37,6 +37,15 @@ public partial class CustomPersianDatePicker : ComponentBase, IDisposable
         }
     }
 
+    protected async Task OpenPicker()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("openJalaliDatePicker", InputId);
+        }
+        catch { }
+    }
+
     protected async Task HandleManualChange(ChangeEventArgs e)
     {
         var val = e.Value?.ToString() ?? string.Empty;

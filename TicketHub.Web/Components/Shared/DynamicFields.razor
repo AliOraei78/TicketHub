@@ -3,15 +3,20 @@
 @using TicketHub.Application.DTOs
 @using TicketHub.Application.Enums
 
-<div class="@(string.IsNullOrWhiteSpace(Title) ? "mt-4" : "mt-8 pt-6 border-t border-slate-200/80") @Class">
+<div class="@(string.IsNullOrWhiteSpace(Title) ? "mt-4" : "mt-8 pt-6 border-t border-white/[0.08]") @Class">
     @if (!string.IsNullOrWhiteSpace(Title))
     {
-        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-6">@Title</h3>
+        <div class="flex items-center gap-2 mb-6">
+            <span class="text-[10px] font-mono font-black px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
+                [SYS // CUSTOM_METRICS]
+            </span>
+            <h3 class="text-sm font-bold text-slate-100">@Title</h3>
+        </div>
     }
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
         @foreach (var field in Fields.OrderBy(f => f.SortOrder))
         {
-            <div class="@GetGridClass(field)">
+            <div class="@GetGridClass(field) relative">
                 @switch ((FieldTypeEnum)field.FieldTypeId)
                 {
                     case FieldTypeEnum.Text:
@@ -28,7 +33,10 @@
 
                     case FieldTypeEnum.ColorPicker:
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">@field.Name</label>
+                            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                <span class="text-cyan-400 text-[9px]">◆</span>
+                                <span>@field.Name</span>
+                            </label>
                             <ColorPicker @bind-Value="field.Value" Placeholder="@field.Placeholder" />
                         </div>
                         break;
@@ -69,13 +77,13 @@
                         break;
 
                     default:
-                        <div class="text-sm text-slate-400">نوع فیلد پشتیبانی نمی‌شود</div>
+                        <div class="text-xs text-slate-500 font-mono">[UNKNOWN_FIELD_TYPE]</div>
                         break;
                 }
 
                 @if (ValidationErrors != null && ValidationErrors.TryGetValue(field.Name, out var errorMsg))
                 {
-                    <div class="text-rose-500 text-xs font-medium mt-1">@errorMsg</div>
+                    <div class="text-rose-400 text-xs font-medium mt-1">@errorMsg</div>
                 }
             </div>
         }

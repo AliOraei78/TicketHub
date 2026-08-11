@@ -49,20 +49,31 @@
     <script src="js/gamer-hud.js"></script>
     <script>
         window.initJalaliDatePicker = (id, showTime, dotnetHelper) => {
-        jalaliDatepicker.startWatch({
-        time: showTime,
-        hasSecond: false
-        });
+            if (window.jalaliDatepicker) {
+                window.jalaliDatepicker.startWatch({
+                    time: showTime,
+                    hasSecond: false
+                });
+            }
 
-        var el = document.getElementById(id);
-        if (el) {
-        var handler = function(e) {
-        dotnetHelper.invokeMethodAsync('UpdateValue', e.target.value);
+            var el = document.getElementById(id);
+            if (el) {
+                var handler = function(e) {
+                    dotnetHelper.invokeMethodAsync('UpdateValue', e.target.value);
+                };
+
+                el.removeEventListener('change', handler);
+                el.removeEventListener('jdp:change', handler);
+                el.addEventListener('change', handler);
+                el.addEventListener('jdp:change', handler);
+            }
         };
 
-        el.addEventListener('change', handler);
-        el.addEventListener('jdp:change', handler);
-        }
+        window.openJalaliDatePicker = (id) => {
+            var el = document.getElementById(id);
+            if (el && window.jalaliDatepicker) {
+                window.jalaliDatepicker.show(el);
+            }
         };
 
         window.initClickOutside = (elementId, dotnetHelper) => {
