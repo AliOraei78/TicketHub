@@ -10,15 +10,15 @@
     <!-- Bell Icon Trigger Button -->
     <button type="button" 
             @onclick="ToggleDropdown" 
-            class="relative w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition-all cursor-pointer border border-slate-200/80 shadow-2xs focus-ring"
+            class="relative w-8.5 h-8.5 rounded-xl bg-[#050811]/80 text-slate-300 hover:text-cyan-300 hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer border border-white/[0.08] shadow-inner focus-ring"
             title="اعلانات">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
 
         @if (UnreadCount > 0)
         {
-            <span class="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-md shadow-rose-500/30 animate-pulse">
+            <span class="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-md shadow-rose-500/50 animate-pulse">
                 @(UnreadCount > 9 ? "9+" : UnreadCount.ToString())
             </span>
         }
@@ -29,15 +29,15 @@
     {
         <div class="fixed inset-0 z-40" @onclick="CloseDropdown"></div>
 
-        <div class="absolute left-0 mt-2 w-80 sm:w-96 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/80 z-50 overflow-hidden modal-content-animate text-right"
+        <div class="absolute left-0 mt-2 w-80 sm:w-96 bg-[#090e1d]/98 backdrop-blur-2xl rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 z-50 overflow-hidden modal-content-animate text-right"
              @onclick:stopPropagation>
             <!-- Dropdown Header -->
-            <div class="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+            <div class="p-3.5 border-b border-white/[0.08] flex items-center justify-between bg-[#050811]/90">
                 <div class="flex items-center gap-2">
-                    <span class="font-bold text-sm text-slate-800 dark:text-slate-100">مرکز اعلانات</span>
+                    <span class="font-bold text-sm text-slate-100">مرکز اعلانات</span>
                     @if (UnreadCount > 0)
                     {
-                        <span class="bg-indigo-100 text-indigo-700 text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                        <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 text-[11px] font-semibold px-2 py-0.5 rounded-full">
                             @UnreadCount جدید
                         </span>
                     }
@@ -47,7 +47,7 @@
                 {
                     <button type="button" 
                             @onclick="MarkAllAsRead" 
-                            class="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium hover:underline flex items-center gap-1 focus-ring rounded-md">
+                            class="text-[11px] text-cyan-400 hover:text-cyan-300 font-medium hover:underline flex items-center gap-1 focus-ring rounded-md cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         خوانده شدن همه
                     </button>
@@ -55,32 +55,32 @@
             </div>
 
             <!-- Filter Tabs -->
-            <div class="flex border-b border-slate-100 text-xs font-semibold bg-slate-50/50">
+            <div class="flex border-b border-white/[0.08] text-xs font-semibold bg-[#050811]/60">
                 <button type="button" 
                         @onclick="() => SetFilter(false)" 
-                        class="flex-1 py-2 text-center transition-colors @(!FilterUnreadOnly ? "text-indigo-600 border-b-2 border-indigo-600 bg-white font-bold" : "text-slate-500 hover:text-slate-700")">
+                        class="flex-1 py-2 text-center transition-colors @(!FilterUnreadOnly ? "text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/40 font-bold" : "text-slate-400 hover:text-slate-200")">
                     همه (@Notifications.Count)
                 </button>
                 <button type="button" 
                         @onclick="() => SetFilter(true)" 
-                        class="flex-1 py-2 text-center transition-colors @(FilterUnreadOnly ? "text-indigo-600 border-b-2 border-indigo-600 bg-white font-bold" : "text-slate-500 hover:text-slate-700")">
+                        class="flex-1 py-2 text-center transition-colors @(FilterUnreadOnly ? "text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/40 font-bold" : "text-slate-400 hover:text-slate-200")">
                     خوانده‌نشده (@UnreadCount)
                 </button>
             </div>
 
             <!-- Notification List -->
-            <div class="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+            <div class="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-white/[0.05]">
                 @if (IsLoading)
                 {
                     <div class="p-8 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-                        <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                        <div class="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                         در حال بارگذاری اعلانات...
                     </div>
                 }
                 else if (!FilteredNotifications.Any())
                 {
                     <div class="p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
-                        <div class="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300">
+                        <div class="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-500 border border-white/[0.05]">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
@@ -93,7 +93,7 @@
                     @foreach (var notif in FilteredNotifications)
                     {
                         <div @onclick="() => OpenNotificationDetails(notif)" 
-                             class="p-3.5 hover:bg-slate-50/80 cursor-pointer transition-colors relative flex items-start gap-3 @(!notif.IsRead ? "bg-indigo-50/30" : "")">
+                             class="p-3.5 hover:bg-slate-50 hover:bg-slate-800/60 cursor-pointer transition-colors relative flex items-start gap-3 @(!notif.IsRead ? "bg-indigo-950/20" : "")">
                             
                             <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 @GetSeverityIconContainerClass(notif.Severity)">
                                 @GetSeverityIcon(notif.Severity)
@@ -101,21 +101,21 @@
 
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between gap-1 mb-1">
-                                    <h4 class="text-xs font-bold text-slate-800 truncate @(!notif.IsRead ? "text-indigo-950" : "")">
+                                    <h4 class="text-xs font-bold text-slate-200 truncate @(!notif.IsRead ? "text-cyan-300" : "")">
                                         @notif.Title
                                     </h4>
-                                    <span class="text-[10px] text-slate-400 flex-shrink-0 font-normal">
+                                    <span class="text-[10px] text-slate-500 flex-shrink-0 font-normal">
                                         @GetTimeAgo(notif.CreatedAt)
                                     </span>
                                 </div>
-                                <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed font-normal">
+                                <p class="text-[11px] text-slate-400 line-clamp-2 leading-relaxed font-normal">
                                     @notif.Message
                                 </p>
                             </div>
 
                             @if (!notif.IsRead)
                             {
-                                <span class="w-2 h-2 rounded-full bg-indigo-600 flex-shrink-0 mt-2"></span>
+                                <span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0 mt-2 shadow-[0_0_8px_#38bdf8]"></span>
                             }
                         </div>
                     }
@@ -123,8 +123,8 @@
             </div>
 
             <!-- Dropdown Footer -->
-            <div class="p-2 border-t border-slate-100 text-center bg-slate-50/60">
-                <button type="button" @onclick="CloseDropdown" class="text-[11px] text-slate-500 hover:text-slate-800 font-medium focus-ring rounded-md px-2 py-0.5">
+            <div class="p-2 border-t border-white/[0.08] text-center bg-[#050811]/80">
+                <button type="button" @onclick="CloseDropdown" class="text-[11px] text-slate-400 hover:text-slate-200 font-medium focus-ring rounded-md px-2 py-0.5 cursor-pointer">
                     بستن منو
                 </button>
             </div>

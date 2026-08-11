@@ -1,4 +1,4 @@
-﻿@code {
+@code {
     [Parameter] public string Href { get; set; } = "";
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? IconContent { get; set; }
@@ -12,9 +12,9 @@
 
     private string GetNavItemClass(bool hasSubMenu)
     {
-        var paddingClass = IsCollapsed ? "justify-center px-0" : (hasSubMenu ? "justify-between px-4" : "px-4");
+        var paddingClass = IsCollapsed ? "justify-center px-0" : (hasSubMenu ? "justify-between px-3.5" : "px-3.5");
         var gapClass = hasSubMenu ? "" : "gap-3";
-        return $"relative w-full flex items-center {gapClass} {paddingClass} py-3 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white smooth-transition group cursor-pointer";
+        return $"cyber-nav-link relative w-full flex items-center {gapClass} {paddingClass} py-2.5 text-sm font-medium rounded-xl text-slate-400 group cursor-pointer focus-ring";
     }
 
     private async Task HandleClick()
@@ -44,11 +44,11 @@
         @IconContent
         @if (!IsCollapsed)
         {
-            <span class="whitespace-nowrap">@Title</span>
+            <span class="whitespace-nowrap tracking-wide font-medium">@Title</span>
         }
         @if (IsCollapsed)
         {
-            <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">@Title</span>
+            <span class="absolute right-full mr-3 px-3 py-1.5 bg-[#090e1d] text-cyan-300 text-xs font-mono font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-cyan-500/30 pointer-events-none">@Title</span>
         }
     </NavLink>
 }
@@ -60,17 +60,17 @@ else
                 @IconContent
                 @if (!IsCollapsed)
                 {
-                    <span class="whitespace-nowrap">@Title</span>
+                    <span class="whitespace-nowrap tracking-wide font-medium">@Title</span>
                 }
             </div>
 
             @if (IsCollapsed)
             {
-                <span class="absolute right-full mr-3 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-slate-700 pointer-events-none">@Title</span>
+                <span class="absolute right-full mr-3 px-3 py-1.5 bg-[#090e1d] text-cyan-300 text-xs font-mono font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-cyan-500/30 pointer-events-none">@Title</span>
             }
             else
             {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isOpen ? "rotate-180 text-cyan-400" : "text-slate-500")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             }
@@ -78,7 +78,7 @@ else
 
         <div class="grid transition-all duration-300 ease-in-out @(isOpen && !IsCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")">
             <div class="overflow-hidden">
-                <div class="pr-12 pl-4 py-1 space-y-1">
+                <div class="pr-9 pl-2 py-1 space-y-1 border-r border-slate-800/80 mr-4">
                     @ChildContent
                 </div>
             </div>

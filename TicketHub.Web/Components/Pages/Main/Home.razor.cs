@@ -50,6 +50,12 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected string ActiveModalType { get; set; } = string.Empty;
     protected string ActiveModalTitle { get; set; } = string.Empty;
 
+    // SVG Path Memoization (Allocations & Render Loop Optimization)
+    protected string CachedTrendLinePath { get; private set; } = string.Empty;
+    protected string CachedTrendAreaPath { get; private set; } = string.Empty;
+    protected string CachedModalTrendLinePath { get; private set; } = string.Empty;
+    protected string CachedModalTrendAreaPath { get; private set; } = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -168,6 +174,12 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             .ToList();
 
         ProjectStats = projGroups;
+
+        // Memoize SVG Paths for zero-allocation Blazor renders
+        CachedTrendLinePath = BuildSvgLinePath(TrendData, 400, 120);
+        CachedTrendAreaPath = BuildSvgAreaPath(TrendData, 400, 120);
+        CachedModalTrendLinePath = BuildSvgLinePath(TrendData, 600, 200);
+        CachedModalTrendAreaPath = BuildSvgAreaPath(TrendData, 600, 200);
     }
 
     protected async Task OpenCreateModal()
@@ -261,28 +273,47 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         return $"{linePath} L {width:F1},{height:F1} L 0,{height:F1} Z";
     }
 
+    protected string ActiveQuestTab { get; set; } = "all";
+    protected void SetQuestTab(string tab) => ActiveQuestTab = tab;
+
+    protected IEnumerable<TicketDto> FilteredRecentTickets
+    {
+        get
+        {
+            var list = RecentTickets ?? Enumerable.Empty<TicketDto>();
+            return ActiveQuestTab switch
+            {
+                "overdue" => list.Where(t => t.IsOverdue),
+                "critical" => list.Where(t => t.Priority?.Level >= 4 || t.Priority?.Name == "بحرانی"),
+                _ => list
+            };
+        }
+    }
+
     protected string GetPriorityClass(string priorityName) => priorityName switch
     {
-        "بحرانی" => "bg-rose-100 text-rose-700 border border-rose-200",
-        "بالا" => "bg-amber-100 text-amber-700 border border-amber-200",
-        "متوسط" => "bg-sky-100 text-sky-700 border border-sky-200",
-        _ => "bg-slate-100 text-slate-700 border border-slate-200"
+        "بحرانی" => "bg-rose-950/80 text-rose-300 border border-rose-500/40 shadow-xs",
+        "بالا" => "bg-amber-950/80 text-amber-300 border border-amber-500/40 shadow-xs",
+        "متوسط" => "bg-sky-950/80 text-sky-300 border border-sky-500/40 shadow-xs",
+        _ => "bg-slate-900 text-slate-300 border border-slate-700 shadow-xs"
     };
 
     protected string GetRarityTag(TicketDto ticket)
     {
-        if (ticket.IsOverdue) return "🔥 BOSS OVERDUE";
-        if (ticket.Priority != null && ticket.Priority.Level > 4) return "⚔️ LEGENDARY";
+        if (ticket.IsOverdue) return "🔥 BOSS RAID [OVERDUE]";
+        if (ticket.Priority != null && ticket.Priority.Level > 4) return "🔴 LEGENDARY";
         if (ticket.Priority != null && ticket.Priority.Level >= 3) return "⚡ EPIC";
-        return "🛡️ QUEST";
+        if (ticket.Priority != null && ticket.Priority.Level == 2) return "🛡️ RARE";
+        return "⚔️ COMMON";
     }
 
     protected string GetRarityTagClass(TicketDto ticket)
     {
-        if (ticket.IsOverdue) return "bg-rose-500/15 text-rose-700 border-rose-300 shadow-xs animate-pulse";
-        if (ticket.Priority != null && ticket.Priority.Level > 4) return "bg-orange-500/15 text-orange-700 border-orange-300";
-        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "bg-amber-500/15 text-amber-700 border-amber-300";
-        return "bg-indigo-500/10 text-indigo-700 border-indigo-200";
+        if (ticket.IsOverdue) return "bg-rose-950/80 text-rose-300 border-rose-500/60 shadow-[0_0_12px_rgba(244,63,94,0.4)] animate-pulse";
+        if (ticket.Priority != null && ticket.Priority.Level > 4) return "bg-orange-950/80 text-orange-300 border-orange-500/60 shadow-[0_0_10px_rgba(249,115,22,0.3)]";
+        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "bg-purple-950/80 text-purple-300 border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.3)]";
+        if (ticket.Priority != null && ticket.Priority.Level == 2) return "bg-sky-950/80 text-sky-300 border-sky-500/60 shadow-[0_0_10px_rgba(56,189,248,0.3)]";
+        return "bg-emerald-950/80 text-emerald-300 border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.3)]";
     }
 
     protected string GetSlaHpClass()

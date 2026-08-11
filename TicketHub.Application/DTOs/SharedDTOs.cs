@@ -31,3 +31,17 @@ public class ProjectWorkloadDto
     public int TicketCount { get; set; }
     public int Percentage { get; set; }
 }
+
+public class DashboardSummaryDto
+{
+    public int TotalTickets { get; set; }
+    public int NewTicketsCount { get; set; }
+    public int InProgressCount { get; set; }
+    public int OverdueCount { get; set; }
+    public int CriticalAndOverdueCount { get; set; }
+    public int SlaOnTimePercentage { get; set; } = 100;
+    public List<DailyTrendDto> TrendData { get; set; } = new();
+    public List<PriorityStatDto> PriorityStats { get; set; } = new();
+    public List<ProjectWorkloadDto> ProjectStats { get; set; } = new();
+    public List<TicketDto> RecentTickets { get; set; } = new();
+}
