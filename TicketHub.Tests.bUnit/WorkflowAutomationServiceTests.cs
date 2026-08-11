@@ -705,6 +705,78 @@ namespace TicketHub.Tests.bUnit
             _mockEventBroker.Verify(b => b.PublishTicketUpdatedAsync(91), Times.Once); // Real-time notification sent
         }
 
+        [Fact]
+        public async Task ProcessDeadlinesAsync_SendsNotification_WhenNotificationServiceIsProvided()
+        {
+            // Arrange
+            var dbName = Guid.NewGuid().ToString();
+            var factory = CreateInMemoryDbContextFactory(dbName);
+            var mockNotifService = new Mock<INotificationService>();
+            mockNotifService.Setup(n => n.CreateNotificationAsync(It.IsAny<TicketHub.Application.DTOs.CreateNotificationDto>()))
+                .ReturnsAsync(new TicketHub.Application.DTOs.NotificationDto());
+
+            using (var context = await factory.CreateDbContextAsync())
+            {
+                var user = new User { Id = 55, Name = "user55", Email = "u55@example.com" };
+                var s1 = new Status { Id = 700, Name = "Open" };
+                var s2 = new Status { Id = 800, Name = "Closed by SLA" };
+                await context.Set<User>().AddAsync(user);
+                await context.Set<Status>().AddRangeAsync(s1, s2);
+
+                var workflow = new Workflow { Id = 11, Name = "Notif SLA WF", IsActive = true };
+                var status1 = new WorkflowStatus { Id = 70, NodeId = Guid.NewGuid(), StatusId = 700, Status = s1, WorkflowId = 11 };
+                var status2 = new WorkflowStatus { Id = 80, NodeId = Guid.NewGuid(), StatusId = 800, Status = s2, WorkflowId = 11 };
+
+                var transition = new Transition
+                {
+                    Id = 30,
+                    Name = "Auto Close",
+                    FromState = 70,
+                    ToState = 80,
+                    FromStatus = status1,
+                    ToStatus = status2,
+                    IsAutomated = 1,
+                    IsActive = true,
+                    WorkflowId = 11,
+                    Workflow = workflow
+                };
+
+                workflow.WorkflowStatuses.Add(status1);
+                workflow.WorkflowStatuses.Add(status2);
+                workflow.Transitions.Add(transition);
+
+                var project = new Project { Id = 11, Name = "P11", WorkflowId = 11, Workflow = workflow };
+                var ticket = new Ticket
+                {
+                    Id = 95,
+                    Title = "Notif Ticket",
+                    UserId = 55,
+                    User = user,
+                    ProjectId = 11,
+                    Project = project,
+                    WorkflowStatusId = 70,
+                    StatusId = 700,
+                    Status = s1,
+                    DueDate = DateTime.UtcNow.AddMinutes(-5) // Overdue
+                };
+
+                await context.Set<Workflow>().AddAsync(workflow);
+                await context.Set<Project>().AddAsync(project);
+                await context.Set<Ticket>().AddAsync(ticket);
+                await context.SaveChangesAsync();
+            }
+
+            var service = new WorkflowAutomationService(factory, _mockTicketRepo.Object, _mockEventBroker.Object, _mockLogger.Object, mockNotifService.Object);
+
+            // Act
+            await service.ProcessDeadlinesAsync();
+
+            // Assert
+            mockNotifService.Verify(n => n.CreateNotificationAsync(It.Is<TicketHub.Application.DTOs.CreateNotificationDto>(
+                dto => dto.UserId == 55 && dto.ReferenceId == 95 && dto.Type == TicketHub.Core.Enums.NotificationType.DeadlineBreached)), Times.Once);
+        }
+
         #endregion
     }
 }
+

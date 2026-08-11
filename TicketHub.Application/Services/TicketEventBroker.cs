@@ -11,6 +11,7 @@ public class TicketEventBroker : ITicketEventBroker
     public event Func<int, int, Task>? OnCommentDeleted;
     public event Func<int, Task>? OnTicketUpdated;
     public event Func<int, Task>? OnTransitionOccurred;
+    public event Func<int, NotificationDto, Task>? OnNotificationReceived;
 
     public async Task PublishCommentAddedAsync(int ticketId, CommentDto comment)
     {
@@ -75,6 +76,24 @@ public class TicketEventBroker : ITicketEventBroker
                 try
                 {
                     await handler(ticketId);
+                }
+                catch
+                {
+                    // Ignore disconnected circuit or disposed component errors safely
+                }
+            }
+        }
+    }
+
+    public async Task PublishNotificationAsync(int targetUserId, NotificationDto notification)
+    {
+        if (OnNotificationReceived != null)
+        {
+            foreach (Func<int, NotificationDto, Task> handler in OnNotificationReceived.GetInvocationList())
+            {
+                try
+                {
+                    await handler(targetUserId, notification);
                 }
                 catch
                 {

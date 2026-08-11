@@ -111,10 +111,13 @@
 
     protected override void OnParametersSet()
     {
-        if (DynamicFields != null && DynamicFieldModels.Count != DynamicFields.Where(f => f.IsActive).Count())
+        var activeFields = DynamicFields?.Where(f => f.IsActive).ToList() ?? new List<TicketFieldDto>();
+        var currentFieldIds = DynamicFieldModels.Select(m => m.OriginalFieldId).ToList();
+        var newFieldIds = activeFields.Select(f => f.Id).ToList();
+
+        if (!currentFieldIds.SequenceEqual(newFieldIds))
         {
-            DynamicFieldModels = DynamicFields
-                .Where(f => f.IsActive)
+            DynamicFieldModels = activeFields
                 .Select(f => new DynamicFieldModel
                 {
                     OriginalFieldId = f.Id,

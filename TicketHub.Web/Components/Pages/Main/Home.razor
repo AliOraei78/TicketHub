@@ -8,6 +8,7 @@
 @using TicketHub.Application.Interfaces
 @using TicketHub.Web.Store
 @using TicketHub.Web.Components.Pages.Main.Tickets
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
 @inject ITicketService TicketService
 @inject IProjectService ProjectService
 @inject IPriorityService PriorityService
@@ -586,6 +587,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         currentPersianDate = GetPersianDate(DateTime.UtcNow);
 
         // گوش دادن به اکشن موفقیت ثبت تیکت برای بستن مودال و رفرش درجا

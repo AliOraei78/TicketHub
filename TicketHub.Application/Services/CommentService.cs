@@ -8,22 +8,30 @@ using TicketHub.Core.Common.Exceptions;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 
+using TicketHub.Core.Enums;
+
 public class CommentService : ICommentService
 {
     private readonly IRepository<Comment> _commentRepo;
     private readonly ITicketEventBroker _eventBroker;
     private readonly ILogger<CommentService> _logger;
+    private readonly INotificationService? _notificationService;
+    private readonly ITicketRepository? _ticketRepository;
 
     public event Action<int, CommentDto>? OnCommentAdded;
 
     public CommentService(
         IRepository<Comment> commentRepo,
         ITicketEventBroker eventBroker,
-        ILogger<CommentService> logger)
+        ILogger<CommentService> logger,
+        INotificationService? notificationService = null,
+        ITicketRepository? ticketRepository = null)
     {
         _commentRepo = commentRepo;
         _eventBroker = eventBroker;
         _logger = logger;
+        _notificationService = notificationService;
+        _ticketRepository = ticketRepository;
     }
 
     public async Task<List<CommentDto>> GetCommentsByTicketIdAsync(int ticketId)
@@ -68,6 +76,38 @@ public class CommentService : ICommentService
 
         // انتشار ایونت سراسری روی تمام مدارها و کاربران آنلاین
         await _eventBroker.PublishCommentAddedAsync(dto.TicketId.Value, resultDto);
+
+        if (_notificationService != null && _ticketRepository != null)
+        {
+            try
+            {
+                var ticket = await _ticketRepository.GetByIdAsync(dto.TicketId.Value);
+                if (ticket != null)
+                {
+                    var commentExcerpt = resultDto.Content.Length > 70
+                        ? resultDto.Content.Substring(0, 70) + "..."
+                        : resultDto.Content;
+
+                    var userName = resultDto.User?.Name ?? "کاربر";
+                    int targetUserId = ticket.UserId != currentUserId ? ticket.UserId : currentUserId;
+
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                    {
+                        UserId = targetUserId,
+                        Title = $"پاسخ جدید روی تیکت #{ticket.Id}",
+                        Message = $"{userName} روی تیکت «{ticket.Title}» پاسخ جدیدی ثبت کرد: {commentExcerpt}",
+                        Type = NotificationType.TicketComment,
+                        Severity = NotificationSeverity.Info,
+                        ReferenceId = ticket.Id,
+                        ActionUrl = $"/tickets/{ticket.Id}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "خطا در ارسال اعلان ثبت نظر.");
+            }
+        }
 
         return resultDto;
     }

@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using TicketHub.Application.Enums;
+using TicketHub.Core.Enums;
 
 public class TicketService : ITicketService
 {
@@ -31,6 +32,7 @@ public class TicketService : ITicketService
     private readonly IRepository<Role> _roleRepo;
     private readonly ITicketEventBroker _eventBroker;
     private readonly IWorkflowAutomationService? _workflowAutomationService;
+    private readonly INotificationService? _notificationService;
 
     public TicketService(
         ITicketRepository ticketRepository,
@@ -45,7 +47,8 @@ public class TicketService : ITicketService
         IRepository<Attachment> attachmentRepo,
         IRepository<Role> roleRepo,
         ITicketEventBroker eventBroker,
-        IWorkflowAutomationService? workflowAutomationService = null)
+        IWorkflowAutomationService? workflowAutomationService = null,
+        INotificationService? notificationService = null)
     {
         _ticketRepository = ticketRepository;
         _logger = logger;
@@ -60,6 +63,7 @@ public class TicketService : ITicketService
         _roleRepo = roleRepo;
         _eventBroker = eventBroker;
         _workflowAutomationService = workflowAutomationService;
+        _notificationService = notificationService;
     }
 
     private async Task<(int CurrentUserId, List<int> UserRoleIds, bool IsAdmin, bool IsStaffOrAdmin)> GetCurrentUserSecurityContextAsync()
@@ -496,6 +500,30 @@ public class TicketService : ITicketService
 
         await _eventBroker.PublishTransitionOccurredAsync(ticketInDb.Id);
         await _eventBroker.PublishTicketUpdatedAsync(ticketInDb.Id);
+
+        if (_notificationService != null)
+        {
+            try
+            {
+                var destinationStatusName = transition.ToStatus?.Status?.Name ?? "وضعیت جدید";
+                int targetUserId = ticketInDb.UserId != currentUserId ? ticketInDb.UserId : currentUserId;
+
+                await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                {
+                    UserId = targetUserId,
+                    Title = $"تغییر وضعیت تیکت #{ticketInDb.Id}",
+                    Message = $"وضعیت تیکت «{ticketInDb.Title}» به «{destinationStatusName}» تغییر یافت.",
+                    Type = NotificationType.StatusChanged,
+                    Severity = NotificationSeverity.Success,
+                    ReferenceId = ticketInDb.Id,
+                    ActionUrl = $"/tickets/{ticketInDb.Id}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "خطا در ارسال اعلان تغییر وضعیت تیکت {TicketId}.", ticketInDb.Id);
+            }
+        }
 
         if (_workflowAutomationService != null)
         {

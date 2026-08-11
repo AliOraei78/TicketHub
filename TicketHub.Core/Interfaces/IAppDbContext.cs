@@ -31,6 +31,7 @@ public interface IAppDbContext
     DbSet<TransitionFieldValue> TransitionFieldValues { get; set; }
     DbSet<Permission> Permissions { get; set; }
     DbSet<RolePermission> RolePermissions { get; set; }
+    DbSet<Notification> Notifications { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

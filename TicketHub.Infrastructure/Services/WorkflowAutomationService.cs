@@ -16,17 +16,20 @@ public class WorkflowAutomationService : IWorkflowAutomationService
     private readonly ITicketRepository _ticketRepository;
     private readonly ITicketEventBroker _eventBroker;
     private readonly ILogger<WorkflowAutomationService> _logger;
+    private readonly INotificationService? _notificationService;
 
     public WorkflowAutomationService(
         IDbContextFactory<AppDbContext> factory,
         ITicketRepository ticketRepository,
         ITicketEventBroker eventBroker,
-        ILogger<WorkflowAutomationService> logger)
+        ILogger<WorkflowAutomationService> logger,
+        INotificationService? notificationService = null)
     {
         _factory = factory;
         _ticketRepository = ticketRepository;
         _eventBroker = eventBroker;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     public async Task ProcessAutomaticTransitionsAsync()
@@ -179,6 +182,30 @@ public class WorkflowAutomationService : IWorkflowAutomationService
 
         await _eventBroker.PublishTransitionOccurredAsync(ticket.Id);
         await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
+
+        if (_notificationService != null && ticket.UserId > 0)
+        {
+            try
+            {
+                var targetStatusName = transition.ToStatus?.Status?.Name ?? "وضعیت خودکار";
+                await _notificationService.CreateNotificationAsync(new Application.DTOs.CreateNotificationDto
+                {
+                    UserId = ticket.UserId,
+                    Title = isDeadlineTriggered ? $"هشدار انقضای مهلت تیکت #{ticket.Id}" : $"انتقال خودکار تیکت #{ticket.Id}",
+                    Message = isDeadlineTriggered
+                        ? $"مهلت اقدام تیکت «{ticket.Title}» به پایان رسید و وضعیت به «{targetStatusName}» تغییر یافت."
+                        : $"تیکت «{ticket.Title}» بر اساس روال سیستم به وضعیت «{targetStatusName}» منتقل شد.",
+                    Type = isDeadlineTriggered ? Core.Enums.NotificationType.DeadlineBreached : Core.Enums.NotificationType.StatusChanged,
+                    Severity = isDeadlineTriggered ? Core.Enums.NotificationSeverity.Warning : Core.Enums.NotificationSeverity.Info,
+                    ReferenceId = ticket.Id,
+                    ActionUrl = $"/tickets/{ticket.Id}"
+                });
+            }
+            catch (Exception notifEx)
+            {
+                _logger.LogWarning(notifEx, "خطا در ارسال اعلان اتوماسیون تیکت {TicketId}.", ticket.Id);
+            }
+        }
     }
 
     public async Task ProcessDeadlinesAsync()
