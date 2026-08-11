@@ -269,6 +269,29 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         _ => "bg-slate-100 text-slate-700 border border-slate-200"
     };
 
+    protected string GetRarityTag(TicketDto ticket)
+    {
+        if (ticket.IsOverdue) return "🔥 BOSS OVERDUE";
+        if (ticket.Priority != null && ticket.Priority.Level > 4) return "⚔️ LEGENDARY";
+        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "⚡ EPIC";
+        return "🛡️ QUEST";
+    }
+
+    protected string GetRarityTagClass(TicketDto ticket)
+    {
+        if (ticket.IsOverdue) return "bg-rose-500/15 text-rose-700 border-rose-300 shadow-xs animate-pulse";
+        if (ticket.Priority != null && ticket.Priority.Level > 4) return "bg-orange-500/15 text-orange-700 border-orange-300";
+        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "bg-amber-500/15 text-amber-700 border-amber-300";
+        return "bg-indigo-500/10 text-indigo-700 border-indigo-200";
+    }
+
+    protected string GetSlaHpClass()
+    {
+        if (SlaOnTimePercentage < 60) return "hp-critical";
+        if (SlaOnTimePercentage < 85) return "hp-warning";
+        return "";
+    }
+
     private string GetPersianDate(DateTime date) => date.ToPersianDateString();
 
     private string GetPersianDayName(DateTime date) => date.DayOfWeek switch

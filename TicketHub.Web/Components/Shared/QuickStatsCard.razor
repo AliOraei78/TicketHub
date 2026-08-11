@@ -1,11 +1,33 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="bg-white p-6 rounded-3xl shadow-2xs border border-slate-200/80 flex items-center justify-between transition-all hover:shadow-md select-none @Class">
-    <div>
-        <p class="text-xs font-semibold text-slate-400">@Title</p>
-        <h3 class="text-2xl font-bold mt-1 tracking-tight @ValueColorClass">@Value</h3>
+<div class="element-card gamer-card-3d @GetElementClass() p-6 rounded-3xl flex items-center justify-between transition-all select-none relative overflow-hidden group cursor-pointer @Class">
+    
+    @* Live Procedural Canvas VFX Layer (Fire flames, Lightning arcs, Toxic bubbles/drips, Fluid waves) *@
+    @if (!ElementType.Equals("none", StringComparison.OrdinalIgnoreCase))
+    {
+        <canvas class="element-vfx-canvas absolute inset-0 w-full h-full pointer-events-none z-0" data-element="@ElementType.ToLowerInvariant()"></canvas>
+    }
+
+    <div class="relative z-10">
+        <div class="flex items-center gap-2">
+            <p class="text-xs font-bold @(ElementType == "none" ? "text-slate-500 group-hover:text-slate-800" : "text-slate-300 group-hover:text-white") transition-colors">@Title</p>
+            @if (!string.IsNullOrEmpty(BadgeText))
+            {
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-md @BadgeClass">
+                    @BadgeText
+                </span>
+            }
+        </div>
+        <h3 class="text-3xl font-black mt-2 tracking-tight @ValueColorClass flex items-baseline gap-1">
+            <span class="gamer-counter" data-target="@Value">@Value</span>
+            @if (!string.IsNullOrEmpty(UnitText))
+            {
+                <span class="text-xs font-medium text-slate-400">@UnitText</span>
+            }
+        </h3>
     </div>
-    <div class="p-3.5 rounded-2xl border border-slate-100/60 shadow-2xs @IconThemeClass">
+    
+    <div class="relative z-10 p-3.5 rounded-2xl border shadow-sm transition-all duration-300 group-hover:scale-110 @IconThemeClass @(ElementType == "lightning" ? "lightning-spark-icon" : "")">
         @Icon
     </div>
 </div>
@@ -14,7 +36,20 @@
     [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public string Value { get; set; } = string.Empty;
     [Parameter] public string ValueColorClass { get; set; } = "text-slate-800";
-    [Parameter] public string IconThemeClass { get; set; } = "bg-indigo-50 text-indigo-600";
+    [Parameter] public string IconThemeClass { get; set; } = "bg-indigo-50 text-indigo-600 border-indigo-100/60";
     [Parameter] public RenderFragment Icon { get; set; } = default!;
     [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public string ElementType { get; set; } = "none";
+    [Parameter] public string BadgeText { get; set; } = string.Empty;
+    [Parameter] public string BadgeClass { get; set; } = "bg-slate-100 text-slate-600";
+    [Parameter] public string UnitText { get; set; } = string.Empty;
+
+    private string GetElementClass() => ElementType.ToLowerInvariant() switch
+    {
+        "water" => "element-water",
+        "lightning" => "element-lightning",
+        "toxic" => "element-toxic",
+        "fire" => "element-fire",
+        _ => "bg-white border border-slate-200/80 shadow-2xs hover:shadow-md"
+    };
 }
