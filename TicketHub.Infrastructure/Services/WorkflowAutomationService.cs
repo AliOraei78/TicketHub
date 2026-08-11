@@ -122,10 +122,16 @@ public class WorkflowAutomationService : IWorkflowAutomationService
         }
     }
 
-    private async Task ExecuteAutomatedTransitionInternalAsync(Ticket ticket, Transition transition)
+    private async Task ExecuteAutomatedTransitionInternalAsync(Ticket ticket, Transition transition, bool isDeadlineTriggered = false)
     {
         var targetStatusId = transition.ToStatus?.StatusId ?? 0;
         var targetWorkflowStatusId = transition.ToState;
+
+        var historyComment = isDeadlineTriggered
+            ? $"انتقال خودکار سیستم به دلیل اتمام مهلت زمانی (Deadline Exceeded) - ترنزیشن: {transition.Name}"
+            : (transition.ActivateAt.HasValue
+                ? $"انتقال خودکار زمان‌بندی‌شده سیستم (زمان فعال‌سازی: {transition.ActivateAt.Value:yyyy/MM/dd HH:mm} UTC)"
+                : "انتقال خودکار سیستم طبق قوانین جریان کاری");
 
         var history = new TicketHistory
         {
@@ -140,20 +146,21 @@ public class WorkflowAutomationService : IWorkflowAutomationService
             FromStatusName = transition.FromStatus?.Status?.Name ?? ticket.Status?.Name,
             ToStatusId = targetStatusId,
             ToStatusName = transition.ToStatus?.Status?.Name,
-            Comment = transition.ActivateAt.HasValue
-                ? $"انتقال خودکار زمان‌بندی‌شده سیستم (زمان فعال‌سازی: {transition.ActivateAt.Value:yyyy/MM/dd HH:mm} UTC)"
-                : "انتقال خودکار سیستم طبق قوانین جریان کاری",
+            Comment = historyComment,
             CreatedAt = DateTime.UtcNow
         };
 
         await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticket.Id, targetStatusId, targetWorkflowStatusId, history);
 
-        // Update DueDate if destination transition has DeadlineMinutes
+        // Update ticket in database with new status and DueDate based on destination transition's DeadlineMinutes
         using (var updateContext = await _factory.CreateDbContextAsync())
         {
             var dbTicket = await updateContext.Set<Ticket>().FindAsync(ticket.Id);
             if (dbTicket != null)
             {
+                dbTicket.StatusId = targetStatusId;
+                dbTicket.WorkflowStatusId = targetWorkflowStatusId;
+
                 if (transition.DeadlineMinutes.HasValue && transition.DeadlineMinutes.Value > 0)
                 {
                     dbTicket.DueDate = DateTime.UtcNow.AddMinutes(transition.DeadlineMinutes.Value);
@@ -166,7 +173,9 @@ public class WorkflowAutomationService : IWorkflowAutomationService
             }
         }
 
-        _logger.LogInformation("انتقال خودکار '{TransitionName}' روی تیکت {TicketId} با موفقیت اعمال گردید.", transition.Name, ticket.Id);
+
+        _logger.LogInformation("انتقال خودکار '{TransitionName}' روی تیکت {TicketId} با موفقیت اعمال گردید (علت: {Reason}).",
+            transition.Name, ticket.Id, isDeadlineTriggered ? "انقضای ددلاین" : "قانون اتوماسیون");
 
         await _eventBroker.PublishTransitionOccurredAsync(ticket.Id);
         await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
@@ -180,8 +189,19 @@ public class WorkflowAutomationService : IWorkflowAutomationService
             var now = DateTime.UtcNow;
 
             var overdueTickets = await context.Set<Ticket>()
+                .Include(t => t.Project)
+                    .ThenInclude(p => p.Workflow)
+                        .ThenInclude(w => w.Transitions)
+                            .ThenInclude(tr => tr.FromStatus)
+                                .ThenInclude(fs => fs.Status)
+                .Include(t => t.Project)
+                    .ThenInclude(p => p.Workflow)
+                        .ThenInclude(w => w.Transitions)
+                            .ThenInclude(tr => tr.ToStatus)
+                                .ThenInclude(ts => ts.Status)
                 .Include(t => t.Status)
-                .Where(t => t.DueDate != null && t.DueDate.Value <= now)
+                .Where(t => t.DueDate != null && t.DueDate.Value <= now && t.WorkflowStatusId != null && t.Project != null && t.Project.Workflow != null && t.Project.Workflow.IsActive)
+                .AsSplitQuery()
                 .ToListAsync();
 
             if (!overdueTickets.Any()) return;
@@ -190,8 +210,24 @@ public class WorkflowAutomationService : IWorkflowAutomationService
 
             foreach (var ticket in overdueTickets)
             {
-                // Real-time broadcast so UI reflects the overdue state
-                await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
+                var workflow = ticket.Project?.Workflow;
+                if (workflow == null) continue;
+
+                // Find active automated transition out of current workflow status
+                var deadlineTransition = workflow.Transitions.FirstOrDefault(tr =>
+                    tr.IsActive &&
+                    tr.IsAutomated == 1 &&
+                    tr.FromState == ticket.WorkflowStatusId);
+
+                if (deadlineTransition != null)
+                {
+                    await ExecuteAutomatedTransitionInternalAsync(ticket, deadlineTransition, isDeadlineTriggered: true);
+                }
+                else
+                {
+                    // Real-time broadcast so UI reflects the overdue state even when no automated transition is defined
+                    await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
+                }
             }
         }
         catch (Exception ex)
@@ -200,3 +236,4 @@ public class WorkflowAutomationService : IWorkflowAutomationService
         }
     }
 }
+
