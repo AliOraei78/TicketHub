@@ -338,6 +338,33 @@ public class TicketService : ITicketService
             }
         }
 
+        if (ticketInDb.TicketHistories != null)
+        {
+            foreach (var history in ticketInDb.TicketHistories)
+            {
+                if (history.Attachments != null)
+                {
+                    foreach (var attachment in history.Attachments)
+                    {
+                        _fileStorageService.DeleteFile(attachment.FilePath);
+                    }
+                }
+                if (history.TransitionFieldValues != null)
+                {
+                    foreach (var tfv in history.TransitionFieldValues)
+                    {
+                        if (tfv.Attachments != null)
+                        {
+                            foreach (var attachment in tfv.Attachments)
+                            {
+                                _fileStorageService.DeleteFile(attachment.FilePath);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         await _ticketRepository.DeleteAsync(id);
 
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت حذف شد.", id);

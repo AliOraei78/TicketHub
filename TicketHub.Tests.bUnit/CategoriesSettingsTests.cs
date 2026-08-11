@@ -119,8 +119,7 @@ namespace TicketHub.Tests.bUnit
             deleteBtn.Click();
 
             // Assert modal appears with the correct description
-            Assert.NotNull(cut.Find("div.fixed.inset-0")); // Modal background
-            var modalBody = cut.Markup;
+            var modalBody = cut.Find("div.fixed.inset-0").OuterHtml;
             Assert.Contains("آیا از حذف «Test Category» مطمئن هستید؟", modalBody);
         }
     }

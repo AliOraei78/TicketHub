@@ -52,8 +52,9 @@ namespace TicketHub.Tests.bUnit
             // Verify validation messages render
             var validationMessages = cut.FindAll(".validation-message, .text-red-500");
             Assert.NotEmpty(validationMessages);
-            Assert.Contains("عنوان تیکت الزامی است.", cut.Markup);
-            Assert.Contains("توضیحات تیکت الزامی است.", cut.Markup);
+            var modalHtml = cut.Find("div.fixed.inset-0").OuterHtml;
+            Assert.Contains("عنوان تیکت الزامی است.", modalHtml);
+            Assert.Contains("توضیحات تیکت الزامی است.", modalHtml);
         }
 
         [Fact]

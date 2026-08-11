@@ -17,6 +17,11 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             .Include(t => t.Attachments)
             .Include(t => t.FieldValues)
                 .ThenInclude(fv => fv.Attachments)
+            .Include(t => t.TicketHistories)
+                .ThenInclude(th => th.Attachments)
+            .Include(t => t.TicketHistories)
+                .ThenInclude(th => th.TransitionFieldValues)
+                    .ThenInclude(tfv => tfv.Attachments)
             .Include(t => t.Project)
                 .ThenInclude(p => p.RoleProjects)
             .Include(t => t.Category)
@@ -127,6 +132,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
                 .ThenInclude(fv => fv.Attachments)
             .Include(t => t.TicketHistories)
                 .ThenInclude(th => th.TransitionFieldValues)
+                    .ThenInclude(tfv => tfv.Attachments)
             .Include(t => t.TicketHistories)
                 .ThenInclude(th => th.Attachments)
             .Include(t => t.Comments)
@@ -136,6 +142,13 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
 
         if (ticket != null)
         {
+            var historyIds = ticket.TicketHistories?.Select(h => h.Id).ToList() ?? new List<int>();
+            var ticketFieldValueIds = ticket.FieldValues?.Select(fv => fv.Id).ToList() ?? new List<int>();
+            var transitionFieldValueIds = ticket.TicketHistories?
+                .Where(th => th.TransitionFieldValues != null)
+                .SelectMany(th => th.TransitionFieldValues.Select(tfv => tfv.Id))
+                .ToList() ?? new List<int>();
+
             var allAttachments = new List<Attachment>();
 
             if (ticket.Attachments != null && ticket.Attachments.Any())
@@ -162,12 +175,33 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
                     {
                         allAttachments.AddRange(th.Attachments);
                     }
+                    if (th.TransitionFieldValues != null)
+                    {
+                        foreach (var tfv in th.TransitionFieldValues)
+                        {
+                            if (tfv.Attachments != null && tfv.Attachments.Any())
+                            {
+                                allAttachments.AddRange(tfv.Attachments);
+                            }
+                        }
+                    }
                 }
             }
 
-            if (allAttachments.Any())
+            // Also query database for any attachments attached via FKs to this ticket or its children
+            var dbAttachments = await context.Set<Attachment>()
+                .Where(a => a.TicketId == id
+                         || (a.TicketHistoryId != null && historyIds.Contains(a.TicketHistoryId.Value))
+                         || (a.TicketFieldValueId != null && ticketFieldValueIds.Contains(a.TicketFieldValueId.Value))
+                         || (a.TransitionFieldValueId != null && transitionFieldValueIds.Contains(a.TransitionFieldValueId.Value)))
+                .ToListAsync();
+
+            allAttachments.AddRange(dbAttachments);
+
+            var distinctAttachments = allAttachments.DistinctBy(a => a.Id).ToList();
+            if (distinctAttachments.Any())
             {
-                context.Set<Attachment>().RemoveRange(allAttachments.Distinct());
+                context.Set<Attachment>().RemoveRange(distinctAttachments);
             }
 
             if (ticket.TicketHistories != null && ticket.TicketHistories.Any())
@@ -179,6 +213,15 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
                         context.Set<TransitionFieldValue>().RemoveRange(history.TransitionFieldValues);
                     }
                 }
+
+                var dbTransitionFieldValues = await context.Set<TransitionFieldValue>()
+                    .Where(tfv => historyIds.Contains(tfv.TicketHistoryId))
+                    .ToListAsync();
+                if (dbTransitionFieldValues.Any())
+                {
+                    context.Set<TransitionFieldValue>().RemoveRange(dbTransitionFieldValues);
+                }
+
                 context.Set<TicketHistory>().RemoveRange(ticket.TicketHistories);
             }
 

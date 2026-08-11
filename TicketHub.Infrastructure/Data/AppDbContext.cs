@@ -231,10 +231,11 @@ namespace TicketHub.Infrastructure.Data
                 .HasForeignKey(tfv => tfv.TransitionFieldId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // ارتباط جدید Attachment با TransitionFieldValue (اگر نیاز بود)
-            // modelBuilder.Entity<Attachment>()
-            //     .HasOne(a => a.TransitionFieldValue)
-            //     ...
+            modelBuilder.Entity<Attachment>()
+                .HasOne(a => a.TransitionFieldValue)
+                .WithMany(tfv => tfv.Attachments)
+                .HasForeignKey(a => a.TransitionFieldValueId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ارتباط جدید بین Ticket و WorkflowStatus
             modelBuilder.Entity<Ticket>()

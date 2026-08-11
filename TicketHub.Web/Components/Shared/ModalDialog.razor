@@ -1,28 +1,39 @@
-﻿@if (IsOpen)
+@using Microsoft.AspNetCore.Components.Sections
+
+@if (IsOpen)
 {
-    <!-- Backdrop overlay using modal-backdrop-animate -->
-    <div class="fixed inset-0 modal-backdrop-animate flex justify-center items-center z-50 p-4"
-         @onclick="OnClose">
+    <SectionContent SectionName="RootModal">
+        <style>
+            main { overflow: hidden !important; }
+            body { overflow: hidden !important; }
+        </style>
 
-        <!-- Modal container using modal-content-animate -->
-        <div class="bg-white w-full @MaxWidthClass rounded-2xl shadow-2xl border border-gray-100 overflow-hidden modal-content-animate"
+        <!-- Backdrop overlay using modal-backdrop-animate -->
+        <div class="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-8 md:pt-12 bg-slate-950/70 backdrop-blur-md animate-backdrop-fade"
              dir="rtl"
-             @onclick:stopPropagation>
+             @onclick="OnClose">
 
-            <!-- Header -->
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-800 text-lg">@Title</h3>
-                <button type="button" @onclick="OnClose" class="text-gray-400 hover:text-gray-600 smooth-transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            <!-- Modal container using modal-content-animate / animate-zoom-modal -->
+            <div class="relative w-full @MaxWidthClass max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-zoom-modal my-0"
+                 @onclick:stopPropagation>
+
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 flex-shrink-0">
+                    <h3 class="font-bold text-gray-800 text-lg">@Title</h3>
+                    <button type="button" @onclick="OnClose" class="text-gray-400 hover:text-gray-600 smooth-transition p-1 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body Content -->
+                <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
+                    @ChildContent
+                </div>
             </div>
-
-            <!-- Body Content -->
-            @ChildContent
         </div>
-    </div>
+    </SectionContent>
 }
 
 @code {

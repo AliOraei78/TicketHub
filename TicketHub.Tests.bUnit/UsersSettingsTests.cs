@@ -134,13 +134,12 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Users>();
 
             // Find delete button and click it
-            var deleteBtn = cut.Find("button.text-rose-500");
+            var deleteBtn = cut.Find("button[title='حذف']");
             deleteBtn.Click();
 
-            // Assert modal appears with the correct description
-            Assert.NotNull(cut.Find("div.fixed.inset-0")); // Modal background
-            var modalBody = cut.Markup;
-            Assert.Contains("آیا از حذف کاربر Test User مطمئن هستید؟", modalBody);
+            var confirmModal = cut.FindComponent<TicketHub.Web.Components.Shared.ConfirmDeleteModal>();
+            Assert.True(confirmModal.Instance.IsOpen, "ConfirmDeleteModal IsOpen should be true");
+            Assert.Contains("آیا از حذف کاربر Test User مطمئن هستید؟", confirmModal.Instance.Description);
         }
     }
 }
