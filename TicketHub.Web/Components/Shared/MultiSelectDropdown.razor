@@ -17,9 +17,9 @@
                    @bind:event="oninput"
                    @onclick="OpenDropdown"
                    placeholder="@Placeholder"
-                   class="w-full h-11 px-4 border border-white/[0.12] rounded-xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-sm text-slate-100 placeholder-slate-400 focus-ring" />
+                   class="w-full h-10 px-3.5 border border-white/[0.12] rounded-xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-xs text-slate-100 placeholder-slate-400 focus-ring" />
             <div class="absolute inset-y-0 left-3 flex items-center cursor-pointer z-10" @onclick="ToggleDropdown" @onclick:stopPropagation>
-                <svg class="w-4 h-4 text-slate-400 hover:text-cyan-400 transition-transform duration-300 @(ShowDropdown ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-slate-400 hover:text-cyan-400 transition-transform duration-300 @(ShowDropdown ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </div>

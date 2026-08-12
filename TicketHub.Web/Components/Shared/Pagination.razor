@@ -1,23 +1,23 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="flex flex-col sm:flex-row justify-between items-center bg-[#070c1a]/90 backdrop-blur-xl py-2.5 px-4 rounded-2xl shadow-lg border border-cyan-500/25 mt-2 gap-3 flex-shrink-0 select-none @Class">
-    <div class="text-sm text-slate-300 flex items-center flex-wrap gap-2">
+<div class="flex flex-col sm:flex-row justify-between items-center bg-[#070c1a]/90 backdrop-blur-xl py-1.5 px-3 rounded-xl shadow-md border border-cyan-500/25 mt-1.5 gap-2 flex-shrink-0 select-none @Class">
+    <div class="text-xs text-slate-300 flex items-center flex-wrap gap-1.5">
         <span>نمایش</span>
-        <span class="font-bold font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg text-xs">
+        <span class="font-bold font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-md text-[11px]">
             @(TotalItems == 0 ? 0 : (CurrentPage - 1) * PageSize + 1)
         </span>
         <span>تا</span>
-        <span class="font-bold font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg text-xs">
+        <span class="font-bold font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-md text-[11px]">
             @Math.Min(CurrentPage * PageSize, TotalItems)
         </span>
         <span>از</span>
-        <span class="font-bold font-mono text-indigo-300 bg-indigo-950/60 border border-indigo-500/40 px-2.5 py-0.5 rounded-lg text-xs">
+        <span class="font-bold font-mono text-indigo-300 bg-indigo-950/60 border border-indigo-500/40 px-2 py-0.5 rounded-md text-[11px]">
             @TotalItems
         </span>
         <span>@ItemName</span>
     </div>
 
-    <div class="flex items-center gap-2.5">
+    <div class="flex items-center gap-2">
         <button @onclick="OnPrevious" disabled="@(CurrentPage == 1)"
                 class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs font-semibold text-slate-200 hover:text-cyan-300 hover:border-cyan-500/50 hover:bg-cyan-950/50 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-2xs focus-ring group">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">

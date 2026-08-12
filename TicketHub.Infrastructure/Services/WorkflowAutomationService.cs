@@ -155,7 +155,7 @@ public class WorkflowAutomationService : IWorkflowAutomationService
 
         await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticket.Id, targetStatusId, targetWorkflowStatusId, history);
 
-        // Update ticket in database with new status and DueDate based on destination transition's DeadlineMinutes
+        // Update ticket in database with new status and DueDate based on destination transition's DeadlineMinutes or outgoing automated transition
         using (var updateContext = await _factory.CreateDbContextAsync())
         {
             var dbTicket = await updateContext.Set<Ticket>().FindAsync(ticket.Id);
@@ -164,9 +164,14 @@ public class WorkflowAutomationService : IWorkflowAutomationService
                 dbTicket.StatusId = targetStatusId;
                 dbTicket.WorkflowStatusId = targetWorkflowStatusId;
 
-                if (transition.DeadlineMinutes.HasValue && transition.DeadlineMinutes.Value > 0)
+                var outgoingAutoTransition = ticket.Project?.Workflow?.Transitions
+                    .FirstOrDefault(tr => tr.IsActive && tr.IsAutomated == 1 && tr.FromState == targetWorkflowStatusId);
+
+                int? effectiveDeadline = outgoingAutoTransition?.DeadlineMinutes ?? transition.DeadlineMinutes;
+
+                if (effectiveDeadline.HasValue && effectiveDeadline.Value > 0)
                 {
-                    dbTicket.DueDate = DateTime.UtcNow.AddMinutes(transition.DeadlineMinutes.Value);
+                    dbTicket.DueDate = DateTime.UtcNow.AddMinutes(effectiveDeadline.Value);
                 }
                 else
                 {
@@ -254,6 +259,28 @@ public class WorkflowAutomationService : IWorkflowAutomationService
                 {
                     // Real-time broadcast so UI reflects the overdue state even when no automated transition is defined
                     await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
+
+                    // Send deadline breach warning notification to user
+                    if (_notificationService != null && ticket.UserId > 0)
+                    {
+                        try
+                        {
+                            await _notificationService.CreateNotificationAsync(new Application.DTOs.CreateNotificationDto
+                            {
+                                UserId = ticket.UserId,
+                                Title = $"هشدار انقضای مهلت تیکت #{ticket.Id}",
+                                Message = $"مهلت اقدام تیکت «{ticket.Title}» در وضعیت «{ticket.Status?.Name ?? "فعلی"}» به پایان رسیده و نیازمند پیگیری است.",
+                                Type = Core.Enums.NotificationType.DeadlineBreached,
+                                Severity = Core.Enums.NotificationSeverity.Warning,
+                                ReferenceId = ticket.Id,
+                                ActionUrl = $"/tickets/{ticket.Id}"
+                            });
+                        }
+                        catch (Exception notifEx)
+                        {
+                            _logger.LogWarning(notifEx, "خطا در ارسال اعلان انقضای مهلت تیکت {TicketId}.", ticket.Id);
+                        }
+                    }
                 }
             }
         }

@@ -1,24 +1,24 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="element-card gamer-card-3d @GetElementClass() p-6 rounded-3xl flex items-center justify-between transition-all select-none relative overflow-hidden group cursor-pointer @Class">
+<div class="element-card gamer-card-3d @GetElementClass() p-3.5 sm:p-4 rounded-2xl flex items-center justify-between transition-all select-none relative overflow-hidden group cursor-pointer @Class">
     
-    @* Live Procedural Canvas VFX Layer (Fire flames, Lightning arcs, Toxic bubbles/drips, Fluid waves) *@
+    @* Live Procedural Canvas VFX Layer (Fire flames, Lightning arcs, Toxic bubbles/drips, Fluid waves, Volumetric Smoke) *@
     @if (!ElementType.Equals("none", StringComparison.OrdinalIgnoreCase))
     {
         <canvas class="element-vfx-canvas absolute inset-0 w-full h-full pointer-events-none z-0" data-element="@ElementType.ToLowerInvariant()"></canvas>
     }
 
-    <div class="relative z-10">
-        <div class="flex items-center gap-2">
-            <p class="text-xs font-bold @(ElementType == "none" ? "text-slate-500 group-hover:text-slate-800" : "text-slate-300 group-hover:text-white") transition-colors">@Title</p>
+    <div class="relative z-10 min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <p class="text-[11px] sm:text-xs font-bold @(ElementType == "none" ? "text-slate-500 group-hover:text-slate-800" : "text-slate-300 group-hover:text-white") transition-colors truncate">@Title</p>
             @if (!string.IsNullOrEmpty(BadgeText))
             {
-                <span class="text-[10px] font-black px-2 py-0.5 rounded-md @BadgeClass">
+                <span class="text-[9px] font-black px-1.5 py-0.2 rounded-md @BadgeClass">
                     @BadgeText
                 </span>
             }
         </div>
-        <h3 class="text-3xl font-black mt-2 tracking-tight @ValueColorClass flex items-baseline gap-1">
+        <h3 class="text-2xl sm:text-3xl font-black mt-1 tracking-tight @ValueColorClass flex items-baseline gap-1">
             <span class="gamer-counter" data-target="@Value">@Value</span>
             @if (!string.IsNullOrEmpty(UnitText))
             {
@@ -27,7 +27,7 @@
         </h3>
     </div>
     
-    <div class="relative z-10 p-3.5 rounded-2xl border shadow-sm transition-all duration-300 group-hover:scale-110 @IconThemeClass @(ElementType == "lightning" ? "lightning-spark-icon" : "")">
+    <div class="relative z-10 p-2.5 rounded-xl border shadow-sm transition-all duration-300 group-hover:scale-110 @IconThemeClass @(ElementType == "lightning" ? "lightning-spark-icon" : "") flex-shrink-0 mr-2">
         @Icon
     </div>
 </div>
@@ -50,6 +50,7 @@
         "lightning" => "element-lightning",
         "toxic" => "element-toxic",
         "fire" => "element-fire",
+        "smoke" => "element-smoke",
         _ => "bg-white border border-slate-200/80 shadow-2xs hover:shadow-md"
     };
 }

@@ -1,4 +1,4 @@
-﻿@page "/workflows/editor/{Id:int?}"
+@page "/workflows/editor/{Id:int?}"
 @layout TicketHub.Web.Components.Layout.EmptyLayout
 @rendermode InteractiveServer
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
@@ -66,6 +66,7 @@
                         OnSetInitialNode="SetInitialNode" />
 
         <TransitionSidebar Connection="SelectedConnections.FirstOrDefault()"
+                           AllConnections="Connections"
                            AvailableRoles="EdState.Value.AvailableRoles"
                            AvailableFieldTypes="EdState.Value.AvailableFieldTypes"
                            GetNodeName="GetNodeName"

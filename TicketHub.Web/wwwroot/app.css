@@ -1294,6 +1294,65 @@ jdp-container .jdp-btn {
     transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   ELEMENTAL STATS CARDS & SHADERS (WATER, LIGHTNING, TOXIC, FIRE, SMOKE)
+   ========================================================================== */
+.element-card {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.element-water {
+    background: linear-gradient(135deg, rgba(8, 15, 36, 0.95) 0%, rgba(3, 105, 161, 0.25) 100%);
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 4px 20px -4px rgba(6, 182, 212, 0.15);
+}
+.element-water:hover {
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 10px 30px -4px rgba(6, 182, 212, 0.3);
+}
+
+.element-lightning {
+    background: linear-gradient(135deg, rgba(20, 15, 5, 0.95) 0%, rgba(202, 138, 4, 0.25) 100%);
+    border-color: rgba(250, 204, 21, 0.25);
+    box-shadow: 0 4px 20px -4px rgba(234, 179, 8, 0.15);
+}
+.element-lightning:hover {
+    border-color: rgba(250, 204, 21, 0.55);
+    box-shadow: 0 10px 30px -4px rgba(234, 179, 8, 0.3);
+}
+
+.element-toxic {
+    background: linear-gradient(135deg, rgba(6, 20, 10, 0.95) 0%, rgba(22, 163, 74, 0.25) 100%);
+    border-color: rgba(74, 222, 128, 0.25);
+    box-shadow: 0 4px 20px -4px rgba(34, 197, 94, 0.15);
+}
+.element-toxic:hover {
+    border-color: rgba(74, 222, 128, 0.55);
+    box-shadow: 0 10px 30px -4px rgba(34, 197, 94, 0.3);
+}
+
+.element-fire {
+    background: linear-gradient(135deg, rgba(28, 8, 8, 0.95) 0%, rgba(225, 29, 72, 0.25) 100%);
+    border-color: rgba(244, 63, 94, 0.25);
+    box-shadow: 0 4px 20px -4px rgba(239, 68, 68, 0.15);
+}
+.element-fire:hover {
+    border-color: rgba(244, 63, 94, 0.55);
+    box-shadow: 0 10px 30px -4px rgba(239, 68, 68, 0.3);
+}
+
+.element-smoke {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(100, 116, 139, 0.3) 100%);
+    border-color: rgba(148, 163, 184, 0.25);
+    box-shadow: 0 4px 20px -4px rgba(148, 163, 184, 0.15);
+}
+.element-smoke:hover {
+    border-color: rgba(203, 213, 225, 0.55);
+    box-shadow: 0 10px 30px -4px rgba(203, 213, 225, 0.3);
+}
+
 
 
 

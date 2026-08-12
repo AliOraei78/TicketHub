@@ -26,7 +26,7 @@ public record TicketState(
     List<int> SelectedFilterPriorityIds,
     IEnumerable<TicketFieldDto> DynamicFields)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 6, 1, new(), new(), new(), Array.Empty<TicketFieldDto>()) { }
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 9, 1, new(), new(), new(), Array.Empty<TicketFieldDto>()) { }
 }
 
 // 2. Actions

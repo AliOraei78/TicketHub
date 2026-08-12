@@ -776,6 +776,114 @@ namespace TicketHub.Tests.bUnit
                 dto => dto.UserId == 55 && dto.ReferenceId == 95 && dto.Type == TicketHub.Core.Enums.NotificationType.DeadlineBreached)), Times.Once);
         }
 
+        [Fact]
+        public async Task ProcessDeadlinesAsync_SendsBreachNotification_WhenOverdue_WithoutAutomatedTransition()
+        {
+            // Arrange
+            var dbName = Guid.NewGuid().ToString();
+            var factory = CreateInMemoryDbContextFactory(dbName);
+            var mockNotifService = new Mock<INotificationService>();
+            mockNotifService.Setup(n => n.CreateNotificationAsync(It.IsAny<TicketHub.Application.DTOs.CreateNotificationDto>()))
+                .ReturnsAsync(new TicketHub.Application.DTOs.NotificationDto());
+
+            using (var context = await factory.CreateDbContextAsync())
+            {
+                var user = new User { Id = 77, Name = "user77", Email = "u77@example.com" };
+                var s1 = new Status { Id = 901, Name = "Pending Review" };
+                await context.Set<User>().AddAsync(user);
+                await context.Set<Status>().AddAsync(s1);
+
+                var workflow = new Workflow { Id = 12, Name = "No Auto WF", IsActive = true };
+                var status1 = new WorkflowStatus { Id = 91, NodeId = Guid.NewGuid(), StatusId = 901, Status = s1, WorkflowId = 12 };
+                workflow.WorkflowStatuses.Add(status1);
+
+                var project = new Project { Id = 12, Name = "P12", WorkflowId = 12, Workflow = workflow };
+                var ticket = new Ticket
+                {
+                    Id = 98,
+                    Title = "Overdue Without Auto Transition",
+                    UserId = 77,
+                    User = user,
+                    ProjectId = 12,
+                    Project = project,
+                    WorkflowStatusId = 91,
+                    StatusId = 901,
+                    Status = s1,
+                    DueDate = DateTime.UtcNow.AddMinutes(-20) // Overdue
+                };
+
+                await context.Set<Workflow>().AddAsync(workflow);
+                await context.Set<Project>().AddAsync(project);
+                await context.Set<Ticket>().AddAsync(ticket);
+                await context.SaveChangesAsync();
+            }
+
+            var service = new WorkflowAutomationService(factory, _mockTicketRepo.Object, _mockEventBroker.Object, _mockLogger.Object, mockNotifService.Object);
+
+            // Act
+            await service.ProcessDeadlinesAsync();
+
+            // Assert
+            _mockEventBroker.Verify(b => b.PublishTicketUpdatedAsync(98), Times.Once);
+            mockNotifService.Verify(n => n.CreateNotificationAsync(It.Is<TicketHub.Application.DTOs.CreateNotificationDto>(
+                dto => dto.UserId == 77 && dto.ReferenceId == 98 && dto.Type == TicketHub.Core.Enums.NotificationType.DeadlineBreached)), Times.Once);
+        }
+
+        [Fact]
+        public void WorkflowDtoValidator_Fails_WhenNodeHasMultipleAutomatedTransitions()
+        {
+            // Arrange
+            var validator = new TicketHub.Application.Validations.WorkflowDtoValidator();
+            var nodeId = Guid.NewGuid();
+            var workflow = new TicketHub.Application.DTOs.WorkflowDto
+            {
+                Name = "Invalid Auto Transition WF",
+                WorkflowStatuses = new List<TicketHub.Application.DTOs.WorkflowStatusDto>
+                {
+                    new() { Id = 1, NodeId = nodeId, StatusId = 1, IsInitial = true }
+                },
+                Transitions = new List<TicketHub.Application.DTOs.TransitionDto>
+                {
+                    new() { Name = "T1", FromNodeId = nodeId, ToNodeId = Guid.NewGuid(), FromState = 1, ToState = 2, IsAutomated = 1, IsActive = true, SourcePort = "Right", TargetPort = "Left" },
+                    new() { Name = "T2", FromNodeId = nodeId, ToNodeId = Guid.NewGuid(), FromState = 1, ToState = 3, IsAutomated = 1, IsActive = true, SourcePort = "Right", TargetPort = "Left" }
+                }
+            };
+
+            // Act
+            var result = validator.Validate(workflow);
+
+            // Assert
+            Assert.False(result.IsValid);
+            Assert.Contains(result.Errors, e => e.ErrorMessage.Contains("حداکثر یک انتقال خودکار"));
+        }
+
+        [Fact]
+        public void WorkflowDtoValidator_Passes_WhenNodeHasSingleAutomatedTransition()
+        {
+            // Arrange
+            var validator = new TicketHub.Application.Validations.WorkflowDtoValidator();
+            var nodeId = Guid.NewGuid();
+            var workflow = new TicketHub.Application.DTOs.WorkflowDto
+            {
+                Name = "Valid Auto Transition WF",
+                WorkflowStatuses = new List<TicketHub.Application.DTOs.WorkflowStatusDto>
+                {
+                    new() { Id = 1, NodeId = nodeId, StatusId = 1, IsInitial = true }
+                },
+                Transitions = new List<TicketHub.Application.DTOs.TransitionDto>
+                {
+                    new() { Name = "T1", FromNodeId = nodeId, ToNodeId = Guid.NewGuid(), FromState = 1, ToState = 2, IsAutomated = 1, IsActive = true, SourcePort = "Right", TargetPort = "Left" },
+                    new() { Name = "T2", FromNodeId = nodeId, ToNodeId = Guid.NewGuid(), FromState = 1, ToState = 3, IsAutomated = 0, IsActive = true, SourcePort = "Right", TargetPort = "Left" }
+                }
+            };
+
+            // Act
+            var result = validator.Validate(workflow);
+
+            // Assert
+            Assert.True(result.IsValid);
+        }
+
         #endregion
     }
 }

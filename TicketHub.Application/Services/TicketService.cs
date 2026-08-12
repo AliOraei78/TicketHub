@@ -483,13 +483,18 @@ public class TicketService : ITicketService
         await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, nextStatusId, nextWorkflowStatusId, ticketHistory);
         _logger.LogInformation("عملیات با موفقیت انجام شد.");
 
-        // Update DueDate based on destination transition DeadlineMinutes
+        // Update DueDate based on destination status's automated transition DeadlineMinutes or the transition's DeadlineMinutes
         var updateTicket = await _ticketRepository.GetByIdAsync(ticketInDb.Id);
         if (updateTicket != null)
         {
-            if (transition.DeadlineMinutes.HasValue && transition.DeadlineMinutes.Value > 0)
+            var outgoingAutoTransition = ticketInDb.Project?.Workflow?.Transitions?
+                .FirstOrDefault(tr => tr.IsActive && tr.IsAutomated == 1 && tr.FromState == nextWorkflowStatusId);
+
+            int? effectiveDeadline = outgoingAutoTransition?.DeadlineMinutes ?? transition.DeadlineMinutes;
+
+            if (effectiveDeadline.HasValue && effectiveDeadline.Value > 0)
             {
-                updateTicket.DueDate = DateTime.UtcNow.AddMinutes(transition.DeadlineMinutes.Value);
+                updateTicket.DueDate = DateTime.UtcNow.AddMinutes(effectiveDeadline.Value);
             }
             else
             {

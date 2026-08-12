@@ -37,6 +37,7 @@ public class DashboardSummaryDto
     public int TotalTickets { get; set; }
     public int NewTicketsCount { get; set; }
     public int InProgressCount { get; set; }
+    public int ResolvedCount { get; set; }
     public int OverdueCount { get; set; }
     public int CriticalAndOverdueCount { get; set; }
     public int SlaOnTimePercentage { get; set; } = 100;

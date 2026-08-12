@@ -9,6 +9,7 @@ public partial class TransitionSidebar : ComponentBase
 {
     [Parameter] public IEnumerable<FieldTypeDto> AvailableFieldTypes { get; set; } = new List<FieldTypeDto>();
     [Parameter] public CanvasConnection? Connection { get; set; }
+    [Parameter] public IEnumerable<CanvasConnection> AllConnections { get; set; } = new List<CanvasConnection>();
     [Parameter] public IEnumerable<RoleDto> AvailableRoles { get; set; } = new List<RoleDto>();
     [Parameter] public Func<Guid, string>? GetNodeName { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
@@ -16,6 +17,20 @@ public partial class TransitionSidebar : ComponentBase
     [Parameter] public EventCallback<CanvasConnection> OnDelete { get; set; }
 
     protected CanvasTransitionField? DraggedField { get; set; }
+
+    protected bool HasCompetingAutomatedTransition =>
+        Connection != null &&
+        AllConnections.Any(c => c != Connection && c.FromNodeId == Connection.FromNodeId && c.IsAutomatic);
+
+    protected void OnIsAutomaticChanged(bool value)
+    {
+        if (Connection == null) return;
+        if (value && HasCompetingAutomatedTransition)
+        {
+            return;
+        }
+        Connection.IsAutomatic = value;
+    }
 
     protected string ActivateAtString
     {

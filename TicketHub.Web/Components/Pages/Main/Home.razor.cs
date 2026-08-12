@@ -37,6 +37,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected int TotalTickets { get; set; } = 0;
     protected int NewTicketsCount { get; set; } = 0;
     protected int InProgressCount { get; set; } = 0;
+    protected int ResolvedCount { get; set; } = 0;
     protected int CriticalAndOverdueCount { get; set; } = 0;
     protected int OverdueCount { get; set; } = 0;
     protected int SlaOnTimePercentage { get; set; } = 100;
@@ -131,6 +132,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
                 TotalTickets = cachedSummary.TotalTickets;
                 NewTicketsCount = cachedSummary.NewTicketsCount;
                 InProgressCount = cachedSummary.InProgressCount;
+                ResolvedCount = cachedSummary.ResolvedCount;
                 OverdueCount = cachedSummary.OverdueCount;
                 CriticalAndOverdueCount = cachedSummary.CriticalAndOverdueCount;
                 SlaOnTimePercentage = cachedSummary.SlaOnTimePercentage;
@@ -157,8 +159,18 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             pageSize: 100);
 
         TotalTickets = total;
-        NewTicketsCount = tickets.Count(t => t.WorkflowStatus?.IsInitial == true || (t.WorkflowStatusId == null && t.Status?.Name == "Open"));
-        InProgressCount = tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial);
+
+        bool IsInitialTicket(TicketDto t) =>
+            t.WorkflowStatus?.IsInitial == true ||
+            (t.WorkflowStatusId == null && (t.Status?.Name == "Open" || t.Status?.Name == "جدید" || t.Status?.Name == "اقدام نشده"));
+
+        bool IsFinalTicket(TicketDto t) =>
+            (t.WorkflowStatus != null && t.Project?.Workflow?.Transitions?.Any(tr => tr.FromState == t.WorkflowStatusId && tr.IsActive) == false) ||
+            (t.Status != null && (t.Status.Name == "Closed" || t.Status.Name == "Resolved" || t.Status.Name.Contains("بسته") || t.Status.Name.Contains("خاتمه") || t.Status.Name.Contains("حل")));
+
+        NewTicketsCount = tickets.Count(t => IsInitialTicket(t));
+        ResolvedCount = tickets.Count(t => IsFinalTicket(t));
+        InProgressCount = tickets.Count(t => !IsInitialTicket(t) && !IsFinalTicket(t));
         OverdueCount = tickets.Count(t => t.IsOverdue);
         CriticalAndOverdueCount = tickets.Count(t => (t.Priority != null && t.Priority.Level > 4) || t.IsOverdue);
 
@@ -219,6 +231,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             TotalTickets = TotalTickets,
             NewTicketsCount = NewTicketsCount,
             InProgressCount = InProgressCount,
+            ResolvedCount = ResolvedCount,
             OverdueCount = OverdueCount,
             CriticalAndOverdueCount = CriticalAndOverdueCount,
             SlaOnTimePercentage = SlaOnTimePercentage,

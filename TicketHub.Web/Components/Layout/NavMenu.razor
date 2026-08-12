@@ -195,6 +195,20 @@
                     <button type="button" onclick="window.setCockpitAura('toxic')" data-aura-target="toxic" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-emerald-600 to-lime-400 cursor-pointer shadow-sm hover:opacity-100" title="تم اسید و سم"></button>
                 </div>
             </div>
+
+            <!-- Cyber EKG Heartbeat Telemetry Monitor -->
+            <div class="px-3.5 py-2 border-b border-white/[0.05] bg-[#030509]/90 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="text-[9px] font-mono font-bold text-emerald-400 tracking-wider">LIVE TELEMETRY</span>
+                    </div>
+                    <span class="hero-ekg-status text-[9px] font-mono text-emerald-400 font-bold">78 BPM // STABLE</span>
+                </div>
+                <div class="h-8 w-full relative rounded-lg bg-[#020408] border border-emerald-500/20 overflow-hidden shadow-inner">
+                    <canvas class="hero-ekg-canvas absolute inset-0 w-full h-full pointer-events-none"></canvas>
+                </div>
+            </div>
         }
 
         <a href="/profile" class="@($"relative flex items-center gap-3 {(IsCollapsed ? "justify-center p-3" : "p-3.5")} hover:bg-slate-800/60 transition-colors group")" @onclick="HandleSideBarClick">

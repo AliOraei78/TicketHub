@@ -281,6 +281,52 @@
         }
     `;
 
+    // --- E. ETHEREAL VOLUMETRIC SMOKE & MIST SHADER ---
+    const FRAGMENT_SMOKE_SRC = GLSL_COMMON_FUNCTIONS + `
+        void main() {
+            vec2 uv = v_uv;
+            float t = u_time * 0.45;
+
+            // Interactive mouse wind force
+            if (u_mouse.x > 0.0) {
+                vec2 mNorm = u_mouse / u_resolution;
+                vec2 toMouse = uv - mNorm;
+                float d = length(toMouse);
+                if (d < 0.45) {
+                    float force = (1.0 - d / 0.45) * 0.12;
+                    uv += normalize(toMouse) * force;
+                }
+            }
+
+            // Smoke domain distortion
+            vec2 p = uv * vec2(2.2, 1.8);
+            p.y -= t * 0.6; // Upward smoke velocity
+
+            // Multi-octave Fractal Brownian Motion for curling smoke plumes
+            float n1 = fbm(p + vec2(t * 0.15, -t * 0.3));
+            float n2 = fbm(p * 1.6 + vec2(-t * 0.2, n1 * 0.8));
+            float smokeDensity = fbm(p * 2.2 + vec2(n2 * 0.6, n1 * 0.7));
+
+            // Soft atmospheric density profile
+            float edgeFade = smoothstep(0.0, 0.25, uv.x) * (1.0 - smoothstep(0.75, 1.0, uv.x));
+            float bottomFade = smoothstep(0.0, 0.35, uv.y);
+            float mask = edgeFade * bottomFade;
+
+            float smoke = smoothstep(0.18, 0.78, smokeDensity) * mask;
+
+            // Color Palette: Deep Slate Obsidian to Ethereal Silver & Soft Cyan-Grey Mist
+            vec3 darkSmoke = vec3(0.08, 0.11, 0.16);
+            vec3 silverMist = vec3(0.68, 0.74, 0.82);
+            vec3 etherealGlow = vec3(0.85, 0.92, 1.0);
+
+            vec3 col = mix(darkSmoke, silverMist, smoke);
+            col += etherealGlow * pow(smoke, 2.2) * 0.45;
+
+            float alpha = clamp(smoke * 0.6, 0.0, 0.85);
+            gl_FragColor = vec4(col * alpha, alpha);
+        }
+    `;
+
     // =========================================================================
     // 2. ULTRA-OPTIMIZED WEBGL RENDERER CONTROLLER
     // =========================================================================
@@ -412,8 +458,8 @@
         generateNextY(now) {
             const h = this.canvas.height;
             const w = this.canvas.width;
-            const midY = h * 0.84;
-            const midPoint = w * 0.48;
+            const midY = h * 0.5;
+            const midPoint = w * 0.55;
 
             // When scan crosses center of card, heart flatlines (Red zone)
             const isFlatline = this.scanX >= midPoint;
@@ -432,26 +478,26 @@
                     this.heartbeatPhase = 1;
                     // Randomize subtle amplitude and interval for organic non-repeating beats
                     this.nextBeatInterval = 420 + Math.random() * 280; // 420ms - 700ms rhythm
-                    this.currentSpikeScale = 0.13 + Math.random() * 0.05; // 13% to 18% max height
-                    this.currentPScale = 0.025 + Math.random() * 0.02; // Subtle P-wave
-                    this.currentTScale = 0.04 + Math.random() * 0.03; // Smooth T-wave
+                    this.currentSpikeScale = 0.35 + Math.random() * 0.08;
+                    this.currentPScale = 0.08 + Math.random() * 0.04;
+                    this.currentTScale = 0.14 + Math.random() * 0.06;
                 }
 
                 if (this.heartbeatPhase > 0) {
                     this.heartbeatPhase++;
                     if (this.heartbeatPhase === 2) return midY - (h * this.currentPScale); // P wave
                     if (this.heartbeatPhase === 3) return midY + (h * (this.currentPScale * 0.5)); // Q dip
-                    if (this.heartbeatPhase === 4) return midY - (h * this.currentSpikeScale); // R spike (sleek peak)
-                    if (this.heartbeatPhase === 5) return midY + (h * (this.currentSpikeScale * 0.55)); // S dip
+                    if (this.heartbeatPhase === 4) return midY - (h * this.currentSpikeScale); // R spike
+                    if (this.heartbeatPhase === 5) return midY + (h * (this.currentSpikeScale * 0.5)); // S dip
                     if (this.heartbeatPhase === 6) return midY - (h * this.currentTScale); // T wave
-                    if (this.heartbeatPhase === 7) return midY - (h * 0.015); // U wave
+                    if (this.heartbeatPhase === 7) return midY - (h * 0.04); // U wave
                     if (this.heartbeatPhase > 7) {
                         this.heartbeatPhase = 0;
                         return midY;
                     }
                 }
                 // Organic biological baseline wave
-                return midY + Math.sin(this.scanX * 0.08) * 0.8 + (Math.random() - 0.5) * 1.0;
+                return midY + Math.sin(this.scanX * 0.15) * 0.6 + (Math.random() - 0.5) * 0.8;
             }
         }
 
@@ -459,13 +505,11 @@
             const badge = document.querySelector('.hero-ekg-status');
             if (!badge) return;
             if (state === 'normal') {
-                badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300';
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shadow-[0_0_8px_#34d399]"></span>
-                                   <span class="font-mono">💚 VITALS: STABLE [78 BPM]</span>`;
+                badge.className = 'hero-ekg-status text-[9px] font-mono text-emerald-400 font-bold';
+                badge.textContent = '78 BPM // STABLE';
             } else {
-                badge.className = 'hero-ekg-status px-3.5 py-1 rounded-full text-xs font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 backdrop-blur-md flex items-center gap-2 shadow-xs transition-all duration-300 animate-pulse';
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e]"></span>
-                                   <span class="font-mono">🚨 VITALS: FLATLINE DETECTED [0 BPM]</span>`;
+                badge.className = 'hero-ekg-status text-[9px] font-mono text-rose-400 font-bold animate-pulse';
+                badge.textContent = '0 BPM // FLATLINE';
             }
         }
 
@@ -506,7 +550,7 @@
 
             if (this.history.length < 2) return;
 
-            const midPoint = w * 0.48;
+            const midPoint = w * 0.55;
 
             // Separate points into Green (First half organic ECG) and Red (Second half Flatline)
             const greenPoints = [];
@@ -532,13 +576,13 @@
             if (greenPoints.length >= 2) {
                 // Outer Emerald Glow
                 ctx.strokeStyle = '#10b981';
-                ctx.lineWidth = 3.5;
+                ctx.lineWidth = 3.0;
                 ctx.globalAlpha = 0.4;
                 this.drawSmoothPath(ctx, greenPoints);
 
                 // White-Hot Core Laser Line
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.4;
+                ctx.lineWidth = 1.3;
                 ctx.globalAlpha = 0.95;
                 this.drawSmoothPath(ctx, greenPoints);
             }
@@ -547,13 +591,13 @@
             if (redPoints.length >= 2) {
                 // Outer Crimson Glow
                 ctx.strokeStyle = '#f43f5e';
-                ctx.lineWidth = 3.5;
+                ctx.lineWidth = 3.0;
                 ctx.globalAlpha = 0.4;
                 this.drawSmoothPath(ctx, redPoints);
 
                 // White-Hot Core Laser Line
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.4;
+                ctx.lineWidth = 1.3;
                 ctx.globalAlpha = 0.95;
                 this.drawSmoothPath(ctx, redPoints);
             }
@@ -583,14 +627,15 @@
 
             const element = canvas.getAttribute('data-element') || 'none';
             const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.max(Math.floor(rect.width), 260);
-            canvas.height = Math.max(Math.floor(rect.height), 150);
+            canvas.width = Math.max(Math.floor(rect.width), 200);
+            canvas.height = Math.max(Math.floor(rect.height), 120);
 
             let shaderSrc = null;
             if (element === 'fire') shaderSrc = FRAGMENT_FIRE_SRC;
             else if (element === 'water') shaderSrc = FRAGMENT_WATER_SRC;
             else if (element === 'lightning') shaderSrc = FRAGMENT_LIGHTNING_SRC;
             else if (element === 'toxic') shaderSrc = FRAGMENT_TOXIC_SRC;
+            else if (element === 'smoke') shaderSrc = FRAGMENT_SMOKE_SRC;
 
             if (shaderSrc) {
                 const renderer = new WebGLShaderRenderer(canvas, shaderSrc);
@@ -605,8 +650,8 @@
             if (activeRenderers.has(canvas)) return;
             const parent = canvas.parentElement || canvas;
             const rect = parent.getBoundingClientRect();
-            canvas.width = Math.max(Math.floor(rect.width), 600);
-            canvas.height = Math.max(Math.floor(rect.height), 220);
+            canvas.width = Math.max(Math.floor(rect.width), 160);
+            canvas.height = Math.max(Math.floor(rect.height), 32);
             const sim = new EkgMonitorSimulator(canvas);
             activeRenderers.set(canvas, sim);
             viewportObserver.observe(canvas);
