@@ -85,7 +85,8 @@
     <ListFilterToolbar @bind-SearchTerm="SearchQuery"
                        SearchPlaceholder="جستجو در عنوان تیکت‌ها..."
                        ItemName="تیکت"
-                       @bind-PageSize="PageSize">
+                       @bind-PageSize="PageSize"
+                       PageSizeOptions="@(new List<int> { 6, 12, 18, 24 })">
         <div class="w-full sm:w-56">
             <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                   Placeholder="پروژه..."
@@ -101,6 +102,14 @@
                                   @bind-SelectedValues="SelectedStatusIds"
                                   ValueSelector="s => s.Id"
                                   DisplaySelector="s => s.Name" />
+        </div>
+        <div class="w-full sm:w-56">
+            <MultiSelectDropdown TItem="PriorityDto" TValue="int"
+                                  Placeholder="اولویت..."
+                                  Items="TicketState.Value.AvailablePriorities"
+                                  @bind-SelectedValues="SelectedPriorityIds"
+                                  ValueSelector="p => p.Id"
+                                  DisplaySelector="p => p.Name" />
         </div>
     </ListFilterToolbar>
 
@@ -122,7 +131,7 @@
     }
     else
     {
-        <StatefulDataView Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد." ContainerClass="grid grid-cols-1 gap-4">
+        <StatefulDataView Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد." ContainerClass="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ItemTemplate Context="ticket">
                 <TicketCard Ticket="ticket"
                             OnClick="NavigateToDetails"
@@ -132,6 +141,13 @@
                             IsSelectedChanged="@(val => ToggleTicketSelection(ticket.Id, val))" />
             </ItemTemplate>
         </StatefulDataView>
+
+        <Pagination CurrentPage="TicketState.Value.CurrentPage"
+                    PageSize="TicketState.Value.PageSize"
+                    TotalItems="TicketState.Value.TotalTickets"
+                    ItemName="تیکت"
+                    OnNext="NextPage"
+                    OnPrevious="PreviousPage" />
     }
 </div>
 

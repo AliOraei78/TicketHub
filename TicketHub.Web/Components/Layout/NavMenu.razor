@@ -195,17 +195,6 @@
                     <button type="button" onclick="window.setCockpitAura('toxic')" data-aura-target="toxic" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-emerald-600 to-lime-400 cursor-pointer shadow-sm hover:opacity-100" title="تم اسید و سم"></button>
                 </div>
             </div>
-
-            <!-- Daily Quests Progress Bar (XP) -->
-            <div class="px-4 py-2.5 border-b border-white/[0.05] bg-[#050811]/40">
-                <div class="flex items-center justify-between text-[11px] font-medium mb-1">
-                    <span class="text-slate-400 text-[10px]">مأموریت روزانه</span>
-                    <span class="text-cyan-400 font-mono text-[10px] font-bold">۸۵% XP</span>
-                </div>
-                <div class="w-full h-1 rounded-full bg-slate-800/80 overflow-hidden">
-                    <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 animate-pulse" style="width: 85%"></div>
-                </div>
-            </div>
         }
 
         <a href="/profile" class="@($"relative flex items-center gap-3 {(IsCollapsed ? "justify-center p-3" : "p-3.5")} hover:bg-slate-800/60 transition-colors group")" @onclick="HandleSideBarClick">

@@ -6,9 +6,9 @@ namespace TicketHub.Application.Interfaces;
 public interface ITicketService
 {
     Task<TicketDto?> GetByIdAsync(int id);
-    Task<(List<TicketDto> Tickets, int TotalCount)> GetFilteredTicketsAsync(string? searchTerm, 
-        List<int>? projectIds, List<int>? statusIds, 
-        int? userId, int page, int pageSize);
+    Task<(List<TicketDto> Tickets, int TotalCount)> GetFilteredTicketsAsync(string? searchTerm = null, 
+        List<int>? projectIds = null, List<int>? statusIds = null, List<int>? priorityIds = null,
+        int? userId = null, int page = 1, int pageSize = 10);
     Task CreateAsync(TicketDto dto);
     Task UpdateAsync(TicketDto dto);
     Task DeleteAsync(int id);

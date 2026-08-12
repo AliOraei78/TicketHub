@@ -34,7 +34,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
     }
 
     public async Task<(List<Ticket> Tickets, int TotalCount)> GetFilteredTicketsAsync(
-        string? searchTerm, List<int>? projectIds, List<int>? statusIds, int? userId,
+        string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId,
         int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize)
     {
         using var context = await _factory.CreateDbContextAsync();
@@ -81,6 +81,9 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
 
         if (statusIds != null && statusIds.Any())
             query = query.Where(t => statusIds.Contains(t.StatusId));
+
+        if (priorityIds != null && priorityIds.Any())
+            query = query.Where(t => t.PriorityId.HasValue && priorityIds.Contains(t.PriorityId.Value));
 
         if (userId.HasValue) query = query.Where(t => t.UserId == userId.Value);
 

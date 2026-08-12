@@ -23,9 +23,10 @@ public record TicketState(
     int CurrentPage,
     List<int> SelectedFilterProjectIds,
     List<int> SelectedFilterStatusIds,
+    List<int> SelectedFilterPriorityIds,
     IEnumerable<TicketFieldDto> DynamicFields)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 10, 1, new(), new(), Array.Empty<TicketFieldDto>()) { }
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 6, 1, new(), new(), new(), Array.Empty<TicketFieldDto>()) { }
 }
 
 // 2. Actions
@@ -33,7 +34,7 @@ public record LoadTicketInitialDataAction(IEnumerable<string> UserRoles);
 public record TicketInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses, IEnumerable<PriorityDto> Priorities, IEnumerable<CategoryDto> Categories);
 public record LoadTicketsAction();
 public record TicketsLoadedAction(IEnumerable<TicketDto> Tickets, int TotalCount, int ValidatedPage);
-public record SetTicketFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds);
+public record SetTicketFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds, List<int>? PriorityIds = null);
 public record SaveTicketAction(TicketDto Ticket);
 public record SaveTicketSuccessAction();
 public record SaveTicketFailedAction(string ErrorMessage);
@@ -65,7 +66,8 @@ public static class TicketReducers
             PageSize = action.PageSize ?? state.PageSize,
             CurrentPage = action.CurrentPage ?? state.CurrentPage,
             SelectedFilterProjectIds = action.ProjectIds ?? state.SelectedFilterProjectIds,
-            SelectedFilterStatusIds = action.StatusIds ?? state.SelectedFilterStatusIds
+            SelectedFilterStatusIds = action.StatusIds ?? state.SelectedFilterStatusIds,
+            SelectedFilterPriorityIds = action.PriorityIds ?? state.SelectedFilterPriorityIds
         };
 
     [ReducerMethod]
@@ -141,9 +143,18 @@ public class TicketEffects
             _logger.LogInformation("شروع فراخوانی لیست تیکت‌ها.");
 
             var st = _state.Value;
-            var result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, null, st.CurrentPage, st.PageSize);
+            var result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null, st.CurrentPage, st.PageSize);
 
-            dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, st.CurrentPage));
+            int maxPage = result.TotalCount == 0 ? 1 : (int)Math.Ceiling(result.TotalCount / (double)st.PageSize);
+            var finalPage = st.CurrentPage;
+
+            if (st.CurrentPage > maxPage && maxPage > 0)
+            {
+                finalPage = maxPage;
+                result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null, finalPage, st.PageSize);
+            }
+
+            dispatcher.Dispatch(new TicketsLoadedAction(result.Tickets, result.TotalCount, finalPage));
 
             _logger.LogInformation("لیست تیکت‌ها با موفقیت دریافت شد.");
         }

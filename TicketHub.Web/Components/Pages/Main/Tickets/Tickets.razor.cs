@@ -22,28 +22,52 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
     protected string SearchQuery
     {
         get => TicketState.Value.SearchTerm;
-        set => Dispatcher.Dispatch(new SetTicketFiltersAction(value, null, null, null, null));
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(value, null, 1, null, null));
     }
 
     protected int PageSize
     {
         get => TicketState.Value.PageSize;
-        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, value, null, null, null));
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, value, 1, null, null));
     }
 
     protected List<int> SelectedProjectIds
     {
         get => TicketState.Value.SelectedFilterProjectIds;
-        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, value, null));
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, value, null));
     }
 
     protected List<int> SelectedStatusIds
     {
         get => TicketState.Value.SelectedFilterStatusIds;
-        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, null, null, value));
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, null, value, null));
+    }
+
+    protected List<int> SelectedPriorityIds
+    {
+        get => TicketState.Value.SelectedFilterPriorityIds;
+        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, null, null, value));
     }
 
     protected IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets;
+
+    protected int TotalPages => TicketState.Value.TotalTickets == 0 ? 1 : (int)Math.Ceiling(TicketState.Value.TotalTickets / (double)TicketState.Value.PageSize);
+
+    protected void NextPage()
+    {
+        if (TicketState.Value.CurrentPage < TotalPages)
+        {
+            Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, TicketState.Value.CurrentPage + 1, null, null));
+        }
+    }
+
+    protected void PreviousPage()
+    {
+        if (TicketState.Value.CurrentPage > 1)
+        {
+            Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, TicketState.Value.CurrentPage - 1, null, null));
+        }
+    }
 
     protected TicketTransitionModal TransitionModal { get; set; } = default!;
 

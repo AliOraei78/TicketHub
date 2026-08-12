@@ -151,6 +151,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             searchTerm: null,
             projectIds: null,
             statusIds: null,
+            priorityIds: null,
             userId: null,
             page: 1,
             pageSize: 100);
@@ -340,27 +341,31 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
 
     protected string GetPriorityClass(string priorityName) => priorityName switch
     {
-        "بحرانی" => "bg-rose-950/80 text-rose-300 border border-rose-500/40 shadow-xs",
-        "بالا" => "bg-amber-950/80 text-amber-300 border border-amber-500/40 shadow-xs",
-        "متوسط" => "bg-sky-950/80 text-sky-300 border border-sky-500/40 shadow-xs",
+        "بحرانی" => "bg-purple-950/80 text-purple-300 border border-purple-500/40 shadow-xs",
+        "زیاد" or "بالا" or "خیلی زیاد" => "bg-rose-950/80 text-rose-300 border border-rose-500/40 shadow-xs",
+        "متوسط" => "bg-amber-950/80 text-amber-300 border border-amber-500/40 shadow-xs",
+        "کم" or "پایین" or "عادی" => "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 shadow-xs",
         _ => "bg-slate-900 text-slate-300 border border-slate-700 shadow-xs"
     };
 
     protected string GetRarityTag(TicketDto ticket)
     {
         if (ticket.IsOverdue) return "🔥 BOSS RAID [OVERDUE]";
-        if (ticket.Priority != null && ticket.Priority.Level > 4) return "🔴 LEGENDARY";
-        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "⚡ EPIC";
-        if (ticket.Priority != null && ticket.Priority.Level == 2) return "🛡️ RARE";
+        if (ticket.Priority != null && (ticket.Priority.Level >= 4 || ticket.Priority.Name == "بحرانی")) return "⚡ EPIC";
+        if (ticket.Priority != null && (ticket.Priority.Level == 3 || ticket.Priority.Name == "زیاد" || ticket.Priority.Name == "بالا" || ticket.Priority.Name == "خیلی زیاد")) return "🛡️ RARE";
+        if (ticket.Priority != null && (ticket.Priority.Level == 2 || ticket.Priority.Name == "متوسط")) return "✨ UNCOMMON";
         return "⚔️ COMMON";
     }
 
     protected string GetRarityTagClass(TicketDto ticket)
     {
-        if (ticket.IsOverdue) return "bg-rose-950/80 text-rose-300 border-rose-500/60 shadow-[0_0_12px_rgba(244,63,94,0.4)] animate-pulse";
-        if (ticket.Priority != null && ticket.Priority.Level > 4) return "bg-orange-950/80 text-orange-300 border-orange-500/60 shadow-[0_0_10px_rgba(249,115,22,0.3)]";
-        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "bg-purple-950/80 text-purple-300 border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.3)]";
-        if (ticket.Priority != null && ticket.Priority.Level == 2) return "bg-sky-950/80 text-sky-300 border-sky-500/60 shadow-[0_0_10px_rgba(56,189,248,0.3)]";
+        if (ticket.IsOverdue) return "bg-rose-950/90 text-rose-300 border-rose-500/70 shadow-[0_0_14px_rgba(244,63,94,0.5)] animate-pulse";
+        if (ticket.Priority != null && (ticket.Priority.Level >= 4 || ticket.Priority.Name == "بحرانی")) 
+            return "bg-purple-950/80 text-purple-300 border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.3)]";
+        if (ticket.Priority != null && (ticket.Priority.Level == 3 || ticket.Priority.Name == "زیاد" || ticket.Priority.Name == "بالا" || ticket.Priority.Name == "خیلی زیاد")) 
+            return "bg-rose-950/80 text-rose-300 border-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.3)]";
+        if (ticket.Priority != null && (ticket.Priority.Level == 2 || ticket.Priority.Name == "متوسط")) 
+            return "bg-amber-950/80 text-amber-300 border-amber-500/60 shadow-[0_0_10px_rgba(245,158,11,0.3)]";
         return "bg-emerald-950/80 text-emerald-300 border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.3)]";
     }
 
@@ -369,6 +374,47 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         if (SlaOnTimePercentage < 60) return "hp-critical";
         if (SlaOnTimePercentage < 85) return "hp-warning";
         return "";
+    }
+
+    protected string GetSlaRemainingTimeText(TicketDto ticket)
+    {
+        if (!ticket.DueDate.HasValue) return "بدون مهلت";
+        if (ticket.IsOverdue)
+        {
+            var overdueSpan = DateTime.UtcNow - ticket.DueDate.Value;
+            if (overdueSpan.TotalHours < 1)
+                return $"🚨 {(int)Math.Max(1, overdueSpan.TotalMinutes)} د گذشته";
+            if (overdueSpan.TotalDays < 1)
+                return $"🚨 {(int)overdueSpan.TotalHours} س گذشته";
+            return $"🚨 {(int)overdueSpan.TotalDays} روز گذشته";
+        }
+        else
+        {
+            var remaining = ticket.DueDate.Value - DateTime.UtcNow;
+            if (remaining.TotalHours < 1)
+                return $"⏳ {(int)Math.Max(1, remaining.TotalMinutes)} د مانده";
+            if (remaining.TotalDays < 1)
+                return $"⏳ {(int)remaining.TotalHours} س مانده";
+            return $"⏳ {(int)remaining.TotalDays} روز مانده";
+        }
+    }
+
+    protected string GetSlaRemainingClass(TicketDto ticket)
+    {
+        if (!ticket.DueDate.HasValue) return "bg-slate-900/80 text-slate-400 border-white/[0.08]";
+        if (ticket.IsOverdue) return "bg-rose-950/90 text-rose-300 border-rose-500/60 shadow-[0_0_12px_rgba(244,63,94,0.35)] animate-pulse font-bold";
+        var remaining = ticket.DueDate.Value - DateTime.UtcNow;
+        if (remaining.TotalHours <= 4) return "bg-amber-950/90 text-amber-300 border-amber-500/60 shadow-[0_0_10px_rgba(245,158,11,0.3)] font-bold";
+        return "bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.3)] font-bold";
+    }
+
+    protected string GetCapsuleBorderGlowClass(TicketDto ticket)
+    {
+        if (ticket.IsOverdue) return "border-rose-500/40 hover:border-rose-400 hover:shadow-[0_8px_30px_rgba(244,63,94,0.22)]";
+        if (ticket.Priority != null && ticket.Priority.Level > 4) return "border-orange-500/40 hover:border-orange-400 hover:shadow-[0_8px_30px_rgba(249,115,22,0.22)]";
+        if (ticket.Priority != null && ticket.Priority.Level >= 3) return "border-purple-500/40 hover:border-purple-400 hover:shadow-[0_8px_30px_rgba(168,85,247,0.22)]";
+        if (ticket.Priority != null && ticket.Priority.Level == 2) return "border-sky-500/40 hover:border-cyan-400 hover:shadow-[0_8px_30px_rgba(56,189,248,0.22)]";
+        return "border-emerald-500/30 hover:border-emerald-400 hover:shadow-[0_8px_30px_rgba(16,185,129,0.22)]";
     }
 
     private string GetPersianDate(DateTime date) => date.ToPersianDateString();
