@@ -10,22 +10,24 @@
             <span>@Label</span>
         </label>
     }
-    <div class="relative @(ShowDropdown ? "z-[100]" : "z-10")">
-        <div class="relative w-full">
-            <input type="text"
-                   @bind="SearchTerm"
-                   @bind:event="oninput"
-                   @onclick="OpenDropdown"
-                   placeholder="@Placeholder"
-                   class="w-full h-10 px-3.5 border border-white/[0.12] rounded-xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-xs text-slate-100 placeholder-slate-400 focus-ring" />
-            <div class="absolute inset-y-0 left-3 flex items-center cursor-pointer z-10" @onclick="ToggleDropdown" @onclick:stopPropagation>
-                <svg class="w-3.5 h-3.5 text-slate-400 hover:text-cyan-400 transition-transform duration-300 @(ShowDropdown ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
+    <div class="relative @(ShowDropdown ? "z-[100]" : "z-10")" dir="rtl">
+        <div class="field-spark-wrap w-full">
+            <div class="relative w-full">
+                <input type="text"
+                       @bind="SearchTerm"
+                       @bind:event="oninput"
+                       @onclick="OpenDropdown"
+                       placeholder="@Placeholder"
+                       class="w-full h-[46px] px-4 pr-4 pl-10 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-sm text-slate-100 placeholder-slate-500 focus-ring" />
+                <div class="absolute inset-y-0 left-4 flex items-center cursor-pointer z-10" @onclick="ToggleDropdown" @onclick:stopPropagation>
+                    <svg class="w-4 h-4 text-slate-400 hover:text-cyan-400 transition-transform duration-300 @(ShowDropdown ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
             </div>
         </div>
 
-        <div class="dropdown-menu-container absolute top-full mt-1.5 z-[110] w-full bg-[#090e1d]/98 border border-cyan-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] overflow-hidden transition-all duration-300 backdrop-blur-2xl @(ShowDropdown ? "opacity-100 max-h-64" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+        <div class="dropdown-menu-container absolute top-full left-0 mt-1.5 z-[110] w-full bg-[#090e1d]/98 border border-cyan-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] overflow-hidden transition-all duration-300 backdrop-blur-2xl @(ShowDropdown ? "opacity-100 max-h-64" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
             <div class="max-h-60 overflow-y-auto pt-1 pb-2 overscroll-contain custom-scrollbar">
                 @if (!FilteredItems.Any())
                 {

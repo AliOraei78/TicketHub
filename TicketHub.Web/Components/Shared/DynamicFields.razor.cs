@@ -20,6 +20,33 @@ public partial class DynamicFields : ComponentBase
 
     private Dictionary<int, List<IBrowserFile>> _files = new();
 
+    protected IEnumerable<DynamicFieldModel> DataFields =>
+        Fields.Where(f =>
+        {
+            var type = (FieldTypeEnum)f.FieldTypeId;
+            return type == FieldTypeEnum.Text ||
+                   type == FieldTypeEnum.Number ||
+                   type == FieldTypeEnum.Date ||
+                   type == FieldTypeEnum.Dropdown ||
+                   type == FieldTypeEnum.MultipleDropdown;
+        }).OrderBy(f => f.SortOrder);
+
+    protected IEnumerable<DynamicFieldModel> RichTextFields =>
+        Fields.Where(f => (FieldTypeEnum)f.FieldTypeId == FieldTypeEnum.TextArea)
+              .OrderBy(f => f.SortOrder);
+
+    protected IEnumerable<DynamicFieldModel> CheckboxFields =>
+        Fields.Where(f => (FieldTypeEnum)f.FieldTypeId == FieldTypeEnum.Checkbox)
+              .OrderBy(f => f.SortOrder);
+
+    protected IEnumerable<DynamicFieldModel> ColorPickerFields =>
+        Fields.Where(f => (FieldTypeEnum)f.FieldTypeId == FieldTypeEnum.ColorPicker)
+              .OrderBy(f => f.SortOrder);
+
+    protected IEnumerable<DynamicFieldModel> AttachmentFields =>
+        Fields.Where(f => (FieldTypeEnum)f.FieldTypeId == FieldTypeEnum.File)
+              .OrderBy(f => f.SortOrder);
+
     protected string GetGridClass(DynamicFieldModel field)
     {
         var type = (FieldTypeEnum)field.FieldTypeId;

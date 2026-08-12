@@ -1,7 +1,7 @@
 @namespace TicketHub.Web.Components.Shared
 
 <div class="flex items-center gap-3 h-[46px] select-none @Class">
-    <label class="cyber-checkbox-container @(Disabled ? "opacity-40 cursor-not-allowed" : "")">
+    <label class="cyber-checkbox-container w-full @(BoxOnLeft ? "flex-row-reverse justify-between" : "") @(Disabled ? "opacity-40 cursor-not-allowed" : "")">
         <div class="cyber-checkbox-box @(CurrentValue ? "checked" : "")">
             <input type="checkbox"
                    id="@Id"
@@ -15,7 +15,7 @@
         </div>
         @if (!string.IsNullOrWhiteSpace(Label))
         {
-            <span class="text-xs font-semibold text-slate-300 hover:text-cyan-300 transition-colors select-none">
+            <span class="text-xs font-semibold text-slate-300 hover:text-cyan-300 transition-colors select-none truncate">
                 @Label
             </span>
         }
@@ -28,6 +28,7 @@
     [Parameter] public bool Value { get; set; }
     [Parameter] public EventCallback<bool> ValueChanged { get; set; }
     [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool BoxOnLeft { get; set; } = false;
     [Parameter] public string Class { get; set; } = string.Empty;
 
     protected bool CurrentValue => Value;
