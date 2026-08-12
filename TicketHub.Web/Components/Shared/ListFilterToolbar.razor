@@ -1,31 +1,31 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200/80 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between select-none @Class">
-    <div class="relative w-full md:w-80">
+<div class="bg-[#070c1a]/90 backdrop-blur-xl p-3 px-4 rounded-2xl shadow-lg border border-cyan-500/25 flex flex-wrap lg:flex-nowrap gap-3 items-center justify-between select-none @Class">
+    <div class="relative w-full lg:w-80 flex-shrink-0">
         <input type="text"
                value="@SearchTerm"
                @oninput="OnSearchInputChanged"
                placeholder="@SearchPlaceholder"
-               class="w-full h-[46px] pr-10 pl-4 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm transition-all shadow-2xs focus-ring" />
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="w-full h-11 pr-10 pl-4 rounded-xl border border-white/[0.12] bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 text-sm text-slate-100 placeholder-slate-400 transition-all shadow-2xs focus-ring" />
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
     </div>
 
     @if (ChildContent != null)
     {
-        <div class="flex flex-wrap gap-4 w-full md:w-auto items-center flex-1">
+        <div class="flex flex-wrap lg:flex-nowrap gap-3 w-full lg:w-auto items-center flex-1">
             @ChildContent
         </div>
     }
 
-    <div class="flex w-full md:w-auto justify-end">
+    <div class="flex w-full lg:w-auto justify-end flex-shrink-0">
         <select value="@PageSize"
                 @onchange="OnPageSizeChanged"
-                class="h-[46px] px-4 text-center text-sm text-slate-700 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all bg-slate-50 hover:bg-white focus:bg-white cursor-pointer shadow-2xs focus-ring font-medium">
+                class="h-11 px-4 text-center text-sm text-slate-200 border border-white/[0.12] rounded-xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] cursor-pointer shadow-2xs focus-ring font-medium">
             @foreach (var size in PageSizeOptions)
             {
-                <option value="@size">@size @ItemName در صفحه</option>
+                <option value="@size" class="bg-[#090e1d] text-slate-200">@size @ItemName در صفحه</option>
             }
         </select>
     </div>

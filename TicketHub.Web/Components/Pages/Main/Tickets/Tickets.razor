@@ -5,80 +5,122 @@
 
 <PageTitle>مدیریت تیکت‌ها | سامانه تیکتینگ</PageTitle>
 
-<div class="w-full flex flex-col gap-5 flex-1 select-none" dir="rtl">
-    <PageHeader Title="سامانه مدیریت تیکت‌ها"
-                Description="تیکت‌های پشتیبانی خود را مشاهده، فیلتر و مدیریت کنید."
-                ButtonText="ثبت تیکت جدید"
-                ButtonThemeClass="bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20"
-                OnActionClick="OpenCreateModal">
-        <Icon>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 drop-shadow-xs" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-            </svg>
-        </Icon>
-    </PageHeader>
+<div class="w-full flex flex-col gap-4 flex-1 select-none" dir="rtl">
+    <!-- Spacious Cyber Operations Master Banner -->
+    <div class="relative overflow-hidden rounded-3xl bg-[#080d1a]/95 backdrop-blur-2xl border border-cyan-500/35 p-5 md:p-6 shadow-[0_0_40px_rgba(8,13,26,0.85)] flex flex-col gap-4">
+        <!-- Ambient Laser Atmosphere -->
+        <div class="absolute -top-24 left-1/3 w-96 h-48 bg-gradient-to-b from-cyan-500/20 via-indigo-500/15 to-transparent blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 right-10 w-48 h-48 bg-purple-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 left-10 w-48 h-48 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-    <!-- Quick Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <QuickStatsCard Title="کل تیکت‌ها" 
-                        Value="@TicketState.Value.TotalTickets.ToString()"
-                        ElementType="water"
-                        BadgeText="🌊 ALL"
-                        BadgeClass="bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm"
-                        ValueColorClass="text-white drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]"
-                        IconThemeClass="bg-cyan-500/20 text-cyan-300 border-cyan-400/40 shadow-inner">
-            <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-            </Icon>
-        </QuickStatsCard>
+        <!-- Top Row: Title & Subtitle (Right) + Create CTA Button (Left) -->
+        <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_15px_rgba(255,255,255,0.25)] leading-tight flex items-center gap-2 flex-wrap">
+                    <span>سامانه مدیریت </span><span class="bg-gradient-to-r from-cyan-300 via-indigo-300 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(56,189,248,0.6)]">تیکت‌ها</span>
+                </h1>
+                <p class="text-slate-300/90 text-xs sm:text-sm font-medium tracking-wide flex items-center gap-2 flex-wrap">
+                    <span>⚡ پایش زنده وضعیت‌ها</span>
+                    <span class="text-cyan-400/50">•</span>
+                    <span>رهگیری هوشمند کوئست‌ها</span>
+                    <span class="text-cyan-400/50">•</span>
+                    <span>پشتیبانی سریع بازیکنان</span>
+                </p>
+            </div>
 
-        <QuickStatsCard Title="اقدام نشده"
-                        Value="@TicketState.Value.Tickets.Count(t => t.WorkflowStatus?.IsInitial == true).ToString()"
-                        ElementType="lightning"
-                        BadgeText="⚡ NEW"
-                        BadgeClass="bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-sm"
-                        ValueColorClass="text-white drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]"
-                        IconThemeClass="bg-cyan-500/20 text-cyan-300 border-cyan-400/40 shadow-inner">
-            <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </Icon>
-        </QuickStatsCard>
+            <div class="flex-shrink-0">
+                <button @onclick="OpenCreateModal"
+                        class="btn-cyber-primary text-sm py-2.5 px-5 focus-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>ثبت تیکت جدید</span>
+                </button>
+            </div>
+        </div>
 
-        <QuickStatsCard Title="در حال بررسی"
-                        Value="@TicketState.Value.Tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial).ToString()"
-                        ElementType="toxic"
-                        BadgeText="🧪 IN ACTION"
-                        BadgeClass="bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-sm"
-                        ValueColorClass="text-white drop-shadow-[0_0_12px_rgba(34,197,94,0.6)]"
-                        IconThemeClass="bg-emerald-500/20 text-emerald-300 border-emerald-400/40 shadow-inner">
-            <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            </Icon>
-        </QuickStatsCard>
+        <!-- Bottom Row: 5 Holographic Telemetry Cards spanning comfortably -->
+        <div class="relative z-10 pt-3 border-t border-white/[0.08] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            <!-- 1. All Tickets (Water) -->
+            <div class="telemetry-pill-segment py-2 px-3" style="--seg-border: rgba(56, 189, 248, 0.5); --seg-glow: rgba(56, 189, 248, 0.25);">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-cyan-300/90 font-bold truncate">کل تیکت‌ها</span>
+                        <span class="text-[9px] font-mono text-cyan-400/60 uppercase">🌊 ALL</span>
+                    </div>
+                </div>
+                <span class="text-lg font-black font-mono text-white drop-shadow-[0_0_8px_rgba(56,189,248,0.7)] px-1.5">
+                    @TicketState.Value.TotalTickets
+                </span>
+            </div>
 
-        <QuickStatsCard Title="اولویت بحرانی"
-                        Value="@TicketState.Value.Tickets.Count(t => t.Priority != null && t.Priority.Level > 4).ToString()"
-                        ElementType="fire"
-                        BadgeText="🔥 BOSS"
-                        BadgeClass="bg-rose-500/20 text-rose-300 border border-rose-400/40 shadow-sm"
-                        ValueColorClass="text-white drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]"
-                        IconThemeClass="bg-rose-500/20 text-rose-300 border-rose-400/40 shadow-inner">
-            <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            </Icon>
-        </QuickStatsCard>
+            <!-- 2. New / Initial (Lightning) -->
+            <div class="telemetry-pill-segment py-2 px-3" style="--seg-border: rgba(245, 158, 11, 0.5); --seg-glow: rgba(245, 158, 11, 0.25);">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-amber-300/90 font-bold truncate">اقدام نشده</span>
+                        <span class="text-[9px] font-mono text-amber-400/60 uppercase">⚡ NEW</span>
+                    </div>
+                </div>
+                <span class="text-lg font-black font-mono text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] px-1.5">
+                    @TicketState.Value.Tickets.Count(t => t.WorkflowStatus?.IsInitial == true)
+                </span>
+            </div>
 
-        <QuickStatsCard Title="سررسید گذشته"
-                        Value="@TicketState.Value.Tickets.Count(t => t.IsOverdue).ToString()"
-                        ElementType="fire"
-                        BadgeText="⏰ OVERDUE"
-                        BadgeClass="bg-rose-500/20 text-rose-300 border border-rose-400/40 shadow-sm"
-                        ValueColorClass="text-white drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]"
-                        IconThemeClass="bg-rose-500/20 text-rose-300 border-rose-400/40 shadow-inner">
-            <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            </Icon>
-        </QuickStatsCard>
+            <!-- 3. In Action / Review (Toxic Acid) -->
+            <div class="telemetry-pill-segment py-2 px-3" style="--seg-border: rgba(16, 185, 129, 0.5); --seg-glow: rgba(16, 185, 129, 0.25);">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-emerald-300/90 font-bold truncate">در حال بررسی</span>
+                        <span class="text-[9px] font-mono text-emerald-400/60 uppercase">🧪 ACTIVE</span>
+                    </div>
+                </div>
+                <span class="text-lg font-black font-mono text-emerald-300 drop-shadow-[0_0_8px_rgba(16,185,129,0.7)] px-1.5">
+                    @TicketState.Value.Tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial)
+                </span>
+            </div>
+
+            <!-- 4. Critical Priority (Purple Epic) -->
+            <div class="telemetry-pill-segment py-2 px-3" style="--seg-border: rgba(168, 85, 247, 0.5); --seg-glow: rgba(168, 85, 247, 0.25);">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-purple-300/90 font-bold truncate">اولویت بحرانی</span>
+                        <span class="text-[9px] font-mono text-purple-400/60 uppercase">⚡ EPIC</span>
+                    </div>
+                </div>
+                <span class="text-lg font-black font-mono text-purple-300 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)] px-1.5">
+                    @TicketState.Value.Tickets.Count(t => t.Priority != null && t.Priority.Level >= 4)
+                </span>
+            </div>
+
+            <!-- 5. Overdue (Fire Raid) -->
+            <div class="telemetry-pill-segment py-2 px-3 col-span-2 sm:col-span-1" style="--seg-border: rgba(244, 63, 94, 0.5); --seg-glow: rgba(244, 63, 94, 0.25);">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-400/30 flex items-center justify-center text-rose-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-rose-300/90 font-bold truncate">سررسید گذشته</span>
+                        <span class="text-[9px] font-mono text-rose-400/60 uppercase">🔥 OVERDUE</span>
+                    </div>
+                </div>
+                <span class="text-lg font-black font-mono text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.7)] px-1.5">
+                    @TicketState.Value.Tickets.Count(t => t.IsOverdue)
+                </span>
+            </div>
+        </div>
     </div>
 
     <!-- Filter Toolbar -->
@@ -87,7 +129,7 @@
                        ItemName="تیکت"
                        @bind-PageSize="PageSize"
                        PageSizeOptions="@(new List<int> { 6, 12, 18, 24 })">
-        <div class="w-full sm:w-56">
+        <div class="w-full sm:w-52 lg:w-60">
             <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                   Placeholder="پروژه..."
                                   Items="TicketState.Value.AvailableProjects"
@@ -95,7 +137,7 @@
                                   ValueSelector="p => p.Id"
                                   DisplaySelector="p => p.Name" />
         </div>
-        <div class="w-full sm:w-56">
+        <div class="w-full sm:w-52 lg:w-60">
             <MultiSelectDropdown TItem="StatusDto" TValue="int"
                                   Placeholder="وضعیت..."
                                   Items="TicketState.Value.AvailableStatuses"
@@ -103,7 +145,7 @@
                                   ValueSelector="s => s.Id"
                                   DisplaySelector="s => s.Name" />
         </div>
-        <div class="w-full sm:w-56">
+        <div class="w-full sm:w-52 lg:w-60">
             <MultiSelectDropdown TItem="PriorityDto" TValue="int"
                                   Placeholder="اولویت..."
                                   Items="TicketState.Value.AvailablePriorities"
@@ -125,13 +167,13 @@
     <!-- Tickets List -->
     @if (TicketState.Value.IsLoading)
     {
-        <div class="flex justify-center items-center py-20">
-            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <div class="flex justify-center items-center py-16">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
         </div>
     }
     else
     {
-        <StatefulDataView Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد." ContainerClass="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StatefulDataView Items="FilteredTickets" EmptyMessage="هیچ تیکتی یافت نشد." ContainerClass="grid grid-cols-1 md:grid-cols-2 gap-3">
             <ItemTemplate Context="ticket">
                 <TicketCard Ticket="ticket"
                             OnClick="NavigateToDetails"
