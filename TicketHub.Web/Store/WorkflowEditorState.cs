@@ -123,7 +123,8 @@ public class WorkflowEditorEffects
                         Status = ws.Status!,
                         X = ws.PositionX,
                         Y = ws.PositionY,
-                        IsInitial = ws.IsInitial
+                        IsInitial = ws.IsInitial,
+                        IsFinal = ws.IsFinal
                     }).ToList();
 
                     connections = currentWf.Transitions
@@ -188,8 +189,8 @@ public class WorkflowEditorEffects
                     foreach (var n in action.Nodes)
                     {
                         var existingWs = wf.WorkflowStatuses.FirstOrDefault(ws => ws.NodeId == n.Id);
-                        if (existingWs != null) { existingWs.PositionX = n.X; existingWs.PositionY = n.Y; existingWs.StatusId = n.Status.Id; existingWs.IsInitial = n.IsInitial; }
-                        else { wf.WorkflowStatuses.Add(new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y, IsInitial = n.IsInitial }); }
+                        if (existingWs != null) { existingWs.PositionX = n.X; existingWs.PositionY = n.Y; existingWs.StatusId = n.Status.Id; existingWs.IsInitial = n.IsInitial; existingWs.IsFinal = n.IsFinal; }
+                        else { wf.WorkflowStatuses.Add(new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y, IsInitial = n.IsInitial, IsFinal = n.IsFinal }); }
                     }
 
                     var activeUiConnectionDbIds = action.Connections.Where(c => c.DbId > 0).Select(c => c.DbId).ToList();
@@ -271,7 +272,7 @@ public class WorkflowEditorEffects
                     Name = action.Name,
                     Description = action.Description,
                     IsActive = action.IsActive,
-                    WorkflowStatuses = action.Nodes.Select(n => new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y, IsInitial = n.IsInitial }).ToList(),
+                    WorkflowStatuses = action.Nodes.Select(n => new WorkflowStatusDto { NodeId = n.Id, StatusId = n.Status.Id, PositionX = n.X, PositionY = n.Y, IsInitial = n.IsInitial, IsFinal = n.IsFinal }).ToList(),
                     Transitions = action.Connections.Select(c =>
                     {
                         var fromStatusId = action.Nodes.First(n => n.Id == c.FromNodeId).Status.Id;

@@ -14,6 +14,7 @@ public partial class WorkflowCanvas : ComponentBase
     [Parameter] public HashSet<CanvasConnection> SelectedConnections { get; set; } = new();
 
     [Parameter] public EventCallback<CanvasNodeDto> OnSetInitialNode { get; set; }
+    [Parameter] public EventCallback<CanvasNodeDto> OnToggleFinalNode { get; set; }
 
     [Parameter] public bool IsBoxSelecting { get; set; }
     [Parameter] public double BoxStartX { get; set; }

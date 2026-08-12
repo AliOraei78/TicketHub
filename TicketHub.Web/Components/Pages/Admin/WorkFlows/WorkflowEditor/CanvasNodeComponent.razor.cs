@@ -15,6 +15,7 @@ public partial class CanvasNodeComponent : ComponentBase
 
     [Parameter] public bool ShowInitialButton { get; set; }
     [Parameter] public EventCallback<CanvasNodeDto> OnSetInitialNode { get; set; }
+    [Parameter] public EventCallback<CanvasNodeDto> OnToggleFinalNode { get; set; }
 
     [Parameter] public EventCallback<(PointerEventArgs e, CanvasNodeDto node)> OnPointerDown { get; set; }
     [Parameter] public EventCallback<(MouseEventArgs e, CanvasNodeDto node)> OnClick { get; set; }

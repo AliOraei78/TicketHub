@@ -32,12 +32,25 @@ public class ProjectWorkloadDto
     public int Percentage { get; set; }
 }
 
+public class TicketTelemetrySummaryDto
+{
+    public int TotalTickets { get; set; }
+    public int NewTicketsCount { get; set; }
+    public int InProgressCount { get; set; }
+    public int ResolvedCount { get; set; }
+    public int CriticalCount { get; set; }
+    public int OverdueCount { get; set; }
+    public int CriticalAndOverdueCount { get; set; }
+    public int SlaOnTimePercentage { get; set; } = 100;
+}
+
 public class DashboardSummaryDto
 {
     public int TotalTickets { get; set; }
     public int NewTicketsCount { get; set; }
     public int InProgressCount { get; set; }
     public int ResolvedCount { get; set; }
+    public int CriticalCount { get; set; }
     public int OverdueCount { get; set; }
     public int CriticalAndOverdueCount { get; set; }
     public int SlaOnTimePercentage { get; set; } = 100;
@@ -46,3 +59,4 @@ public class DashboardSummaryDto
     public List<ProjectWorkloadDto> ProjectStats { get; set; } = new();
     public List<TicketDto> RecentTickets { get; set; } = new();
 }
+

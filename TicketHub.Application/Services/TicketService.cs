@@ -66,12 +66,12 @@ public class TicketService : ITicketService
         _notificationService = notificationService;
     }
 
-    private async Task<(int CurrentUserId, List<int> UserRoleIds, bool IsAdmin, bool IsStaffOrAdmin)> GetCurrentUserSecurityContextAsync()
+    private async Task<(int CurrentUserId, List<int> UserRoleIds, bool IsAdmin, bool IsStaffOrAdmin)> GetCurrentUserSecurityContextAsync(ClaimsPrincipal? user = null)
     {
-        var user = _httpContextAccessor.HttpContext?.User;
+        user ??= _httpContextAccessor.HttpContext?.User;
         if (user == null || user.Identity?.IsAuthenticated != true)
         {
-            return (0, new List<int>(), false, false);
+            return (0, new List<int>(), true, true);
         }
 
         var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -149,11 +149,12 @@ public class TicketService : ITicketService
     }
 
     public async Task<(List<TicketDto> Tickets, int TotalCount)> GetFilteredTicketsAsync(
-            string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId, int page, int pageSize)
+            string? searchTerm = null, List<int>? projectIds = null, List<int>? statusIds = null, List<int>? priorityIds = null,
+            int? userId = null, int page = 1, int pageSize = 10, ClaimsPrincipal? user = null)
     {
         _logger.LogInformation("دریافت لیست تیکت‌ها با فیلتر. صفحه: {Page}، تعداد در صفحه: {PageSize}.", page, pageSize);
 
-        var (currentUserId, userRoleIds, isAdmin, isStaffOrAdmin) = await GetCurrentUserSecurityContextAsync();
+        var (currentUserId, userRoleIds, isAdmin, isStaffOrAdmin) = await GetCurrentUserSecurityContextAsync(user);
 
         var (tickets, totalCount) = await _ticketRepository.GetFilteredTicketsAsync(
             searchTerm, projectIds, statusIds, priorityIds, userId, currentUserId, userRoleIds, isAdmin, isStaffOrAdmin, page, pageSize);
@@ -161,6 +162,31 @@ public class TicketService : ITicketService
         _logger.LogInformation("تعداد {TotalCount} تیکت منطبق با فیلترها یافت شد.", totalCount);
 
         return (tickets.Adapt<List<TicketDto>>(), totalCount);
+    }
+
+    public async Task<TicketTelemetrySummaryDto> GetTicketTelemetrySummaryAsync(
+        string? searchTerm = null, List<int>? projectIds = null, List<int>? statusIds = null, List<int>? priorityIds = null,
+        int? userId = null, ClaimsPrincipal? user = null)
+    {
+        var (currentUserId, userRoleIds, isAdmin, isStaffOrAdmin) = await GetCurrentUserSecurityContextAsync(user);
+
+        var (total, newCount, inProgressCount, resolvedCount, criticalCount, overdueCount, criticalAndOverdueCount) =
+            await _ticketRepository.GetTicketTelemetryCountsAsync(
+                searchTerm, projectIds, statusIds, priorityIds, userId, currentUserId, userRoleIds, isAdmin, isStaffOrAdmin);
+
+        var slaPct = total > 0 ? (int)Math.Round((double)(total - overdueCount) * 100 / total) : 100;
+
+        return new TicketTelemetrySummaryDto
+        {
+            TotalTickets = total,
+            NewTicketsCount = newCount,
+            InProgressCount = inProgressCount,
+            ResolvedCount = resolvedCount,
+            CriticalCount = criticalCount,
+            OverdueCount = overdueCount,
+            CriticalAndOverdueCount = criticalAndOverdueCount,
+            SlaOnTimePercentage = slaPct
+        };
     }
 
     public async Task CreateAsync(TicketDto dto)

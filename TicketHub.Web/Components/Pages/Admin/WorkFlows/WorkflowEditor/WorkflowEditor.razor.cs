@@ -461,6 +461,18 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 
             foreach (var n in CanvasNodes) n.IsInitial = false;
             node.IsInitial = true;
+            node.IsFinal = false;
+
+            InvokeAsync(StateHasChanged);
+        }
+
+        private void ToggleFinalNode(CanvasNodeDto node)
+        {
+            node.IsFinal = !node.IsFinal;
+            if (node.IsFinal)
+            {
+                node.IsInitial = false;
+            }
 
             InvokeAsync(StateHasChanged);
         }

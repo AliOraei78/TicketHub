@@ -38,8 +38,9 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected int NewTicketsCount { get; set; } = 0;
     protected int InProgressCount { get; set; } = 0;
     protected int ResolvedCount { get; set; } = 0;
-    protected int CriticalAndOverdueCount { get; set; } = 0;
+    protected int CriticalCount { get; set; } = 0;
     protected int OverdueCount { get; set; } = 0;
+    protected int CriticalAndOverdueCount { get; set; } = 0;
     protected int SlaOnTimePercentage { get; set; } = 100;
 
     protected List<DailyTrendDto>? TrendData { get; set; }
@@ -58,6 +59,36 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected string CachedModalTrendLinePath { get; private set; } = string.Empty;
     protected string CachedModalTrendAreaPath { get; private set; } = string.Empty;
 
+    protected int DisplayTotalTickets => 
+        TicketState.Value.Telemetry.TotalTickets > 0 
+            ? TicketState.Value.Telemetry.TotalTickets 
+            : (TotalTickets > 0 ? TotalTickets : (TicketState.Value.TotalTickets > 0 ? TicketState.Value.TotalTickets : 0));
+
+    protected int DisplayNewTicketsCount => 
+        TicketState.Value.Telemetry.TotalTickets > 0 
+            ? TicketState.Value.Telemetry.NewTicketsCount 
+            : NewTicketsCount;
+
+    protected int DisplayInProgressCount => 
+        TicketState.Value.Telemetry.TotalTickets > 0 
+            ? TicketState.Value.Telemetry.InProgressCount 
+            : InProgressCount;
+
+    protected int DisplayCriticalCount => 
+        TicketState.Value.Telemetry.TotalTickets > 0 
+            ? TicketState.Value.Telemetry.CriticalCount 
+            : CriticalCount;
+
+    protected int DisplayOverdueCount => 
+        TicketState.Value.Telemetry.TotalTickets > 0 
+            ? TicketState.Value.Telemetry.OverdueCount 
+            : OverdueCount;
+
+    protected int DisplayResolvedCount => 
+        TicketState.Value.Telemetry.TotalTickets > 0 
+            ? TicketState.Value.Telemetry.ResolvedCount 
+            : ResolvedCount;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -67,6 +98,26 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         {
             IsCreateModalOpen = false;
             await LoadDashboardDataAsync(forceRefresh: true);
+            await InvokeAsync(StateHasChanged);
+        });
+
+        ActionSubscriber.SubscribeToAction<TicketsLoadedAction>(this, async action =>
+        {
+            if (action.Telemetry != null && action.Telemetry.TotalTickets > 0)
+            {
+                TotalTickets = action.Telemetry.TotalTickets;
+                NewTicketsCount = action.Telemetry.NewTicketsCount;
+                InProgressCount = action.Telemetry.InProgressCount;
+                ResolvedCount = action.Telemetry.ResolvedCount;
+                CriticalCount = action.Telemetry.CriticalCount;
+                OverdueCount = action.Telemetry.OverdueCount;
+                CriticalAndOverdueCount = action.Telemetry.CriticalAndOverdueCount;
+                SlaOnTimePercentage = action.Telemetry.SlaOnTimePercentage;
+            }
+            else if (action.TotalCount > 0)
+            {
+                TotalTickets = action.TotalCount;
+            }
             await InvokeAsync(StateHasChanged);
         });
 
@@ -127,12 +178,13 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         if (!forceRefresh)
         {
             var cachedSummary = await CacheService.GetAsync<DashboardSummaryDto>(cacheKey);
-            if (cachedSummary != null)
+            if (cachedSummary != null && cachedSummary.TotalTickets > 0)
             {
                 TotalTickets = cachedSummary.TotalTickets;
                 NewTicketsCount = cachedSummary.NewTicketsCount;
                 InProgressCount = cachedSummary.InProgressCount;
                 ResolvedCount = cachedSummary.ResolvedCount;
+                CriticalCount = cachedSummary.CriticalCount;
                 OverdueCount = cachedSummary.OverdueCount;
                 CriticalAndOverdueCount = cachedSummary.CriticalAndOverdueCount;
                 SlaOnTimePercentage = cachedSummary.SlaOnTimePercentage;
@@ -149,6 +201,29 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             }
         }
 
+        var telemetry = await TicketService.GetTicketTelemetrySummaryAsync(user: user);
+
+        TotalTickets = telemetry.TotalTickets;
+        NewTicketsCount = telemetry.NewTicketsCount;
+        ResolvedCount = telemetry.ResolvedCount;
+        InProgressCount = telemetry.InProgressCount;
+        CriticalCount = telemetry.CriticalCount;
+        OverdueCount = telemetry.OverdueCount;
+        CriticalAndOverdueCount = telemetry.CriticalAndOverdueCount;
+        SlaOnTimePercentage = telemetry.SlaOnTimePercentage;
+
+        if (TotalTickets == 0 && TicketState.Value.Telemetry.TotalTickets > 0)
+        {
+            TotalTickets = TicketState.Value.Telemetry.TotalTickets;
+            NewTicketsCount = TicketState.Value.Telemetry.NewTicketsCount;
+            InProgressCount = TicketState.Value.Telemetry.InProgressCount;
+            ResolvedCount = TicketState.Value.Telemetry.ResolvedCount;
+            CriticalCount = TicketState.Value.Telemetry.CriticalCount;
+            OverdueCount = TicketState.Value.Telemetry.OverdueCount;
+            CriticalAndOverdueCount = TicketState.Value.Telemetry.CriticalAndOverdueCount;
+            SlaOnTimePercentage = TicketState.Value.Telemetry.SlaOnTimePercentage;
+        }
+
         var (tickets, total) = await TicketService.GetFilteredTicketsAsync(
             searchTerm: null,
             projectIds: null,
@@ -156,25 +231,29 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             priorityIds: null,
             userId: null,
             page: 1,
-            pageSize: 100);
+            pageSize: 100,
+            user: user);
 
-        TotalTickets = total;
+        if (TotalTickets == 0 && total > 0)
+        {
+            TotalTickets = total;
+            bool IsInitialTicket(TicketDto t) =>
+                t.WorkflowStatus?.IsInitial == true ||
+                (t.WorkflowStatusId == null && (t.Status?.Name == "Open" || t.Status?.Name == "جدید" || t.Status?.Name == "اقدام نشده"));
 
-        bool IsInitialTicket(TicketDto t) =>
-            t.WorkflowStatus?.IsInitial == true ||
-            (t.WorkflowStatusId == null && (t.Status?.Name == "Open" || t.Status?.Name == "جدید" || t.Status?.Name == "اقدام نشده"));
+            bool IsFinalTicket(TicketDto t) =>
+                t.WorkflowStatus?.IsFinal == true ||
+                (t.WorkflowStatus != null && t.Project?.Workflow?.Transitions?.Any(tr => tr.FromState == t.WorkflowStatusId && tr.IsActive) == false) ||
+                (t.Status != null && (t.Status.Name == "Closed" || t.Status.Name == "Resolved" || t.Status.Name.Contains("بسته") || t.Status.Name.Contains("خاتمه") || t.Status.Name.Contains("حل")));
 
-        bool IsFinalTicket(TicketDto t) =>
-            (t.WorkflowStatus != null && t.Project?.Workflow?.Transitions?.Any(tr => tr.FromState == t.WorkflowStatusId && tr.IsActive) == false) ||
-            (t.Status != null && (t.Status.Name == "Closed" || t.Status.Name == "Resolved" || t.Status.Name.Contains("بسته") || t.Status.Name.Contains("خاتمه") || t.Status.Name.Contains("حل")));
-
-        NewTicketsCount = tickets.Count(t => IsInitialTicket(t));
-        ResolvedCount = tickets.Count(t => IsFinalTicket(t));
-        InProgressCount = tickets.Count(t => !IsInitialTicket(t) && !IsFinalTicket(t));
-        OverdueCount = tickets.Count(t => t.IsOverdue);
-        CriticalAndOverdueCount = tickets.Count(t => (t.Priority != null && t.Priority.Level > 4) || t.IsOverdue);
-
-        SlaOnTimePercentage = TotalTickets > 0 ? (int)Math.Round((double)(TotalTickets - OverdueCount) * 100 / TotalTickets) : 100;
+            NewTicketsCount = tickets.Count(t => IsInitialTicket(t));
+            ResolvedCount = tickets.Count(t => IsFinalTicket(t));
+            InProgressCount = tickets.Count(t => !IsInitialTicket(t) && !IsFinalTicket(t));
+            CriticalCount = tickets.Count(t => t.Priority != null && t.Priority.Level >= 4);
+            OverdueCount = tickets.Count(t => t.IsOverdue);
+            CriticalAndOverdueCount = tickets.Count(t => (t.Priority != null && t.Priority.Level >= 4) || t.IsOverdue);
+            SlaOnTimePercentage = TotalTickets > 0 ? (int)Math.Round((double)(TotalTickets - OverdueCount) * 100 / TotalTickets) : 100;
+        }
 
         RecentTickets = tickets.Take(6).ToList();
 
@@ -232,6 +311,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             NewTicketsCount = NewTicketsCount,
             InProgressCount = InProgressCount,
             ResolvedCount = ResolvedCount,
+            CriticalCount = CriticalCount,
             OverdueCount = OverdueCount,
             CriticalAndOverdueCount = CriticalAndOverdueCount,
             SlaOnTimePercentage = SlaOnTimePercentage,
@@ -241,7 +321,10 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             RecentTickets = RecentTickets.ToList()
         };
 
-        await CacheService.SetAsync(cacheKey, summaryToCache, TimeSpan.FromSeconds(30));
+        if (summaryToCache.TotalTickets > 0)
+        {
+            await CacheService.SetAsync(cacheKey, summaryToCache, TimeSpan.FromSeconds(30));
+        }
     }
 
     protected async Task OpenCreateModal()

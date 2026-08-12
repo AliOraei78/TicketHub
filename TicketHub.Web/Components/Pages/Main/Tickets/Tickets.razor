@@ -17,7 +17,7 @@
         <div class="relative z-10 flex flex-col items-center justify-center text-center gap-1.5">
             <div class="space-y-0.5 flex flex-col items-center">
                 <h1 class="text-lg sm:text-xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.25)] leading-tight flex items-center justify-center gap-1.5 flex-wrap text-center">
-                    <span>سامانه مدیریت </span><span class="bg-gradient-to-r from-cyan-300 via-indigo-300 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]">تیکت‌ها</span>
+                    <span class="bg-gradient-to-r from-cyan-300 via-indigo-300 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]">مدیریت تیکت‌ها</span>
                 </h1>
                 <p class="text-slate-300/90 text-[10px] sm:text-[11px] font-medium tracking-wide flex items-center justify-center gap-1.5 flex-wrap text-center">
                     <span>⚡ پایش زنده وضعیت‌ها</span>
@@ -39,8 +39,8 @@
             </div>
         </div>
 
-        <!-- Bottom Row: 5 Holographic Telemetry Cards spanning comfortably -->
-        <div class="relative z-10 pt-1.5 border-t border-white/[0.08] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5">
+        <!-- Bottom Row: 6 Holographic Telemetry Cards spanning comfortably -->
+        <div class="relative z-10 pt-1.5 border-t border-white/[0.08] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
             <!-- 1. All Tickets (Water) -->
             <div class="telemetry-pill-segment py-1 px-2" style="--seg-border: rgba(56, 189, 248, 0.5); --seg-glow: rgba(56, 189, 248, 0.25);">
                 <div class="flex items-center gap-1.5 min-w-0">
@@ -53,7 +53,7 @@
                     </div>
                 </div>
                 <span class="text-sm font-black font-mono text-white drop-shadow-[0_0_6px_rgba(56,189,248,0.7)] px-1">
-                    @TicketState.Value.TotalTickets
+                    @TicketState.Value.Telemetry.TotalTickets
                 </span>
             </div>
 
@@ -69,7 +69,7 @@
                     </div>
                 </div>
                 <span class="text-sm font-black font-mono text-amber-300 drop-shadow-[0_0_6px_rgba(245,158,11,0.7)] px-1">
-                    @TicketState.Value.Tickets.Count(t => t.WorkflowStatus?.IsInitial == true)
+                    @TicketState.Value.Telemetry.NewTicketsCount
                 </span>
             </div>
 
@@ -85,7 +85,7 @@
                     </div>
                 </div>
                 <span class="text-sm font-black font-mono text-emerald-300 drop-shadow-[0_0_6px_rgba(16,185,129,0.7)] px-1">
-                    @TicketState.Value.Tickets.Count(t => t.WorkflowStatus != null && !t.WorkflowStatus.IsInitial)
+                    @TicketState.Value.Telemetry.InProgressCount
                 </span>
             </div>
 
@@ -101,12 +101,12 @@
                     </div>
                 </div>
                 <span class="text-sm font-black font-mono text-purple-300 drop-shadow-[0_0_6px_rgba(168,85,247,0.7)] px-1">
-                    @TicketState.Value.Tickets.Count(t => t.Priority != null && t.Priority.Level >= 4)
+                    @TicketState.Value.Telemetry.CriticalCount
                 </span>
             </div>
 
             <!-- 5. Overdue (Fire Raid) -->
-            <div class="telemetry-pill-segment py-1 px-2 col-span-2 sm:col-span-1" style="--seg-border: rgba(244, 63, 94, 0.5); --seg-glow: rgba(244, 63, 94, 0.25);">
+            <div class="telemetry-pill-segment py-1 px-2" style="--seg-border: rgba(244, 63, 94, 0.5); --seg-glow: rgba(244, 63, 94, 0.25);">
                 <div class="flex items-center gap-1.5 min-w-0">
                     <div class="w-6 h-6 rounded-md bg-rose-500/15 border border-rose-400/30 flex items-center justify-center text-rose-300 flex-shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -117,7 +117,23 @@
                     </div>
                 </div>
                 <span class="text-sm font-black font-mono text-rose-400 drop-shadow-[0_0_6px_rgba(244,63,94,0.7)] px-1">
-                    @TicketState.Value.Tickets.Count(t => t.IsOverdue)
+                    @TicketState.Value.Telemetry.OverdueCount
+                </span>
+            </div>
+
+            <!-- 6. Resolved / Closed (Quantum Smoke) -->
+            <div class="telemetry-pill-segment py-1 px-2" style="--seg-border: rgba(148, 163, 184, 0.5); --seg-glow: rgba(148, 163, 184, 0.25);">
+                <div class="flex items-center gap-1.5 min-w-0">
+                    <div class="w-6 h-6 rounded-md bg-slate-500/15 border border-slate-400/30 flex items-center justify-center text-slate-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-[10px] text-slate-300/90 font-bold truncate">خاتمه یافته</span>
+                        <span class="text-[8px] font-mono text-slate-400/60 uppercase">💨 CLOSED</span>
+                    </div>
+                </div>
+                <span class="text-sm font-black font-mono text-slate-200 drop-shadow-[0_0_6px_rgba(203,213,225,0.7)] px-1">
+                    @TicketState.Value.Telemetry.ResolvedCount
                 </span>
             </div>
         </div>

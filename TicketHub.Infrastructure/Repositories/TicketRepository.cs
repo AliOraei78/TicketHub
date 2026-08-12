@@ -94,6 +94,77 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
         return (tickets, total);
     }
 
+    public async Task<(int Total, int NewCount, int InProgressCount, int ResolvedCount, int CriticalCount, int OverdueCount, int CriticalAndOverdueCount)> GetTicketTelemetryCountsAsync(
+        string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId,
+        int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin)
+    {
+        using var context = await _factory.CreateDbContextAsync();
+
+        var query = context.Set<Ticket>().AsQueryable();
+
+        // 1. Security Scoping: Admin / Staff / Customer
+        if (!isAdmin)
+        {
+            if (!isStaffOrAdmin)
+            {
+                query = query.Where(t => t.UserId == currentUserId);
+            }
+            else
+            {
+                var validRoleIds = userRoleIds ?? new List<int>();
+                query = query.Where(t =>
+                    t.UserId == currentUserId ||
+                    !t.Project.RoleProjects.Any() ||
+                    t.Project.RoleProjects.Any(rp => validRoleIds.Contains(rp.RoleId))
+                );
+            }
+        }
+
+        // 2. User-Selected Filters
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            query = query.Where(t => t.Title.Contains(searchTerm) || t.Description.Contains(searchTerm));
+
+        if (projectIds != null && projectIds.Any())
+            query = query.Where(t => projectIds.Contains(t.ProjectId));
+
+        if (statusIds != null && statusIds.Any())
+            query = query.Where(t => statusIds.Contains(t.StatusId));
+
+        if (priorityIds != null && priorityIds.Any())
+            query = query.Where(t => t.PriorityId.HasValue && priorityIds.Contains(t.PriorityId.Value));
+
+        if (userId.HasValue) query = query.Where(t => t.UserId == userId.Value);
+
+        var now = DateTime.UtcNow;
+
+        var total = await query.CountAsync();
+
+        var newCount = await query.CountAsync(t =>
+            (t.WorkflowStatus != null && t.WorkflowStatus.IsInitial) ||
+            (t.WorkflowStatusId == null && (t.Status.Name == "Open" || t.Status.Name == "جدید" || t.Status.Name == "اقدام نشده")));
+
+        var resolvedCount = await query.CountAsync(t =>
+            (t.WorkflowStatus != null && t.WorkflowStatus.IsFinal) ||
+            (t.Status != null && (t.Status.Name == "Closed" || t.Status.Name == "Resolved" || t.Status.Name.Contains("بسته") || t.Status.Name.Contains("خاتمه") || t.Status.Name.Contains("حل"))));
+
+        var inProgressCount = Math.Max(0, total - newCount - resolvedCount);
+
+        var criticalCount = await query.CountAsync(t => t.Priority != null && t.Priority.Level >= 4);
+
+        var overdueCount = await query.CountAsync(t =>
+            t.DueDate != null && t.DueDate.Value <= now &&
+            !(t.WorkflowStatus != null && t.WorkflowStatus.IsFinal) &&
+            !(t.Status != null && (t.Status.Name == "Closed" || t.Status.Name == "Resolved" || t.Status.Name.Contains("بسته") || t.Status.Name.Contains("خاتمه") || t.Status.Name.Contains("حل"))));
+
+        var criticalAndOverdueCount = await query.CountAsync(t =>
+            (t.Priority != null && t.Priority.Level >= 4) ||
+            (t.DueDate != null && t.DueDate.Value <= now &&
+             !(t.WorkflowStatus != null && t.WorkflowStatus.IsFinal) &&
+             !(t.Status != null && (t.Status.Name == "Closed" || t.Status.Name == "Resolved" || t.Status.Name.Contains("بسته") || t.Status.Name.Contains("خاتمه") || t.Status.Name.Contains("حل")))));
+
+        return (total, newCount, inProgressCount, resolvedCount, criticalCount, overdueCount, criticalAndOverdueCount);
+    }
+
     public async Task<Ticket?> GetTicketWithProjectAndStatusAsync(int id)
     {
         using var context = await _factory.CreateDbContextAsync();

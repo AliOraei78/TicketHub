@@ -6,6 +6,7 @@ public class WorkflowStatus
     public int Id { get; set; } // باید کلید اصلی شود (تغییر در DbContext نیاز است)
     public Guid NodeId { get; set; } // شناسه یکتای این گره در بوم
     public bool IsInitial { get; set; } = false;
+    public bool IsFinal { get; set; } = false;
     public int WorkflowId { get; set; }
     public Workflow Workflow { get; set; } = null!;
 

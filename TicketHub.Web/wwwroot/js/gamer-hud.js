@@ -281,48 +281,117 @@
         }
     `;
 
-    // --- E. ETHEREAL VOLUMETRIC SMOKE & MIST SHADER ---
+    // --- E. PURE WHITE VOLUMETRIC BILLOWING SMOKE SHADER (LOCALIZED BOTTOM) ---
     const FRAGMENT_SMOKE_SRC = GLSL_COMMON_FUNCTIONS + `
         void main() {
             vec2 uv = v_uv;
-            float t = u_time * 0.45;
+            float t = u_time * 0.95;
 
-            // Interactive mouse wind force
+            // Bottom mask: confine smoke strictly to the lower portion of the card
+            float bottomMask = 1.0 - smoothstep(0.04, 0.58, uv.y);
+
+            // Mouse wind repulsion
             if (u_mouse.x > 0.0) {
                 vec2 mNorm = u_mouse / u_resolution;
                 vec2 toMouse = uv - mNorm;
                 float d = length(toMouse);
                 if (d < 0.45) {
-                    float force = (1.0 - d / 0.45) * 0.12;
+                    float force = (1.0 - d / 0.45) * 0.15;
                     uv += normalize(toMouse) * force;
                 }
             }
 
-            // Smoke domain distortion
-            vec2 p = uv * vec2(2.2, 1.8);
-            p.y -= t * 0.6; // Upward smoke velocity
+            // Upward smoke advection with natural curling
+            vec2 p = uv * vec2(3.0, 2.0);
+            p.x += sin(p.y * 2.8 + t * 1.4) * 0.18;
+            p.y += t * 1.1; // Smooth rising motion from bottom
 
-            // Multi-octave Fractal Brownian Motion for curling smoke plumes
-            float n1 = fbm(p + vec2(t * 0.15, -t * 0.3));
-            float n2 = fbm(p * 1.6 + vec2(-t * 0.2, n1 * 0.8));
-            float smokeDensity = fbm(p * 2.2 + vec2(n2 * 0.6, n1 * 0.7));
+            // Multi-octave FBM for dense curling smoke puffs
+            float n1 = fbm(p);
+            float n2 = fbm(p * 2.2 + vec2(n1 * 1.3, -t * 0.5));
+            float n3 = fbm(p * 3.8 + vec2(-t * 0.6, n2 * 1.0));
+            float smokeDensity = fbm(p * 1.6 + vec2(n3 * 0.8, n2 * 0.7));
 
-            // Soft atmospheric density profile
-            float edgeFade = smoothstep(0.0, 0.25, uv.x) * (1.0 - smoothstep(0.75, 1.0, uv.x));
-            float bottomFade = smoothstep(0.0, 0.35, uv.y);
-            float mask = edgeFade * bottomFade;
+            // Sharp cloudy puff contrast
+            float puff = smoothstep(0.2, 0.72, smokeDensity);
+            float corePuff = smoothstep(0.42, 0.88, n2);
+            float totalSmoke = clamp(puff * 0.75 + corePuff * 0.55, 0.0, 1.0);
 
-            float smoke = smoothstep(0.18, 0.78, smokeDensity) * mask;
+            // Edge taper
+            float edgeFade = smoothstep(0.01, 0.2, uv.x) * (1.0 - smoothstep(0.8, 0.99, uv.x));
+            totalSmoke *= bottomMask * edgeFade;
 
-            // Color Palette: Deep Slate Obsidian to Ethereal Silver & Soft Cyan-Grey Mist
-            vec3 darkSmoke = vec3(0.08, 0.11, 0.16);
-            vec3 silverMist = vec3(0.68, 0.74, 0.82);
-            vec3 etherealGlow = vec3(0.85, 0.92, 1.0);
+            // Pure White & Soft Silver Smoke Colors (100% white-hot billowing cloud)
+            vec3 softSilver = vec3(0.82, 0.88, 0.94);
+            vec3 pureWhite = vec3(1.0, 1.0, 1.0);
+            vec3 brilliantGlow = vec3(1.0, 1.0, 1.0);
 
-            vec3 col = mix(darkSmoke, silverMist, smoke);
-            col += etherealGlow * pow(smoke, 2.2) * 0.45;
+            vec3 col = mix(softSilver, pureWhite, totalSmoke);
+            col += brilliantGlow * pow(totalSmoke, 2.2) * 1.4;
 
-            float alpha = clamp(smoke * 0.6, 0.0, 0.85);
+            float alpha = clamp(totalSmoke * 0.92, 0.0, 0.95);
+            gl_FragColor = vec4(col * alpha, alpha);
+        }
+    `;
+
+    // --- F. COSMIC CHRONO VOID & CRIMSON GRAVITATIONAL SINGULARITY SHADER (LOCALIZED BOTTOM) ---
+    const FRAGMENT_VOID_SRC = GLSL_COMMON_FUNCTIONS + `
+        void main() {
+            vec2 uv = v_uv;
+            float t = u_time * 1.4;
+
+            // Bottom mask: confine void singularity strictly to lower portion of the card
+            float bottomMask = 1.0 - smoothstep(0.04, 0.58, uv.y);
+
+            // Singularity center fixed at bottom-center
+            vec2 center = vec2(0.5, 0.08);
+            vec2 p = (uv - center) * vec2(u_resolution.x / u_resolution.y, 1.0);
+
+            // Mouse gravitational distortion
+            if (u_mouse.x > 0.0) {
+                vec2 mNorm = (u_mouse / u_resolution - center) * vec2(u_resolution.x / u_resolution.y, 1.0);
+                float mDist = length(p - mNorm);
+                p += (mNorm - p) * (1.0 - smoothstep(0.0, 0.5, mDist)) * 0.2;
+            }
+
+            float r = length(p);
+            float angle = atan(p.y, p.x);
+
+            // Swirling gravitational vortex
+            float spiral = angle + 4.0 / (r + 0.12) - t * 1.8;
+            vec2 spiralUv = vec2(sin(spiral), cos(spiral)) * r * 2.2;
+
+            // Cosmic plasma turbulence
+            float plasma1 = fbm(spiralUv * 3.2 + vec2(t * 0.6, -t * 0.8));
+            float plasma2 = fbm(vec2(r * 9.0 - t * 2.8, angle * 2.0 + t));
+            float accretion = clamp(plasma1 * 0.6 + plasma2 * 0.5, 0.0, 1.0);
+
+            // Accretion Disk Rings & Singularity
+            float diskRing = 1.0 / (abs(r - 0.24) * 24.0 + 1.0);
+            float outerRing = 1.0 / (abs(r - 0.44) * 18.0 + 1.0);
+            float innerSingularity = 1.0 - smoothstep(0.0, 0.12, r);
+
+            // Radial Pulsing Chrono Shockwave
+            float shockwave = sin(r * 26.0 - t * 5.5);
+            shockwave = smoothstep(0.7, 1.0, shockwave) * (1.0 - smoothstep(0.08, 0.55, r));
+
+            // Deep Cosmic Void & Neon Crimson/Violet Palette
+            vec3 deepVoid = vec3(0.02, 0.01, 0.06);
+            vec3 neonViolet = vec3(0.55, 0.08, 0.85);
+            vec3 bloodCrimson = vec3(0.95, 0.08, 0.25);
+            vec3 pulsarWhite = vec3(1.0, 0.95, 1.0);
+            vec3 chronoGold = vec3(1.0, 0.65, 0.15);
+
+            vec3 col = deepVoid;
+            col += neonViolet * (accretion * 1.1 + outerRing * 0.9);
+            col += bloodCrimson * (diskRing * 2.0 + shockwave * 1.4);
+            col += pulsarWhite * pow(diskRing, 2.5) * 1.8;
+            col += chronoGold * (shockwave * 0.8);
+
+            // Darken the actual black hole core
+            col *= (1.0 - innerSingularity * 0.92);
+
+            float alpha = clamp((accretion * 0.6 + diskRing * 0.8 + outerRing * 0.4 + shockwave * 0.5) * bottomMask * (1.0 - innerSingularity * 0.4), 0.0, 0.92);
             gl_FragColor = vec4(col * alpha, alpha);
         }
     `;
@@ -636,6 +705,7 @@
             else if (element === 'lightning') shaderSrc = FRAGMENT_LIGHTNING_SRC;
             else if (element === 'toxic') shaderSrc = FRAGMENT_TOXIC_SRC;
             else if (element === 'smoke') shaderSrc = FRAGMENT_SMOKE_SRC;
+            else if (element === 'void') shaderSrc = FRAGMENT_VOID_SRC;
 
             if (shaderSrc) {
                 const renderer = new WebGLShaderRenderer(canvas, shaderSrc);
@@ -736,22 +806,36 @@
 
     // --- 5. Digital Odometer Counter ---
     function initCounters() {
-        const counters = document.querySelectorAll('.gamer-counter:not([data-counter-initialized])');
+        const counters = document.querySelectorAll('.gamer-counter');
         counters.forEach(counter => {
             const targetText = counter.getAttribute('data-target') || counter.textContent.trim();
             const targetNumber = parseInt(targetText.replace(/[^\d]/g, ''), 10);
 
             if (isNaN(targetNumber)) return;
-            counter.setAttribute('data-counter-initialized', 'true');
 
-            const duration = 1000;
+            const currentTarget = counter.getAttribute('data-current-target');
+            if (currentTarget === String(targetNumber)) {
+                return;
+            }
+
+            counter.setAttribute('data-current-target', String(targetNumber));
+
+            const prevVal = parseInt((counter.textContent || '0').replace(/[^\d]/g, ''), 10);
+            const startVal = isNaN(prevVal) ? 0 : prevVal;
+
+            if (startVal === targetNumber) {
+                counter.textContent = targetNumber.toLocaleString('fa-IR');
+                return;
+            }
+
+            const duration = 600;
             const startTime = performance.now();
 
             function updateCounter(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-                const currentVal = Math.floor(easeOut * targetNumber);
+                const currentVal = Math.floor(startVal + easeOut * (targetNumber - startVal));
 
                 counter.textContent = currentVal.toLocaleString('fa-IR');
 
@@ -824,7 +908,12 @@
         initAll();
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true, 
+        attributeFilter: ['data-target'] 
+    });
 
     // Global ESC Key Listener for Modals
     document.addEventListener('keydown', (e) => {

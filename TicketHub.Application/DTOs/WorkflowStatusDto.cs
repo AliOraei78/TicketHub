@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +13,7 @@ public class WorkflowStatusDto
     public int WorkflowId { get; set; }
     public int StatusId { get; set; }
     public bool IsInitial { get; set; } = false;
+    public bool IsFinal { get; set; } = false;
     public StatusDto? Status { get; set; }
 
     public double PositionX { get; set; }

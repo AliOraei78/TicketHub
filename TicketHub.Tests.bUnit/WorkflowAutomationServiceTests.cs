@@ -884,6 +884,53 @@ namespace TicketHub.Tests.bUnit
             Assert.True(result.IsValid);
         }
 
+        [Fact]
+        public void WorkflowDtoValidator_Fails_WhenNodeIsBothInitialAndFinal()
+        {
+            // Arrange
+            var validator = new TicketHub.Application.Validations.WorkflowDtoValidator();
+            var nodeId = Guid.NewGuid();
+            var workflow = new TicketHub.Application.DTOs.WorkflowDto
+            {
+                Name = "Invalid Initial and Final WF",
+                WorkflowStatuses = new List<TicketHub.Application.DTOs.WorkflowStatusDto>
+                {
+                    new() { Id = 1, NodeId = nodeId, StatusId = 1, IsInitial = true, IsFinal = true }
+                }
+            };
+
+            // Act
+            var result = validator.Validate(workflow);
+
+            // Assert
+            Assert.False(result.IsValid);
+            Assert.Contains(result.Errors, e => e.ErrorMessage.Contains("همزمان به عنوان وضعیت اولیه و نهایی"));
+        }
+
+        [Fact]
+        public void WorkflowDtoValidator_Passes_WhenNodeIsFinalAndAnotherIsInitial()
+        {
+            // Arrange
+            var validator = new TicketHub.Application.Validations.WorkflowDtoValidator();
+            var node1 = Guid.NewGuid();
+            var node2 = Guid.NewGuid();
+            var workflow = new TicketHub.Application.DTOs.WorkflowDto
+            {
+                Name = "Valid Initial and Final WF",
+                WorkflowStatuses = new List<TicketHub.Application.DTOs.WorkflowStatusDto>
+                {
+                    new() { Id = 1, NodeId = node1, StatusId = 1, IsInitial = true, IsFinal = false },
+                    new() { Id = 2, NodeId = node2, StatusId = 2, IsInitial = false, IsFinal = true }
+                }
+            };
+
+            // Act
+            var result = validator.Validate(workflow);
+
+            // Assert
+            Assert.True(result.IsValid);
+        }
+
         #endregion
     }
 }

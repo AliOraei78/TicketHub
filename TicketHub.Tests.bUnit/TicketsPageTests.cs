@@ -43,7 +43,8 @@ public class TicketsPageTests : BUnitComponentTestBase
             new List<int>(),
             new List<int>(),
             new List<int>(),
-            new List<TicketFieldDto>()
+            new List<TicketFieldDto>(),
+            new TicketTelemetrySummaryDto { TotalTickets = 18 }
         ));
         Services.AddSingleton(_mockTicketState.Object);
 
@@ -78,7 +79,7 @@ public class TicketsPageTests : BUnitComponentTestBase
         var cut = Render<Tickets>();
 
         // Assert page header
-        Assert.NotNull(cut.Find("h1:contains('سامانه مدیریت تیکت‌ها')"));
+        Assert.NotNull(cut.Find("h1:contains('مدیریت تیکت‌ها')"));
 
         // Assert pagination is rendered and displays TotalItems 18
         var paginationEl = cut.Find("span:contains('18')");
@@ -130,7 +131,8 @@ public class TicketsPageTests : BUnitComponentTestBase
             new List<int>(),
             new List<int>(),
             new List<int>(),
-            new List<TicketFieldDto>()
+            new List<TicketFieldDto>(),
+            new TicketTelemetrySummaryDto { TotalTickets = 6 }
         ));
 
         var returnTickets = new List<TicketDto> { new() { Id = 1, Title = "تیکت ۱" } };
@@ -138,6 +140,8 @@ public class TicketsPageTests : BUnitComponentTestBase
             .ReturnsAsync((new List<TicketDto>(), 6));
         _mockTicketService.Setup(s => s.GetFilteredTicketsAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), 1, 6))
             .ReturnsAsync((returnTickets, 6));
+        _mockTicketService.Setup(s => s.GetTicketTelemetrySummaryAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>()))
+            .ReturnsAsync(new TicketTelemetrySummaryDto { TotalTickets = 6 });
 
         var effects = new TicketEffects(
             _mockTicketService.Object,

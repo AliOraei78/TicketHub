@@ -16,7 +16,9 @@ public class WorkflowDtoValidator : AbstractValidator<WorkflowDto>
 
         RuleFor(x => x.WorkflowStatuses)
             .Must(statuses => statuses.Count(s => s.IsInitial) == 1)
-            .WithMessage("دقیقاً یک وضعیت باید به عنوان وضعیت اولیه جریان کاری انتخاب شود.");
+            .WithMessage("دقیقاً یک وضعیت باید به عنوان وضعیت اولیه جریان کاری انتخاب شود.")
+            .Must(statuses => statuses == null || !statuses.Any(s => s.IsInitial && s.IsFinal))
+            .WithMessage("یک وضعیت نمی‌تواند همزمان به عنوان وضعیت اولیه و نهایی انتخاب شود.");
 
         RuleFor(x => x.Transitions)
             .Must(transitions =>

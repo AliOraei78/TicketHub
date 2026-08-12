@@ -96,6 +96,7 @@
                              IsSelected="SelectedNodes.Contains(node)"
                              ShowInitialButton="@(SelectedNodes.Count == 1 && SelectedConnections.Count == 0)"
                              OnSetInitialNode="args => OnSetInitialNode.InvokeAsync(args)"
+                             OnToggleFinalNode="args => OnToggleFinalNode.InvokeAsync(args)"
                              IsConnecting="IsConnecting"
                              ConnectingFromNode="ConnectingFromNode"
                              CursorStyle="@(IsDragging && DraggedNode == node ? "grabbing" : "grab")"

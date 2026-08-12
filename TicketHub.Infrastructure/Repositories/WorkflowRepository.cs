@@ -317,6 +317,7 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
                 existingWs.PositionY = ws.PositionY;
                 existingWs.StatusId = ws.StatusId;
                 existingWs.IsInitial = ws.IsInitial;
+                existingWs.IsFinal = ws.IsFinal;
             }
             else
             {
@@ -327,6 +328,7 @@ public class WorkflowRepository : GenericRepository<Workflow>, IWorkflowReposito
                     PositionY = ws.PositionY,
                     StatusId = ws.StatusId,
                     IsInitial = ws.IsInitial,
+                    IsFinal = ws.IsFinal,
                     WorkflowId = dbWorkflow.Id
                 };
                 dbWorkflow.WorkflowStatuses.Add(newWs);
