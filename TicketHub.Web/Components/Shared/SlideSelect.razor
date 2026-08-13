@@ -10,12 +10,12 @@
             <span>@Label</span>
         </label>
     }
-    <div class="field-spark-wrap w-full h-[46px] flex items-center">
-        <div @onclick="Toggle" class="w-full h-[46px] pr-4.5 pl-5.5 border border-white/[0.12] rounded-2xl cursor-pointer flex justify-between items-center transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] hover:border-cyan-500/50 focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(56,189,248,0.2)] text-sm select-none focus-ring">
+    <div class="field-spark-wrap w-full h-[46px] flex items-center @(IsOpen ? "active" : "")">
+        <div @onclick="Toggle" tabindex="0" class="w-full h-[46px] pr-4.5 pl-5.5 border rounded-2xl cursor-pointer flex justify-between items-center transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] hover:border-cyan-500/50 @(IsOpen ? "border-cyan-400 ring-2 ring-cyan-500/20 shadow-[0_0_15px_rgba(56,189,248,0.25)]" : "border-white/[0.12]") text-sm select-none focus-ring">
             <span class="text-sm truncate block max-w-[85%] @(EqualityComparer<TValue>.Default.Equals(Value, default) ? "text-slate-500" : "text-slate-100 font-medium")" title="@GetSelectedText()">
                 @GetSelectedText()
             </span>
-            <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0 ml-0.5 @(IsOpen ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-400 hover:text-cyan-400 transition-transform duration-300 shrink-0 ml-0.5 @(IsOpen ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
         </div>
@@ -28,22 +28,48 @@
                 <input type="text" @bind="SearchTerm" @bind:event="oninput" @onclick:stopPropagation class="w-full h-9 px-3 text-xs text-slate-100 bg-[#050811] border border-white/[0.1] rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/30 transition-all focus-ring placeholder-slate-500" placeholder="جستجو..." />
             </div>
         }
-        <ul class="overflow-y-auto max-h-52 pt-1 pb-2 overscroll-contain custom-scrollbar divide-y divide-white/[0.04]">
+        <div class="max-h-60 overflow-y-auto pt-1 pb-2 overscroll-contain custom-scrollbar">
             @if (AllowClear)
             {
-                <li @onclick="() => Select(default!)" class="px-4 py-2.5 text-xs text-slate-400 hover:bg-cyan-950/60 hover:text-cyan-300 cursor-pointer transition-colors font-medium select-none">@ClearText</li>
+                bool isClearSelected = EqualityComparer<TValue>.Default.Equals(Value, default);
+                <div @onclick="() => Select(default!)"
+                     class="px-3 py-2 mx-2 my-1 rounded-xl cursor-pointer flex items-center justify-between group transition-all select-none @(isClearSelected ? "bg-cyan-950/60 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(56,189,248,0.2)]" : "hover:bg-cyan-950/40 text-slate-400 hover:text-cyan-300")">
+                    <span class="text-xs font-medium">@ClearText</span>
+                    <div class="cyber-checkbox-box @(isClearSelected ? "checked" : "")">
+                        <svg class="cyber-checkbox-icon @(isClearSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
             }
             @if (FilteredItems != null && FilteredItems.Any())
             {
                 @foreach (var item in FilteredItems)
                 {
-                    <li @onclick="() => Select(ValueSelector(item))" class="px-4 py-2.5 text-xs text-slate-200 hover:bg-cyan-950/60 hover:text-cyan-300 cursor-pointer transition-all truncate block max-w-full font-medium select-none hover:translate-x-1" title="@TextSelector(item)">@TextSelector(item)</li>
+                    var val = ValueSelector(item);
+                    var text = TextSelector(item);
+                    bool isSelected = EqualityComparer<TValue>.Default.Equals(val, Value);
+                    <div @onclick="() => Select(val)"
+                         class="px-3 py-2 mx-2 my-1 rounded-xl cursor-pointer flex items-center justify-between group transition-all select-none @(isSelected ? "bg-cyan-950/60 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(56,189,248,0.2)]" : "hover:bg-cyan-950/40 text-slate-200 hover:text-cyan-300")">
+                        <span class="text-xs font-medium group-hover:text-cyan-300 truncate block max-w-[85%]" title="@text">@text</span>
+                        <div class="cyber-checkbox-box @(isSelected ? "checked" : "")">
+                            <svg class="cyber-checkbox-icon @(isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    </div>
                 }
             }
             else if (FilteredItems != null && !FilteredItems.Any())
             {
-                <li class="px-4 py-3 text-xs text-slate-500 text-center">نتیجه‌ای یافت نشد</li>
+                <div class="px-4 py-6 text-center flex flex-col items-center justify-center opacity-80">
+                    <svg class="w-8 h-8 text-cyan-500/50 mb-2 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    <span class="text-[10px] font-mono text-cyan-400 tracking-wider mb-1">[SYS // NO_MATCH]</span>
+                    <span class="text-xs text-slate-400 font-medium">نتیجه‌ای یافت نشد</span>
+                </div>
             }
-        </ul>
+        </div>
     </div>
 </div>

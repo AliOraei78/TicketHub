@@ -987,6 +987,8 @@ nav a.active svg,
     position: relative;
 }
 
+.field-spark-wrap.active::before,
+.field-spark-wrap.active::after,
 .field-spark-wrap:focus-within::before,
 .field-spark-wrap:focus-within::after {
     content: '';
@@ -1001,11 +1003,13 @@ nav a.active svg,
     animation: sparkJitter 0.5s infinite ease-in-out;
 }
 
+.field-spark-wrap.active::before,
 .field-spark-wrap:focus-within::before {
     top: -2px;
     right: 14px;
 }
 
+.field-spark-wrap.active::after,
 .field-spark-wrap:focus-within::after {
     bottom: -2px;
     left: 14px;
