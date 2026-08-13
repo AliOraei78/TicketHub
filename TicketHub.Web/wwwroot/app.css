@@ -234,6 +234,15 @@ h1:focus-visible {
     }
 }
 
+@keyframes rotateBorderAngleReverse {
+    0% {
+        --border-angle: 360deg;
+    }
+    100% {
+        --border-angle: 0deg;
+    }
+}
+
 /* Base Elemental Card Container */
 .element-card {
     position: relative;
@@ -275,23 +284,6 @@ h1:focus-visible {
     box-shadow: 0 10px 35px -5px rgba(56, 189, 248, 0.3), inset 0 0 25px rgba(99, 102, 241, 0.2);
 }
 
-.element-water::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2.5px;
-    background: conic-gradient(from var(--border-angle), transparent 30%, #38bdf8 60%, #6366f1 85%, #93c5fd 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rotateBorderAngle 5s linear infinite;
-    opacity: 1;
-    pointer-events: none;
-    z-index: 1;
-}
-
 .element-water:hover {
     box-shadow: 0 20px 45px -5px rgba(56, 189, 248, 0.5), 0 0 35px rgba(99, 102, 241, 0.4), inset 0 0 30px rgba(56, 189, 248, 0.25);
 }
@@ -303,23 +295,6 @@ h1:focus-visible {
     border: 1.5px solid rgba(6, 182, 212, 0.5);
     background: radial-gradient(circle at 50% 0%, #08263d 0%, #060913 100%);
     box-shadow: 0 10px 35px -5px rgba(6, 182, 212, 0.4), inset 0 0 25px rgba(250, 204, 21, 0.18);
-}
-
-.element-lightning::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2.5px;
-    background: conic-gradient(from var(--border-angle), transparent 35%, #06b6d4 65%, #38bdf8 85%, #fef08a 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rotateBorderAngle 2.5s linear infinite;
-    opacity: 1;
-    pointer-events: none;
-    z-index: 1;
 }
 
 .element-lightning:hover {
@@ -335,23 +310,6 @@ h1:focus-visible {
     box-shadow: 0 10px 35px -5px rgba(34, 197, 94, 0.4), inset 0 0 25px rgba(163, 230, 53, 0.25);
 }
 
-.element-toxic::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2.5px;
-    background: conic-gradient(from var(--border-angle), transparent 35%, #10b981 65%, #22c55e 85%, #a3e635 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rotateBorderAngle 3.5s linear infinite;
-    opacity: 1;
-    pointer-events: none;
-    z-index: 1;
-}
-
 .element-toxic:hover {
     box-shadow: 0 20px 45px -5px rgba(34, 197, 94, 0.6), 0 0 40px rgba(163, 230, 53, 0.5), inset 0 0 30px rgba(34, 197, 94, 0.3);
 }
@@ -363,23 +321,6 @@ h1:focus-visible {
     border: 1.5px solid rgba(239, 68, 68, 0.6);
     background: radial-gradient(circle at 50% 100%, #360a0a 0%, #060913 100%);
     box-shadow: 0 10px 40px -5px rgba(239, 68, 68, 0.5), inset 0 0 30px rgba(249, 115, 22, 0.3);
-}
-
-.element-fire::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2.5px;
-    background: conic-gradient(from var(--border-angle), transparent 25%, #f97316 55%, #ef4444 80%, #fef08a 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rotateBorderAngle 2.2s linear infinite;
-    opacity: 1;
-    pointer-events: none;
-    z-index: 1;
 }
 
 .element-fire:hover {
@@ -851,6 +792,135 @@ nav a.active svg,
     border-bottom: 2px solid var(--cockpit-aura-primary, #38bdf8);
     border-left: 2px solid var(--cockpit-aura-primary, #38bdf8);
 }
+
+/* Animated Rotating Conic Laser Ring Wrapper for Modals */
+.modal-laser-ring {
+    position: relative;
+    padding: 2px;
+    border-radius: 1.6rem;
+    background: conic-gradient(from var(--border-angle), transparent 25%, #06b6d4 55%, #38bdf8 80%, #a855f7 100%);
+    animation: rotateBorderAngle 4s linear infinite;
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.35), 0 20px 60px rgba(0, 0, 0, 0.85);
+    isolation: isolate;
+}
+
+/* --------------------------------------------------------------------------
+   DUAL-BEAM ROTATING LIGHT DANCE WRAPPERS FOR CHART MODALS (DISTINCT COLORS)
+   -------------------------------------------------------------------------- */
+
+/* 1. Trend Chart Modal: Cyan & Electric Indigo */
+.modal-dual-beam-cyan-indigo {
+    position: relative;
+    padding: 2.5px;
+    border-radius: 1.6rem;
+    isolation: isolate;
+    box-shadow: 0 0 35px rgba(56, 189, 248, 0.4), 0 0 20px rgba(99, 102, 241, 0.35);
+}
+
+.modal-dual-beam-cyan-indigo::before,
+.modal-dual-beam-cyan-indigo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.modal-dual-beam-cyan-indigo::before {
+    background: conic-gradient(from var(--border-angle), #38bdf8 0%, #06b6d4 25%, transparent 45%, transparent 75%, #38bdf8 100%);
+    animation: rotateBorderAngle 2.8s linear infinite;
+}
+
+.modal-dual-beam-cyan-indigo::after {
+    background: conic-gradient(from var(--border-angle), #6366f1 0%, #818cf8 25%, transparent 45%, transparent 75%, #6366f1 100%);
+    animation: rotateBorderAngleReverse 2.8s linear infinite;
+}
+
+/* 2. Priority Chart Modal: Purple & Amber Gold */
+.modal-dual-beam-purple-amber {
+    position: relative;
+    padding: 2.5px;
+    border-radius: 1.6rem;
+    isolation: isolate;
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.4), 0 0 20px rgba(245, 158, 11, 0.35);
+}
+
+.modal-dual-beam-purple-amber::before,
+.modal-dual-beam-purple-amber::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.modal-dual-beam-purple-amber::before {
+    background: conic-gradient(from var(--border-angle), #a855f7 0%, #c084fc 25%, transparent 45%, transparent 75%, #a855f7 100%);
+    animation: rotateBorderAngle 2.8s linear infinite;
+}
+
+.modal-dual-beam-purple-amber::after {
+    background: conic-gradient(from var(--border-angle), #facc15 0%, #f59e0b 25%, transparent 45%, transparent 75%, #facc15 100%);
+    animation: rotateBorderAngleReverse 2.8s linear infinite;
+}
+
+/* 3. Project Workload Chart Modal: Emerald Green & Violet */
+.modal-dual-beam-emerald-purple {
+    position: relative;
+    padding: 2.5px;
+    border-radius: 1.6rem;
+    isolation: isolate;
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.4), 0 0 20px rgba(168, 85, 247, 0.35);
+}
+
+.modal-dual-beam-emerald-purple::before,
+.modal-dual-beam-emerald-purple::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.modal-dual-beam-emerald-purple::before {
+    background: conic-gradient(from var(--border-angle), #10b981 0%, #34d399 25%, transparent 45%, transparent 75%, #10b981 100%);
+    animation: rotateBorderAngle 2.8s linear infinite;
+}
+
+.modal-dual-beam-emerald-purple::after {
+    background: conic-gradient(from var(--border-angle), #a855f7 0%, #8b5cf6 25%, transparent 45%, transparent 75%, #a855f7 100%);
+    animation: rotateBorderAngleReverse 2.8s linear infinite;
+}
+
+/* 4. SLA Performance Chart Modal: Emerald & Rose */
+.modal-dual-beam-emerald-rose {
+    position: relative;
+    padding: 2.5px;
+    border-radius: 1.6rem;
+    isolation: isolate;
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.4), 0 0 20px rgba(244, 63, 94, 0.35);
+}
+
+.modal-dual-beam-emerald-rose::before,
+.modal-dual-beam-emerald-rose::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.modal-dual-beam-emerald-rose::before {
+    background: conic-gradient(from var(--border-angle), #10b981 0%, #059669 25%, transparent 45%, transparent 75%, #10b981 100%);
+    animation: rotateBorderAngle 2.8s linear infinite;
+}
+
+.modal-dual-beam-emerald-rose::after {
+    background: conic-gradient(from var(--border-angle), #f43f5e 0%, #fb7185 25%, transparent 45%, transparent 75%, #f43f5e 100%);
+    animation: rotateBorderAngleReverse 2.8s linear infinite;
+}
+
+
 
 /* Modal ESC Key Indicator */
 .esc-key-badge {

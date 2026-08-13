@@ -53,6 +53,15 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected string ActiveModalType { get; set; } = string.Empty;
     protected string ActiveModalTitle { get; set; } = string.Empty;
 
+    protected string GetChartModalBeamClass() => ActiveModalType switch
+    {
+        "trend" => "modal-dual-beam-cyan-indigo",
+        "priority" => "modal-dual-beam-purple-amber",
+        "project" => "modal-dual-beam-emerald-purple",
+        "sla" => "modal-dual-beam-emerald-rose",
+        _ => "modal-laser-ring"
+    };
+
     // SVG Path Memoization (Allocations & Render Loop Optimization)
     protected string CachedTrendLinePath { get; private set; } = string.Empty;
     protected string CachedTrendAreaPath { get; private set; } = string.Empty;
