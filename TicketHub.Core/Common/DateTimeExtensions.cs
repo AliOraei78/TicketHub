@@ -64,5 +64,21 @@ public static class DateTimeExtensions
 
         return $"{year:D4}/{month:D2}/{day:D2}";
     }
+
+    public static string ToPersianNumbers(this object? input)
+    {
+        if (input == null) return string.Empty;
+        var str = input.ToString() ?? string.Empty;
+        return str.Replace('0', '۰')
+                  .Replace('1', '۱')
+                  .Replace('2', '۲')
+                  .Replace('3', '۳')
+                  .Replace('4', '۴')
+                  .Replace('5', '۵')
+                  .Replace('6', '۶')
+                  .Replace('7', '۷')
+                  .Replace('8', '۸')
+                  .Replace('9', '۹');
+    }
 }
 
