@@ -85,9 +85,9 @@ public class TicketsPageTests : BUnitComponentTestBase
         var paginationEl = cut.Find("span:contains('18')");
         Assert.NotNull(paginationEl);
 
-        // Assert default page size in select contains 6
-        var selectEl = cut.Find("select");
-        Assert.Contains("6 تیکت در صفحه", selectEl.InnerHtml);
+        // Assert default page size in dropdown button contains 6
+        var pageSizeButton = cut.Find("button:contains('6 تیکت در صفحه')");
+        Assert.NotNull(pageSizeButton);
     }
 
     [Fact]

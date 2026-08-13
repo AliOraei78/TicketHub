@@ -1,7 +1,7 @@
 @namespace TicketHub.Web.Components.Shared
 
 <div class="relative z-30 bg-[#070c1a]/90 backdrop-blur-xl p-2.5 px-4 rounded-2xl shadow-lg border border-cyan-500/25 flex flex-wrap lg:flex-nowrap gap-3 items-start justify-between select-none @Class">
-    <div class="relative w-full sm:w-40 md:w-44 flex-shrink-0 flex items-start h-[46px]">
+    <div class="relative w-full sm:w-48 md:w-64 flex-shrink-0 flex items-start h-[46px]">
         <div class="field-spark-wrap w-full h-[46px] flex items-center">
             <div class="relative w-full h-[46px] flex items-center">
                 <input type="text"
@@ -24,15 +24,28 @@
     }
 
     <div class="flex w-full sm:w-40 md:w-44 justify-end flex-shrink-0 flex items-start h-[46px]">
-        <div class="field-spark-wrap w-full h-[46px] flex items-center">
-            <select value="@PageSize"
-                    @onchange="OnPageSizeChanged"
-                    class="w-full h-[46px] px-4 text-center text-sm text-slate-200 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] cursor-pointer shadow-2xs focus-ring font-medium leading-none">
-                @foreach (var size in PageSizeOptions)
-                {
-                    <option value="@size" class="bg-[#090e1d] text-slate-200">@size @ItemName در صفحه</option>
-                }
-            </select>
+        <div class="field-spark-wrap relative w-full h-[46px] flex items-center select-none @(isPageSizeOpen ? "z-[250]" : "z-10")">
+            <button type="button"
+                    @onclick="TogglePageSizeDropdown"
+                    @onblur="ClosePageSizeDropdown"
+                    class="w-full h-[46px] px-4 pl-10 text-center text-sm text-slate-200 border border-white/[0.12] rounded-2xl transition-all bg-[#050811]/90 hover:bg-[#050811] hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs focus-ring font-medium leading-none flex items-center justify-between cursor-pointer">
+                <span class="w-full text-center truncate">@PageSize @ItemName در صفحه</span>
+                <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none @(isPageSizeOpen ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+
+            <div class="dropdown-menu-container absolute top-full left-0 z-[250] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(isPageSizeOpen ? "opacity-100 max-h-60" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+                <ul class="py-1 custom-scrollbar max-h-52 overflow-y-auto divide-y divide-white/[0.04]">
+                    @foreach (var size in PageSizeOptions)
+                    {
+                        <li @onmousedown="() => SelectPageSize(size)"
+                            class="px-4 py-2.5 text-xs text-center cursor-pointer transition-all font-medium hover:bg-cyan-950/60 hover:text-cyan-300 @(size == PageSize ? "text-cyan-400 font-bold bg-cyan-950/40" : "text-slate-200")">
+                            @size @ItemName در صفحه
+                        </li>
+                    }
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -48,16 +61,32 @@
     [Parameter] public List<int> PageSizeOptions { get; set; } = new() { 10, 25, 50, 100 };
     [Parameter] public string Class { get; set; } = string.Empty;
 
+    private bool isPageSizeOpen = false;
+
     protected async Task OnSearchInputChanged(ChangeEventArgs e)
     {
         var value = e.Value?.ToString() ?? string.Empty;
         await SearchTermChanged.InvokeAsync(value);
     }
 
-    protected async Task OnPageSizeChanged(ChangeEventArgs e)
+    private void TogglePageSizeDropdown()
     {
-        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        isPageSizeOpen = !isPageSizeOpen;
+    }
+
+    private async Task ClosePageSizeDropdown()
+    {
+        await Task.Delay(150);
+        isPageSizeOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectPageSize(int newSize)
+    {
+        isPageSizeOpen = false;
+        if (PageSize != newSize)
         {
+            PageSize = newSize;
             await PageSizeChanged.InvokeAsync(newSize);
         }
     }
