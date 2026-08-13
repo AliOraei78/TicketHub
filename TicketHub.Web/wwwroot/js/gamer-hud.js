@@ -225,111 +225,178 @@
         }
     `;
 
-    // --- D. VIBRANT VISCOUS TOXIC ACID, SMOKE & DROPLETS SHADER ---
+    // --- D. VIBRANT BOILING RADIOACTIVE ACID BUBBLES (LAVA LAMP) ---
     const FRAGMENT_TOXIC_SRC = GLSL_COMMON_FUNCTIONS + `
         void main() {
             vec2 uv = v_uv;
-            float t = u_time * 1.1;
+            float t = u_time * 0.8; // Boiling speed
 
-            // Base Y masks for bottom fluid pool and rising fumes
-            float poolMask = 1.0 - smoothstep(0.05, 0.55, uv.y);
-            float fumeFade = 1.0 - smoothstep(0.2, 0.9, uv.y);
+            // Mask to hide bubbles before they hit the text
+            float poolMask = 1.0 - smoothstep(0.3, 0.65, uv.y);
 
-            // Layer 1: Swirling Viscous Acidic Slime Pool at Bottom
-            vec2 p = uv * vec2(2.8, 2.2);
-            float n1 = fbm(p + vec2(0.0, t * 0.7));
-            float n2 = fbm(p * 1.8 + vec2(n1, -t * 0.5));
-            float acidFluid = fbm(p + vec2(n2 * 0.8, n1 * 0.6 + t * 0.4));
-            float depth = smoothstep(0.12, 0.75, acidFluid);
+            // Interactive mouse liquid disturbance
+            vec2 mouseOffset = vec2(0.0);
+            if (u_mouse.x > 0.0) {
+                vec2 mNorm = u_mouse / u_resolution;
+                vec2 toMouse = uv - mNorm;
+                float d = length(toMouse);
+                if (d < 0.4) {
+                    float force = (1.0 - d / 0.4) * 0.05;
+                    mouseOffset = normalize(toMouse) * force * sin(d * 20.0 - t * 4.0);
+                }
+            }
+            vec2 dUv = uv + mouseOffset;
 
-            // Layer 2: Rising Turbulent Toxic Green Smoke & Fumes
-            vec2 smokeUv = uv * vec2(1.6, 1.2);
-            smokeUv.y += t * 0.85;
-            float smokeNoise1 = fbm(smokeUv * 2.2);
-            float smokeNoise2 = fbm(smokeUv * 3.8 + vec2(smokeNoise1, -t * 0.6));
-            float toxicFumes = smoothstep(0.25, 0.75, smokeNoise2) * fumeFade * 0.7;
-
-            // Acidic color palette
-            vec3 darkAcid = vec3(0.04, 0.22, 0.06);
-            vec3 vibrantGreen = vec3(0.35, 0.98, 0.15);
-            vec3 bioGlow = vec3(0.78, 1.0, 0.2);
-            vec3 hotYellowGreen = vec3(0.95, 1.0, 0.35);
-            vec3 toxicSmokeCol = vec3(0.2, 0.75, 0.15);
-
-            // Base fluid color
-            vec3 col = mix(darkAcid, vibrantGreen, depth);
-
-            // Add rising toxic smoke
-            col = mix(col, toxicSmokeCol, toxicFumes * 0.65);
-            col += bioGlow * (toxicFumes * 0.4);
-
-            // Layer 3: Splattering Acidic Droplets & Effervescent Micro-Bubbles
-            vec2 dropUv = uv * vec2(14.0, 16.0) + vec2(0.0, -t * 3.2);
-            float dropNoise = noise2D(dropUv);
-            if (dropNoise > 0.76 && uv.y < 0.88) {
-                float dropGlow = (dropNoise - 0.76) * 6.0;
-                col = mix(col, hotYellowGreen, dropGlow);
-                col += vec3(0.9, 1.0, 0.4) * dropGlow;
+            // 1. Base fluid level (creates a solid wavy pool at the bottom)
+            float surfaceY = 0.06 + sin(dUv.x * 15.0 + t * 1.5) * 0.015 + cos(dUv.x * 8.0 - t) * 0.01;
+            float denom = dUv.y - surfaceY;
+            float field = 0.0;
+            if(denom < 0.0) {
+                field = 100.0; // Solid liquid below surface
+            } else {
+                field = 0.012 / max(0.0001, denom); 
             }
 
-            // Corrosive acid edge highlights
-            float edgeGlow = smoothstep(0.6, 0.85, acidFluid) * poolMask;
-            col += bioGlow * edgeGlow * 0.6;
+            // 2. Add rising, merging metaball bubbles
+            const int NUM_BUBBLES = 14;
+            for(int i = 0; i < NUM_BUBBLES; i++) {
+                float id = float(i);
+                float radius = 0.005 + fract(sin(id * 73.1) * 192.4) * 0.01; // Random sizes
+                float speed = 0.1 + fract(sin(id * 31.3) * 21.2) * 0.15;
+                float startX = fract(sin(id * 92.4) * 51.5); // Random X position
+                
+                // Organic wobble and rise
+                float x = startX + sin(t * 1.2 + id * 5.0) * 0.05; 
+                
+                // Bubbles spawn inside the pool and rise up
+                float y = fract(t * speed + id * 0.618) * 0.7 - 0.05; 
+                
+                vec2 p = vec2(x, y);
+                
+                // Minor distance distortion for organic shapes
+                vec2 distP = dUv;
+                distP.x += sin(dUv.y * 20.0 + t * 2.0) * 0.003;
+                
+                float d = length(distP - p);
+                
+                field += radius / (d * d + 0.0001); 
+            }
 
-            float alpha = clamp((depth * 0.55 * poolMask) + (toxicFumes * 0.45) + (length(col) * 0.25), 0.0, 0.92);
+            // 3. Define the fluid boundary (metaball threshold)
+            float isLiquid = smoothstep(18.0, 22.0, field);
+            
+            // 4. Acid colors
+            vec3 deepBlack = vec3(0.01, 0.03, 0.01);
+            vec3 darkGreen = vec3(0.05, 0.35, 0.1);
+            vec3 neonLime = vec3(0.3, 0.95, 0.15);
+            vec3 toxicWhite = vec3(0.8, 1.0, 0.7);
+
+            // Shading layers based on field density
+            float edgeGlow = smoothstep(18.0, 30.0, field) - smoothstep(30.0, 60.0, field);
+            float core = smoothstep(25.0, 90.0, field);
+            float specular = smoothstep(90.0, 200.0, field);
+
+            vec3 col = deepBlack;
+            col = mix(col, darkGreen, edgeGlow);
+            col = mix(col, neonLime, core);
+            col += toxicWhite * specular * 0.9;
+
+            // 5. Tiny ambient fizzy particles floating up
+            float fizz = 0.0;
+            for(int i = 0; i < 10; i++) {
+                float fi = float(i);
+                float vY = fract(t * 0.4 + fi * 0.33) * 0.8;
+                float vX = fract(sin(fi * 11.1) * 33.3) + sin(t * 1.5 + fi) * 0.04;
+                float vD = length(uv - vec2(vX, vY));
+                fizz += smoothstep(0.01, 0.004, vD) * (1.0 - smoothstep(0.3, 0.6, vY));
+            }
+            col += neonLime * fizz * 0.8;
+
+            // Combine masks
+            float alpha = clamp((isLiquid + fizz) * poolMask, 0.0, 0.95);
+            
             gl_FragColor = vec4(col * alpha, alpha);
         }
     `;
 
-    // --- E. PURE WHITE VOLUMETRIC BILLOWING SMOKE SHADER (LOCALIZED BOTTOM) ---
+    // --- E. MULTI-COLUMN REALISTIC CURLING SMOKE WISPS SHADER (IMAGE 2 INSPIRATION) ---
     const FRAGMENT_SMOKE_SRC = GLSL_COMMON_FUNCTIONS + `
+        // Single Sinuous Smoke Wisp Generator (Image 2 style)
+        float smokeWisp(vec2 uv, float originX, float time, float widthScale, float swayFreq, float swayAmp) {
+            float y = uv.y;
+            // Laminar root at base transitioning to turbulent curling plume as it rises
+            float curlTransition = smoothstep(0.02, 0.75, y);
+            
+            // Sinuous S-curve horizontal displacement
+            float sway = sin(y * swayFreq * 6.28 - time * 2.0) * swayAmp * curlTransition;
+            sway += sin(y * (swayFreq * 2.2) * 6.28 + time * 1.5) * (swayAmp * 0.4) * curlTransition;
+            
+            // Fibrous tendril noise distortion
+            vec2 tendrilP = vec2(uv.x * 16.0, y * 4.5 - time * 1.2);
+            float fibrousNoise = fbm(tendrilP) * 0.035 * curlTransition;
+
+            float centerX = originX + sway + fibrousNoise;
+            float distFromCenter = abs(uv.x - centerX);
+
+            // Plume width expands organically as it rises
+            float plumeWidth = (0.018 + y * 0.065) * widthScale;
+            
+            // Core wisp density with soft falloff
+            float density = 1.0 - smoothstep(0.0, plumeWidth, distFromCenter);
+            
+            // Vertical dissipation
+            float verticalFade = smoothstep(0.0, 0.06, y) * (1.0 - smoothstep(0.45, 0.85, y));
+            
+            // Internal fibrous strand turbulence
+            float strandNoise = fbm(vec2(uv.x * 24.0, y * 7.0 - time * 1.8));
+            float strands = smoothstep(0.15, 0.85, strandNoise);
+
+            return pow(density, 1.6) * verticalFade * (0.65 + strands * 0.55);
+        }
+
         void main() {
             vec2 uv = v_uv;
-            float t = u_time * 0.95;
+            float t = u_time * 0.75;
 
-            // Bottom mask: confine smoke strictly to the lower portion of the card
-            float bottomMask = 1.0 - smoothstep(0.04, 0.58, uv.y);
-
-            // Mouse wind repulsion
+            // Interactive mouse wind deflection
             if (u_mouse.x > 0.0) {
                 vec2 mNorm = u_mouse / u_resolution;
                 vec2 toMouse = uv - mNorm;
                 float d = length(toMouse);
                 if (d < 0.45) {
-                    float force = (1.0 - d / 0.45) * 0.15;
-                    uv += normalize(toMouse) * force;
+                    float force = (1.0 - d / 0.45) * 0.16;
+                    uv.x += (toMouse.x > 0.0 ? force : -force) * (1.0 - uv.y * 0.5);
                 }
             }
 
-            // Upward smoke advection with natural curling
-            vec2 p = uv * vec2(3.0, 2.0);
-            p.x += sin(p.y * 2.8 + t * 1.4) * 0.18;
-            p.y += t * 1.1; // Smooth rising motion from bottom
+            // Combine 4 distinct graceful rising plumes across the card (Image 2 style)
+            float wisp1 = smokeWisp(uv, 0.22, t * 1.0,  1.0, 0.9, 0.045);
+            float wisp2 = smokeWisp(uv, 0.45, t * 0.85, 1.2, 1.2, 0.055);
+            float wisp3 = smokeWisp(uv, 0.68, t * 1.15, 0.9, 1.1, 0.040);
+            float wisp4 = smokeWisp(uv, 0.85, t * 0.95, 1.1, 0.8, 0.050);
 
-            // Multi-octave FBM for dense curling smoke puffs
-            float n1 = fbm(p);
-            float n2 = fbm(p * 2.2 + vec2(n1 * 1.3, -t * 0.5));
-            float n3 = fbm(p * 3.8 + vec2(-t * 0.6, n2 * 1.0));
-            float smokeDensity = fbm(p * 1.6 + vec2(n3 * 0.8, n2 * 0.7));
+            // Ambient background mist drift
+            vec2 ambientP = uv * vec2(2.5, 1.8) + vec2(t * 0.15, -t * 0.6);
+            float ambientMist = fbm(ambientP) * (1.0 - smoothstep(0.02, 0.65, uv.y)) * 0.22;
 
-            // Sharp cloudy puff contrast
-            float puff = smoothstep(0.2, 0.72, smokeDensity);
-            float corePuff = smoothstep(0.42, 0.88, n2);
-            float totalSmoke = clamp(puff * 0.75 + corePuff * 0.55, 0.0, 1.0);
+            float totalSmoke = clamp(wisp1 + wisp2 * 1.1 + wisp3 * 0.9 + wisp4 + ambientMist, 0.0, 1.0);
 
-            // Edge taper
-            float edgeFade = smoothstep(0.01, 0.2, uv.x) * (1.0 - smoothstep(0.8, 0.99, uv.x));
-            totalSmoke *= bottomMask * edgeFade;
+            if (totalSmoke <= 0.01) {
+                gl_FragColor = vec4(0.0);
+                return;
+            }
 
-            // Pure White & Soft Silver Smoke Colors (100% white-hot billowing cloud)
+            // Pearlescent Soft Silver & Billowing White Smoke Palette
+            vec3 deepMist   = vec3(0.45, 0.52, 0.62);
             vec3 softSilver = vec3(0.82, 0.88, 0.94);
-            vec3 pureWhite = vec3(1.0, 1.0, 1.0);
-            vec3 brilliantGlow = vec3(1.0, 1.0, 1.0);
+            vec3 pureWhite  = vec3(1.0, 1.0, 1.0);
+            vec3 silkyGlow  = vec3(0.95, 0.98, 1.0);
 
-            vec3 col = mix(softSilver, pureWhite, totalSmoke);
-            col += brilliantGlow * pow(totalSmoke, 2.2) * 1.4;
+            vec3 col = mix(deepMist, softSilver, smoothstep(0.1, 0.5, totalSmoke));
+            col = mix(col, pureWhite, smoothstep(0.45, 0.9, totalSmoke));
+            col += silkyGlow * (pow(totalSmoke, 2.5) * 0.45);
 
-            float alpha = clamp(totalSmoke * 0.92, 0.0, 0.95);
+            float alpha = clamp(totalSmoke * 0.92, 0.0, 0.94);
             gl_FragColor = vec4(col * alpha, alpha);
         }
     `;
