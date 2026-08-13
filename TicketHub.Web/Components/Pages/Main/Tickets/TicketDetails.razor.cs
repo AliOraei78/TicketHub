@@ -19,6 +19,8 @@ public partial class TicketDetails : ComponentBase, IDisposable
     [Inject] public IToastService ToastService { get; set; } = default!;
     [Inject] public AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] public IPermissionService PermissionService { get; set; } = default!;
+    [Inject] public IWorkflowService WorkflowService { get; set; } = default!;
+    [Inject] public IRoleService RoleService { get; set; } = default!;
     [Inject] public NavigationManager Navigation { get; set; } = default!;
     [Inject] public ITicketEventBroker EventBroker { get; set; } = default!;
 
@@ -37,6 +39,7 @@ public partial class TicketDetails : ComponentBase, IDisposable
     protected bool CanEdit { get; set; } = false;
     protected int CurrentUserId { get; set; } = 0;
     protected bool HasFullAccess { get; set; } = false;
+    protected bool HasAvailableTransitions { get; set; } = false;
 
     protected bool IsEditingTitle { get; set; } = false;
     protected string TitleValue { get; set; } = string.Empty;
@@ -94,6 +97,8 @@ public partial class TicketDetails : ComponentBase, IDisposable
 
         Comments = await CommentService.GetCommentsByTicketIdAsync(TicketId);
         Transitions = await TicketService.GetTransitionsByTicketIdAsync(TicketId);
+
+        await CheckAvailableTransitionsAsync();
 
         LoadAttachments();
 
@@ -164,6 +169,7 @@ public partial class TicketDetails : ComponentBase, IDisposable
             {
                 Ticket = await TicketService.GetByIdAsync(TicketId);
                 LoadAttachments();
+                await CheckAvailableTransitionsAsync();
                 StateHasChanged();
             });
         }
@@ -177,8 +183,68 @@ public partial class TicketDetails : ComponentBase, IDisposable
             {
                 Ticket = await TicketService.GetByIdAsync(TicketId);
                 Transitions = await TicketService.GetTransitionsByTicketIdAsync(TicketId);
+                await CheckAvailableTransitionsAsync();
                 StateHasChanged();
             });
+        }
+    }
+
+    private async Task CheckAvailableTransitionsAsync()
+    {
+        HasAvailableTransitions = false;
+        if (Ticket?.Project == null || !Ticket.Project.WorkflowId.HasValue) return;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userRoles = user.Claims
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
+            bool isAdmin = userRoles.Any(r => r == "مدیر سیستم" || r == "ادمین");
+
+            List<int> userRoleIds = new();
+            if (!isAdmin && userRoles.Any())
+            {
+                var allRoles = await RoleService.GetAllRolesAsync();
+                userRoleIds = allRoles
+                    .Where(r => userRoles.Contains(r.Name))
+                    .Select(r => r.Id)
+                    .ToList();
+            }
+
+            var workflow = await WorkflowService.GetByIdWithDetailsAsync(Ticket.Project.WorkflowId.Value);
+            if (workflow != null && workflow.Transitions != null && workflow.WorkflowStatuses != null)
+            {
+                WorkflowStatusDto? currentWorkflowStatus = null;
+                if (Ticket.WorkflowStatusId.HasValue && Ticket.WorkflowStatusId.Value > 0)
+                {
+                    currentWorkflowStatus = workflow.WorkflowStatuses
+                        .FirstOrDefault(ws => ws.Id == Ticket.WorkflowStatusId.Value);
+                }
+
+                if (currentWorkflowStatus == null)
+                {
+                    currentWorkflowStatus = workflow.WorkflowStatuses
+                        .FirstOrDefault(ws => ws.StatusId == Ticket.StatusId);
+                }
+
+                if (currentWorkflowStatus != null)
+                {
+                    HasAvailableTransitions = workflow.Transitions
+                        .Where(t => t.IsActive)
+                        .Where(t => t.FromState == currentWorkflowStatus.Id)
+                        .Any(t => isAdmin
+                                 || !t.AllowedRoleIds.Any()
+                                 || t.AllowedRoleIds.Any(roleId => userRoleIds.Contains(roleId)));
+                }
+            }
+        }
+        catch
+        {
+            HasAvailableTransitions = false;
         }
     }
 
@@ -201,10 +267,19 @@ public partial class TicketDetails : ComponentBase, IDisposable
     {
         if (Ticket == null || string.IsNullOrWhiteSpace(TitleValue)) return;
 
-        Ticket.Title = TitleValue.Trim();
-        await TicketService.UpdateAsync(Ticket);
-        IsEditingTitle = false;
-        ToastService.ShowSuccess("عنوان تیکت با موفقیت ویرایش شد.");
+        try
+        {
+            Ticket.Title = TitleValue.Trim();
+            await TicketService.UpdateAsync(Ticket);
+            Ticket = await TicketService.GetByIdAsync(TicketId);
+            IsEditingTitle = false;
+            ToastService.ShowSuccess("عنوان تیکت با موفقیت ویرایش شد.");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("خطا در ویرایش عنوان: " + ex.Message);
+        }
     }
 
     protected void EnableDescriptionEdit()
@@ -218,22 +293,39 @@ public partial class TicketDetails : ComponentBase, IDisposable
     {
         if (Ticket == null || string.IsNullOrWhiteSpace(DescriptionValue)) return;
 
-        Ticket.Description = DescriptionValue.Trim();
-        await TicketService.UpdateAsync(Ticket);
-        IsEditingDescription = false;
-        ToastService.ShowSuccess("توضیحات تیکت با موفقیت ویرایش شد.");
+        try
+        {
+            Ticket.Description = DescriptionValue.Trim();
+            await TicketService.UpdateAsync(Ticket);
+            Ticket = await TicketService.GetByIdAsync(TicketId);
+            IsEditingDescription = false;
+            ToastService.ShowSuccess("توضیحات تیکت با موفقیت ویرایش شد.");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("خطا در ویرایش توضیحات: " + ex.Message);
+        }
     }
 
     protected async Task UpdatePriorityAsync(ChangeEventArgs e)
     {
         if (Ticket == null || e.Value == null) return;
 
-        if (int.TryParse(e.Value.ToString(), out int priId))
+        try
         {
-            Ticket.PriorityId = priId == 0 ? null : priId;
-            await TicketService.UpdateAsync(Ticket);
-            Ticket = await TicketService.GetByIdAsync(TicketId);
-            ToastService.ShowSuccess("اولویت تیکت بروزرسانی شد.");
+            if (int.TryParse(e.Value.ToString(), out int priId))
+            {
+                Ticket.PriorityId = priId == 0 ? null : priId;
+                await TicketService.UpdateAsync(Ticket);
+                Ticket = await TicketService.GetByIdAsync(TicketId);
+                ToastService.ShowSuccess("اولویت تیکت بروزرسانی شد.");
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("خطا در بروزرسانی اولویت: " + ex.Message);
         }
     }
 
@@ -241,12 +333,20 @@ public partial class TicketDetails : ComponentBase, IDisposable
     {
         if (Ticket == null || e.Value == null) return;
 
-        if (int.TryParse(e.Value.ToString(), out int statusId))
+        try
         {
-            Ticket.StatusId = statusId;
-            await TicketService.UpdateAsync(Ticket);
-            Ticket = await TicketService.GetByIdAsync(TicketId);
-            ToastService.ShowSuccess("وضعیت تیکت بروزرسانی شد.");
+            if (int.TryParse(e.Value.ToString(), out int statusId))
+            {
+                Ticket.StatusId = statusId;
+                await TicketService.UpdateAsync(Ticket);
+                Ticket = await TicketService.GetByIdAsync(TicketId);
+                ToastService.ShowSuccess("وضعیت تیکت بروزرسانی شد.");
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("خطا در بروزرسانی وضعیت: " + ex.Message);
         }
     }
 
@@ -258,6 +358,7 @@ public partial class TicketDetails : ComponentBase, IDisposable
             Ticket = await TicketService.GetByIdAsync(TicketId);
             LoadAttachments();
             ToastService.ShowSuccess("فایل ضمیمه با موفقیت حذف شد.");
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -280,6 +381,7 @@ public partial class TicketDetails : ComponentBase, IDisposable
             Ticket = await TicketService.GetByIdAsync(TicketId);
             LoadAttachments();
             ToastService.ShowSuccess("فایل(های) جدید با موفقیت آپلود شد.");
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -301,7 +403,9 @@ public partial class TicketDetails : ComponentBase, IDisposable
             }, CurrentUserId);
 
             NewCommentContent = string.Empty;
+            Comments = await CommentService.GetCommentsByTicketIdAsync(TicketId);
             ToastService.ShowSuccess("نظر شما با موفقیت ثبت شد.");
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -318,8 +422,9 @@ public partial class TicketDetails : ComponentBase, IDisposable
         try
         {
             await CommentService.DeleteCommentAsync(commentId, CurrentUserId, HasFullAccess);
-            Comments.RemoveAll(c => c.Id == commentId);
+            Comments = await CommentService.GetCommentsByTicketIdAsync(TicketId);
             ToastService.ShowSuccess("نظر با موفقیت حذف شد.");
+            StateHasChanged();
         }
         catch (Exception ex)
         {

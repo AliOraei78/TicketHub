@@ -317,6 +317,16 @@ public class TicketService : ITicketService
         }
 
         dto.Adapt(ticketInDb);
+
+        // 🌟 فیکس مشکل عدم بروزرسانی priority / status / category / workflowStatus:
+        // پاک کردن Navigation Propertyها تا EF Core مقادیر کلید خارجی جدید را ذخیره کند
+        ticketInDb.Priority = null;
+        ticketInDb.Status = null;
+        ticketInDb.Category = null;
+        ticketInDb.WorkflowStatus = null;
+        ticketInDb.Project = null;
+        ticketInDb.User = null;
+
         await _ticketRepository.UpdateAsync(ticketInDb);
 
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);

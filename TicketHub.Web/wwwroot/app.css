@@ -1536,6 +1536,28 @@ jdp-container .jdp-btn {
     animation: toastProgressShrink 5s linear forwards;
 }
 
+/* Custom Cyber Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(5, 8, 17, 0.6);
+    border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.35);
+    border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.65);
+}
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.35) rgba(5, 8, 17, 0.6);
+}
+
+
 
 
 
