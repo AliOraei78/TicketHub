@@ -12,3 +12,6 @@ For requests involving code modification, UI design, refactoring, or feature imp
 
 2. **Completion Workflow:**
    - After completing code modifications, always clean/rebuild (`dotnet build`), run bUnit tests (`dotnet test`), update `Journey.md`, and restart `TicketHub.Web`.
+
+## UI & Browser Testing
+- For UI/UX visual validation, browser rendering inspection, and interactive testing, you can use Chrome DevTools MCP tools (`chrome-devtools-mcp`).
