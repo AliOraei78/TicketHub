@@ -139,29 +139,29 @@
     </div>
 
     <!-- Cyberpunk Filter & Search Command Bar -->
-    <div class="p-2.5 sm:p-3 rounded-xl bg-[#080d1a]/95 backdrop-blur-2xl border border-cyan-500/30 shadow-[0_0_20px_rgba(8,13,26,0.8)] flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="relative z-30 bg-[#070c1a]/90 backdrop-blur-xl p-2.5 px-4 rounded-2xl shadow-lg border border-cyan-500/25 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
         <!-- Search Box -->
-        <div class="w-full sm:w-80">
+        <div class="w-full sm:w-72 md:w-80 flex items-center h-[46px]">
             <SearchBox Placeholder="جست‌وجوی پروژه یا شناسه..." 
                        SearchTerm="@State.Value.SearchTerm" 
                        OnSearchChanged="HandleSearch" />
         </div>
 
         <!-- 3-State Cyberpunk Status Filter Switcher -->
-        <div class="flex items-center gap-1 p-1 bg-[#050811]/90 rounded-xl border border-cyan-500/30 w-full sm:w-auto">
+        <div class="flex items-center gap-1 p-1 bg-[#050811]/90 rounded-2xl border border-white/[0.12] h-[46px] w-full sm:w-auto shrink-0 select-none">
             <button type="button" 
                     @onclick="@(() => FilterByStatus(null))"
-                    class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer @(State.Value.SelectedFilterStatus == null ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(56,189,248,0.25)]" : "text-slate-400 hover:text-slate-200")">
+                    class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(State.Value.SelectedFilterStatus == null ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(56,189,248,0.25)]" : "text-slate-400 hover:text-slate-200")">
                 همه (@TotalProjectsCount)
             </button>
             <button type="button" 
                     @onclick="@(() => FilterByStatus(true))"
-                    class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer @(State.Value.SelectedFilterStatus == true ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]" : "text-slate-400 hover:text-slate-200")">
+                    class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(State.Value.SelectedFilterStatus == true ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]" : "text-slate-400 hover:text-slate-200")">
                 فعال (@ActiveProjectsCount)
             </button>
             <button type="button" 
                     @onclick="@(() => FilterByStatus(false))"
-                    class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer @(State.Value.SelectedFilterStatus == false ? "bg-rose-500/20 text-rose-300 border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.25)]" : "text-slate-400 hover:text-slate-200")">
+                    class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(State.Value.SelectedFilterStatus == false ? "bg-rose-500/20 text-rose-300 border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.25)]" : "text-slate-400 hover:text-slate-200")">
                 غیرفعال (@InactiveProjectsCount)
             </button>
         </div>

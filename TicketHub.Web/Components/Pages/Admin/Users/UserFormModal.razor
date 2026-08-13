@@ -1,57 +1,151 @@
 @namespace TicketHub.Web.Components.Pages.Admin.Users
+@using Microsoft.AspNetCore.Components.Sections
 @using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
-<ModalDialog IsOpen="IsOpen" Title="@(FormModel.User.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")" OnClose="OnCancel" MaxWidthClass="max-w-2xl">
-    <EditForm EditContext="EditContext" OnSubmit="HandleSubmit" class="flex flex-col max-h-[85vh] select-none" novalidate>
-        <FluentValidationValidator />
+@if (IsOpen)
+{
+    <SectionContent SectionName="RootModal">
+        <div class="modal-backdrop-quantum fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl modal-backdrop-animate select-none">
+            <div class="absolute inset-0" @onclick="OnCancel"></div>
 
-        <div class="p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <CustomInput Label="نام کاربر" @bind-Value="FormModel.User.Name" />
-                    <ValidationMessage For="@(() => FormModel.User.Name)" class="text-rose-500 text-red-500 text-xs mt-1" />
+            <div class="modal-warp-container modal-hud-chassis relative z-[99999] w-full max-w-2xl bg-[#090e1d]/98 rounded-3xl flex flex-col border border-cyan-500/40 my-auto select-none text-slate-200 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_30px_rgba(56,189,248,0.15)]" dir="rtl">
+
+                <!-- Header Section -->
+                <div class="flex items-center justify-between px-6 py-4.5 border-b border-white/[0.08] bg-[#050811]/90 flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 rounded-2xl shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                @if (FormModel.User.Id == 0)
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                }
+                                else
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                }
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
+                                    @(FormModel.User.Id == 0 ? "[SYS // NEW_USER]" : "[SYS // EDIT_USER]")
+                                </span>
+                                <h2 class="text-lg sm:text-xl font-bold text-slate-100">@(FormModel.User.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")</h2>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5 font-normal">
+                                @(FormModel.User.Id == 0 ? "ثبت کاربر جدید در سیستم تله‌متری" : "بروزرسانی مشخصات و سطح دسترسی کاربر")
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="esc-key-badge hidden sm:inline-flex">ESC</span>
+                        <button type="button" @onclick="OnCancel" class="group p-2 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 rounded-full transition-all focus-ring" title="بستن">
+                            <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <CustomInput Label="ایمیل" Type="email" @bind-Value="FormModel.User.Email" Dir="ltr" />
-                    <ValidationMessage For="@(() => FormModel.User.Email)" class="text-rose-500 text-red-500 text-xs mt-1" />
-                </div>
+
+                <EditForm EditContext="EditContext" OnSubmit="HandleSubmit" class="flex flex-col flex-1" novalidate>
+                    <FluentValidationValidator />
+
+                    <div class="p-6 space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="stagger-item-1 relative z-30">
+                                <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                    <span class="text-cyan-400 text-[9px]">◆</span>
+                                    <span>نام کاربر</span>
+                                </label>
+                                <div class="field-spark-wrap w-full">
+                                    <InputText @bind-Value="FormModel.User.Name" type="text"
+                                               class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500"
+                                               placeholder="نام کامل" />
+                                </div>
+                                <ValidationMessage For="@(() => FormModel.User.Name)" class="text-red-500 text-rose-400 text-xs mt-1" />
+                            </div>
+                            <div class="stagger-item-1 relative z-20">
+                                <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                    <span class="text-cyan-400 text-[9px]">◆</span>
+                                    <span>ایمیل</span>
+                                </label>
+                                <div class="field-spark-wrap w-full">
+                                    <InputText @bind-Value="FormModel.User.Email" type="email" dir="ltr"
+                                               class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500"
+                                               placeholder="user@example.com" />
+                                </div>
+                                <ValidationMessage For="@(() => FormModel.User.Email)" class="text-red-500 text-rose-400 text-xs mt-1" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="stagger-item-2 relative z-10">
+                                <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                    <span class="text-cyan-400 text-[9px]">◆</span>
+                                    <span>شماره تلفن</span>
+                                </label>
+                                <div class="field-spark-wrap w-full">
+                                    <InputText @bind-Value="FormModel.User.PhoneNumber" type="tel" dir="ltr"
+                                               class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500"
+                                               placeholder="0912..." />
+                                </div>
+                                <ValidationMessage For="@(() => FormModel.User.PhoneNumber)" class="text-red-500 text-rose-400 text-xs mt-1" />
+                            </div>
+                            <div class="stagger-item-2 relative z-10">
+                                <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                    <span class="text-cyan-400 text-[9px]">◆</span>
+                                    <span>@(FormModel.User.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")</span>
+                                </label>
+                                <div class="field-spark-wrap w-full">
+                                    <InputText @bind-Value="FormModel.Password" type="password" dir="ltr"
+                                               class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500"
+                                               placeholder="@(FormModel.User.Id == 0 ? "********" : "خالی بگذارید")" />
+                                </div>
+                                <ValidationMessage For="@(() => FormModel.Password)" class="text-red-500 text-rose-400 text-xs mt-1" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 stagger-item-3 pt-1">
+                            <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="FormModel.User.IsConfirmed" />
+                            <CustomCheckbox Label="کاربر فعال است؟" @bind-Value="FormModel.User.IsActive" />
+                        </div>
+
+                        <div class="stagger-item-4 relative z-40 pt-2">
+                            <MultiSelectDropdown TItem="RoleDto" TValue="string"
+                                                 Label="نقش‌های دسترسی"
+                                                 Placeholder="جستجو و انتخاب نقش..."
+                                                 Items="AvailableRoles"
+                                                 @bind-SelectedValues="FormModel.SelectedRoles"
+                                                 ValueSelector="r => r.Name"
+                                                 DisplaySelector="r => r.Name"
+                                                 BadgeBgClass="bg-cyan-500/10"
+                                                 BadgeTextClass="text-cyan-300"
+                                                 BadgeButtonClass="text-cyan-500 hover:text-cyan-200" />
+                        </div>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="p-4 sm:px-6 sm:py-4 border-t border-white/[0.08] bg-[#050811]/90 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl mt-auto">
+                        <button type="button" @onclick="OnCancel" class="btn-cyber-ghost focus-ring">انصراف</button>
+                        <button type="submit" class="btn-cyber-primary focus-ring">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @if (FormModel.User.Id == 0)
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                }
+                                else
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                }
+                            </svg>
+                            <span>@(FormModel.User.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")</span>
+                        </button>
+                    </div>
+                </EditForm>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <CustomInput Label="شماره تلفن" Type="tel" @bind-Value="FormModel.User.PhoneNumber" Dir="ltr" />
-                    <ValidationMessage For="@(() => FormModel.User.PhoneNumber)" class="text-rose-500 text-red-500 text-xs mt-1" />
-                </div>
-                <div>
-                    <CustomInput Label="@(FormModel.User.Id == 0 ? "رمز عبور" : "رمز عبور جدید (اختیاری)")"
-                                 Type="password"
-                                 @bind-Value="FormModel.Password"
-                                 Placeholder="@(FormModel.User.Id == 0 ? "رمز عبور را وارد کنید" : "خالی بگذارید اگر تغییری نمی‌خواهید")"
-                                 Dir="ltr" />
-                    <ValidationMessage For="@(() => FormModel.Password)" class="text-rose-500 text-red-500 text-xs mt-1" />
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CustomCheckbox Label="ایمیل تایید شده است؟" @bind-Value="FormModel.User.IsConfirmed" />
-                <CustomCheckbox Label="کاربر فعال است؟" @bind-Value="FormModel.User.IsActive" />
-            </div>
-
-            <MultiSelectDropdown TItem="RoleDto" TValue="string"
-                                 Label="نقش‌ها"
-                                 Placeholder="جستجو و انتخاب نقش..."
-                                 Items="AvailableRoles"
-                                 @bind-SelectedValues="FormModel.SelectedRoles"
-                                 ValueSelector="r => r.Name"
-                                 DisplaySelector="r => r.Name"
-                                 BadgeBgClass="bg-indigo-100"
-                                 BadgeTextClass="text-indigo-700"
-                                 BadgeButtonClass="text-indigo-500 hover:text-indigo-900" />
         </div>
-        <div class="px-8 py-6 border-t border-slate-100 bg-slate-50 flex gap-3 rounded-b-3xl">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all focus-ring">@(FormModel.User.Id == 0 ? "ثبت کاربر" : "ذخیره تغییرات")</button>
-            <button type="button" @onclick="OnCancel" class="flex-1 border border-slate-200 hover:bg-slate-100 font-bold text-sm text-slate-700 py-3.5 rounded-2xl transition-colors focus-ring">انصراف</button>
-        </div>
-    </EditForm>
-</ModalDialog>
+    </SectionContent>
+}

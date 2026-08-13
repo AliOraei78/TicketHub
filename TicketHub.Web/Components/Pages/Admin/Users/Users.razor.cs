@@ -23,6 +23,10 @@ public partial class Users : IDisposable
     private HashSet<int> deletingUserIds = new();
     private bool isBulkDelete = false;
 
+    // Telemetry
+    private int ActiveUsersCount => UsrState.Value.Users.Count(u => u.IsActive);
+    private int AdminUsersCount => UsrState.Value.Users.Count(u => u.UserRoles.Any(ur => ur.Role?.Name == "Admin"));
+
     protected override void OnInitialized()
     {
         base.OnInitialized();

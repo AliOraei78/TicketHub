@@ -12,6 +12,7 @@ public partial class DataGrid<TItem, TKey> : ComponentBase
     [Parameter] public Func<TItem, string>? RowClassSelector { get; set; }
 
     [Parameter] public string EmptyStateValue { get; set; } = "رکوردی";
+    [Parameter] public bool IsCyberpunk { get; set; } = false;
 
     [Parameter] public bool ShowSelection { get; set; } = true;
     [Parameter] public bool ShowRowIndex { get; set; } = true;

@@ -12,41 +12,40 @@
           SelectedKeys="SelectedIds"
           SelectedKeysChanged="OnSelectionChanged"
           EmptyStateValue="کاربری"
-          ShowSelection="CanManage">
+          ShowSelection="CanManage"
+          IsCyberpunk="true">
 
     <HeaderTemplate>
-        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[20%]">نام کاربر</th>
-        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[20%]">ایمیل</th>
-        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[15%]">نقش‌ها</th>
-        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[15%]">پروژه‌ها</th>
-        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 w-[15%]">وضعیت</th>
-        <th class="px-6 py-2.5 text-xs font-bold text-slate-700 text-center w-[10%]">عملیات</th>
+        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[20%]">نام کاربر</th>
+        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[20%]">ایمیل</th>
+        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[15%]">نقش‌ها</th>
+        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[15%]">پروژه‌ها</th>
+        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[15%]">وضعیت</th>
+        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[10%]">عملیات</th>
     </HeaderTemplate>
 
     <RowTemplate Context="user">
-        <td class="px-6 py-2.5 w-[20%]">
+        <td class="px-6 py-3 w-[20%]">
             <div class="flex items-center gap-3">
                 <TextAvatar Text="@user.Name" />
-                <span class="font-bold text-xs text-slate-800 truncate block max-w-[150px]" title="@user.Name">@user.Name</span>
+                <span class="font-bold text-[13px] text-slate-200 truncate block max-w-[150px] group-hover/row:text-cyan-300 transition-colors" title="@user.Name">@user.Name</span>
             </div>
         </td>
-        <td class="px-6 py-2.5 text-xs text-slate-500 font-medium w-[20%] truncate max-w-[150px]" dir="ltr" title="@user.Email">@user.Email</td>
-        <td class="px-6 py-2.5 w-[15%]">
-            <div class="flex flex-wrap gap-1">
+        <td class="px-6 py-3 text-xs text-slate-400 font-medium w-[20%] truncate max-w-[150px] group-hover/row:text-cyan-400/80 transition-colors" dir="ltr" title="@user.Email">@user.Email</td>
+        <td class="px-6 py-3 w-[15%]">
+            <div class="flex flex-wrap gap-1.5">
                 @foreach (var userRole in user.UserRoles)
                 {
-                    <Badge Variant="BadgeVariant.Primary">
-                        <span class="block truncate max-w-[100px]" title="@userRole.Role?.Name">@userRole.Role?.Name</span>
-                    </Badge>
+                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 truncate max-w-[100px] shadow-[0_0_8px_rgba(99,102,241,0.2)]" title="@userRole.Role?.Name">@userRole.Role?.Name</span>
                 }
                 @if (!user.UserRoles.Any())
                 {
-                    <span class="text-slate-400 text-xs font-normal">بدون نقش</span>
+                    <span class="text-slate-500/60 text-xs font-mono">بدون نقش</span>
                 }
             </div>
         </td>
-        <td class="px-6 py-2.5 w-[15%]">
-            <div class="flex flex-wrap gap-1">
+        <td class="px-6 py-3 w-[15%]">
+            <div class="flex flex-wrap gap-1.5">
                 @{
                     var userProjects = user.UserRoles
                         .Where(ur => ur.Role?.RoleProjects != null)
@@ -58,32 +57,32 @@
                 }
                 @foreach (var project in userProjects)
                 {
-                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 truncate max-w-[120px] align-middle" title="@project.Name">
+                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 truncate max-w-[120px] align-middle shadow-[0_0_8px_rgba(56,189,248,0.2)]" title="@project.Name">
                         @project.Name
                     </span>
                 }
                 @if (!userProjects.Any())
                 {
-                    <span class="text-slate-400 text-xs font-normal">بدون پروژه</span>
+                    <span class="text-slate-500/60 text-xs font-mono">بدون پروژه</span>
                 }
             </div>
         </td>
-        <td class="px-6 py-2.5 w-[15%]">
+        <td class="px-6 py-3 w-[15%]">
             @if (user.IsActive)
             {
-                <span class="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-bold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs"></span>
+                <span class="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-bold drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"></span>
                     فعال
                 </span>
             }
             else
             {
-                <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium">
+                <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700 text-slate-500 text-xs font-mono">
                     غیرفعال
                 </span>
             }
         </td>
-        <td class="px-6 py-2.5 text-center w-[10%]">
+        <td class="px-6 py-3 text-center w-[10%] opacity-70 group-hover/row:opacity-100 transition-opacity">
             <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" ResourceKey="@ResourceKey" />
         </td>
     </RowTemplate>

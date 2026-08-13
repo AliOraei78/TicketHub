@@ -92,16 +92,16 @@ namespace TicketHub.Tests.bUnit
 
             var inputs = cut.FindAll("input[type='text']");
             // inputs[3] is the user name input
-            inputs[3].Input("علی علوی");
+            inputs[3].Change("علی علوی");
 
             var emailInput = cut.Find("input[type='email']");
-            emailInput.Input("ali@test.com");
+            emailInput.Change("ali@test.com");
 
             var telInput = cut.Find("input[type='tel']");
-            telInput.Input("09121111111");
+            telInput.Change("09121111111");
 
             var passInput = cut.Find("input[type='password']");
-            passInput.Input("Test@123");
+            passInput.Change("Test@123");
 
             // Click submit
             var submitBtn = cut.Find("button[type='submit']");
