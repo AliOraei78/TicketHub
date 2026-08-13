@@ -1433,6 +1433,109 @@ jdp-container .jdp-btn {
     box-shadow: 0 10px 30px -4px rgba(217, 70, 239, 0.4), 0 0 20px rgba(225, 29, 72, 0.25);
 }
 
+/* ==========================================================================
+   CYBER HOLOGRAPHIC TOAST SYSTEM
+   ========================================================================== */
+@keyframes toastSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastProgressShrink {
+    0% { width: 100%; }
+    100% { width: 0%; }
+}
+
+.animate-toast-slide-in {
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-cyber-success {
+    background: rgba(7, 12, 26, 0.95);
+    border-color: rgba(16, 185, 129, 0.45);
+    box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(16, 185, 129, 0.25);
+}
+.toast-cyber-success .toast-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+.toast-cyber-success .p-2 {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+.toast-cyber-success .toast-progress-bar {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    animation: toastProgressShrink 5s linear forwards;
+}
+
+.toast-cyber-error {
+    background: rgba(7, 12, 26, 0.95);
+    border-color: rgba(244, 63, 94, 0.45);
+    box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(244, 63, 94, 0.25);
+}
+.toast-cyber-error .toast-badge {
+    background: rgba(244, 63, 94, 0.2);
+    color: #fb7185;
+    border: 1px solid rgba(244, 63, 94, 0.4);
+}
+.toast-cyber-error .p-2 {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.4);
+    color: #fb7185;
+}
+.toast-cyber-error .toast-progress-bar {
+    background: linear-gradient(90deg, #f43f5e, #fb7185);
+    animation: toastProgressShrink 5s linear forwards;
+}
+
+.toast-cyber-warning {
+    background: rgba(7, 12, 26, 0.95);
+    border-color: rgba(245, 158, 11, 0.45);
+    box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(245, 158, 11, 0.25);
+}
+.toast-cyber-warning .toast-badge {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+.toast-cyber-warning .p-2 {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+.toast-cyber-warning .toast-progress-bar {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    animation: toastProgressShrink 5s linear forwards;
+}
+
+.toast-cyber-info {
+    background: rgba(7, 12, 26, 0.95);
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.25);
+}
+.toast-cyber-info .toast-badge {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+.toast-cyber-info .p-2 {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+}
+.toast-cyber-info .toast-progress-bar {
+    background: linear-gradient(90deg, #06b6d4, #38bdf8);
+    animation: toastProgressShrink 5s linear forwards;
+}
+
 
 
 

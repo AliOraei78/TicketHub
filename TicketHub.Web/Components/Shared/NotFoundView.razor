@@ -1,36 +1,58 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="flex flex-col items-center justify-center min-h-[65vh] px-4 text-center select-none" dir="rtl">
-    <div class="relative overflow-hidden bg-[#070c1a]/90 backdrop-blur-2xl border border-rose-500/30 rounded-3xl p-10 md:p-14 max-w-lg w-full shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(244,63,94,0.15)]">
-        <!-- Holographic Scanner Icon -->
-        <div class="relative mx-auto w-24 h-24 rounded-2xl bg-rose-500/10 border border-rose-400/40 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(244,63,94,0.2)]">
-            <div class="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-rose-400"></div>
-            <div class="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-rose-400"></div>
-            <span class="text-3xl font-black font-mono text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]">404</span>
+<div class="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center select-none" dir="rtl">
+    <div class="relative overflow-hidden bg-[#070c1a]/95 backdrop-blur-2xl border border-rose-500/40 rounded-3xl p-8 md:p-12 max-w-lg w-full shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(244,63,94,0.2)]">
+        
+        <!-- Rotating Radar Background Circle -->
+        <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-10">
+            <div class="w-80 h-80 rounded-full border border-rose-500 animate-spin" style="animation-duration: 20s;"></div>
+            <div class="w-56 h-56 rounded-full border border-dashed border-rose-400 absolute"></div>
+        </div>
+
+        <!-- Glitch Hologram 404 Badge -->
+        <div class="relative mx-auto w-28 h-28 rounded-2xl bg-rose-950/80 border border-rose-500/50 flex flex-col items-center justify-center mb-6 shadow-[0_0_35px_rgba(244,63,94,0.3)]">
+            <!-- Chamfered HUD Corners -->
+            <div class="absolute -top-1 -right-1 w-3.5 h-3.5 border-t-2 border-r-2 border-rose-400"></div>
+            <div class="absolute -bottom-1 -left-1 w-3.5 h-3.5 border-b-2 border-l-2 border-rose-400"></div>
+            <div class="absolute -top-1 -left-1 w-3.5 h-3.5 border-t-2 border-l-2 border-rose-400"></div>
+            <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 border-b-2 border-r-2 border-rose-400"></div>
+
+            <span class="text-4xl font-black font-mono text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.8)] animate-pulse">404</span>
+            <span class="text-[9px] font-mono text-rose-300/80 tracking-widest mt-1">[SIGNAL_LOST]</span>
         </div>
 
         <!-- Telemetry Badge -->
-        <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-950/70 border border-rose-500/30 text-[10px] font-mono text-rose-400 tracking-wider mb-4">
-            <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-950/80 border border-rose-500/40 text-[10px] font-mono text-rose-300 tracking-wider mb-4 shadow-inner">
+            <span class="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
             <span>[ERR // HTTP_404_NOT_FOUND]</span>
         </div>
 
-        <h1 class="text-2xl font-black text-slate-100 mb-2">
+        <h1 class="text-2xl font-black text-slate-100 mb-2 tracking-tight">
             صفحه مورد نظر شما یافت نشد
         </h1>
-        <p class="text-xs text-slate-400 leading-relaxed mb-6">
+        <p class="text-xs text-slate-400 leading-relaxed mb-6 font-normal">
             @Message
         </p>
 
-        <a href="/" class="btn-cyber-primary inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            <span>بازگشت به داشبورد اصلی</span>
-        </a>
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="/" class="btn-cyber-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>بازگشت به مرکز فرماندهی</span>
+            </a>
+
+            <button onclick="history.back()" type="button" class="btn-cyber-ghost w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>صفحه قبل</span>
+            </button>
+        </div>
     </div>
 </div>
 
 @code {
-    [Parameter] public string Message { get; set; } = "آدرسی که به دنبال آن هستید در سیستم وجود ندارد یا دسترسی لازم را ندارید.";
+    [Parameter] public string Message { get; set; } = "مسیر درخواستی در شبکه عصبی سامانه موجود نیست یا دسترسی لازم برای مشاهده آن صادر نشده است.";
 }
