@@ -1,57 +1,138 @@
 @namespace TicketHub.Web.Components.Pages.Admin.Projects
+@using Microsoft.AspNetCore.Components.Sections
 @using TicketHub.Application.DTOs
 @using TicketHub.Web.Components.Shared
 
-<ModalDialog IsOpen="IsOpen"
-             Title="@Title"
-             OnClose="OnCancel"
-             MaxWidthClass="max-w-md">
+@if (IsOpen)
+{
+    <SectionContent SectionName="RootModal">
+        <div class="modal-backdrop-quantum fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-black/80 backdrop-blur-xl">
+            <div class="absolute inset-0" @onclick="OnCancel"></div>
 
-    <EditForm Model="@Model" OnValidSubmit="OnSave" class="flex flex-col max-h-[85vh] select-none">
-        <FluentValidationValidator />
-        <div class="p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1.5">نام پروژه</label>
-                <InputText @bind-Value="Model.Name" class="w-full h-[46px] px-4 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="نام پروژه را وارد کنید" />
-                <ValidationMessage For="@(() => Model.Name)" class="text-rose-500 text-red-500 text-xs mt-1" />
-            </div>
+            <div class="modal-warp-container modal-hud-chassis relative z-[99999] w-full max-w-2xl max-h-[85vh] bg-[#090e1d]/98 rounded-3xl flex flex-col border border-cyan-500/40 my-0 select-none text-slate-200" dir="rtl">
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1.5">توضیحات</label>
-                <InputTextArea @bind-Value="Model.Description" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="درباره این پروژه بنویسید..." />
-                <ValidationMessage For="@(() => Model.Description)" class="text-rose-500 text-red-500 text-xs mt-1" />
-            </div>
+                <!-- Header Section -->
+                <div class="flex items-center justify-between px-6 py-5 border-b border-white/[0.08] bg-[#050811]/90 flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 rounded-2xl shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                @if (Model.Id == 0)
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                }
+                                else
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                }
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
+                                    @(Model.Id == 0 ? "[SYS // NEW_PROJECT]" : "[SYS // EDIT_PROJECT]")
+                                </span>
+                                <h2 class="text-xl font-bold text-slate-100">@Title</h2>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5 font-normal">
+                                @(Model.Id == 0 ? "ایجاد و تعریف پروژه جدید در سیستم" : "ویرایش مشخصات و جریان کاری پروژه")
+                            </p>
+                        </div>
+                    </div>
 
-            <SlideSelect TItem="WorkflowDto"
-                         TValue="int?"
-                         Label="جریان کاری"
-                         Placeholder="انتخاب جریان کاری..."
-                         Items="@Workflows"
-                         TextSelector="@(w => w.Name)"
-                         ValueSelector="@(w => w.Id)"
-                         @bind-Value="Model.WorkflowId"
-                         AllowClear="true"
-                         ClearText="بدون جریان کاری" />
+                    <div class="flex items-center gap-2">
+                        <span class="esc-key-badge hidden sm:inline-flex">ESC</span>
+                        <button type="button" @onclick="OnCancel" class="group p-2 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 rounded-full transition-all focus-ring" title="بستن">
+                            <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
-            <MultiSelectDropdown TItem="RoleDto"
-                                 TValue="int"
-                                 Label="نقش‌های پروژه"
-                                 Placeholder="انتخاب نقش‌ها..."
-                                 Items="@Roles"
-                                 DisplaySelector="r => r.Name"
-                                 ValueSelector="r => r.Id"
-                                 @bind-SelectedValues="Model.RoleIds" />
+                <EditForm Model="@Model" OnValidSubmit="OnSave" novalidate class="flex flex-col overflow-hidden flex-1">
+                    <FluentValidationValidator />
 
-            <div class="flex items-center mt-4 gap-2">
-                <CustomCheckbox Label="پروژه فعال است؟" @bind-Value="Model.IsActive" />
+                    <div class="overflow-y-auto p-6 space-y-4 custom-scrollbar max-h-[70vh]">
+                        <!-- Project Name -->
+                        <div class="stagger-item-1 relative z-20">
+                            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                <span class="text-cyan-400 text-[9px]">◆</span>
+                                <span>نام پروژه</span>
+                            </label>
+                            <div class="field-spark-wrap w-full">
+                                <InputText @bind-Value="Model.Name"
+                                           class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500"
+                                           placeholder="نام پروژه را وارد کنید" />
+                            </div>
+                            <ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-rose-400 text-xs mt-1" />
+                        </div>
+
+                        <!-- Description -->
+                        <div class="stagger-item-2 relative z-10">
+                            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
+                                <span class="text-cyan-400 text-[9px]">◆</span>
+                                <span>توضیحات پروژه</span>
+                            </label>
+                            <div class="field-spark-wrap w-full">
+                                <InputTextArea @bind-Value="Model.Description" rows="3"
+                                               class="w-full px-4 py-3 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500 resize-none"
+                                               placeholder="درباره این پروژه بنویسید..." />
+                            </div>
+                            <ValidationMessage For="@(() => Model.Description)" class="text-red-500 text-rose-400 text-xs mt-1" />
+                        </div>
+
+                        <!-- Workflow & Roles in 2 columns -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-item-3 relative z-30">
+                            <div>
+                                <SlideSelect TItem="WorkflowDto"
+                                             TValue="int?"
+                                             Label="جریان کاری"
+                                             Placeholder="انتخاب جریان کاری..."
+                                             Items="@Workflows"
+                                             TextSelector="@(w => w.Name)"
+                                             ValueSelector="@(w => w.Id)"
+                                             @bind-Value="Model.WorkflowId"
+                                             AllowClear="true"
+                                             ClearText="بدون جریان کاری" />
+                            </div>
+
+                            <div>
+                                <MultiSelectDropdown TItem="RoleDto"
+                                                     TValue="int"
+                                                     Label="نقش‌های پروژه"
+                                                     Placeholder="انتخاب نقش‌ها..."
+                                                     Items="@Roles"
+                                                     DisplaySelector="r => r.Name"
+                                                     ValueSelector="r => r.Id"
+                                                     @bind-SelectedValues="Model.RoleIds" />
+                            </div>
+                        </div>
+
+                        <!-- Active Checkbox -->
+                        <div class="pt-1 stagger-item-4">
+                            <CustomCheckbox Label="پروژه فعال است؟" @bind-Value="Model.IsActive" />
+                        </div>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="p-5 border-t border-white/[0.08] bg-[#050811]/90 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
+                        <button type="button" @onclick="OnCancel" class="btn-cyber-ghost focus-ring">انصراف</button>
+                        <button type="submit" class="btn-cyber-primary focus-ring">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @if (Model.Id == 0)
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                }
+                                else
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                }
+                            </svg>
+                            <span>@(Model.Id == 0 ? "ثبت پروژه" : "ذخیره تغییرات")</span>
+                        </button>
+                    </div>
+                </EditForm>
             </div>
         </div>
-
-        <div class="px-8 py-6 border-t border-slate-100 bg-slate-50 flex gap-3 rounded-b-3xl">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all focus-ring">
-                @(Model.Id == 0 ? "ثبت پروژه" : "ذخیره تغییرات")
-            </button>
-            <button type="button" @onclick="OnCancel" class="flex-1 border border-slate-200 hover:bg-slate-100 font-bold text-sm text-slate-700 py-3.5 rounded-2xl transition-colors focus-ring">انصراف</button>
-        </div>
-    </EditForm>
-</ModalDialog>
+    </SectionContent>
+}

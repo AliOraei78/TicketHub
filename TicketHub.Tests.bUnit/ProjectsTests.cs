@@ -71,12 +71,14 @@ namespace TicketHub.Tests.bUnit
             );
 
             // Act - Submit empty form
-            cut.Find("form").Submit();
+            var outletRef = cut.Services.GetRequiredService<SectionOutletRef>();
+            outletRef.Wrapper!.Find("form").Submit();
 
-            // Assert
-            var validationMessages = cut.FindAll(".validation-message, .text-red-500");
+            // Assert - Search in the wrapper since content renders via SectionContent
+            var validationMessages = outletRef.Wrapper!.FindAll(".validation-message, .text-rose-400");
             Assert.NotEmpty(validationMessages);
         }
+
 
         [Fact]
         public void OpenCreateModal_ShowsForm()

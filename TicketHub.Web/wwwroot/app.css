@@ -1557,8 +1557,289 @@ jdp-container .jdp-btn {
     scrollbar-color: rgba(56, 189, 248, 0.35) rgba(5, 8, 17, 0.6);
 }
 
+/* ==========================================================================
+   TACTICAL CYBERPUNK TARGET-LOCK HUD & PROJECT CARD ANIMATION
+   ========================================================================== */
+
+@keyframes tacticalFloatingBob {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-7px);
+    }
+}
+
+.tactical-project-card {
+    position: relative;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tactical-project-card:hover {
+    animation: tacticalFloatingBob 3.2s ease-in-out infinite;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.25), inset 0 0 15px rgba(56, 189, 248, 0.08);
+    border-color: rgba(56, 189, 248, 0.55) !important;
+}
+
+/* Target Corner Brackets */
+.target-bracket {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.tactical-project-card:hover .target-bracket {
+    opacity: 1;
+}
+
+.target-bracket-tl {
+    top: -2px;
+    right: -2px;
+    border-top: 2.5px solid #38bdf8;
+    border-right: 2.5px solid #38bdf8;
+    border-top-right-radius: 4px;
+    transform: translate(6px, -6px);
+}
+.tactical-project-card:hover .target-bracket-tl {
+    transform: translate(0, 0);
+    filter: drop-shadow(0 0 6px #38bdf8);
+}
+
+.target-bracket-tr {
+    top: -2px;
+    left: -2px;
+    border-top: 2.5px solid #38bdf8;
+    border-left: 2.5px solid #38bdf8;
+    border-top-left-radius: 4px;
+    transform: translate(-6px, -6px);
+}
+.tactical-project-card:hover .target-bracket-tr {
+    transform: translate(0, 0);
+    filter: drop-shadow(0 0 6px #38bdf8);
+}
+
+.target-bracket-bl {
+    bottom: -2px;
+    right: -2px;
+    border-bottom: 2.5px solid #38bdf8;
+    border-right: 2.5px solid #38bdf8;
+    border-bottom-right-radius: 4px;
+    transform: translate(6px, 6px);
+}
+.tactical-project-card:hover .target-bracket-bl {
+    transform: translate(0, 0);
+    filter: drop-shadow(0 0 6px #38bdf8);
+}
+
+.target-bracket-br {
+    bottom: -2px;
+    left: -2px;
+    border-bottom: 2.5px solid #38bdf8;
+    border-left: 2.5px solid #38bdf8;
+    border-bottom-left-radius: 4px;
+    transform: translate(-6px, 6px);
+}
+.tactical-project-card:hover .target-bracket-br {
+    transform: translate(0, 0);
+    filter: drop-shadow(0 0 6px #38bdf8);
+}
+
+/* Central Target Crosshair Reticle Overlay */
+.target-crosshair-hud {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(1.18);
+    z-index: 15;
+}
+
+.tactical-project-card:hover .target-crosshair-hud {
+    opacity: 1;
+    transform: scale(1);
+}
+
+@keyframes reticleRotateSlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes reticleRotateReverse {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes reticlePulseGlow {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.06); }
+}
+
+.reticle-spin-slow {
+    animation: reticleRotateSlow 14s linear infinite;
+}
+
+.reticle-spin-reverse {
+    animation: reticleRotateReverse 9s linear infinite;
+}
+
+.reticle-pulse {
+    animation: reticlePulseGlow 2.2s ease-in-out infinite;
+}
 
 
+/* ==========================================================================
+   Holographic Warfare Console (Modal Styles)
+   ========================================================================== */
 
+/* 1. Glitch Entrance Animation (Scale-up + RGB Glitch) */
+@keyframes glitchEntrance {
+    0% { transform: scale(0.9); opacity: 0; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+    10% { transform: scale(1.02); opacity: 1; text-shadow: 2px 0 red, -2px 0 cyan; }
+    15% { transform: scale(0.98); text-shadow: -2px 0 red, 2px 0 cyan; }
+    20% { transform: scale(1); text-shadow: none; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
-
+.modal-glitch-entrance {
+    animation: glitchEntrance 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* 2. Cyber Dot Grid & Grid Lines */
+.cyber-dot-grid {
+    background-image: 
+        radial-gradient(rgba(56, 189, 248, 0.15) 1px, transparent 1px),
+        linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px, 40px 40px, 40px 40px;
+    background-position: center center;
+}
+
+/* 3. CRT Scanline */
+@keyframes scanlineSweep {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+}
+
+.cyber-scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: linear-gradient(to bottom, transparent, rgba(56, 189, 248, 0.4), transparent);
+    animation: scanlineSweep 4s linear infinite;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.7;
+}
+
+/* 4. Laser Progress Bar (Right to Left for RTL) */
+@keyframes laserProgress {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+.laser-progress-bar {
+    position: relative;
+    overflow: hidden;
+    height: 2px;
+}
+
+.laser-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(to left, transparent, rgba(56, 189, 248, 1), transparent);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    animation: laserProgress 2s ease-in-out infinite;
+}
+
+/* 5. Neon Field Borders */
+.cyber-input-neon {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: all 0.3s ease;
+}
+
+.cyber-input-neon:focus-within {
+    border-color: rgba(56, 189, 248, 0.8);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3), inset 0 0 8px rgba(56, 189, 248, 0.1);
+}
+
+.field-laser-underline {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 0%;
+    height: 1px;
+    background: rgba(56, 189, 248, 1);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+    transition: width 0.3s ease;
+}
+
+.cyber-input-neon:focus-within .field-laser-underline {
+    width: 100%;
+}
+
+/* 6. Button Laser Charge (Rotating Glow) */
+@keyframes rotateCharge {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+.btn-laser-charge {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.btn-laser-charge::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    background: linear-gradient(90deg, transparent, rgba(56,189,248,0.8), transparent, rgba(99,102,241,0.8), transparent);
+    background-size: 200% 200%;
+    animation: rotateCharge 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn-laser-charge:hover::before {
+    opacity: 1;
+}
+
+.btn-laser-charge::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: inherit;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+/* 7. Hologram Flicker (Cancel Button) */
+@keyframes holoFlicker {
+    0%, 100% { opacity: 1; }
+    33% { opacity: 0.8; }
+    36% { opacity: 0.4; }
+    39% { opacity: 0.9; }
+    66% { opacity: 0.7; }
+    70% { opacity: 0.2; }
+    73% { opacity: 1; }
+}
+
+.btn-holo-flicker:hover {
+    animation: holoFlicker 2s infinite;
+    text-shadow: 0 0 5px rgba(148, 163, 184, 0.8);
+}

@@ -1,16 +1,24 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="relative w-full max-w-md @Class">
-    <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
-        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="relative w-full @Class">
+    <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-cyan-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
     </div>
     <input type="text"
-           class="block w-full h-[46px] px-3 pr-10 text-sm text-slate-900 border border-slate-200 rounded-2xl bg-slate-50 hover:bg-white focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm focus-ring"
+           class="block w-full h-[40px] px-3 pr-10 pl-8 text-xs sm:text-sm text-slate-100 placeholder-slate-400 border border-cyan-500/30 rounded-xl bg-[#050811]/90 hover:border-cyan-400/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all shadow-sm focus-ring @InputClass"
            placeholder="@Placeholder"
            value="@SearchTerm"
            @oninput="OnInputChanged" />
+    @if (!string.IsNullOrWhiteSpace(SearchTerm))
+    {
+        <button type="button" 
+                @onclick="ClearSearch"
+                class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 hover:text-cyan-300 cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    }
 </div>
 
 @code {
@@ -18,10 +26,17 @@
     [Parameter] public string SearchTerm { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
     [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public string InputClass { get; set; } = string.Empty;
 
     protected async Task OnInputChanged(ChangeEventArgs e)
     {
         SearchTerm = e.Value?.ToString() ?? string.Empty;
+        await OnSearchChanged.InvokeAsync(SearchTerm);
+    }
+
+    private async Task ClearSearch()
+    {
+        SearchTerm = string.Empty;
         await OnSearchChanged.InvokeAsync(SearchTerm);
     }
 }

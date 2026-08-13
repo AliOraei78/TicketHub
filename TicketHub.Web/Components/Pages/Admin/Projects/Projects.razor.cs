@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;
@@ -22,6 +22,12 @@ public partial class Projects
         State.Value.Projects
         .Where(p => string.IsNullOrWhiteSpace(State.Value.SearchTerm) || p.Name.Contains(State.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
         .Where(p => State.Value.SelectedFilterStatus == null || p.IsActive == State.Value.SelectedFilterStatus);
+
+    private int TotalProjectsCount => State.Value.Projects?.Count() ?? 0;
+    private int ActiveProjectsCount => State.Value.Projects?.Count(p => p.IsActive) ?? 0;
+    private int InactiveProjectsCount => State.Value.Projects?.Count(p => !p.IsActive) ?? 0;
+    private int WorkflowsCount => State.Value.Workflows?.Count() ?? 0;
+    private int RolesCount => State.Value.Roles?.Count() ?? 0;
 
     protected override void OnInitialized()
     {
