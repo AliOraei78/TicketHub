@@ -3,6 +3,20 @@
 @rendermode InteractiveServer
 
 <aside class="h-full flex flex-col bg-[#070b16]/98 border-l border-white/[0.08] text-slate-300 select-none shadow-2xl relative">
+    <!-- Protruding Border Toggle Handle (Desktop Only) -->
+    <button type="button"
+            @onclick="HandleToggleSidebar"
+            title="@(IsCollapsed ? "باز کردن منو" : "بستن منو")"
+            class="hidden md:flex absolute top-1/2 -left-3.5 -translate-y-1/2 w-7 h-7 rounded-full bg-[#080d1a] border border-cyan-500/40 text-cyan-300 hover:text-white hover:bg-cyan-950 hover:border-cyan-400 hover:scale-115 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:shadow-[0_0_25px_rgba(56,189,248,0.7)] items-center justify-center transition-all duration-300 z-50 cursor-pointer focus-ring">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="w-4 h-4 transition-transform duration-300 @(IsCollapsed ? "rotate-180 text-cyan-400" : "text-cyan-300")"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
+    </button>
+
     <!-- Brand / Logo Section -->
     <div class="@($"h-16 flex items-center {(IsCollapsed ? "justify-center" : "justify-between px-5")} bg-[#050811]/90 border-b border-white/[0.08] transition-all duration-300")">
         <div class="flex items-center gap-3">

@@ -15,7 +15,7 @@
     <SectionOutlet SectionName="RootModal" />
 
     <!-- Desktop Sidebar -->
-    <div class="hidden md:block @(IsSidebarCollapsed ? "w-20" : "w-64") h-screen sticky top-0 flex-shrink-0 z-30 shadow-2xl sidebar-transition relative">
+    <div class="hidden md:block @(IsSidebarCollapsed ? "w-20" : "w-64") h-screen sticky top-0 flex-shrink-0 z-30 shadow-2xl transition-all duration-300 ease-in-out relative">
         <NavMenu IsMobileMenuOpen="false" IsCollapsed="IsSidebarCollapsed" OnExpandRequested="OpenSidebar" OnToggleSidebar="ToggleDesktopSidebar" />
     </div>
 
