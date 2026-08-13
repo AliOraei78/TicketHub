@@ -44,7 +44,9 @@ public class TicketsPageTests : BUnitComponentTestBase
             new List<int>(),
             new List<int>(),
             new List<TicketFieldDto>(),
-            new TicketTelemetrySummaryDto { TotalTickets = 18 }
+            new TicketTelemetrySummaryDto { TotalTickets = 18 },
+            "createdAt",
+            false
         ));
         Services.AddSingleton(_mockTicketState.Object);
 
@@ -132,13 +134,15 @@ public class TicketsPageTests : BUnitComponentTestBase
             new List<int>(),
             new List<int>(),
             new List<TicketFieldDto>(),
-            new TicketTelemetrySummaryDto { TotalTickets = 6 }
+            new TicketTelemetrySummaryDto { TotalTickets = 6 },
+            "createdAt",
+            false
         ));
 
         var returnTickets = new List<TicketDto> { new() { Id = 1, Title = "تیکت ۱" } };
-        _mockTicketService.Setup(s => s.GetFilteredTicketsAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), 3, 6))
+        _mockTicketService.Setup(s => s.GetFilteredTicketsAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), 3, 6, It.IsAny<System.Security.Claims.ClaimsPrincipal?>(), It.IsAny<string?>(), It.IsAny<bool>()))
             .ReturnsAsync((new List<TicketDto>(), 6));
-        _mockTicketService.Setup(s => s.GetFilteredTicketsAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), 1, 6))
+        _mockTicketService.Setup(s => s.GetFilteredTicketsAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), 1, 6, It.IsAny<System.Security.Claims.ClaimsPrincipal?>(), It.IsAny<string?>(), It.IsAny<bool>()))
             .ReturnsAsync((returnTickets, 6));
         _mockTicketService.Setup(s => s.GetTicketTelemetrySummaryAsync(It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>()))
             .ReturnsAsync(new TicketTelemetrySummaryDto { TotalTickets = 6 });

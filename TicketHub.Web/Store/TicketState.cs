@@ -25,9 +25,11 @@ public record TicketState(
     List<int> SelectedFilterStatusIds,
     List<int> SelectedFilterPriorityIds,
     IEnumerable<TicketFieldDto> DynamicFields,
-    TicketTelemetrySummaryDto Telemetry)
+    TicketTelemetrySummaryDto Telemetry,
+    string SortBy,
+    bool IsAscending)
 {
-    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 9, 1, new(), new(), new(), Array.Empty<TicketFieldDto>(), new()) { }
+    private TicketState() : this(true, Array.Empty<TicketDto>(), 0, Array.Empty<ProjectDto>(), Array.Empty<StatusDto>(), Array.Empty<PriorityDto>(), Array.Empty<CategoryDto>(), string.Empty, 9, 1, new(), new(), new(), Array.Empty<TicketFieldDto>(), new(), "createdAt", false) { }
 }
 
 // 2. Actions
@@ -35,7 +37,7 @@ public record LoadTicketInitialDataAction(IEnumerable<string> UserRoles);
 public record TicketInitialDataLoadedAction(IEnumerable<ProjectDto> Projects, IEnumerable<StatusDto> Statuses, IEnumerable<PriorityDto> Priorities, IEnumerable<CategoryDto> Categories);
 public record LoadTicketsAction();
 public record TicketsLoadedAction(IEnumerable<TicketDto> Tickets, int TotalCount, int ValidatedPage, TicketTelemetrySummaryDto Telemetry);
-public record SetTicketFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds, List<int>? PriorityIds = null);
+public record SetTicketFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, List<int>? ProjectIds, List<int>? StatusIds, List<int>? PriorityIds = null, string? SortBy = null, bool? IsAscending = null);
 public record SaveTicketAction(TicketDto Ticket);
 public record SaveTicketSuccessAction();
 public record SaveTicketFailedAction(string ErrorMessage);
@@ -68,7 +70,9 @@ public static class TicketReducers
             CurrentPage = action.CurrentPage ?? state.CurrentPage,
             SelectedFilterProjectIds = action.ProjectIds ?? state.SelectedFilterProjectIds,
             SelectedFilterStatusIds = action.StatusIds ?? state.SelectedFilterStatusIds,
-            SelectedFilterPriorityIds = action.PriorityIds ?? state.SelectedFilterPriorityIds
+            SelectedFilterPriorityIds = action.PriorityIds ?? state.SelectedFilterPriorityIds,
+            SortBy = action.SortBy ?? state.SortBy,
+            IsAscending = action.IsAscending ?? state.IsAscending
         };
 
     [ReducerMethod]
@@ -144,7 +148,7 @@ public class TicketEffects
             _logger.LogInformation("شروع فراخوانی لیست تیکت‌ها.");
 
             var st = _state.Value;
-            var result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null, st.CurrentPage, st.PageSize);
+            var result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null, st.CurrentPage, st.PageSize, null, st.SortBy, st.IsAscending);
 
             int maxPage = result.TotalCount == 0 ? 1 : (int)Math.Ceiling(result.TotalCount / (double)st.PageSize);
             var finalPage = st.CurrentPage;
@@ -152,7 +156,7 @@ public class TicketEffects
             if (st.CurrentPage > maxPage && maxPage > 0)
             {
                 finalPage = maxPage;
-                result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null, finalPage, st.PageSize);
+                result = await _ticketService.GetFilteredTicketsAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null, finalPage, st.PageSize, null, st.SortBy, st.IsAscending);
             }
 
             var telemetry = await _ticketService.GetTicketTelemetrySummaryAsync(st.SearchTerm, st.SelectedFilterProjectIds, st.SelectedFilterStatusIds, st.SelectedFilterPriorityIds, null);

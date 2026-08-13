@@ -46,8 +46,44 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
     protected List<int> SelectedPriorityIds
     {
         get => TicketState.Value.SelectedFilterPriorityIds;
-        set => Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, null, null, value));
+        set
+        {
+            Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, null, null, value));
+            Dispatcher.Dispatch(new LoadTicketsAction());
+        }
     }
+
+    protected string SortBy
+    {
+        get => TicketState.Value.SortBy;
+        set
+        {
+            Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, null, null, null, value, null));
+            Dispatcher.Dispatch(new LoadTicketsAction());
+        }
+    }
+
+    protected bool SortIsAscending
+    {
+        get => TicketState.Value.IsAscending;
+        set
+        {
+            Dispatcher.Dispatch(new SetTicketFiltersAction(null, null, 1, null, null, null, null, value));
+            Dispatcher.Dispatch(new LoadTicketsAction());
+        }
+    }
+
+    protected void ToggleSortDirection()
+    {
+        SortIsAscending = !SortIsAscending;
+    }
+
+    protected List<TicketHub.Web.Components.Shared.SortOption> TicketSortOptions { get; } = new()
+    {
+        new("createdAt", "📅 تاریخ ثبت تیکت"),
+        new("lastAction", "⚡ تاریخ آخرین اقدام"),
+        new("priority", "🔥 اولویت تیکت")
+    };
 
     protected IEnumerable<TicketDto> FilteredTickets => TicketState.Value.Tickets;
 

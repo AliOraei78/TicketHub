@@ -1,0 +1,62 @@
+@namespace TicketHub.Web.Components.Shared
+
+<div class="flex items-center gap-1.5 h-[46px] w-full select-none @Class">
+    <!-- Cyber Sort Dropdown -->
+    <div class="relative flex-grow h-[46px] flex items-center">
+        <select value="@SelectedSortBy"
+                @onchange="OnSortByChanged"
+                class="w-full h-[46px] pr-9 pl-3 text-xs font-bold text-slate-100 bg-[#050811]/90 hover:bg-[#050811] border border-white/[0.12] hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 rounded-2xl transition-all outline-none cursor-pointer appearance-none">
+            @if (Options != null)
+            {
+                @foreach (var opt in Options)
+                {
+                    <option value="@opt.Value">@opt.Label</option>
+                }
+            }
+        </select>
+        <svg class="w-4 h-4 text-cyan-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+        </svg>
+    </div>
+
+    <!-- Direction Toggle Arrow Button -->
+    <button type="button"
+            @onclick="ToggleDirection"
+            title="@(IsAscending ? AscendingTooltip : DescendingTooltip)"
+            class="h-[46px] w-[46px] flex items-center justify-center bg-[#050811]/90 hover:bg-cyan-950/60 border border-white/[0.12] hover:border-cyan-400 text-cyan-400 rounded-2xl transition-all shadow-2xs cursor-pointer group shrink-0">
+        <svg class="w-5 h-5 transition-transform duration-300 transform group-hover:scale-110 @(IsAscending ? "rotate-180 text-emerald-400" : "text-cyan-400")"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+    </button>
+</div>
+
+@code {
+    [Parameter] public string SelectedSortBy { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedSortByChanged { get; set; }
+
+    [Parameter] public bool IsAscending { get; set; } = false;
+    [Parameter] public EventCallback<bool> IsAscendingChanged { get; set; }
+
+    [Parameter] public IEnumerable<SortOption> Options { get; set; } = new List<SortOption>();
+
+    [Parameter] public string AscendingTooltip { get; set; } = "صعودی (کم به زیاد)";
+    [Parameter] public string DescendingTooltip { get; set; } = "نزولی (زیاد به کم)";
+    [Parameter] public string Class { get; set; } = string.Empty;
+
+    private async Task OnSortByChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString() ?? string.Empty;
+        if (SelectedSortBy != val)
+        {
+            SelectedSortBy = val;
+            await SelectedSortByChanged.InvokeAsync(val);
+        }
+    }
+
+    private async Task ToggleDirection()
+    {
+        IsAscending = !IsAscending;
+        await IsAscendingChanged.InvokeAsync(IsAscending);
+    }
+}

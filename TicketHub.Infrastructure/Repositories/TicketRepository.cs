@@ -35,7 +35,8 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
 
     public async Task<(List<Ticket> Tickets, int TotalCount)> GetFilteredTicketsAsync(
         string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId,
-        int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize)
+        int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize,
+        string? sortBy = "createdAt", bool isAscending = false)
     {
         using var context = await _factory.CreateDbContextAsync();
 
@@ -88,7 +89,23 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
         if (userId.HasValue) query = query.Where(t => t.UserId == userId.Value);
 
         var total = await query.CountAsync();
-        var tickets = await query.OrderByDescending(t => t.CreatedAt)
+
+        IOrderedQueryable<Ticket> orderedQuery = (sortBy?.ToLower()) switch
+        {
+            "priority" => isAscending
+                ? query.OrderBy(t => t.Priority != null ? t.Priority.Level : 0).ThenBy(t => t.CreatedAt)
+                : query.OrderByDescending(t => t.Priority != null ? t.Priority.Level : 0).ThenByDescending(t => t.CreatedAt),
+
+            "lastaction" => isAscending
+                ? query.OrderBy(t => t.TicketHistories.Any() ? t.TicketHistories.Max(th => th.CreatedAt) : t.CreatedAt)
+                : query.OrderByDescending(t => t.TicketHistories.Any() ? t.TicketHistories.Max(th => th.CreatedAt) : t.CreatedAt),
+
+            _ => isAscending
+                ? query.OrderBy(t => t.CreatedAt)
+                : query.OrderByDescending(t => t.CreatedAt)
+        };
+
+        var tickets = await orderedQuery
                     .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return (tickets, total);

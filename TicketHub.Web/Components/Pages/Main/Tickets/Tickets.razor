@@ -169,6 +169,13 @@
                                   ValueSelector="p => p.Id"
                                   DisplaySelector="p => p.Name" />
         </div>
+
+        <!-- Cyber Sorting Control Component -->
+        <div class="w-full sm:w-48 md:w-56 flex items-center h-[46px]">
+            <SortControl @bind-SelectedSortBy="SortBy"
+                         @bind-IsAscending="SortIsAscending"
+                         Options="TicketSortOptions" />
+        </div>
     </ListFilterToolbar>
 
     @if (SelectedTicketIds.Any())

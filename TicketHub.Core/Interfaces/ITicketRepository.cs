@@ -13,7 +13,8 @@ public interface ITicketRepository : IRepository<Ticket>
     new Task<Ticket?> GetByIdAsync(int id);
     Task<(List<Ticket> Tickets, int TotalCount)> GetFilteredTicketsAsync(
             string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId,
-            int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize);
+            int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin, int page, int pageSize,
+            string? sortBy = "createdAt", bool isAscending = false);
     Task<(int Total, int NewCount, int InProgressCount, int ResolvedCount, int CriticalCount, int OverdueCount, int CriticalAndOverdueCount)> GetTicketTelemetryCountsAsync(
             string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId,
             int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin);

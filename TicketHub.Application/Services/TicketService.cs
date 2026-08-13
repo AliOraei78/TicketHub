@@ -150,14 +150,15 @@ public class TicketService : ITicketService
 
     public async Task<(List<TicketDto> Tickets, int TotalCount)> GetFilteredTicketsAsync(
             string? searchTerm = null, List<int>? projectIds = null, List<int>? statusIds = null, List<int>? priorityIds = null,
-            int? userId = null, int page = 1, int pageSize = 10, ClaimsPrincipal? user = null)
+            int? userId = null, int page = 1, int pageSize = 10, ClaimsPrincipal? user = null,
+            string? sortBy = "createdAt", bool isAscending = false)
     {
         _logger.LogInformation("دریافت لیست تیکت‌ها با فیلتر. صفحه: {Page}، تعداد در صفحه: {PageSize}.", page, pageSize);
 
         var (currentUserId, userRoleIds, isAdmin, isStaffOrAdmin) = await GetCurrentUserSecurityContextAsync(user);
 
         var (tickets, totalCount) = await _ticketRepository.GetFilteredTicketsAsync(
-            searchTerm, projectIds, statusIds, priorityIds, userId, currentUserId, userRoleIds, isAdmin, isStaffOrAdmin, page, pageSize);
+            searchTerm, projectIds, statusIds, priorityIds, userId, currentUserId, userRoleIds, isAdmin, isStaffOrAdmin, page, pageSize, sortBy, isAscending);
 
         _logger.LogInformation("تعداد {TotalCount} تیکت منطبق با فیلترها یافت شد.", totalCount);
 

@@ -8,7 +8,8 @@ public interface ITicketService
     Task<TicketDto?> GetByIdAsync(int id);
     Task<(List<TicketDto> Tickets, int TotalCount)> GetFilteredTicketsAsync(string? searchTerm = null, 
         List<int>? projectIds = null, List<int>? statusIds = null, List<int>? priorityIds = null,
-        int? userId = null, int page = 1, int pageSize = 10, ClaimsPrincipal? user = null);
+        int? userId = null, int page = 1, int pageSize = 10, ClaimsPrincipal? user = null,
+        string? sortBy = "createdAt", bool isAscending = false);
     Task<TicketTelemetrySummaryDto> GetTicketTelemetrySummaryAsync(string? searchTerm = null,
         List<int>? projectIds = null, List<int>? statusIds = null, List<int>? priorityIds = null,
         int? userId = null, ClaimsPrincipal? user = null);
