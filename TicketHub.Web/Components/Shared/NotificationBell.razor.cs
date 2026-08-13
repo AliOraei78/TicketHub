@@ -235,10 +235,10 @@ public partial class NotificationBell : ComponentBase, IDisposable
 
     protected string GetSeverityIconContainerClass(NotificationSeverity severity) => severity switch
     {
-        NotificationSeverity.Success => "bg-emerald-50 text-emerald-600 border border-emerald-100",
-        NotificationSeverity.Warning => "bg-amber-50 text-amber-600 border border-amber-100",
-        NotificationSeverity.Danger => "bg-rose-50 text-rose-600 border border-rose-100",
-        _ => "bg-indigo-50 text-indigo-600 border border-indigo-100"
+        NotificationSeverity.Success => "bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]",
+        NotificationSeverity.Warning => "bg-amber-950/80 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]",
+        NotificationSeverity.Danger => "bg-rose-950/80 text-rose-400 border border-rose-500/40 shadow-[0_0_10px_rgba(244,63,94,0.25)]",
+        _ => "bg-cyan-950/80 text-cyan-400 border border-cyan-500/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]"
     };
 
     protected RenderFragment GetSeverityIcon(NotificationSeverity severity) => builder =>

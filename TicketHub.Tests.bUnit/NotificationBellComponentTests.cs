@@ -183,7 +183,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
         await cut.Find("button[title='اعلانات']").ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Click on notification item
-        var itemDiv = cut.FindAll("div").First(d => d.Attributes["class"]?.Value.Contains("hover:bg-slate-50") == true);
+        var itemDiv = cut.Find("div.notification-item");
         await itemDiv.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Assert - Modal is opened with details and MarkAsRead was called

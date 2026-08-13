@@ -41,16 +41,32 @@ public partial class NotificationDetailsModal : ComponentBase
 
     protected string GetSeverityBadgeClass(NotificationSeverity severity) => severity switch
     {
-        NotificationSeverity.Success => "bg-emerald-50 text-emerald-700 border border-emerald-200",
-        NotificationSeverity.Warning => "bg-amber-50 text-amber-700 border border-amber-200",
-        NotificationSeverity.Danger => "bg-rose-50 text-rose-700 border border-rose-200",
-        _ => "bg-indigo-50 text-indigo-700 border border-indigo-200"
+        NotificationSeverity.Success => "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
+        NotificationSeverity.Warning => "bg-amber-950/80 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]",
+        NotificationSeverity.Danger => "bg-rose-950/80 text-rose-300 border border-rose-500/40 shadow-[0_0_10px_rgba(244,63,94,0.2)]",
+        _ => "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(56,189,248,0.2)]"
     };
 
-    protected RenderFragment GetSeverityIcon(NotificationSeverity severity) => builder =>
+    protected string GetSeverityBoxClass(NotificationSeverity severity) => severity switch
+    {
+        NotificationSeverity.Success => "bg-emerald-950/90 text-emerald-400 border border-emerald-500/60 shadow-[0_0_25px_rgba(16,185,129,0.35)]",
+        NotificationSeverity.Warning => "bg-amber-950/90 text-amber-400 border border-amber-500/60 shadow-[0_0_25px_rgba(245,158,11,0.35)]",
+        NotificationSeverity.Danger => "bg-rose-950/90 text-rose-400 border border-rose-500/60 shadow-[0_0_25px_rgba(244,63,94,0.35)]",
+        _ => "bg-cyan-950/90 text-cyan-400 border border-cyan-500/60 shadow-[0_0_25px_rgba(56,189,248,0.35)]"
+    };
+
+    protected string GetSeverityCornerClass(NotificationSeverity severity) => severity switch
+    {
+        NotificationSeverity.Success => "border-emerald-400",
+        NotificationSeverity.Warning => "border-amber-400",
+        NotificationSeverity.Danger => "border-rose-400",
+        _ => "border-cyan-400"
+    };
+
+    protected RenderFragment GetSeverityIconLarge(NotificationSeverity severity) => builder =>
     {
         builder.OpenElement(0, "svg");
-        builder.AddAttribute(1, "class", "w-3.5 h-3.5");
+        builder.AddAttribute(1, "class", "w-6 h-6 drop-shadow-[0_0_8px_currentColor]");
         builder.AddAttribute(2, "fill", "none");
         builder.AddAttribute(3, "stroke", "currentColor");
         builder.AddAttribute(4, "viewBox", "0 0 24 24");
