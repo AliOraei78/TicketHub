@@ -2,7 +2,7 @@
 @using TicketHub.Application.DTOs
 @using TicketHub.Core.Entities
 
-<div class="flex-1 relative bg-slate-50 overflow-hidden canvas-pattern outline-none select-none"
+<div class="flex-1 relative cyber-canvas overflow-hidden outline-none select-none"
      tabindex="0"
      @onkeydown="OnKeyDown"
      @onpointerdown="OnPointerDown"
@@ -17,16 +17,41 @@
 
     @if (IsBoxSelecting)
     {
-        <div class="absolute border border-indigo-500 bg-indigo-500/20 z-50 pointer-events-none rounded-lg"
+        <div class="absolute border border-sky-400 bg-sky-500/15 z-50 pointer-events-none rounded-xl shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-[1px]"
              style="left: @(Math.Min(BoxStartX, BoxEndX))px; top: @(Math.Min(BoxStartY, BoxEndY))px; width: @(Math.Abs(BoxEndX - BoxStartX))px; height: @(Math.Abs(BoxEndY - BoxStartY))px;">
         </div>
     }
 
     <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
         <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" /></marker>
-            <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" /></marker>
-            <marker id="arrowhead-inactive" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#e2e8f0" /></marker>
+            <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+            <filter id="glow-indigo" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+
+            <!-- Cyber Arrowheads -->
+            <marker id="arrowhead-normal" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+                <polygon points="0 1, 11 4.5, 0 8, 3 4.5" fill="#38bdf8" opacity="0.85" />
+            </marker>
+            <marker id="arrowhead-selected" markerWidth="14" markerHeight="10" refX="11" refY="5" orient="auto">
+                <polygon points="0 1, 13 5, 0 9, 4 5" fill="#a855f7" />
+            </marker>
+            <marker id="arrowhead-auto" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+                <polygon points="0 1, 11 4.5, 0 8, 3 4.5" fill="#f59e0b" />
+            </marker>
+            <marker id="arrowhead-inactive" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 1, 9 3.5, 0 6, 2 3.5" fill="#475569" opacity="0.6" />
+            </marker>
         </defs>
 
         @foreach (var conn in Connections)
@@ -37,24 +62,37 @@
             {
                 bool isSelected = SelectedConnections.Contains(conn);
 
-                string strokeColor = isSelected ? "#6366f1" : (conn.IsActive ? "#94a3b8" : "#e2e8f0");
-                string marker = isSelected ? "url(#arrowhead-active)" : (conn.IsActive ? "url(#arrowhead)" : "url(#arrowhead-inactive)");
+                string glowStroke = isSelected ? "rgba(168, 85, 247, 0.4)" : (conn.IsAutomatic ? "rgba(245, 158, 11, 0.35)" : (conn.IsActive ? "rgba(56, 189, 248, 0.3)" : "transparent"));
+                string coreStroke = isSelected ? "#c084fc" : (conn.IsAutomatic ? "#fbbf24" : (conn.IsActive ? "#38bdf8" : "#475569"));
+                string marker = isSelected ? "url(#arrowhead-selected)" : (conn.IsAutomatic ? "url(#arrowhead-auto)" : (conn.IsActive ? "url(#arrowhead-normal)" : "url(#arrowhead-inactive)"));
 
                 var sameNodeConnections = Connections.Where(c => (c.FromNodeId == fromNode.Id && c.ToNodeId == toNode.Id) || (c.FromNodeId == toNode.Id && c.ToNodeId == fromNode.Id)).ToList();
                 int index = sameNodeConnections.IndexOf(conn);
 
                 var p1 = GetPortCoordinates(fromNode, conn.SourcePort);
                 var p2 = GetPortCoordinates(toNode, conn.TargetPort);
+                var pathD = GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId);
 
                 <g @key="conn.Id" @onclick:stopPropagation="true">
-                    <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId)"
-                          stroke="transparent" stroke-width="15" fill="none" class="pointer-events-auto cursor-pointer"
+                    <!-- Broad Click Target -->
+                    <path d="@pathD"
+                          stroke="transparent" stroke-width="20" fill="none" class="pointer-events-auto cursor-pointer"
                           @onpointerdown="e => OnSelectConnection.InvokeAsync((e, conn))"
                           @onpointerdown:stopPropagation="true" />
 
-                    <path d="@GetBezierPath(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId)"
-                          stroke="@strokeColor" stroke-width="2.5" fill="none" marker-end="@marker"
-                          class="transition-colors duration-200" stroke-dasharray="@(conn.IsAutomatic ? "5,5" : "none")" />
+                    <!-- Outer Glow Line -->
+                    @if (conn.IsActive)
+                    {
+                        <path d="@pathD"
+                              stroke="@glowStroke" stroke-width="6" fill="none"
+                              class="pointer-events-none transition-colors duration-200" />
+                    }
+
+                    <!-- Core Laser Line with Flowing Dash -->
+                    <path d="@pathD"
+                          stroke="@coreStroke" stroke-width="@(isSelected ? "2.5" : "2")" fill="none" marker-end="@marker"
+                          class="pointer-events-none transition-all duration-200 @(conn.IsActive ? (conn.IsAutomatic ? "animate-laser-flow-fast" : "animate-laser-flow") : "")"
+                          stroke-dasharray="@(conn.IsAutomatic ? "6,4" : (conn.IsActive ? "8,4" : "none"))" />
                 </g>
             }
         }
@@ -62,7 +100,9 @@
         @if (IsConnecting && ConnectingFromNode != null)
         {
             var p1 = GetPortCoordinates(ConnectingFromNode, ActiveSourcePort);
-            <path d="@GetBezierPath(p1.X, p1.Y, MouseX, MouseY, 0, Guid.Empty, Guid.Empty)" stroke="#6366f1" stroke-width="2.5" fill="none" stroke-dasharray="4,4" class="opacity-60" />
+            var pathConnecting = GetBezierPath(p1.X, p1.Y, MouseX, MouseY, 0, Guid.Empty, Guid.Empty);
+            <path d="@pathConnecting" stroke="rgba(56, 189, 248, 0.4)" stroke-width="5" fill="none" class="pointer-events-none" />
+            <path d="@pathConnecting" stroke="#38bdf8" stroke-width="2.5" fill="none" stroke-dasharray="6,4" class="pointer-events-none animate-laser-flow" />
         }
     </svg>
 
@@ -82,7 +122,12 @@
 
                 var center = GetBezierCenter(p1.X, p1.Y, p2.X, p2.Y, index, conn.FromNodeId, conn.ToNodeId);
 
-                <button @key="@($"del-conn-{conn.Id}")" @onpointerdown="() => OnDeleteItem.InvokeAsync(conn)" @onpointerdown:stopPropagation="true" class="absolute w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 z-40 pointer-events-auto focus-ring" style="@($"left: {center.X - 12}px; top: {center.Y - 12}px;")" title="حذف مسیر">
+                <button @key="@($"del-conn-{conn.Id}")"
+                        @onpointerdown="() => OnDeleteItem.InvokeAsync(conn)"
+                        @onpointerdown:stopPropagation="true"
+                        class="absolute w-7 h-7 rounded-xl bg-[#0a0f1d] hover:bg-rose-950/90 text-rose-400 border border-rose-500/70 flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.5)] transition-all hover:scale-125 z-40 pointer-events-auto focus-ring"
+                        style="@($"left: {center.X - 14}px; top: {center.Y - 14}px;")"
+                        title="حذف مسیر انتقال">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             }

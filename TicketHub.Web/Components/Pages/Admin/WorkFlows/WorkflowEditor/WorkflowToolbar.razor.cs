@@ -15,6 +15,9 @@ public partial class WorkflowToolbar : ComponentBase
     [Parameter] public bool IsActive { get; set; } = true;
     [Parameter] public EventCallback<bool> IsActiveChanged { get; set; }
 
+    [Parameter] public int NodeCount { get; set; }
+    [Parameter] public int ConnectionCount { get; set; }
+
     protected async Task OnIsActiveChanged(ChangeEventArgs e)
     {
         IsActive = (bool)(e.Value ?? false);

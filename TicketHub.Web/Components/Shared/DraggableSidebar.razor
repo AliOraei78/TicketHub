@@ -1,9 +1,15 @@
 @namespace TicketHub.Web.Components.Shared
 @typeparam TItem
 
-<div class="w-64 bg-white border-r border-slate-200/80 flex flex-col h-full z-10 shadow-sm select-none @Class">
-    <div class="p-4 border-b border-slate-100 flex flex-col gap-3">
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">@Title</h2>
+<div class="w-72 cyber-sidebar-glass border-l border-slate-800/80 flex flex-col h-full z-10 shadow-[0_10px_35px_rgba(0,0,0,0.8)] select-none @Class" dir="rtl">
+    <div class="p-4 border-b border-slate-800/80 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]"></span>
+                <h2 class="text-xs font-black text-slate-100 uppercase tracking-wider">@Title</h2>
+            </div>
+            <span class="text-[10px] font-mono text-sky-400/80 font-bold bg-sky-950/60 border border-sky-500/40 px-2 py-0.5 rounded-md">PALETTE</span>
+        </div>
         @HeaderContent
     </div>
 
@@ -14,9 +20,9 @@
             {
                 <div draggable="true"
                      @ondragstart="() => OnDragStart.InvokeAsync(item)"
-                     class="group flex items-center justify-between p-3 bg-white border border-slate-200 rounded-2xl cursor-grab active:cursor-grabbing hover:border-indigo-400 hover:shadow-2xs transition-all">
+                     class="group flex items-center justify-between p-2.5 bg-[#090e1d]/90 border border-slate-800/80 rounded-2xl cursor-grab active:cursor-grabbing hover:border-sky-400 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:bg-slate-900/90 transition-all">
 
-                    <div class="flex-1 truncate">
+                    <div class="flex-1 truncate pl-2">
                         @ItemTemplate(item)
                     </div>
 
@@ -24,8 +30,9 @@
                     {
                         <button type="button"
                                 @onclick="() => OnItemAdd.InvokeAsync(item)"
-                                class="w-7 h-7 rounded-xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center transition-colors focus-ring">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                class="w-7 h-7 rounded-xl text-slate-400 hover:bg-sky-950/80 hover:text-sky-300 border border-transparent hover:border-sky-500/50 flex items-center justify-center transition-all focus-ring"
+                                title="افزودن به بوم">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
                         </button>
                     }
                 </div>

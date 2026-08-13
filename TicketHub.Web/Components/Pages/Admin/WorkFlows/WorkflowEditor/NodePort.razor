@@ -1,12 +1,12 @@
 @namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 @using TicketHub.Application.DTOs
 
-<div class="absolute w-6 h-6 rounded-full bg-white border flex items-center justify-center cursor-crosshair transition-all z-30 pointer-events-auto shadow-2xs @ClassName @BorderClass"
+<div class="absolute w-5.5 h-5.5 rounded-full bg-[#070c1a] border flex items-center justify-center cursor-crosshair transition-all duration-200 z-30 pointer-events-auto shadow-md @ClassName @BorderClass"
      title="@PortName"
      @onpointerdown='e => OnPortPointerDown.InvokeAsync((e, Node, PortName))' @onpointerdown:stopPropagation="true"
      @onpointerup='e => OnPortPointerUp.InvokeAsync((e, Node, PortName))' @onpointerup:stopPropagation="true"
      @onclick:stopPropagation="true">
-    <div class="w-2.5 h-2.5 rounded-full @DotClass"></div>
+    <div class="w-2 h-2 rounded-full @DotClass"></div>
 </div>
 
 @code {
@@ -20,6 +20,10 @@
     [Parameter] public EventCallback<(Microsoft.AspNetCore.Components.Web.PointerEventArgs e, CanvasNodeDto node, string port)> OnPortPointerUp { get; set; }
 
     private bool IsActiveTarget => IsConnecting && ConnectingFromNode != Node;
-    private string BorderClass => IsActiveTarget ? "border-indigo-500 scale-125 shadow-xs animate-pulse" : "border-slate-300 hover:border-indigo-500 hover:bg-indigo-50";
-    private string DotClass => IsActiveTarget ? "bg-indigo-500" : "bg-slate-300";
+    private string BorderClass => IsActiveTarget 
+        ? "border-sky-400 scale-140 bg-sky-950/90 shadow-[0_0_12px_rgba(56,189,248,0.9)] cyber-port-active ring-2 ring-sky-400/50" 
+        : "border-slate-600/80 hover:border-sky-400 hover:bg-slate-900 hover:scale-125 hover:shadow-[0_0_8px_rgba(56,189,248,0.5)]";
+    private string DotClass => IsActiveTarget 
+        ? "bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,1)] animate-ping" 
+        : "bg-slate-400 group-hover:bg-sky-400";
 }
