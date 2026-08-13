@@ -9,22 +9,54 @@
             body { overflow: hidden !important; }
         </style>
 
-        <div class="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-16 sm:pt-24 md:pt-28 bg-slate-950/70 backdrop-blur-md modal-backdrop-animate select-none" dir="rtl">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center modal-content-animate border border-slate-200/80 my-0 @Class">
-                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-200/50 shadow-2xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        <div class="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl modal-backdrop-animate select-none" dir="rtl">
+            <!-- Modal Chassis -->
+            <div class="relative bg-[#070c1a]/98 backdrop-blur-2xl rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(244,63,94,0.3)] max-w-sm w-full overflow-hidden p-6 text-center modal-content-animate border border-rose-500/50 @Class">
+                <!-- Chamfered HUD Corner Markers -->
+                <div class="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-rose-400"></div>
+                <div class="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-rose-400"></div>
+                <div class="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-rose-400"></div>
+                <div class="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-rose-400"></div>
+
+                <!-- Hazard Warning Icon Box with Crisp Cyber Skull 💀 -->
+                <div class="relative w-16 h-16 bg-rose-950/90 text-rose-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-500/60 shadow-[0_0_30px_rgba(244,63,94,0.4)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-rose-300 drop-shadow-[0_0_10px_rgba(244,63,94,0.9)] animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <!-- Skull Contour -->
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 2.5c-4.14 0-7.5 3.36-7.5 7.5 0 2.65 1.37 4.98 3.45 6.31V19a1.5 1.5 0 001.5 1.5h5.1a1.5 1.5 0 001.5-1.5v-2.69c2.08-1.33 3.45-3.66 3.45-6.31 0-4.14-3.36-7.5-7.5-7.5z" />
+                        <!-- Eye Sockets -->
+                        <circle cx="8.5" cy="10.5" r="1.6" fill="currentColor" />
+                        <circle cx="15.5" cy="10.5" r="1.6" fill="currentColor" />
+                        <!-- Nose Cavity -->
+                        <path d="M12 13l-1.2 1.8h2.4L12 13z" fill="currentColor" />
+                        <!-- Teeth Lines -->
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.5 17v3M12 17v3M14.5 17v3" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">@Title</h3>
-                <p class="text-slate-500 mb-6 text-sm">@Description</p>
+
+                <!-- Telemetry Badge -->
+                <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-[9px] font-mono text-rose-300 tracking-wider mb-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>
+                    <span>[SYS // CRITICAL_DELETE_PROTOCOL]</span>
+                </div>
+
+                <h3 class="text-xl font-black text-slate-100 mb-2 tracking-tight">@Title</h3>
+                <p class="text-slate-400 mb-6 text-xs leading-relaxed font-normal">@Description</p>
+                
                 @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
-                    <div class="mb-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">@ErrorMessage</div>
+                    <div class="mb-4 p-3 bg-rose-950/90 border border-rose-500/50 text-rose-300 rounded-xl text-xs font-bold text-right shadow-inner">
+                        ⚠️ @ErrorMessage
+                    </div>
                 }
+
+                <!-- Action Buttons -->
                 <div class="flex gap-3 justify-center">
-                    <button @onclick="OnConfirm" class="flex-1 px-4 py-2.5 bg-rose-600 text-white text-sm font-semibold rounded-xl hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20 focus-ring">بله، حذف کن</button>
-                    <button @onclick="OnCancel" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all focus-ring">انصراف</button>
+                    <button @onclick="OnConfirm" type="button" class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(244,63,94,0.4)] border border-rose-400/50 cursor-pointer">
+                        بله، حذف کن
+                    </button>
+                    <button @onclick="OnCancel" type="button" class="flex-1 btn-cyber-ghost px-4 py-2.5 text-xs font-bold cursor-pointer">
+                        انصراف
+                    </button>
                 </div>
             </div>
         </div>
