@@ -26,10 +26,7 @@ else
             bool isSelected = SelectedIds.Contains(workflow.Id);
             bool isDeleting = DeletingIds.Contains(workflow.Id);
 
-            <div class="w-full @($"circuit-tracer-card group bg-[#080d1a]/90 backdrop-blur-2xl rounded-2xl p-4.5 border transition-all duration-300 flex flex-col gap-3.5 {(isSelected ? "border-cyan-400 ring-2 ring-cyan-500/30 shadow-[0_0_20px_rgba(56,189,248,0.35)]" : "border-cyan-500/25 hover:border-cyan-400/80 shadow-[0_0_15px_rgba(8,13,26,0.85)]")} {(isDeleting ? "opacity-40 scale-95" : "")}")">
-
-                <!-- Holographic Laser Scan Sweep -->
-                <div class="laser-scan-overlay"></div>
+            <div class="w-full @($"circuit-tracer-card group bg-[#080d1a]/90 backdrop-blur-2xl rounded-2xl p-4.5 border transition-all duration-300 flex flex-col gap-3.5 {(isSelected ? "border-cyan-400 ring-2 ring-cyan-500/30 shadow-[0_0_20px_rgba(56,189,248,0.35)] selected-workflow-card" : "border-cyan-500/25 hover:border-cyan-400/80 shadow-[0_0_15px_rgba(8,13,26,0.85)]")} {(isDeleting ? "opacity-40 scale-95" : "")}")">
 
                 <!-- Animated Neon Border Beam -->
                 <div class="circuit-border-beam"></div>

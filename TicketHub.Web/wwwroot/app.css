@@ -1941,3 +1941,22 @@ jdp-container .jdp-btn {
     animation: holoFlicker 2s infinite;
     text-shadow: 0 0 5px rgba(148, 163, 184, 0.8);
 }
+
+/* ==========================================================================
+   SELECTED WORKFLOW CARD ANIMATION
+   ========================================================================== */
+@keyframes workflow-select-float {
+    0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 0 20px rgba(56,189,248,0.35), inset 0 0 10px rgba(56,189,248,0.1);
+    }
+    50% {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(56,189,248,0.6), inset 0 0 15px rgba(56,189,248,0.3);
+    }
+}
+
+.selected-workflow-card {
+    animation: workflow-select-float 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    border-color: rgba(56, 189, 248, 0.8) !important;
+}

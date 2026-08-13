@@ -139,14 +139,14 @@
         <!-- Controls Group: Search & Dropdowns -->
         <div class="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto flex-1">
             <!-- Search Box -->
-            <div class="w-full sm:w-48 md:w-64 flex items-center h-[46px]">
+            <div class="w-full sm:w-48 md:w-64">
                 <SearchBox Placeholder="جستجوی نام یا ایمیل..."
                            SearchTerm="@UsrState.Value.SearchTerm"
                            OnSearchChanged="SearchTermChanged" />
             </div>
 
             <!-- Role Filter -->
-            <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
+            <div class="w-full sm:w-40 md:w-44">
                 <MultiSelectDropdown TItem="RoleDto" TValue="int"
                                      Placeholder="فیلتر نقش..."
                                      Items="UsrState.Value.AvailableRoles.ToList()"
@@ -157,7 +157,7 @@
             </div>
 
             <!-- Project Filter -->
-            <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
+            <div class="w-full sm:w-40 md:w-44">
                 <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                      Placeholder="فیلتر پروژه..."
                                      Items="UsrState.Value.AvailableProjects.ToList()"
