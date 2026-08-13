@@ -16,23 +16,23 @@
           IsCyberpunk="true">
 
     <HeaderTemplate>
-        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[20%]">نام کاربر</th>
-        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[20%]">ایمیل</th>
-        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[15%]">نقش‌ها</th>
-        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[15%]">پروژه‌ها</th>
-        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[15%]">وضعیت</th>
-        <th class="px-6 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[10%]">عملیات</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[22%]">نام کاربر</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[22%]">ایمیل</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[16%]">نقش‌ها</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[16%]">پروژه‌ها</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[11%]">وضعیت</th>
+        <th class="px-2 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[7%]">عملیات</th>
     </HeaderTemplate>
 
     <RowTemplate Context="user">
-        <td class="px-6 py-3 w-[20%]">
-            <div class="flex items-center gap-3">
+        <td class="px-4 py-3 w-[22%]">
+            <div class="flex items-center gap-2.5">
                 <TextAvatar Text="@user.Name" />
                 <span class="font-bold text-[13px] text-slate-200 truncate block max-w-[150px] group-hover/row:text-cyan-300 transition-colors" title="@user.Name">@user.Name</span>
             </div>
         </td>
-        <td class="px-6 py-3 text-xs text-slate-400 font-medium w-[20%] truncate max-w-[150px] group-hover/row:text-cyan-400/80 transition-colors" dir="ltr" title="@user.Email">@user.Email</td>
-        <td class="px-6 py-3 w-[15%]">
+        <td class="px-4 py-3 text-xs text-slate-400 font-medium w-[22%] truncate max-w-[150px] group-hover/row:text-cyan-400/80 transition-colors" dir="ltr" title="@user.Email">@user.Email</td>
+        <td class="px-4 py-3 w-[16%]">
             <div class="flex flex-wrap gap-1.5">
                 @foreach (var userRole in user.UserRoles)
                 {
@@ -44,7 +44,7 @@
                 }
             </div>
         </td>
-        <td class="px-6 py-3 w-[15%]">
+        <td class="px-4 py-3 w-[16%]">
             <div class="flex flex-wrap gap-1.5">
                 @{
                     var userProjects = user.UserRoles
@@ -67,7 +67,7 @@
                 }
             </div>
         </td>
-        <td class="px-6 py-3 w-[15%]">
+        <td class="px-4 py-3 w-[11%]">
             @if (user.IsActive)
             {
                 <span class="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-bold drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">
@@ -82,7 +82,7 @@
                 </span>
             }
         </td>
-        <td class="px-6 py-3 text-center w-[10%] opacity-70 group-hover/row:opacity-100 transition-opacity">
+        <td class="px-2 py-3 text-center w-[7%] opacity-70 group-hover/row:opacity-100 transition-opacity">
             <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" ResourceKey="@ResourceKey" />
         </td>
     </RowTemplate>

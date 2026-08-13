@@ -25,7 +25,9 @@ public partial class Users : IDisposable
 
     // Telemetry
     private int ActiveUsersCount => UsrState.Value.Users.Count(u => u.IsActive);
-    private int AdminUsersCount => UsrState.Value.Users.Count(u => u.UserRoles.Any(ur => ur.Role?.Name == "Admin"));
+    private int InactiveUsersCount => UsrState.Value.Users.Count(u => !u.IsActive);
+    private int AdminUsersCount => UsrState.Value.Users.Count(u => u.UserRoles.Any(ur => ur.Role?.Name == "Admin" || (ur.Role?.Name != null && ur.Role.Name.Contains("مدیر"))));
+    private int AssignedRolesUsersCount => UsrState.Value.Users.Count(u => u.UserRoles.Any());
 
     protected override void OnInitialized()
     {

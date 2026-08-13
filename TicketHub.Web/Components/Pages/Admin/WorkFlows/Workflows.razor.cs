@@ -17,6 +17,13 @@ public partial class Workflows : IDisposable
     private HashSet<int> selectedWorkflowIds = new();
     private HashSet<int> deletingWorkflowIds = new();
 
+    // Telemetry
+    private int TotalWorkflowsCount => WfState.Value.TotalWorkflows;
+    private int TotalStatusesCount => WfState.Value.Workflows.Sum(w => w.WorkflowStatuses?.Count ?? 0);
+    private int TotalTransitionsCount => WfState.Value.Workflows.Sum(w => w.Transitions?.Count ?? 0);
+    private int AssignedProjectsCount => WfState.Value.Workflows.SelectMany(w => w.Projects ?? new List<ProjectDto>()).DistinctBy(p => p.Id).Count();
+    private int ActiveWorkflowsCount => WfState.Value.Workflows.Count(w => (w.WorkflowStatuses?.Count ?? 0) > 0);
+
     private bool isDeleteModalOpen = false;
     private string deleteModalDescription = string.Empty;
     private WorkflowDto? workflowToDelete = null;

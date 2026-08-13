@@ -10,39 +10,49 @@
 }
 else if (!Workflows.Any())
 {
-    <EmptyState Message="هیچ جریان کاری یافت نشد." />
+    <div class="flex flex-col items-center justify-center p-12 bg-[#080d1a]/80 backdrop-blur-2xl rounded-2xl border border-cyan-500/30 text-center w-full">
+        <svg class="w-16 h-16 text-cyan-500/40 mb-3 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+        <span class="text-xs font-mono text-cyan-400 tracking-wider mb-1">[SYS // NO_WORKFLOWS_FOUND]</span>
+        <span class="text-sm text-slate-300 font-bold">هیچ جریان کاری یافت نشد.</span>
+    </div>
 }
 else
 {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full select-none">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full select-none" dir="rtl">
         @foreach (var workflow in Workflows)
         {
             bool isSelected = SelectedIds.Contains(workflow.Id);
             bool isDeleting = DeletingIds.Contains(workflow.Id);
 
-            <div class="w-full @($"group relative bg-white rounded-3xl p-5 border shadow-2xs hover:shadow-xl transition-all duration-300 flex flex-col gap-4 overflow-hidden {(isSelected ? "border-indigo-400 ring-2 ring-indigo-100" : "border-slate-200/80 hover:border-indigo-200")} {(isDeleting ? "opacity-50 scale-95" : "")}")">
+            <div class="w-full @($"circuit-tracer-card group bg-[#080d1a]/90 backdrop-blur-2xl rounded-2xl p-4.5 border transition-all duration-300 flex flex-col gap-3.5 {(isSelected ? "border-cyan-400 ring-2 ring-cyan-500/30 shadow-[0_0_20px_rgba(56,189,248,0.35)]" : "border-cyan-500/25 hover:border-cyan-400/80 shadow-[0_0_15px_rgba(8,13,26,0.85)]")} {(isDeleting ? "opacity-40 scale-95" : "")}")">
 
-                <!-- Hover Blob Effect -->
-                <div class="absolute -top-12 -left-12 w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none"></div>
+                <!-- Holographic Laser Scan Sweep -->
+                <div class="laser-scan-overlay"></div>
+
+                <!-- Animated Neon Border Beam -->
+                <div class="circuit-border-beam"></div>
 
                 <!-- Header & Selection -->
                 <div class="flex justify-between items-start z-10">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
-                            <span class="font-black text-xl">@workflow.Name.FirstOrDefault()</span>
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0e172a] to-[#070c1a] border border-cyan-500/40 text-cyan-300 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.25)] flex-shrink-0 group-hover:border-cyan-400 transition-colors">
+                            <span class="font-black text-lg drop-shadow-[0_0_6px_rgba(56,189,248,0.6)]">@workflow.Name.FirstOrDefault()</span>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-base truncate max-w-[120px]" title="@workflow.Name">@workflow.Name</h3>
-                            <span class="text-[10px] text-slate-400 font-medium">ایجاد: @workflow.CreatedAt.ToString("yyyy/MM/dd")</span>
+                        <div class="flex flex-col min-w-0">
+                            <h3 class="font-bold text-slate-100 text-sm sm:text-[15px] truncate max-w-[140px] group-hover:text-cyan-300 transition-colors" title="@workflow.Name">@workflow.Name</h3>
+                            <span class="text-[10px] text-slate-400 font-mono">ایجاد: @workflow.CreatedAt.ToString("yyyy/MM/dd")</span>
                         </div>
                     </div>
 
                     @if (CanManage)
                     {
-                        <label class="cursor-pointer relative z-20">
-                            <input type="checkbox" class="peer sr-only" checked="@isSelected" @onchange="@(e => ToggleSelection(workflow.Id, e.Value))" />
-                            <div class="w-6 h-6 rounded-lg border-2 border-slate-300 peer-checked:bg-indigo-600 peer-checked:border-indigo-600 transition-all flex items-center justify-center">
-                                <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <label class="cyber-checkbox-container m-0 relative z-20">
+                            <div class="cyber-checkbox-box @(isSelected ? "checked" : "")">
+                                <input type="checkbox" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                                       checked="@isSelected" @onchange="@(e => ToggleSelection(workflow.Id, e.Value))" />
+                                <svg class="cyber-checkbox-icon @(isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
@@ -51,40 +61,60 @@ else
                 </div>
 
                 <!-- Description -->
-                <p class="text-xs text-slate-500 line-clamp-2 min-h-[2.5rem] z-10 leading-relaxed font-normal">
-                    @(string.IsNullOrEmpty(workflow.Description) ? "توضیحاتی برای این جریان کار ثبت نشده است." : (workflow.Description.Length > 30 ? workflow.Description[..30] + "..." : workflow.Description))
+                <p class="text-xs text-slate-400 line-clamp-2 min-h-[2.25rem] z-10 leading-relaxed font-medium">
+                    @(string.IsNullOrEmpty(workflow.Description) ? "توضیحاتی برای این جریان کار ثبت نشده است." : workflow.Description)
                 </p>
 
+                <!-- Assigned Projects Tags -->
+                @if (workflow.Projects != null && workflow.Projects.Any())
+                {
+                    <div class="flex flex-wrap gap-1.5 z-10 items-center">
+                        @foreach (var proj in workflow.Projects.Take(3))
+                        {
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_8px_rgba(56,189,248,0.15)] truncate max-w-[100px]" title="@proj.Name">
+                                <span class="text-cyan-400 text-[7px]">◆</span>
+                                <span class="truncate">@proj.Name</span>
+                            </span>
+                        }
+                        @if (workflow.Projects.Count > 3)
+                        {
+                            <span class="px-1.5 py-0.5 rounded-lg text-[10px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 shadow-[0_0_6px_rgba(56,189,248,0.2)]">
+                                +@(workflow.Projects.Count - 3)
+                            </span>
+                        }
+                    </div>
+                }
+
                 <!-- Stats Badges -->
-                <div class="flex gap-1.5 z-10 mt-auto pt-2">
-                    <div class="flex-1 bg-slate-50/80 rounded-xl p-2 flex items-center justify-center gap-1.5 border border-slate-100 group-hover:bg-white transition-colors">
-                        <span class="w-2 h-2 rounded-full bg-purple-500 shadow-xs"></span>
-                        <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap">@(workflow.WorkflowStatuses?.Count ?? 0) <span class="font-normal text-slate-400">وضعیت</span></span>
+                <div class="grid grid-cols-3 gap-1.5 z-10 mt-auto pt-1">
+                    <div class="bg-[#050811]/90 rounded-xl py-1.5 px-2 flex items-center justify-center gap-1.5 border border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_#c084fc]"></span>
+                        <span class="text-[11px] font-bold text-purple-300">@(workflow.WorkflowStatuses?.Count ?? 0) <span class="text-[9px] text-purple-400/70 font-normal">گام</span></span>
                     </div>
-                    <div class="flex-1 bg-slate-50/80 rounded-xl p-2 flex items-center justify-center gap-1.5 border border-slate-100 group-hover:bg-white transition-colors">
-                        <span class="w-2 h-2 rounded-full bg-sky-500 shadow-xs"></span>
-                        <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap">@(workflow.Transitions?.Count ?? 0) <span class="font-normal text-slate-400">انتقال</span></span>
+                    <div class="bg-[#050811]/90 rounded-xl py-1.5 px-2 flex items-center justify-center gap-1.5 border border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]"></span>
+                        <span class="text-[11px] font-bold text-amber-300">@(workflow.Transitions?.Count ?? 0) <span class="text-[9px] text-amber-400/70 font-normal">انتقال</span></span>
                     </div>
-                    <div class="flex-1 bg-slate-50/80 rounded-xl p-2 flex items-center justify-center gap-1.5 border border-slate-100 group-hover:bg-white transition-colors">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs"></span>
-                        <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap">@(workflow.Projects?.Count ?? 0) <span class="font-normal text-slate-400">پروژه</span></span>
+                    <div class="bg-[#050811]/90 rounded-xl py-1.5 px-2 flex items-center justify-center gap-1.5 border border-cyan-500/30 shadow-[0_0_8px_rgba(56,189,248,0.15)]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#38bdf8]"></span>
+                        <span class="text-[11px] font-bold text-cyan-300">@(workflow.Projects?.Count ?? 0) <span class="text-[9px] text-cyan-400/70 font-normal">پروژه</span></span>
                     </div>
                 </div>
 
                 <!-- Actions Footer -->
-                <div class="pt-3 mt-1 border-t border-slate-100 flex justify-between items-center z-10">
+                <div class="pt-2.5 mt-0.5 border-t border-white/[0.08] flex justify-between items-center z-10">
                     <SecuredView ResourceKey="/workflows" MinimumType="PermissionType.SystemSection">
-                        <button type="button" @onclick="() => OnEdit.InvokeAsync(workflow)" class="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50/60 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors focus-ring">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        <button type="button" @onclick="() => OnEdit.InvokeAsync(workflow)" class="flex items-center gap-1.5 text-xs font-bold text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 hover:border-cyan-400 px-3 py-1.5 rounded-xl transition-all shadow-[0_0_10px_rgba(56,189,248,0.2)] focus-ring">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-cyan-400 group-hover:animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            ویرایش مسیر
+                            <span>طراحی و ویرایش مسیر</span>
                         </button>
                     </SecuredView>
 
                     <SecuredView ResourceKey="/workflows" MinimumType="PermissionType.Full">
-                        <button type="button" @onclick="() => OnDelete.InvokeAsync(workflow)" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus-ring" title="حذف جریان کار">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button type="button" @onclick="() => OnDelete.InvokeAsync(workflow)" class="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 hover:border hover:border-rose-500/30 transition-all focus-ring" title="حذف جریان کار">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </button>

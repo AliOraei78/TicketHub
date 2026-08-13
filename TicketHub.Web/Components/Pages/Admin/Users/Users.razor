@@ -40,8 +40,8 @@
             </SecuredView>
         </div>
 
-        <!-- Bottom Row: 3 Holographic Telemetry Cards -->
-        <div class="relative z-10 pt-2 border-t border-white/[0.08] grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <!-- Bottom Row: 5 Holographic Telemetry Cards -->
+        <div class="relative z-10 pt-2 border-t border-white/[0.08] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <!-- 1. Total Users (Cyan / Water) -->
             <div class="telemetry-pill-segment py-1.5 px-2.5 sm:px-3" style="--seg-border: rgba(56, 189, 248, 0.5); --seg-glow: rgba(56, 189, 248, 0.25);">
                 <div class="flex items-center gap-2 min-w-0">
@@ -70,7 +70,7 @@
                     </div>
                     <div class="flex flex-col min-w-0">
                         <span class="text-xs sm:text-[13px] text-emerald-300/90 font-bold truncate">کاربران فعال</span>
-                        <span class="text-[9px] sm:text-[10px] font-bold text-emerald-400/60 uppercase">🟢 آنلاین</span>
+                        <span class="text-[9px] sm:text-[10px] font-bold text-emerald-400/60 uppercase">🟢 فعال</span>
                     </div>
                 </div>
                 <span class="text-base sm:text-lg font-black text-white drop-shadow-[0_0_8px_rgba(16,185,129,0.7)] px-1">
@@ -78,7 +78,25 @@
                 </span>
             </div>
 
-            <!-- 3. Admins (Purple / Void) -->
+            <!-- 3. Inactive Users (Rose / Fire) -->
+            <div class="telemetry-pill-segment py-1.5 px-2.5 sm:px-3" style="--seg-border: rgba(244, 63, 94, 0.5); --seg-glow: rgba(244, 63, 94, 0.25);">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/15 border border-rose-400/30 flex items-center justify-center text-rose-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs sm:text-[13px] text-rose-300/90 font-bold truncate">غیرفعال</span>
+                        <span class="text-[9px] sm:text-[10px] font-bold text-rose-400/60 uppercase">🔴 آفلاین</span>
+                    </div>
+                </div>
+                <span class="text-base sm:text-lg font-black text-white drop-shadow-[0_0_8px_rgba(244,63,94,0.7)] px-1">
+                    @InactiveUsersCount.ToPersianNumbers()
+                </span>
+            </div>
+
+            <!-- 4. Admins (Purple / Void) -->
             <div class="telemetry-pill-segment py-1.5 px-2.5 sm:px-3" style="--seg-border: rgba(168, 85, 247, 0.5); --seg-glow: rgba(168, 85, 247, 0.25);">
                 <div class="flex items-center gap-2 min-w-0">
                     <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 flex-shrink-0">
@@ -93,6 +111,24 @@
                 </div>
                 <span class="text-base sm:text-lg font-black text-white drop-shadow-[0_0_8px_rgba(168,85,247,0.7)] px-1">
                     @AdminUsersCount.ToPersianNumbers()
+                </span>
+            </div>
+
+            <!-- 5. Users with Roles (Amber / Lightning) -->
+            <div class="telemetry-pill-segment py-1.5 px-2.5 sm:px-3" style="--seg-border: rgba(245, 158, 11, 0.5); --seg-glow: rgba(245, 158, 11, 0.25);">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs sm:text-[13px] text-amber-300/90 font-bold truncate">دارای نقش</span>
+                        <span class="text-[9px] sm:text-[10px] font-bold text-amber-400/60 uppercase">⚡ اعضا</span>
+                    </div>
+                </div>
+                <span class="text-base sm:text-lg font-black text-white drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] px-1">
+                    @AssignedRolesUsersCount.ToPersianNumbers()
                 </span>
             </div>
         </div>

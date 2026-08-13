@@ -15,7 +15,7 @@ else
                     <tr class="table w-full table-fixed">
                         @if (ShowSelection)
                         {
-                            <th class="px-3 py-3 w-[5%] text-center">
+                            <th class="pr-3.5 pl-0 py-3 w-[3%] text-center">
                                 @if (IsCyberpunk)
                                 {
                                     <label class="cyber-checkbox-container inline-flex justify-center items-center cursor-pointer m-0">
@@ -37,7 +37,7 @@ else
                         }
                         @if (ShowRowIndex)
                         {
-                            <th class="px-2 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider w-[5%] text-center">ردیف</th>
+                            <th class="pr-0 pl-1 py-3 text-xs font-bold @(IsCyberpunk ? "text-cyan-400/80 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]" : "text-slate-600") uppercase tracking-wider w-[3%] text-center">ردیف</th>
                         }
                         @HeaderTemplate
                     </tr>
@@ -61,7 +61,7 @@ else
                             <tr @key="key" class="@(IsCyberpunk ? $"table w-full table-fixed hover:bg-cyan-900/10 hover:shadow-[inset_0_0_15px_rgba(56,189,248,0.15)] transition-all group/row {RowClassSelector?.Invoke(item)}" : $"table w-full table-fixed hover:bg-slate-50/80 transition-colors group/row {RowClassSelector?.Invoke(item)}")">
                                 @if (ShowSelection)
                                 {
-                                    <td class="px-3 py-3 w-[5%] text-center">
+                                    <td class="pr-3.5 pl-0 py-3 w-[3%] text-center">
                                         @if (IsCyberpunk)
                                         {
                                             bool isSelected = SelectedKeys.Contains(key);
@@ -86,7 +86,7 @@ else
                                 }
                                 @if (ShowRowIndex)
                                 {
-                                    <td class="px-2 py-3 w-[5%] text-center text-sm font-medium text-slate-500">
+                                    <td class="pr-0 pl-1 py-3 w-[3%] text-center text-xs sm:text-[13px] font-bold @(IsCyberpunk ? "text-cyan-300/80" : "text-slate-500")">
                                         @(rowIndex++)
                                     </td>
                                 }
