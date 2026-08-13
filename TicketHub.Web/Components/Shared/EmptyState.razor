@@ -1,20 +1,44 @@
 @namespace TicketHub.Web.Components.Shared
 
-<div class="bg-white rounded-3xl border border-dashed border-slate-200 p-12 text-center shadow-2xs select-none @Class">
-    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-    </svg>
-    <p class="text-slate-500 font-medium text-sm">@Message</p>
+<div class="relative overflow-hidden bg-[#070c1a]/85 backdrop-blur-xl border border-cyan-500/25 rounded-3xl p-10 md:p-14 text-center shadow-[0_15px_40px_rgba(0,0,0,0.6)] select-none group transition-all duration-300 hover:border-cyan-400/40 @Class" dir="rtl">
+    <!-- Background Holographic Gradient -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.08),transparent_70%)] pointer-events-none"></div>
+
+    <!-- Cyberpunk Holographic Scanning Reticle Icon -->
+    <div class="relative z-10 mx-auto w-20 h-20 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(56,189,248,0.2)] group-hover:scale-110 transition-transform duration-300">
+        <div class="absolute -top-1 -right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-cyan-400"></div>
+        <div class="absolute -bottom-1 -left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-cyan-400"></div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+        </svg>
+    </div>
+
+    <!-- System Status Badge -->
+    <div class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-500/30 text-[10px] font-mono text-cyan-400 tracking-wider mb-3">
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span>[SYS // DATA_NULL_RECORD]</span>
+    </div>
+
+    <!-- Message Text -->
+    <h3 class="relative z-10 text-lg font-bold text-slate-100 mb-1">
+        @Message
+    </h3>
+    <p class="relative z-10 text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-4">
+        @SubMessage
+    </p>
+
+    <!-- Optional Child Content (Action Buttons) -->
     @if (ChildContent != null)
     {
-        <div class="mt-4">
+        <div class="relative z-10 mt-5 flex justify-center items-center gap-3">
             @ChildContent
         </div>
     }
 </div>
 
 @code {
-    [Parameter] public string Message { get; set; } = "هیچ داده‌ای یافت نشد.";
+    [Parameter] public string Message { get; set; } = "هیچ رکوردی یافت نشد.";
+    [Parameter] public string SubMessage { get; set; } = "هیچ داده‌ای منطبق با فیلترها و اطلاعات درخواستی وجود ندارد.";
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string Class { get; set; } = string.Empty;
 }

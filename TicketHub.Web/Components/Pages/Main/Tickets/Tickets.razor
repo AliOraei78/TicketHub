@@ -145,7 +145,7 @@
                        ItemName="تیکت"
                        @bind-PageSize="PageSize"
                        PageSizeOptions="@(new List<int> { 9, 18, 27, 36 })">
-        <div class="w-full sm:w-40 md:w-44">
+        <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
             <MultiSelectDropdown TItem="ProjectDto" TValue="int"
                                   Placeholder="پروژه..."
                                   Items="TicketState.Value.AvailableProjects"
@@ -153,7 +153,7 @@
                                   ValueSelector="p => p.Id"
                                   DisplaySelector="p => p.Name" />
         </div>
-        <div class="w-full sm:w-40 md:w-44">
+        <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
             <MultiSelectDropdown TItem="StatusDto" TValue="int"
                                   Placeholder="وضعیت..."
                                   Items="TicketState.Value.AvailableStatuses"
@@ -161,7 +161,7 @@
                                   ValueSelector="s => s.Id"
                                   DisplaySelector="s => s.Name" />
         </div>
-        <div class="w-full sm:w-40 md:w-44">
+        <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
             <MultiSelectDropdown TItem="PriorityDto" TValue="int"
                                   Placeholder="اولویت..."
                                   Items="TicketState.Value.AvailablePriorities"

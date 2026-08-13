@@ -7,110 +7,164 @@
 @if (IsVisible)
 {
     <SectionContent SectionName="RootModal">
-        <div class="fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-slate-950/70 backdrop-blur-md fade-in-item">
+        <div class="modal-backdrop-quantum fixed inset-0 z-[99999] flex justify-center items-start pt-6 sm:pt-10 md:pt-12 p-4 sm:p-6 overflow-hidden bg-black/80 backdrop-blur-xl">
             <div class="absolute inset-0" @onclick="CloseAsync"></div>
 
-            <div class="relative z-[99999] w-full max-w-3xl max-h-[85vh] bg-white rounded-3xl shadow-2xl flex flex-col modal-content-animate border border-slate-200/80 my-0 select-none" dir="rtl">
+            <div class="modal-warp-container modal-hud-chassis relative z-[99999] w-full max-w-3xl max-h-[85vh] bg-[#090e1d]/98 rounded-3xl flex flex-col border border-cyan-500/40 my-0 select-none text-slate-200" dir="rtl">
                 @if (IsLoading)
                 {
-                    <div class="p-8 flex justify-center items-center gap-3">
-                        <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-indigo-600"></div>
-                        <span class="text-slate-600 text-sm font-medium">در حال بارگذاری...</span>
+                    <div class="p-12 flex flex-col justify-center items-center gap-4">
+                        <div class="relative w-12 h-12">
+                            <div class="w-12 h-12 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                            </div>
+                        </div>
+                        <span class="text-slate-400 text-xs font-mono font-bold tracking-widest animate-pulse">[LOADING // WORKFLOW_PIPELINE...]</span>
                     </div>
                 }
                 else
                 {
-                    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
-                        <h2 class="text-xl font-bold text-slate-800">ثبت عملیات برای تیکت: @TicketTitle</h2>
-                        <button type="button" @onclick="CloseAsync" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors focus-ring">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+                    <div class="flex items-center justify-between px-6 py-5 border-b border-white/[0.08] bg-[#050811]/90 flex-shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 rounded-2xl shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
+                                        [SYS // WORKFLOW_TRANSITION]
+                                    </span>
+                                    <h2 class="text-xl font-bold text-slate-100 truncate max-w-[260px] sm:max-w-md" title="@TicketTitle">ثبت عملیات: @TicketTitle</h2>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-0.5 font-normal">تغییر وضعیت و انتقال تیکت در چرخه جریان کاری</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span class="esc-key-badge hidden sm:inline-flex">ESC</span>
+                            <button type="button" @onclick="CloseAsync" class="group p-2 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 rounded-full transition-all focus-ring">
+                                <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <EditForm Model="Model" OnValidSubmit="HandleValidSubmitAsync" class="flex flex-col overflow-hidden flex-1">
                         <div class="overflow-y-auto p-6 pb-28 space-y-4 custom-scrollbar max-h-[70vh]">
                             @if (ValidationErrors.Any())
                             {
-                                <div class="rounded-2xl bg-rose-50 p-4 border border-rose-100">
-                                    <div class="flex">
-                                        <div class="flex-shrink-0">
-                                            <svg class="h-5 w-5 text-rose-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <div class="rounded-2xl bg-rose-950/40 p-4 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                                    <div class="flex items-start gap-3">
+                                        <div class="p-1 rounded-lg bg-rose-900/50 text-rose-400 shrink-0 mt-0.5">
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
                                             </svg>
                                         </div>
-                                        <div class="mr-3">
-                                            <h3 class="text-xs font-bold text-rose-800">لطفا خطاهای زیر را برطرف کنید:</h3>
-                                            <div class="mt-2 text-xs text-rose-700">
-                                                <ul role="list" class="list-disc space-y-1 pr-5">
-                                                    @foreach (var error in ValidationErrors)
-                                                    {
-                                                        <li>@error</li>
-                                                    }
-                                                </ul>
-                                            </div>
+                                        <div class="flex-1">
+                                            <h3 class="text-xs font-bold text-rose-300">لطفاً خطاهای زیر را برطرف کنید:</h3>
+                                            <ul role="list" class="list-disc space-y-1 pr-5 mt-1 text-xs text-rose-400/90 font-medium">
+                                                @foreach (var error in ValidationErrors)
+                                                {
+                                                    <li>@error</li>
+                                                }
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
                             }
 
                             <!-- Transition Selector -->
-                            <div class="mb-6">
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">انتخاب عملیات</label>
+                            <div class="mb-4 stagger-item-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                                        <span class="text-cyan-400 text-[9px]">◆</span>
+                                        <span>انتخاب عملیات انتقال</span>
+                                    </label>
+                                    <span class="text-[10px] font-mono text-slate-500">
+                                        [AVAILABLE: @AvailableTransitions.Count]
+                                    </span>
+                                </div>
+                                
                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                                     @foreach (var transition in AvailableTransitions)
                                     {
-                                        <div class="relative flex items-center p-3 border rounded-2xl cursor-pointer transition-all
-                                            @(Model.TransitionId == transition.Id ? "border-indigo-500 bg-indigo-50/50" : "border-slate-200/80 hover:border-indigo-200 bg-slate-50/50 hover:bg-white")"
+                                        var isSelected = Model.TransitionId == transition.Id;
+                                        <div class="relative flex items-center justify-between p-3.5 border rounded-2xl cursor-pointer transition-all select-none
+                                            @(isSelected 
+                                                ? "border-cyan-400 bg-cyan-950/60 shadow-[0_0_20px_rgba(56,189,248,0.25)] text-cyan-300" 
+                                                : "border-white/[0.12] hover:border-cyan-500/40 bg-[#050811]/90 hover:bg-[#090e1d] text-slate-300")"
                                              @onclick="() => SelectTransition(transition.Id)">
                                             
-                                            <div class="min-w-0 flex-1">
-                                                <p class="text-xs font-bold @(Model.TransitionId == transition.Id ? "text-indigo-900" : "text-slate-900")">
+                                            <div class="min-w-0 flex-1 pl-2">
+                                                <p class="text-xs font-bold @(isSelected ? "text-cyan-300 font-black" : "text-slate-200") truncate">
                                                     @transition.Name
                                                 </p>
-                                                <p class="text-[11px] text-slate-500 mt-0.5">
-                                                    به: @(transition.ToStatus?.Status?.Name ?? "نامشخص")
-                                                </p>
+                                                <div class="flex items-center gap-1 mt-1">
+                                                    <span class="text-[10px] text-slate-400">به:</span>
+                                                    <span class="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-white/[0.06] text-slate-300 border border-white/[0.08] truncate">
+                                                        @(transition.ToStatus?.Status?.Name ?? "نامشخص")
+                                                    </span>
+                                                </div>
                                             </div>
-                                            @if (Model.TransitionId == transition.Id)
-                                            {
-                                                <svg class="h-5 w-5 text-indigo-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+
+                                            <div class="cyber-checkbox-box @(isSelected ? "checked" : "")">
+                                                <svg class="cyber-checkbox-icon @(isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                                                 </svg>
-                                            }
+                                            </div>
                                         </div>
                                     }
                                 </div>
                                 @if (!AvailableTransitions.Any())
                                 {
-                                    <p class="text-xs text-slate-500 text-center py-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                                        عملیاتی برای وضعیت فعلی این تیکت و نقش‌های شما یافت نشد.
-                                    </p>
+                                    <div class="text-xs text-slate-400 text-center py-6 bg-[#050811]/80 rounded-2xl border border-dashed border-white/[0.12] flex flex-col items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <span>عملیاتی برای وضعیت فعلی این تیکت و نقش‌های شما یافت نشد.</span>
+                                    </div>
                                 }
                             </div>
 
                             @if (Model.TransitionId > 0)
                             {
-                                <div class="mb-6 border-t border-slate-100 pt-6">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-2">توضیحات (اختیاری)</label>
-                                    <textarea @bind="Model.Comment" rows="3" class="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs bg-slate-50 hover:bg-white focus:bg-white text-sm" placeholder="توضیحات خود را در مورد این عملیات وارد کنید..."></textarea>
+                                <div class="mt-4 stagger-item-2 border-t border-white/[0.08] pt-5">
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                                            <span class="text-cyan-400 text-[9px]">◆</span>
+                                            <span>توضیحات و یادداشت عملیات (اختیاری)</span>
+                                        </label>
+                                        <span class="text-[10px] font-mono text-slate-500">
+                                            [CHARS: @(Model.Comment?.Length ?? 0)]
+                                        </span>
+                                    </div>
+                                    <div class="field-spark-wrap w-full">
+                                        <textarea @bind="Model.Comment" rows="3" class="w-full px-4 py-3 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-slate-100 text-sm placeholder-slate-500" placeholder="توضیحات خود را در مورد این عملیات وارد کنید..."></textarea>
+                                    </div>
                                 </div>
 
                                 @if (DynamicFields.Any())
                                 {
-                                    <DynamicFields Fields="DynamicFields" ValidationErrors="FieldValidationErrors" />
+                                    <div class="stagger-item-3">
+                                        <DynamicFields Fields="DynamicFields" ValidationErrors="FieldValidationErrors" />
+                                    </div>
                                 }
                             }
                         </div>
 
-                        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
-                            <button type="button" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shadow-2xs focus-ring" @onclick="CloseAsync">
+                        <div class="p-5 border-t border-white/[0.08] bg-[#050811]/90 flex justify-end gap-3 flex-shrink-0 rounded-b-3xl">
+                            <button type="button" class="btn-cyber-ghost focus-ring" @onclick="CloseAsync">
                                 انصراف
                             </button>
                             <button type="submit" disabled="@(IsSubmitting || Model.TransitionId == 0)"
-                                    class="px-6 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 flex items-center justify-center focus-ring">
+                                    class="btn-cyber-primary focus-ring flex items-center justify-center gap-2">
                                 @if (IsSubmitting)
                                 {
-                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -118,6 +172,9 @@
                                 }
                                 else
                                 {
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
                                     <span>ثبت عملیات</span>
                                 }
                             </button>

@@ -2,7 +2,7 @@
 @typeparam TItem
 @typeparam TValue
 
-<div id="@ElementId" class="relative @(IsOpen ? "z-[100]" : "z-10")" dir="rtl">
+<div id="@ElementId" class="relative @(IsOpen ? "z-[200]" : "z-10")" dir="rtl">
     @if (!string.IsNullOrEmpty(Label))
     {
         <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 mb-1.5">
@@ -10,18 +10,18 @@
             <span>@Label</span>
         </label>
     }
-    <div class="field-spark-wrap w-full">
-        <div @onclick="Toggle" class="w-full h-[46px] px-4 border border-white/[0.12] rounded-2xl cursor-pointer flex justify-between items-center transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] hover:border-cyan-500/50 focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(56,189,248,0.2)] text-sm select-none focus-ring">
-            <span class="text-sm truncate block max-w-[90%] @(EqualityComparer<TValue>.Default.Equals(Value, default) ? "text-slate-500" : "text-slate-100 font-medium")" title="@GetSelectedText()">
+    <div class="field-spark-wrap w-full h-[46px] flex items-center">
+        <div @onclick="Toggle" class="w-full h-[46px] pr-4.5 pl-5.5 border border-white/[0.12] rounded-2xl cursor-pointer flex justify-between items-center transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] hover:border-cyan-500/50 focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(56,189,248,0.2)] text-sm select-none focus-ring">
+            <span class="text-sm truncate block max-w-[85%] @(EqualityComparer<TValue>.Default.Equals(Value, default) ? "text-slate-500" : "text-slate-100 font-medium")" title="@GetSelectedText()">
                 @GetSelectedText()
             </span>
-            <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 @(IsOpen ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0 ml-0.5 @(IsOpen ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
         </div>
     </div>
 
-    <div class="dropdown-menu-container absolute top-full left-0 z-[110] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(IsOpen ? "opacity-100 max-h-64" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+    <div class="dropdown-menu-container absolute top-full left-0 z-[250] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(IsOpen ? "opacity-100 max-h-64" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
         @if (IsOpen)
         {
             <div class="p-2 border-b border-white/[0.08] bg-[#050811]/80">
