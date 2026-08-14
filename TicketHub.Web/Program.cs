@@ -58,7 +58,19 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options =>
+    {
+        options.DetailedErrors = builder.Environment.IsDevelopment();
+        options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(2);
+        options.MaxBufferedUnacknowledgedRenderBatches = 10;
+    });
+
+builder.Services.AddSignalR(hubOptions =>
+{
+    hubOptions.MaximumReceiveMessageSize = 1024 * 1024;
+    hubOptions.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    hubOptions.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddControllers();
 

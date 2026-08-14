@@ -2699,4 +2699,20 @@ input:autofill {
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
+
+/* ==========================================================================
+   HIGH-PERFORMANCE HARDWARE-ACCELERATED DOM CONTAINMENT
+   ========================================================================== */
+.ticket-card-capsule,
+.cyber-quest-capsule,
+.table-row,
+.notification-item {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 160px;
+}
+
+.custom-scrollbar {
+    scrollbar-gutter: stable;
+}
+
 
