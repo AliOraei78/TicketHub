@@ -133,6 +133,18 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         EventBroker.OnTicketUpdated += HandleLiveTicketEventAsync;
         EventBroker.OnTransitionOccurred += HandleLiveTicketEventAsync;
 
+        if (TicketState.Value.Telemetry != null && TicketState.Value.Telemetry.TotalTickets > 0)
+        {
+            TotalTickets = TicketState.Value.Telemetry.TotalTickets;
+            NewTicketsCount = TicketState.Value.Telemetry.NewTicketsCount;
+            InProgressCount = TicketState.Value.Telemetry.InProgressCount;
+            ResolvedCount = TicketState.Value.Telemetry.ResolvedCount;
+            CriticalCount = TicketState.Value.Telemetry.CriticalCount;
+            OverdueCount = TicketState.Value.Telemetry.OverdueCount;
+            CriticalAndOverdueCount = TicketState.Value.Telemetry.CriticalAndOverdueCount;
+            SlaOnTimePercentage = TicketState.Value.Telemetry.SlaOnTimePercentage;
+        }
+
         var authState = await AuthState;
         var user = authState.User;
 

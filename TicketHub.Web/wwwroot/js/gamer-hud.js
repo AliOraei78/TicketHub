@@ -501,17 +501,36 @@
 
         initGL(fragmentSrc) {
             const gl = this.gl;
-            const vs = this.compileShader(VERTEX_SHADER_SRC, gl.VERTEX_SHADER);
-            const fs = this.compileShader(fragmentSrc, gl.FRAGMENT_SHADER);
-            if (!vs || !fs) return;
+            if (!gl.__programCache) {
+                gl.__programCache = new Map();
+                gl.__shaderCache = new Map();
+            }
 
-            const prog = gl.createProgram();
-            gl.attachShader(prog, vs);
-            gl.attachShader(prog, fs);
-            gl.linkProgram(prog);
-            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-                console.error('Program Link Error:', gl.getProgramInfoLog(prog));
-                return;
+            let prog = gl.__programCache.get(fragmentSrc);
+            if (!prog) {
+                let vs = gl.__shaderCache.get(VERTEX_SHADER_SRC);
+                if (!vs) {
+                    vs = this.compileShader(VERTEX_SHADER_SRC, gl.VERTEX_SHADER);
+                    if (vs) gl.__shaderCache.set(VERTEX_SHADER_SRC, vs);
+                }
+
+                let fs = gl.__shaderCache.get(fragmentSrc);
+                if (!fs) {
+                    fs = this.compileShader(fragmentSrc, gl.FRAGMENT_SHADER);
+                    if (fs) gl.__shaderCache.set(fragmentSrc, fs);
+                }
+
+                if (!vs || !fs) return;
+
+                prog = gl.createProgram();
+                gl.attachShader(prog, vs);
+                gl.attachShader(prog, fs);
+                gl.linkProgram(prog);
+                if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                    console.error('Program Link Error:', gl.getProgramInfoLog(prog));
+                    return;
+                }
+                gl.__programCache.set(fragmentSrc, prog);
             }
             this.program = prog;
 
@@ -575,17 +594,9 @@
 
         destroy() {
             try {
-                if (this.gl) {
-                    if (this.program) {
-                        this.gl.deleteProgram(this.program);
-                    }
-                    const loseExt = this.gl.getExtension('WEBGL_lose_context');
-                    if (loseExt) {
-                        loseExt.loseContext();
-                    }
-                    this.gl = null;
-                    this.program = null;
-                }
+                this.isVisible = false;
+                this.gl = null;
+                this.program = null;
             } catch (e) { }
         }
     }
@@ -772,11 +783,16 @@
         });
     }, { rootMargin: '60px' });
 
-    function initElementalCanvases() {
-        const canvases = document.querySelectorAll('.element-vfx-canvas');
-        canvases.forEach(canvas => {
-            if (activeRenderers.has(canvas)) return;
+    const pendingCanvasesQueue = [];
+    let isProcessingVfxQueue = false;
 
+    function processNextVfxCanvas() {
+        if (pendingCanvasesQueue.length === 0) {
+            isProcessingVfxQueue = false;
+            return;
+        }
+        const canvas = pendingCanvasesQueue.shift();
+        if (canvas && document.body.contains(canvas) && !activeRenderers.has(canvas)) {
             const element = canvas.getAttribute('data-element') || 'none';
             const rect = canvas.getBoundingClientRect();
             const targetW = Math.max(Math.floor(rect.width), 200);
@@ -797,8 +813,29 @@
                 activeRenderers.set(canvas, renderer);
                 viewportObserver.observe(canvas);
                 ensureVfxLoopRunning();
+                canvas.classList.add('vfx-active');
+            }
+        }
+
+        if (pendingCanvasesQueue.length > 0) {
+            requestAnimationFrame(processNextVfxCanvas);
+        } else {
+            isProcessingVfxQueue = false;
+        }
+    }
+
+    function initElementalCanvases() {
+        const canvases = document.querySelectorAll('.element-vfx-canvas');
+        canvases.forEach(canvas => {
+            if (!activeRenderers.has(canvas) && !pendingCanvasesQueue.includes(canvas)) {
+                pendingCanvasesQueue.push(canvas);
             }
         });
+
+        if (!isProcessingVfxQueue && pendingCanvasesQueue.length > 0) {
+            isProcessingVfxQueue = true;
+            requestAnimationFrame(processNextVfxCanvas);
+        }
 
         // Initialize EKG Canvases
         const ekgCanvases = document.querySelectorAll('.hero-ekg-canvas');
@@ -1660,16 +1697,16 @@
         initAll();
     }
 
-    let initAllRafId = null;
+    let initAllTimer = null;
     function debouncedInitAll() {
-        if (initAllRafId) return;
-        initAllRafId = requestAnimationFrame(() => {
+        if (initAllTimer) return;
+        initAllTimer = setTimeout(() => {
+            initAllTimer = null;
             initElementalCanvases();
             init3DTilt();
             initCounters();
             applyStealthModeUI();
-            initAllRafId = null;
-        });
+        }, 30);
     }
 
     const observer = new MutationObserver(() => {

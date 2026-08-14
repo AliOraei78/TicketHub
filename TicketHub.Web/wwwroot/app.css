@@ -2715,4 +2715,39 @@ input:autofill {
     scrollbar-gutter: stable;
 }
 
+/* ==========================================================================
+   CYBER SKELETON SHIMMER & HUD BOOT SCAN ANIMATIONS
+   ========================================================================== */
+
+@keyframes cyberSkeletonSweep {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+.cyber-skeleton-box {
+    position: relative;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+.cyber-skeleton-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.12) 50%, transparent 100%);
+    animation: cyberSkeletonSweep 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.element-vfx-canvas {
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity;
+}
+
+.element-vfx-canvas.vfx-active {
+    opacity: 1;
+}
+
 

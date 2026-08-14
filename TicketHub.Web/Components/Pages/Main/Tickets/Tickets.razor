@@ -191,10 +191,26 @@
     }
 
     <!-- Tickets List (3 Columns x 3 Rows = 9 Tickets) -->
-    @if (TicketState.Value.IsLoading)
+    @if (TicketState.Value.IsLoading && !FilteredTickets.Any())
     {
-        <div class="flex justify-center items-center py-16">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            @for (int i = 0; i < 9; i++)
+            {
+                <div class="cyber-skeleton-box rounded-xl bg-[#070c1a]/95 border border-white/[0.08] p-3.5 h-36 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <div class="h-4 bg-cyan-500/20 rounded w-20"></div>
+                        <div class="h-4 bg-slate-700/40 rounded w-14"></div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="h-4 bg-slate-600/40 rounded w-3/4"></div>
+                        <div class="h-3 bg-slate-700/30 rounded w-1/2"></div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-white/[0.05]">
+                        <div class="h-4 bg-slate-800/60 rounded w-16"></div>
+                        <div class="h-4 bg-cyan-500/15 rounded w-12"></div>
+                    </div>
+                </div>
+            }
         </div>
     }
     else
