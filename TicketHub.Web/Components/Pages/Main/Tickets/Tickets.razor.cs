@@ -206,9 +206,13 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
         }
     }
 
-    protected void ClearSelection() => SelectedTicketIds.Clear();
+    public void ClearSelection()
+    {
+        SelectedTicketIds.Clear();
+        StateHasChanged();
+    }
 
-    protected void ToggleTicketSelection(int ticketId, bool isSelected)
+    public void ToggleTicketSelection(int ticketId, bool isSelected)
     {
         if (isSelected)
             SelectedTicketIds.Add(ticketId);
@@ -216,6 +220,7 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
             SelectedTicketIds.Remove(ticketId);
 
         SelectedTicketIds = new HashSet<int>(SelectedTicketIds);
+        StateHasChanged();
     }
 
     protected void HandleSingleDelete(TicketDto ticket)

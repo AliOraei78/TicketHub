@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
@@ -21,6 +22,7 @@ public class TicketsPageTests : BUnitComponentTestBase
     private readonly Mock<IState<TicketState>> _mockTicketState;
     private readonly Mock<IDispatcher> _mockDispatcher;
     private readonly Mock<ITicketService> _mockTicketService;
+    private readonly Mock<IToastService> _mockToastService;
 
     public TicketsPageTests()
     {
@@ -65,8 +67,8 @@ public class TicketsPageTests : BUnitComponentTestBase
         var mockRoleService = new Mock<IRoleService>();
         Services.AddSingleton(mockRoleService.Object);
 
-        var mockToastService = new Mock<IToastService>();
-        Services.AddSingleton(mockToastService.Object);
+        _mockToastService = new Mock<IToastService>();
+        Services.AddSingleton(_mockToastService.Object);
 
         var mockTransitionValidator = new Mock<IValidator<ExecuteTransitionDto>>();
         Services.AddSingleton(mockTransitionValidator.Object);
@@ -114,6 +116,50 @@ public class TicketsPageTests : BUnitComponentTestBase
         cut.WaitForAssertion(() =>
             _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetTicketFiltersAction>(a => a.SearchTerm == "خطا" && a.CurrentPage == 1)), Times.Once)
         );
+    }
+
+    [Fact]
+    public void ToggleSortOrder_DispatchesSetTicketFiltersAction_WithInvertedSort()
+    {
+        var cut = Render<Tickets>();
+
+        var sortOrderBtn = cut.Find("button[title='نزولی (زیاد به کم)']");
+        sortOrderBtn.Click();
+
+        _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetTicketFiltersAction>(a => a.IsAscending == true)), Times.Once);
+    }
+
+    [Fact]
+    public async Task BulkSelection_ToggleCardSelection_ShowsBulkActionToolbar()
+    {
+        var cut = Render<Tickets>();
+
+        // Toggle selection for ticket 1
+        await cut.InvokeAsync(() => cut.Instance.ToggleTicketSelection(1, true));
+
+        Assert.Contains("مورد انتخاب شده", ModalMarkup);
+    }
+
+    [Fact]
+    public async Task BulkDelete_WhenConfirmed_DispatchesDeleteMultipleTicketsAction()
+    {
+        var cut = Render<Tickets>();
+
+        // Select first ticket
+        await cut.InvokeAsync(() => cut.Instance.ToggleTicketSelection(1, true));
+
+        // Click bulk delete button in toolbar
+        var bulkDeleteBtn = cut.Find("button:contains('حذف گروهی')");
+        bulkDeleteBtn.Click();
+
+        // Confirm modal opens in portal
+        Assert.Contains("حذف تیکت", ModalMarkup);
+
+        // Click confirm in modal
+        var confirmBtn = cut.Find("button:contains('بله، حذف کن')");
+        confirmBtn.Click();
+
+        _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteMultipleTicketsAction>(a => a.Ids.Count() == 1 && a.Ids.Contains(1))), Times.Once);
     }
 
     [Fact]

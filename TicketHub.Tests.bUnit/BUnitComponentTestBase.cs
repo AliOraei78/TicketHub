@@ -109,6 +109,8 @@ namespace TicketHub.Tests.bUnit
             return _outletRef.Wrapper.FindComponent<TComponent>();
         }
 
+        public string ModalMarkup => _outletRef.Wrapper?.Markup ?? "";
+
         public new void Dispose()
         {
             base.Dispose();

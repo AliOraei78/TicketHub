@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Bunit;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -5,7 +8,6 @@ using TicketHub.Application.DTOs;
 using TicketHub.Application.Validations;
 using TicketHub.Web.Components.Pages.Main.Tickets;
 using Xunit;
-using System.Collections.Generic;
 
 namespace TicketHub.Tests.bUnit
 {
@@ -13,7 +15,6 @@ namespace TicketHub.Tests.bUnit
     {
         public TicketFormModalTests()
         {
-            // Register Validator so FluentValidationValidator can resolve it
             Services.AddScoped<IValidator<TicketDto>, TicketDtoValidator>();
         }
 
@@ -29,9 +30,9 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, new List<TicketFieldDto>())
             );
 
-            // Verify base elements rendered
-            Assert.NotNull(cut.Find("input[placeholder='یک عنوان کوتاه بنویسید']"));
-            Assert.NotNull(cut.Find("textarea[placeholder='جزئیات مشکل یا درخواست خود را بنویسید...']"));
+            Assert.Contains("ایجاد تیکت پشتیبانی جدید", ModalMarkup);
+            Assert.Contains("عنوان تیکت", ModalMarkup);
+            Assert.Contains("توضیحات تیکت", ModalMarkup);
         }
 
         [Fact]
@@ -46,15 +47,10 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, new List<TicketFieldDto>())
             );
 
-            // Try to submit
             cut.Find("form").Submit();
 
-            // Verify validation messages render
-            var validationMessages = cut.FindAll(".validation-message, .text-red-500");
-            Assert.NotEmpty(validationMessages);
-            var modalHtml = cut.Find("div.fixed.inset-0").OuterHtml;
-            Assert.Contains("عنوان تیکت الزامی است.", modalHtml);
-            Assert.Contains("توضیحات تیکت الزامی است.", modalHtml);
+            Assert.Contains("عنوان تیکت الزامی است.", ModalMarkup);
+            Assert.Contains("توضیحات تیکت الزامی است.", ModalMarkup);
         }
 
         [Fact]
@@ -62,8 +58,8 @@ namespace TicketHub.Tests.bUnit
         {
             var dynamicFields = new List<TicketFieldDto>
             {
-                new TicketFieldDto { Id = 1, Name = "تست فیلد متنی", FieldTypeId = 1, IsRequired = true },
-                new TicketFieldDto { Id = 2, Name = "تست فیلد کشویی", FieldTypeId = 5, Options = "گزینه 1,گزینه 2", IsRequired = false }
+                new TicketFieldDto { Id = 1, Name = "تست فیلد متنی", FieldTypeId = 1, IsActive = true, IsRequired = true },
+                new TicketFieldDto { Id = 2, Name = "تست فیلد کشویی", FieldTypeId = 5, Options = "گزینه 1,گزینه 2", IsActive = true, IsRequired = false }
             };
 
             var cut = Render<TicketFormModal>(parameters => parameters
@@ -75,11 +71,8 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, dynamicFields)
             );
 
-            // Verify dynamic fields label rendered
-            // Uses text content checking since labels wrap or precede the input
-            var labels = cut.FindAll("label");
-            Assert.Contains(labels, l => l.TextContent.Contains("تست فیلد متنی"));
-            Assert.Contains(labels, l => l.TextContent.Contains("تست فیلد کشویی"));
+            Assert.Contains("تست فیلد متنی", ModalMarkup);
+            Assert.Contains("تست فیلد کشویی", ModalMarkup);
         }
 
         [Fact]
@@ -88,8 +81,8 @@ namespace TicketHub.Tests.bUnit
             bool submitted = false;
             var model = new TicketDto 
             { 
-                Title = "Test Title",
-                Description = "Test Description",
+                Title = "تیکت تستی",
+                Description = "شرح تیکت برای ارسال",
                 ProjectId = 1,
                 PriorityId = 1,
                 CategoryId = 1,
@@ -100,17 +93,94 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<TicketFormModal>(parameters => parameters
                 .Add(p => p.IsOpen, true)
                 .Add(p => p.Model, model)
-                .Add(p => p.Projects, new List<ProjectDto>())
-                .Add(p => p.Priorities, new List<PriorityDto>())
-                .Add(p => p.Categories, new List<CategoryDto> { new CategoryDto { Id = 1, Name = "Cat 1", ProjectIds = new List<int> { 1 } } })
+                .Add(p => p.Projects, new List<ProjectDto> { new() { Id = 1, Name = "پروژه ۱" } })
+                .Add(p => p.Priorities, new List<PriorityDto> { new() { Id = 1, Name = "بالا" } })
+                .Add(p => p.Categories, new List<CategoryDto> { new() { Id = 1, Name = "دسته ۱", ProjectIds = new List<int> { 1 } } })
                 .Add(p => p.DynamicFields, new List<TicketFieldDto>())
                 .Add(p => p.OnSubmit, () => { submitted = true; })
             );
 
             cut.Find("form").Submit();
 
-            // Verify callback triggered
             Assert.True(submitted);
+        }
+
+        [Fact]
+        public void DynamicField_RequiredValidation_PreventsSubmitWhenEmpty()
+        {
+            bool submitted = false;
+            var model = new TicketDto 
+            { 
+                Title = "تیکت با فیلد اجباری",
+                Description = "شرح تیکت",
+                ProjectId = 1,
+                PriorityId = 1,
+                CategoryId = 1,
+                StatusId = 1,
+                UserId = 1
+            };
+
+            var dynamicFields = new List<TicketFieldDto>
+            {
+                new TicketFieldDto { Id = 10, Name = "کد رهگیری الزامی", FieldTypeId = 1, IsActive = true, IsRequired = true }
+            };
+
+            var cut = Render<TicketFormModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.Model, model)
+                .Add(p => p.Projects, new List<ProjectDto> { new() { Id = 1, Name = "پروژه ۱" } })
+                .Add(p => p.Priorities, new List<PriorityDto> { new() { Id = 1, Name = "عادی" } })
+                .Add(p => p.Categories, new List<CategoryDto> { new() { Id = 1, Name = "دسته ۱", ProjectIds = new List<int> { 1 } } })
+                .Add(p => p.DynamicFields, dynamicFields)
+                .Add(p => p.OnSubmit, () => { submitted = true; })
+            );
+
+            cut.Find("form").Submit();
+
+            // Submit should NOT be called because dynamic field is required and empty
+            Assert.False(submitted);
+            Assert.Contains("تکمیل فیلد «کد رهگیری الزامی» الزامی است.", ModalMarkup);
+        }
+
+        [Fact]
+        public void CategoryChanged_RendersProjectCategories()
+        {
+            var model = new TicketDto { ProjectId = 1 };
+            var categories = new List<CategoryDto>
+            {
+                new() { Id = 101, Name = "پشتیبانی فنی", ProjectIds = new List<int> { 1 } }
+            };
+
+            var cut = Render<TicketFormModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.Model, model)
+                .Add(p => p.Projects, new List<ProjectDto> { new() { Id = 1, Name = "پروژه ۱" } })
+                .Add(p => p.Priorities, new List<PriorityDto>())
+                .Add(p => p.Categories, categories)
+            );
+
+            // Assert categories are rendered in modal
+            Assert.Contains("پشتیبانی فنی", ModalMarkup);
+        }
+
+        [Fact]
+        public void Cancel_Button_TriggersOnCancelCallback()
+        {
+            bool cancelled = false;
+
+            var cut = Render<TicketFormModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.Model, new TicketDto())
+                .Add(p => p.Projects, new List<ProjectDto>())
+                .Add(p => p.Priorities, new List<PriorityDto>())
+                .Add(p => p.Categories, new List<CategoryDto>())
+                .Add(p => p.OnCancel, () => { cancelled = true; })
+            );
+
+            var cancelButton = cut.Find("button.btn-cyber-ghost");
+            cancelButton.Click();
+
+            Assert.True(cancelled);
         }
     }
 }
