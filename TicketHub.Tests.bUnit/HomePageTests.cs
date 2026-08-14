@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Bunit;
 using FluentValidation;
 using Fluxor;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -540,6 +541,145 @@ public class HomePageTests : BUnitComponentTestBase
 
         Assert.StartsWith("M ", linePath);
         Assert.Contains(" Z", areaPath);
+
+        // Null and Empty SVG paths
+        Assert.Equal(string.Empty, home.BuildSvgLinePath(null, 400, 120));
+        Assert.Equal(string.Empty, home.BuildSvgLinePath(new List<DailyTrendDto>(), 400, 120));
+        Assert.Equal(string.Empty, home.BuildSvgAreaPath(null, 400, 120));
+    }
+
+    [Fact]
+    public void QuestTabs_FiltersRecentTicketsCorrectly()
+    {
+        var cut = Render<TestableHome>();
+        var home = cut.Instance;
+
+        var tickets = new List<TicketDto>
+        {
+            new() { Id = 1, Title = "تیکت معوقه", DueDate = DateTime.UtcNow.AddDays(-1), Priority = new PriorityDto { Level = 1 } },
+            new() { Id = 2, Title = "تیکت بحرانی", Priority = new PriorityDto { Level = 4, Name = "بحرانی" } },
+            new() { Id = 3, Title = "تیکت عادی", Priority = new PriorityDto { Level = 2, Name = "متوسط" } }
+        };
+
+        home.SetRecentTickets(tickets);
+
+        // Tab: all
+        home.SetQuestTab("all");
+        Assert.Equal(3, home.GetFilteredRecentTickets().Count());
+
+        // Tab: overdue
+        home.SetQuestTab("overdue");
+        var overdueList = home.GetFilteredRecentTickets().ToList();
+        Assert.Single(overdueList);
+        Assert.Equal("تیکت معوقه", overdueList[0].Title);
+
+        // Tab: critical
+        home.SetQuestTab("critical");
+        var criticalList = home.GetFilteredRecentTickets().ToList();
+        Assert.Single(criticalList);
+        Assert.Equal("تیکت بحرانی", criticalList[0].Title);
+    }
+
+    [Fact]
+    public void ChartModalBeamClass_ReturnsCorrectStyling_ForEachModalType()
+    {
+        var cut = Render<TestableHome>();
+        var home = cut.Instance;
+
+        home.SetActiveModalType("trend");
+        Assert.Equal("modal-dual-beam-cyan-indigo", home.GetChartModalBeamClass());
+
+        home.SetActiveModalType("priority");
+        Assert.Equal("modal-dual-beam-purple-amber", home.GetChartModalBeamClass());
+
+        home.SetActiveModalType("project");
+        Assert.Equal("modal-dual-beam-emerald-purple", home.GetChartModalBeamClass());
+
+        home.SetActiveModalType("sla");
+        Assert.Equal("modal-dual-beam-emerald-rose", home.GetChartModalBeamClass());
+
+        home.SetActiveModalType("unknown");
+        Assert.Equal("modal-laser-ring", home.GetChartModalBeamClass());
+    }
+
+    [Fact]
+    public void SlaHpClass_ReturnsStatusBasedOnHealthPercentage()
+    {
+        var cut = Render<TestableHome>();
+        var home = cut.Instance;
+
+        home.SetSlaOnTimePercentage(50);
+        Assert.Equal("hp-critical", home.GetSlaHpClass());
+
+        home.SetSlaOnTimePercentage(75);
+        Assert.Equal("hp-warning", home.GetSlaHpClass());
+
+        home.SetSlaOnTimePercentage(95);
+        Assert.Equal(string.Empty, home.GetSlaHpClass());
+    }
+
+    [Fact]
+    public void CapsuleBorderGlowClass_ReturnsExpectedGlows()
+    {
+        var cut = Render<TestableHome>();
+        var home = cut.Instance;
+
+        var overdue = new TicketDto { DueDate = DateTime.UtcNow.AddDays(-1) };
+        Assert.Contains("border-rose-500", home.GetCapsuleBorderGlowClass(overdue));
+
+        var bossLevel = new TicketDto { Priority = new PriorityDto { Level = 5 } };
+        Assert.Contains("border-orange-500", home.GetCapsuleBorderGlowClass(bossLevel));
+
+        var highPriority = new TicketDto { Priority = new PriorityDto { Level = 3 } };
+        Assert.Contains("border-purple-500", home.GetCapsuleBorderGlowClass(highPriority));
+
+        var mediumPriority = new TicketDto { Priority = new PriorityDto { Level = 2 } };
+        Assert.Contains("border-sky-500", home.GetCapsuleBorderGlowClass(mediumPriority));
+
+        var lowPriority = new TicketDto { Priority = new PriorityDto { Level = 1 } };
+        Assert.Contains("border-emerald-500", home.GetCapsuleBorderGlowClass(lowPriority));
+    }
+
+    [Fact]
+    public void RealTimeEventBroker_TriggersDashboardRefresh_OnTicketUpdated_And_OnTransitionOccurred()
+    {
+        var cut = Render<Home>();
+
+        // Raise OnTicketUpdated
+        _mockEventBroker.Raise(e => e.OnTicketUpdated += null, 1);
+        _mockTicketService.Verify(t => t.GetTicketTelemetrySummaryAsync(
+            It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), It.IsAny<ClaimsPrincipal?>()),
+            Times.AtLeast(2));
+
+        // Raise OnTransitionOccurred
+        _mockEventBroker.Raise(e => e.OnTransitionOccurred += null, 2);
+        _mockTicketService.Verify(t => t.GetTicketTelemetrySummaryAsync(
+            It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<List<int>?>(), It.IsAny<int?>(), It.IsAny<ClaimsPrincipal?>()),
+            Times.AtLeast(3));
+    }
+
+    [Fact]
+    public void Component_Dispose_UnsubscribesFromActions_And_Events()
+    {
+        var cut = Render<Home>();
+
+        // Act: Dispose the component
+        cut.Instance.Dispose();
+
+        // Assert: Unsubscribe from all actions was invoked
+        _mockActionSubscriber.Verify(a => a.UnsubscribeFromAllActions(cut.Instance), Times.Once);
+    }
+
+    [Fact]
+    public void NavigateToDetails_NavigatesToExpectedTicketUrl()
+    {
+        var cut = Render<TestableHome>();
+        var home = cut.Instance;
+        var nav = cut.Services.GetRequiredService<NavigationManager>();
+
+        home.NavigateToDetails(42);
+
+        Assert.EndsWith("/tickets/42", nav.Uri);
     }
 }
 
@@ -557,4 +697,12 @@ public class TestableHome : Home
     public new void HandleCreateTicket() => base.HandleCreateTicket();
     public TicketDto GetNewTicket() => base.NewTicket;
     public void SetNewTicket(TicketDto t) => base.NewTicket = t;
+    public new string GetChartModalBeamClass() => base.GetChartModalBeamClass();
+    public new string GetSlaHpClass() => base.GetSlaHpClass();
+    public void SetActiveModalType(string type) => base.ActiveModalType = type;
+    public void SetSlaOnTimePercentage(int pct) => base.SlaOnTimePercentage = pct;
+    public new void SetQuestTab(string tab) => base.SetQuestTab(tab);
+    public IEnumerable<TicketDto> GetFilteredRecentTickets() => base.FilteredRecentTickets;
+    public void SetRecentTickets(IEnumerable<TicketDto> tickets) => base.RecentTickets = tickets;
+    public new void NavigateToDetails(int id) => base.NavigateToDetails(id);
 }

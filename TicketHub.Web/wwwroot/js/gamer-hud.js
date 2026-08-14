@@ -939,13 +939,32 @@
         });
     }
 
-    // --- 6. Cyber Audio Synthesizer (Web Audio API) ---
+    // --- 6. Cyber Audio Synthesizer Engine (Web Audio API) ---
     let audioCtx = null;
+    let masterGain = null;
+    let compressor = null;
+    let lastSoundTime = 0;
+    let lastSoundType = '';
+
     function getAudioContext() {
         if (!audioCtx) {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (AudioContextClass) {
                 audioCtx = new AudioContextClass();
+                
+                // Dynamics compressor to ensure silky smooth output without distortion or clipping
+                compressor = audioCtx.createDynamicsCompressor();
+                compressor.threshold.setValueAtTime(-20, audioCtx.currentTime);
+                compressor.knee.setValueAtTime(15, audioCtx.currentTime);
+                compressor.ratio.setValueAtTime(10, audioCtx.currentTime);
+                compressor.attack.setValueAtTime(0.002, audioCtx.currentTime);
+                compressor.release.setValueAtTime(0.12, audioCtx.currentTime);
+
+                masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
+
+                masterGain.connect(compressor);
+                compressor.connect(audioCtx.destination);
             }
         }
         if (audioCtx && audioCtx.state === 'suspended') {
@@ -959,59 +978,247 @@
             const soundEnabled = localStorage.getItem('tickethub_sound_fx') !== 'false';
             if (!soundEnabled) return;
 
+            const nowPerf = performance.now();
+            // Jitter & debounce protection: prevent rapid stutter/stacking
+            if (nowPerf - lastSoundTime < 45 && lastSoundType === type) {
+                return;
+            }
+            lastSoundTime = nowPerf;
+            lastSoundType = type;
+
             const ctx = getAudioContext();
-            if (!ctx) return;
+            if (!ctx || !masterGain) return;
 
             const now = ctx.currentTime;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
 
-            if (type === 'click') {
+            if (type === 'menu' || type === 'nav') {
+                // 1. Menu & Submenu Navigation: Soft, sleek holographic glass blip
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(900, now);
-                osc.frequency.exponentialRampToValueAtTime(1400, now + 0.04);
-                gain.gain.setValueAtTime(0.08, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.frequency.setValueAtTime(540, now);
+                osc.frequency.exponentialRampToValueAtTime(780, now + 0.035);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.045, now + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+                osc.connect(gain);
+                gain.connect(masterGain);
                 osc.start(now);
                 osc.stop(now + 0.04);
-            } else if (type === 'aura') {
-                // Futuristic Power-Surge Sound
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(220, now);
-                osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
-                osc.frequency.exponentialRampToValueAtTime(440, now + 0.3);
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } else if (type === 'toggle') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-                osc.start(now);
-                osc.stop(now + 0.06);
-            } else if (type === 'success') {
-                // Cyber Chime
-                [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            }
+            else if (type === 'create') {
+                // 2. Module Creation Buttons: High-tech futuristic engage/uplink dual chime
+                // Note 1: Fast rising sine pulse
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(440, now);
+                osc1.frequency.exponentialRampToValueAtTime(880, now + 0.045);
+
+                gain1.gain.setValueAtTime(0.0001, now);
+                gain1.gain.exponentialRampToValueAtTime(0.055, now + 0.005);
+                gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+
+                osc1.connect(gain1);
+                gain1.connect(masterGain);
+                osc1.start(now);
+                osc1.stop(now + 0.065);
+
+                // Note 2: Harmonic high spark
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(880, now + 0.025);
+                osc2.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+
+                gain2.gain.setValueAtTime(0.0001, now + 0.025);
+                gain2.gain.exponentialRampToValueAtTime(0.045, now + 0.03);
+                gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.085);
+
+                osc2.connect(gain2);
+                gain2.connect(masterGain);
+                osc2.start(now + 0.025);
+                osc2.stop(now + 0.09);
+            }
+            else if (type === 'submit' || type === 'save' || type === 'success') {
+                // 3. Modal Submit / Save Buttons: Satisfying 3-tone cyber confirmation arpeggio (C5 -> E5 -> C6)
+                const notes = [
+                    { freq: 523.25, time: 0, dur: 0.12, vol: 0.045 },
+                    { freq: 659.25, time: 0.035, dur: 0.14, vol: 0.045 },
+                    { freq: 1046.50, time: 0.07, dur: 0.18, vol: 0.055 }
+                ];
+
+                notes.forEach(n => {
                     const o = ctx.createOscillator();
                     const g = ctx.createGain();
                     o.type = 'sine';
-                    o.frequency.value = freq;
+                    o.frequency.setValueAtTime(n.freq, now + n.time);
+
+                    g.gain.setValueAtTime(0.0001, now + n.time);
+                    g.gain.exponentialRampToValueAtTime(n.vol, now + n.time + 0.006);
+                    g.gain.exponentialRampToValueAtTime(0.0001, now + n.time + n.dur);
+
                     o.connect(g);
-                    g.connect(ctx.destination);
-                    const startTime = now + idx * 0.06;
-                    g.gain.setValueAtTime(0.07, startTime);
-                    g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-                    o.start(startTime);
-                    o.stop(startTime + 0.25);
+                    g.connect(masterGain);
+                    o.start(now + n.time);
+                    o.stop(now + n.time + n.dur + 0.01);
                 });
+            }
+            else if (type === 'close' || type === 'cancel') {
+                // 4. Modal Close / Cancel Buttons: Gentle soft cyber power-down tone
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(580, now);
+                osc.frequency.exponentialRampToValueAtTime(320, now + 0.055);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.04, now + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            }
+            else if (type === 'aura') {
+                // Futuristic Power-Surge Sound for theme switches
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(660, now + 0.12);
+                osc.frequency.exponentialRampToValueAtTime(440, now + 0.22);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.06, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + 0.23);
+            }
+            else if (type === 'toggle') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(660, now + 0.04);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.035, now + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + 0.045);
+            }
+            else if (type === 'click') {
+                // Fallback for legacy click invocations
+                window.playCyberSound('menu');
             }
         } catch (e) { }
     };
+
+    // --- 6.1 Unified Cyber UI Click Sound Dispatcher ---
+    let soundListenerInitialized = false;
+    function initCyberSoundDispatcher() {
+        if (soundListenerInitialized) return;
+        soundListenerInitialized = true;
+
+        document.addEventListener('click', (e) => {
+            try {
+                const target = e.target;
+                if (!target) return;
+
+                // Modal backdrop direct click check
+                if (target.classList && (target.classList.contains('modal-backdrop-quantum') || target.classList.contains('modal-backdrop-animate'))) {
+                    window.playCyberSound('close');
+                    return;
+                }
+
+                // Find nearest interactive element
+                const btn = target.closest('a, button, [role="button"], input[type="submit"], input[type="button"], .aura-btn, .esc-key-badge');
+                if (!btn) return;
+
+                // Explicit sound attribute override
+                const explicitSound = btn.getAttribute('data-sound');
+                if (explicitSound) {
+                    if (explicitSound !== 'none') {
+                        window.playCyberSound(explicitSound);
+                    }
+                    return;
+                }
+
+                const text = (btn.innerText || btn.textContent || '').trim();
+                const isInsideModal = !!btn.closest('.modal-hud-chassis, .modal-backdrop-quantum, .modal-backdrop-animate, [class*="modal"]');
+
+                // 1. Modal Close & Cancel Buttons
+                if (
+                    (isInsideModal && (
+                        btn.matches('.btn-cyber-ghost, .btn-holo-flicker, button[class*="hover:text-cyan-300"], button[class*="hover:text-rose"]') ||
+                        text.includes('انصراف') ||
+                        text.includes('بستن') ||
+                        text.includes('لغو') ||
+                        btn.querySelector('svg path[d*="M6 18L18 6"]') // ✕ close icon
+                    )) ||
+                    (!isInsideModal && btn.matches('.btn-cyber-ghost') && (text.includes('انصراف') || text.includes('بستن') || text.includes('لغو')))
+                ) {
+                    window.playCyberSound('close');
+                    return;
+                }
+
+                // 2. Modal Submit / Save Buttons
+                if (
+                    (isInsideModal && (
+                        btn.matches('button[type="submit"], .btn-laser-charge, .btn-cyber-primary') ||
+                        text.includes('ذخیره') ||
+                        text.includes('ثبت') ||
+                        text.includes('حذف کن') ||
+                        text.includes('تایید') ||
+                        text.includes('انتقال') ||
+                        text.includes('ارسال')
+                    )) ||
+                    (!isInsideModal && btn.matches('form button[type="submit"]'))
+                ) {
+                    window.playCyberSound('submit');
+                    return;
+                }
+
+                // 3. Module Creation Buttons ("دکمه‌های ایجاد ماژول‌ها")
+                if (
+                    !isInsideModal && (
+                        btn.matches('.btn-cyber-primary') ||
+                        text.includes('تیکت جدید') ||
+                        text.includes('پروژه جدید') ||
+                        text.includes('کاربر جدید') ||
+                        text.includes('جریان کاری جدید') ||
+                        text.includes('تعریف') ||
+                        text.includes('ایجاد') ||
+                        text.includes('ثبت کوئست')
+                    )
+                ) {
+                    window.playCyberSound('create');
+                    return;
+                }
+
+                // 4. Menus and Submenus ("منوها و زیر منوها")
+                if (
+                    btn.matches('.cyber-nav-link, .cyber-sub-link, nav a, nav button, .aura-btn') ||
+                    btn.closest('nav') ||
+                    (btn.closest('aside') && btn.matches('a, button')) ||
+                    btn.matches('[data-nav], [role="tab"]')
+                ) {
+                    window.playCyberSound('menu');
+                    return;
+                }
+            } catch (err) { }
+        }, { capture: true, passive: true });
+    }
 
     // --- 7. Cockpit Aura & Telemetry HUD ---
     window.setCockpitAura = function (auraName, playSound = false) {
@@ -1083,7 +1290,7 @@
             localStorage.setItem('tickethub_sound_fx', enabled ? 'true' : 'false');
         } catch (e) { }
         if (enabled) {
-            window.playCyberSound('success');
+            window.playCyberSound('submit');
         }
     };
 
@@ -1187,6 +1394,7 @@
         initCockpitAura();
         initCockpitTelemetry();
         initAmbientNebulaParallax();
+        initCyberSoundDispatcher();
     }
 
     if (document.readyState === 'loading') {

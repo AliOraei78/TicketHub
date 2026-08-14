@@ -143,7 +143,7 @@ public partial class Profile : ComponentBase
         StatusMessage = null;
         try
         {
-            _ = JSRuntime.InvokeVoidAsync("playCyberSound", "click");
+            _ = JSRuntime.InvokeVoidAsync("playCyberSound", "menu");
         }
         catch { }
     }
