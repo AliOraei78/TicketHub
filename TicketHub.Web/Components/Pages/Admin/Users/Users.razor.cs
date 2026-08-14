@@ -24,10 +24,11 @@ public partial class Users : IDisposable
     private bool isBulkDelete = false;
 
     // Telemetry
-    private int ActiveUsersCount => UsrState.Value.Users.Count(u => u.IsActive);
-    private int InactiveUsersCount => UsrState.Value.Users.Count(u => !u.IsActive);
-    private int AdminUsersCount => UsrState.Value.Users.Count(u => u.UserRoles.Any(ur => ur.Role?.Name == "Admin" || (ur.Role?.Name != null && ur.Role.Name.Contains("مدیر"))));
-    private int AssignedRolesUsersCount => UsrState.Value.Users.Count(u => u.UserRoles.Any());
+    private int TotalUsersCount => UsrState.Value.MasterTotalUsers > 0 ? UsrState.Value.MasterTotalUsers : UsrState.Value.TotalUsers;
+    private int ActiveUsersCount => (UsrState.Value.MasterActiveUsers > 0 || UsrState.Value.MasterInactiveUsers > 0) ? UsrState.Value.MasterActiveUsers : UsrState.Value.Users.Count(u => u.IsActive);
+    private int InactiveUsersCount => (UsrState.Value.MasterActiveUsers > 0 || UsrState.Value.MasterInactiveUsers > 0) ? UsrState.Value.MasterInactiveUsers : UsrState.Value.Users.Count(u => !u.IsActive);
+    private int AdminUsersCount => UsrState.Value.MasterAdminUsers > 0 ? UsrState.Value.MasterAdminUsers : UsrState.Value.Users.Count(u => u.UserRoles.Any(ur => ur.Role?.Name == "Admin" || (ur.Role?.Name != null && ur.Role.Name.Contains("مدیر"))));
+    private int AssignedRolesUsersCount => UsrState.Value.MasterAssignedRolesUsers > 0 ? UsrState.Value.MasterAssignedRolesUsers : UsrState.Value.Users.Count(u => u.UserRoles.Any());
 
     protected override void OnInitialized()
     {
@@ -53,13 +54,17 @@ public partial class Users : IDisposable
     private void PageSizeChanged(int size) => UpdateFilterAndLoad(pageSize: size, page: 1);
     private void FilterRolesChanged(List<int> v) => UpdateFilterAndLoad(roleIds: v, page: 1);
     private void FilterProjectsChanged(List<int> v) => UpdateFilterAndLoad(projectIds: v, page: 1);
-    private void FilterByStatus(bool? status) => UpdateFilterAndLoad(status: status, page: 1);
+    private void FilterByStatus(bool? status)
+    {
+        Dispatcher.Dispatch(new SetUserFilterStatusAction(status));
+        Dispatcher.Dispatch(new LoadUsersAction());
+    }
     private void NextPage() { if (UsrState.Value.CurrentPage < Math.Ceiling(UsrState.Value.TotalUsers / (double)UsrState.Value.PageSize)) UpdateFilterAndLoad(page: UsrState.Value.CurrentPage + 1); }
     private void PreviousPage() { if (UsrState.Value.CurrentPage > 1) UpdateFilterAndLoad(page: UsrState.Value.CurrentPage - 1); }
 
-    private void UpdateFilterAndLoad(string? searchTerm = null, int? pageSize = null, int? page = null, bool? status = null, List<int>? roleIds = null, List<int>? projectIds = null)
+    private void UpdateFilterAndLoad(string? searchTerm = null, int? pageSize = null, int? page = null, List<int>? roleIds = null, List<int>? projectIds = null)
     {
-        Dispatcher.Dispatch(new SetUserFiltersAction(searchTerm, pageSize, page, status, roleIds, projectIds));
+        Dispatcher.Dispatch(new SetUserFiltersAction(searchTerm, pageSize, page, null, roleIds, projectIds));
         Dispatcher.Dispatch(new LoadUsersAction());
     }
 

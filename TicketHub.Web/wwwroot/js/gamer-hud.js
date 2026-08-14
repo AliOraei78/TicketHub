@@ -957,12 +957,46 @@
         }, 3500);
     }
 
+    // --- 7. Ambient Nebula Parallax Inertia ---
+    let nebulaParallaxInitialized = false;
+    let targetParallaxX = 0;
+    let targetParallaxY = 0;
+    let currentParallaxX = 0;
+    let currentParallaxY = 0;
+    let parallaxRafId = null;
+
+    function initAmbientNebulaParallax() {
+        const container = document.getElementById('cyber-ambient-nebula-container');
+        if (!container || nebulaParallaxInitialized) return;
+        nebulaParallaxInitialized = true;
+
+        window.addEventListener('mousemove', (e) => {
+            if (document.hidden) return;
+            const x = (e.clientX / window.innerWidth) - 0.5;
+            const y = (e.clientY / window.innerHeight) - 0.5;
+            targetParallaxX = x * 24; // Subtle 24px displacement
+            targetParallaxY = y * 18;
+        }, { passive: true });
+
+        function animateParallax() {
+            if (!document.hidden && container) {
+                currentParallaxX += (targetParallaxX - currentParallaxX) * 0.04;
+                currentParallaxY += (targetParallaxY - currentParallaxY) * 0.04;
+                container.style.transform = `translate3d(${currentParallaxX.toFixed(2)}px, ${currentParallaxY.toFixed(2)}px, 0)`;
+            }
+            parallaxRafId = requestAnimationFrame(animateParallax);
+        }
+
+        parallaxRafId = requestAnimationFrame(animateParallax);
+    }
+
     function initAll() {
         initElementalCanvases();
         init3DTilt();
         initCounters();
         initCockpitAura();
         initCockpitTelemetry();
+        initAmbientNebulaParallax();
     }
 
     if (document.readyState === 'loading') {

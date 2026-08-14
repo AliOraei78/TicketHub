@@ -97,8 +97,8 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<RolesSettings>();
 
             // Act
-            var filter = cut.FindComponent<GenericStatusFilter<bool?>>();
-            filter.InvokeAsync(() => filter.Instance.OnValueChanged.InvokeAsync(true));
+            var activeFilterBtn = cut.Find("button:contains('فعال')");
+            activeFilterBtn.Click();
 
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetRoleFilterStatusAction>(a => a.Status == true)), Times.Once);

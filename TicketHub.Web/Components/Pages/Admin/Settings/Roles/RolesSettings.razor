@@ -105,18 +105,23 @@
                     <SearchBox Placeholder="جستجوی نقش..." SearchTerm="@RolState.Value.SearchTerm" OnSearchChanged="HandleSearch" />
                 </div>
 
-                <div class="w-full sm:w-56">
-                    <GenericStatusFilter TValue="bool?"
-                                         Options="new bool?[] { null, true, false }"
-                                         SelectedValue="RolState.Value.SelectedFilterStatus"
-                                         OnValueChanged="FilterByStatus"
-                                         Class="!bg-[#050811]/90 !border-white/[0.12]"
-                                         BackgroundClassSelector='val => val == null ? "translate-x-0 bg-cyan-600/30 border border-cyan-400/50 shadow-[0_0_10px_rgba(56,189,248,0.3)]" : val == true ? "-translate-x-full bg-emerald-600/30 border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.3)]" : "-translate-x-[200%] bg-rose-600/30 border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]"'
-                                         ItemClassSelector='(item, selected) => item == selected ? "!text-white font-bold" : "text-slate-400 hover:text-slate-200"'>
-                        <ItemTemplate Context="status">
-                            @(status == null ? "همه" : status == true ? "فعال" : "غیرفعال")
-                        </ItemTemplate>
-                    </GenericStatusFilter>
+                <!-- 3-State Cyberpunk Status Filter Switcher -->
+                <div class="flex items-center gap-1 p-1 bg-[#050811]/90 rounded-2xl border border-white/[0.12] h-[46px] w-full sm:w-auto shrink-0 select-none">
+                    <button type="button" 
+                            @onclick="@(() => FilterByStatus(null))"
+                            class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(RolState.Value.SelectedFilterStatus == null ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(56,189,248,0.25)]" : "text-slate-400 hover:text-slate-200")">
+                        همه (@TotalRolesCount.ToPersianNumbers())
+                    </button>
+                    <button type="button" 
+                            @onclick="@(() => FilterByStatus(true))"
+                            class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(RolState.Value.SelectedFilterStatus == true ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]" : "text-slate-400 hover:text-slate-200")">
+                        فعال (@ActiveRolesCount.ToPersianNumbers())
+                    </button>
+                    <button type="button" 
+                            @onclick="@(() => FilterByStatus(false))"
+                            class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(RolState.Value.SelectedFilterStatus == false ? "bg-rose-500/20 text-rose-300 border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.25)]" : "text-slate-400 hover:text-slate-200")">
+                        غیرفعال (@InactiveRolesCount.ToPersianNumbers())
+                    </button>
                 </div>
             </div>
 

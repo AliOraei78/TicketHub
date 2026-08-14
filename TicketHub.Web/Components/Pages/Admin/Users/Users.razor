@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <span class="text-base sm:text-lg font-black text-white drop-shadow-[0_0_8px_rgba(56,189,248,0.7)] px-1">
-                    @UsrState.Value.TotalUsers.ToPersianNumbers()
+                    @TotalUsersCount.ToPersianNumbers()
                 </span>
             </div>
 
@@ -173,17 +173,17 @@
             <button type="button" 
                     @onclick="@(() => FilterByStatus(null))"
                     class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(UsrState.Value.SelectedFilterStatus == null ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(56,189,248,0.25)]" : "text-slate-400 hover:text-slate-200")">
-                همه
+                همه (@TotalUsersCount.ToPersianNumbers())
             </button>
             <button type="button" 
                     @onclick="@(() => FilterByStatus(true))"
                     class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(UsrState.Value.SelectedFilterStatus == true ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]" : "text-slate-400 hover:text-slate-200")">
-                فعال
+                فعال (@ActiveUsersCount.ToPersianNumbers())
             </button>
             <button type="button" 
                     @onclick="@(() => FilterByStatus(false))"
                     class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer @(UsrState.Value.SelectedFilterStatus == false ? "bg-rose-500/20 text-rose-300 border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.25)]" : "text-slate-400 hover:text-slate-200")">
-                غیرفعال
+                غیرفعال (@InactiveUsersCount.ToPersianNumbers())
             </button>
         </div>
     </div>

@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
@@ -21,16 +21,29 @@ public record UserState(
     int CurrentPage,
     bool? SelectedFilterStatus,
     List<int> SelectedFilterRoleIds,
-    List<int> SelectedFilterProjectIds)
+    List<int> SelectedFilterProjectIds,
+    int MasterTotalUsers = 0,
+    int MasterActiveUsers = 0,
+    int MasterInactiveUsers = 0,
+    int MasterAdminUsers = 0,
+    int MasterAssignedRolesUsers = 0)
 {
-    private UserState() : this(true, Array.Empty<UserDto>(), 0, Array.Empty<RoleDto>(), Array.Empty<ProjectDto>(), string.Empty, 10, 1, null, new(), new()) { }
+    private UserState() : this(true, Array.Empty<UserDto>(), 0, Array.Empty<RoleDto>(), Array.Empty<ProjectDto>(), string.Empty, 10, 1, null, new(), new(), 0, 0, 0, 0, 0) { }
 }
 
 // 2. Actions
 public record LoadUserInitialDataAction();
-public record UserInitialDataLoadedAction(IEnumerable<RoleDto> Roles, IEnumerable<ProjectDto> Projects);
+public record UserInitialDataLoadedAction(
+    IEnumerable<RoleDto> Roles,
+    IEnumerable<ProjectDto> Projects,
+    int TotalUsers,
+    int ActiveUsers,
+    int InactiveUsers,
+    int AdminUsers,
+    int AssignedRolesUsers);
 public record LoadUsersAction();
 public record UsersLoadedAction(IEnumerable<UserDto> Users, int TotalCount, int ValidatedPage);
+public record SetUserFilterStatusAction(bool? Status);
 public record SetUserFiltersAction(string? SearchTerm, int? PageSize, int? CurrentPage, bool? Status, List<int>? RoleIds, List<int>? ProjectIds);
 public record SaveUserAction(UserDto User, string Password, List<string> SelectedRoles, List<RoleDto> AvailableRoles);
 public record SaveUserSuccessAction(); // برای بستن مُدال در کامپوننت نیاز است
@@ -44,11 +57,24 @@ public static class UserReducers
 
     [ReducerMethod]
     public static UserState ReduceInitialDataLoaded(UserState state, UserInitialDataLoadedAction action) =>
-        state with { AvailableRoles = action.Roles, AvailableProjects = action.Projects };
+        state with
+        {
+            AvailableRoles = action.Roles,
+            AvailableProjects = action.Projects,
+            MasterTotalUsers = action.TotalUsers,
+            MasterActiveUsers = action.ActiveUsers,
+            MasterInactiveUsers = action.InactiveUsers,
+            MasterAdminUsers = action.AdminUsers,
+            MasterAssignedRolesUsers = action.AssignedRolesUsers
+        };
 
     [ReducerMethod]
     public static UserState ReduceUsersLoaded(UserState state, UsersLoadedAction action) =>
         state with { IsLoading = false, Users = action.Users, TotalUsers = action.TotalCount, CurrentPage = action.ValidatedPage };
+
+    [ReducerMethod]
+    public static UserState ReduceSetFilterStatus(UserState state, SetUserFilterStatusAction action) =>
+        state with { SelectedFilterStatus = action.Status, CurrentPage = 1 };
 
     [ReducerMethod]
     public static UserState ReduceSetFilters(UserState state, SetUserFiltersAction action) =>
@@ -57,7 +83,6 @@ public static class UserReducers
             SearchTerm = action.SearchTerm ?? state.SearchTerm,
             PageSize = action.PageSize ?? state.PageSize,
             CurrentPage = action.CurrentPage ?? state.CurrentPage,
-            SelectedFilterStatus = action.Status ?? state.SelectedFilterStatus,
             SelectedFilterRoleIds = action.RoleIds ?? state.SelectedFilterRoleIds,
             SelectedFilterProjectIds = action.ProjectIds ?? state.SelectedFilterProjectIds
         };
@@ -97,8 +122,15 @@ public class UserEffects
             _logger.LogInformation("شروع فراخوانی اطلاعات اولیه کاربران.");
             var roles = await _roleService.GetAllRolesAsync();
             var projects = await _projectService.GetProjectsAsync();
+            var allUsers = await _userService.GetAllAsync();
 
-            dispatcher.Dispatch(new UserInitialDataLoadedAction(roles, projects));
+            int total = allUsers.Count;
+            int active = allUsers.Count(u => u.IsActive);
+            int inactive = allUsers.Count(u => !u.IsActive);
+            int admins = allUsers.Count(u => u.UserRoles.Any(ur => ur.Role?.Name == "Admin" || (ur.Role?.Name != null && ur.Role.Name.Contains("مدیر"))));
+            int assigned = allUsers.Count(u => u.UserRoles.Any());
+
+            dispatcher.Dispatch(new UserInitialDataLoadedAction(roles, projects, total, active, inactive, admins, assigned));
             dispatcher.Dispatch(new LoadUsersAction());
         }
         catch (Exception ex)
@@ -150,7 +182,7 @@ public class UserEffects
             _toastService.ShowSuccess(action.User.Id == 0 ? "کاربر جدید ایجاد شد." : "تغییرات کاربر با موفقیت ذخیره شد.");
 
             dispatcher.Dispatch(new SaveUserSuccessAction());
-            dispatcher.Dispatch(new LoadUsersAction());
+            dispatcher.Dispatch(new LoadUserInitialDataAction());
         }
         catch (ValidationException ex)
         {
@@ -183,7 +215,7 @@ public class UserEffects
 
             _toastService.ShowSuccess($"{count} کاربر با موفقیت {actionName} {verb}.");
 
-            dispatcher.Dispatch(new LoadUsersAction());
+            dispatcher.Dispatch(new LoadUserInitialDataAction());
         }
         catch (Exception ex)
         {

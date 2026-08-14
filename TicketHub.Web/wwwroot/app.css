@@ -713,6 +713,95 @@ nav a.active span,
 }
 
 /* ==========================================================================
+   AMBIENT CYBER NEBULA FLUID MESH (GPU ACCELERATED)
+   ========================================================================== */
+#cyber-ambient-nebula-container {
+    perspective: 1000px;
+    will-change: transform;
+}
+
+.cyber-nebula-orb {
+    position: absolute;
+    border-radius: 9999px;
+    pointer-events: none;
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    transition: background 0.8s ease-in-out, opacity 0.6s ease;
+}
+
+.cyber-nebula-orb.orb-1 {
+    top: -10%;
+    right: 15%;
+    width: 650px;
+    height: 450px;
+    background: radial-gradient(circle, var(--cockpit-aura-glow, #6366f1) 0%, rgba(99, 102, 241, 0) 70%);
+    filter: blur(140px);
+    opacity: 0.12;
+    animation: nebula-drift-1 28s ease-in-out infinite alternate;
+}
+
+.cyber-nebula-orb.orb-2 {
+    bottom: -10%;
+    left: 20%;
+    width: 700px;
+    height: 500px;
+    background: radial-gradient(circle, var(--cockpit-aura-primary, #38bdf8) 0%, rgba(56, 189, 248, 0) 70%);
+    filter: blur(160px);
+    opacity: 0.10;
+    animation: nebula-drift-2 34s ease-in-out infinite alternate;
+}
+
+.cyber-nebula-orb.orb-3 {
+    top: 40%;
+    left: 45%;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, var(--cockpit-aura-primary, #38bdf8) 0%, var(--cockpit-aura-glow, #6366f1) 40%, transparent 75%);
+    filter: blur(170px);
+    opacity: 0.07;
+    animation: nebula-drift-3 24s ease-in-out infinite alternate;
+}
+
+@keyframes nebula-drift-1 {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+    50% {
+        transform: translate3d(60px, 40px, 0) scale(1.15) rotate(15deg);
+    }
+    100% {
+        transform: translate3d(-40px, 70px, 0) scale(0.95) rotate(-10deg);
+    }
+}
+
+@keyframes nebula-drift-2 {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+    50% {
+        transform: translate3d(-70px, -50px, 0) scale(1.18) rotate(-20deg);
+    }
+    100% {
+        transform: translate3d(50px, -30px, 0) scale(0.92) rotate(15deg);
+    }
+}
+
+@keyframes nebula-drift-3 {
+    0% {
+        transform: translate3d(0, 0, 0) scale(0.9);
+        opacity: 0.05;
+    }
+    50% {
+        transform: translate3d(40px, -60px, 0) scale(1.2);
+        opacity: 0.09;
+    }
+    100% {
+        transform: translate3d(-50px, 30px, 0) scale(0.85);
+        opacity: 0.06;
+    }
+}
+
+/* ==========================================================================
    CYBER TACTICAL BUTTONS & QUANTUM WARP MODAL SYSTEM
    ========================================================================== */
 
