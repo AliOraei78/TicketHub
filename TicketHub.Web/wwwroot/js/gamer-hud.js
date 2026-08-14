@@ -786,6 +786,17 @@
     const pendingCanvasesQueue = [];
     let isProcessingVfxQueue = false;
 
+    function queueVfxCanvas(canvas) {
+        if (!canvas) return;
+        if (!pendingCanvasesQueue.includes(canvas)) {
+            pendingCanvasesQueue.push(canvas);
+        }
+        if (!isProcessingVfxQueue) {
+            isProcessingVfxQueue = true;
+            requestAnimationFrame(processNextVfxCanvas);
+        }
+    }
+
     function processNextVfxCanvas() {
         if (pendingCanvasesQueue.length === 0) {
             isProcessingVfxQueue = false;
@@ -793,27 +804,39 @@
         }
         const canvas = pendingCanvasesQueue.shift();
         if (canvas && document.body.contains(canvas) && !activeRenderers.has(canvas)) {
-            const element = canvas.getAttribute('data-element') || 'none';
-            const rect = canvas.getBoundingClientRect();
-            const targetW = Math.max(Math.floor(rect.width), 200);
-            const targetH = Math.max(Math.floor(rect.height), 120);
-            if (canvas.width !== targetW) canvas.width = targetW;
-            if (canvas.height !== targetH) canvas.height = targetH;
-
-            let shaderSrc = null;
-            if (element === 'fire') shaderSrc = FRAGMENT_FIRE_SRC;
-            else if (element === 'water') shaderSrc = FRAGMENT_WATER_SRC;
-            else if (element === 'lightning') shaderSrc = FRAGMENT_LIGHTNING_SRC;
-            else if (element === 'toxic') shaderSrc = FRAGMENT_TOXIC_SRC;
-            else if (element === 'smoke') shaderSrc = FRAGMENT_SMOKE_SRC;
-            else if (element === 'void') shaderSrc = FRAGMENT_VOID_SRC;
-
-            if (shaderSrc) {
-                const renderer = new WebGLShaderRenderer(canvas, shaderSrc);
-                activeRenderers.set(canvas, renderer);
+            if (canvas.classList.contains('hero-ekg-canvas')) {
+                const parent = canvas.parentElement || canvas;
+                const rect = parent.getBoundingClientRect();
+                const targetW = Math.max(Math.floor(rect.width), 160);
+                const targetH = Math.max(Math.floor(rect.height), 32);
+                if (canvas.width !== targetW) canvas.width = targetW;
+                if (canvas.height !== targetH) canvas.height = targetH;
+                const sim = new EkgMonitorSimulator(canvas);
+                activeRenderers.set(canvas, sim);
                 viewportObserver.observe(canvas);
                 ensureVfxLoopRunning();
-                canvas.classList.add('vfx-active');
+            } else {
+                const element = canvas.getAttribute('data-element') || 'none';
+                const rect = canvas.getBoundingClientRect();
+                const targetW = Math.max(Math.floor(rect.width), 200);
+                const targetH = Math.max(Math.floor(rect.height), 120);
+                if (canvas.width !== targetW) canvas.width = targetW;
+                if (canvas.height !== targetH) canvas.height = targetH;
+
+                let shaderSrc = null;
+                if (element === 'fire') shaderSrc = FRAGMENT_FIRE_SRC;
+                else if (element === 'water') shaderSrc = FRAGMENT_WATER_SRC;
+                else if (element === 'lightning') shaderSrc = FRAGMENT_LIGHTNING_SRC;
+                else if (element === 'toxic') shaderSrc = FRAGMENT_TOXIC_SRC;
+                else if (element === 'smoke') shaderSrc = FRAGMENT_SMOKE_SRC;
+                else if (element === 'void') shaderSrc = FRAGMENT_VOID_SRC;
+
+                if (shaderSrc) {
+                    const renderer = new WebGLShaderRenderer(canvas, shaderSrc);
+                    activeRenderers.set(canvas, renderer);
+                    viewportObserver.observe(canvas);
+                    ensureVfxLoopRunning();
+                }
             }
         }
 
@@ -824,34 +847,53 @@
         }
     }
 
-    function initElementalCanvases() {
+    window.ensureDashboardVfxReady = function () {
         const canvases = document.querySelectorAll('.element-vfx-canvas');
         canvases.forEach(canvas => {
-            if (!activeRenderers.has(canvas) && !pendingCanvasesQueue.includes(canvas)) {
-                pendingCanvasesQueue.push(canvas);
+            if (!activeRenderers.has(canvas)) {
+                queueVfxCanvas(canvas);
             }
         });
-
-        if (!isProcessingVfxQueue && pendingCanvasesQueue.length > 0) {
-            isProcessingVfxQueue = true;
-            requestAnimationFrame(processNextVfxCanvas);
-        }
 
         // Initialize EKG Canvases
         const ekgCanvases = document.querySelectorAll('.hero-ekg-canvas');
         ekgCanvases.forEach(canvas => {
-            if (activeRenderers.has(canvas)) return;
-            const parent = canvas.parentElement || canvas;
-            const rect = parent.getBoundingClientRect();
-            const targetW = Math.max(Math.floor(rect.width), 160);
-            const targetH = Math.max(Math.floor(rect.height), 32);
-            if (canvas.width !== targetW) canvas.width = targetW;
-            if (canvas.height !== targetH) canvas.height = targetH;
-            const sim = new EkgMonitorSimulator(canvas);
-            activeRenderers.set(canvas, sim);
-            viewportObserver.observe(canvas);
-            ensureVfxLoopRunning();
+            if (!activeRenderers.has(canvas)) {
+                queueVfxCanvas(canvas);
+            }
         });
+
+        return true;
+    };
+
+    // Auto-observe DOM for dynamically mounted canvases (e.g. after skeleton finishes)
+    if (typeof MutationObserver !== 'undefined') {
+        const domObserver = new MutationObserver((mutations) => {
+            let foundCanvas = false;
+            for (const mutation of mutations) {
+                if (mutation.addedNodes.length > 0) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === 1) { // ELEMENT_NODE
+                            if (node.matches && (node.matches('.element-vfx-canvas') || node.matches('.hero-ekg-canvas'))) {
+                                queueVfxCanvas(node);
+                                foundCanvas = true;
+                            } else if (node.querySelectorAll) {
+                                const matched = node.querySelectorAll('.element-vfx-canvas, .hero-ekg-canvas');
+                                matched.forEach(c => {
+                                    queueVfxCanvas(c);
+                                    foundCanvas = true;
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        domObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    function initElementalCanvases() {
+        return window.ensureDashboardVfxReady();
     }
 
     // Main Render Loop with 60 FPS Capping & Page Visibility Sleep

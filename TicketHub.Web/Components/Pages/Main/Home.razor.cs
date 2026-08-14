@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Fluxor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Services;
@@ -22,6 +23,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     [Inject] public IActionSubscriber ActionSubscriber { get; set; } = default!;
     [Inject] public ITicketEventBroker EventBroker { get; set; } = default!;
     [Inject] public ICacheService CacheService { get; set; } = default!;
+    [Inject] public Microsoft.JSInterop.IJSRuntime JS { get; set; } = default!;
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
@@ -167,6 +169,19 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         IsLoading = false;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("ensureDashboardVfxReady");
+            }
+            catch { }
+        }
+    }
+
     private async Task HandleLiveTicketEventAsync(int ticketId)
     {
         await InvokeAsync(async () =>
@@ -199,7 +214,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         if (!forceRefresh)
         {
             var cachedSummary = await CacheService.GetAsync<DashboardSummaryDto>(cacheKey);
-            if (cachedSummary != null && cachedSummary.TotalTickets > 0)
+            if (cachedSummary != null)
             {
                 TotalTickets = cachedSummary.TotalTickets;
                 NewTicketsCount = cachedSummary.NewTicketsCount;
@@ -209,15 +224,16 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
                 OverdueCount = cachedSummary.OverdueCount;
                 CriticalAndOverdueCount = cachedSummary.CriticalAndOverdueCount;
                 SlaOnTimePercentage = cachedSummary.SlaOnTimePercentage;
-                TrendData = cachedSummary.TrendData;
-                PriorityStats = cachedSummary.PriorityStats;
-                ProjectStats = cachedSummary.ProjectStats;
-                RecentTickets = cachedSummary.RecentTickets;
+                TrendData = cachedSummary.TrendData ?? new List<DailyTrendDto>();
+                PriorityStats = cachedSummary.PriorityStats ?? new List<PriorityStatDto>();
+                ProjectStats = cachedSummary.ProjectStats ?? new List<ProjectWorkloadDto>();
+                RecentTickets = cachedSummary.RecentTickets ?? new List<TicketDto>();
 
                 CachedTrendLinePath = BuildSvgLinePath(TrendData, 400, 120);
                 CachedTrendAreaPath = BuildSvgAreaPath(TrendData, 400, 120);
                 CachedModalTrendLinePath = BuildSvgLinePath(TrendData, 600, 200);
                 CachedModalTrendAreaPath = BuildSvgAreaPath(TrendData, 600, 200);
+                IsLoading = false;
                 return;
             }
         }
@@ -339,13 +355,10 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
             TrendData = TrendData,
             PriorityStats = PriorityStats,
             ProjectStats = ProjectStats,
-            RecentTickets = RecentTickets.ToList()
+            RecentTickets = RecentTickets?.ToList() ?? new List<TicketDto>()
         };
 
-        if (summaryToCache.TotalTickets > 0)
-        {
-            await CacheService.SetAsync(cacheKey, summaryToCache, TimeSpan.FromSeconds(30));
-        }
+        await CacheService.SetAsync(cacheKey, summaryToCache, TimeSpan.FromMinutes(10));
     }
 
     protected async Task OpenCreateModal()
