@@ -1,4 +1,5 @@
-﻿
+@namespace TicketHub.Web.Components.Pages.Auth.Shared
+
 @typeparam TModel
 
 @if (IsSuccess)
@@ -9,29 +10,36 @@ else
 {
     @HeaderTemplate
 
-    <EditForm Model="Model" OnSubmit="HandleSubmit" FormName="@FormName" method="post">
+    <EditForm Model="Model" OnSubmit="HandleSubmit" FormName="@FormName" method="post" class="space-y-5">
         <DataAnnotationsValidator />
 
         <AlertMessage Message="@ErrorMessage" Type="AlertMessage.AlertType.Error" />
         <AlertMessage Message="@SuccessMessage" Type="AlertMessage.AlertType.Success" />
 
-        <div class="mb-5">
+        <div class="my-6">
             @FormFields
         </div>
 
-        <button type="submit" name="Action" value="Verify" disabled="@IsProcessing" class="w-full flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg mb-4">
+        <button type="submit"
+                name="Action"
+                value="Verify"
+                disabled="@IsProcessing"
+                class="w-full flex justify-center items-center gap-2.5 py-3.5 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(56,189,248,0.35)] hover:shadow-[0_0_30px_rgba(56,189,248,0.6)] cursor-pointer focus:outline-none">
             @if (IsProcessing)
             {
-                <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                <span>در حال بررسی...</span>
+                <span class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                <span>در حال اعتبارسنجی کد امنیتی...</span>
             }
             else
             {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <span>@SubmitButtonText</span>
             }
         </button>
 
-        <div class="flex flex-col items-center justify-center space-y-2 mt-4 border-t border-slate-700/50 pt-4">
+        <div class="flex flex-col items-center justify-center space-y-2 pt-4 border-t border-white/[0.08]">
             @TimerSection
         </div>
     </EditForm>
@@ -42,7 +50,7 @@ else
     [Parameter] public bool IsProcessing { get; set; }
     [Parameter] public string ErrorMessage { get; set; } = string.Empty;
     [Parameter] public string SuccessMessage { get; set; } = string.Empty;
-    [Parameter] public string SubmitButtonText { get; set; } = "تایید";
+    [Parameter] public string SubmitButtonText { get; set; } = "تایید و فعال‌سازی حساب";
     [Parameter] public string FormName { get; set; } = "Form";
 
     [Parameter, EditorRequired] public TModel Model { get; set; } = default!;
@@ -58,12 +66,10 @@ else
     {
         if (OnSubmit.HasDelegate)
         {
-            // اگر فرم (مثل تایید ایمیل) می‌خواهد خودش دستی تصمیم بگیرد
             await OnSubmit.InvokeAsync(context);
         }
         else
         {
-            // رفتار پیش‌فرض برای سایر فرم‌های پروژه که دست‌نخورده باقی می‌مانند
             if (context.Validate())
             {
                 await OnValidSubmit.InvokeAsync();

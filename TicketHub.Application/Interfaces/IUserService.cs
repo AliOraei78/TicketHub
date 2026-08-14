@@ -16,7 +16,7 @@ namespace TicketHub.Application.Interfaces
         Task ExecuteBulkActionAsync(HashSet<int> userIds, string actionType, int? singleId = null);
         Task<(bool Success, string? ErrorMessage)> RegisterUserAsync(UserDto dto, string plainPassword);
         Task<bool> ConfirmUserAsync(int userId, string token);
-        Task ResendConfirmationCodeAsync(string email);
+        Task<(bool Success, string? Message, int RemainingSeconds)> ResendConfirmationCodeAsync(string email);
         Task<AuthServiceResponse> LoginAsync(LoginViewModel model);
     }
 }

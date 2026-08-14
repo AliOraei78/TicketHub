@@ -1,29 +1,39 @@
-﻿@page "/login"
+@page "/login"
 @layout TicketHub.Web.Components.Layout.AuthLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 
-<AuthBackground Title="سامانه تیکت‌هاب" Subtitle="به پنل مدیریت یکپارچه خوش آمدید" ShowLogo="true">
-    
+<PageTitle>ورود به سامانه | تیکت‌هاب</PageTitle>
+
+<AuthBackground Title="ورود به سامانه"
+                Subtitle="اطلاعات کاربری خود را جهت احراز هویت و دسترسی به پنل وارد نمایید."
+                BadgeText="AUTH_GATE // SECURE_LOGIN"
+                ShowcaseTitle="سامانه مدیریت هوشمند تیکت‌هاب"
+                ShowcaseSubtitle="پلتفرم یکپارچه عملیات پشتیبانی سازمانی، گردش کار اتوماتیک و امنیت چندلایه">
+
     <GenericAuthForm TModel="LoginViewModel"
                      Model="loginModel"
                      OnValidSubmit="HandleLogin"
                      FormName="loginForm"
                      ErrorMessage="@errorMessage"
                      IsLoading="isLoading"
-                     LoadingText="در حال ورود..."
-                     SubmitButtonText="ورود به سیستم">
-                     
+                     LoadingText="در حال احراز هویت..."
+                     SubmitButtonText="ورود امن به سامانه">
+
+        <!-- فیلد ایمیل -->
         <CustomAuthInput @bind-Value="loginModel.Email"
-                         Label="آدرس ایمیل"
+                         Label="آدرس ایمیل سازمانی"
                          Type="email"
                          Placeholder="name@company.com"
                          Dir="ltr"
                          ValidationFor="() => loginModel.Email">
             <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
             </Icon>
         </CustomAuthInput>
 
+        <!-- فیلد رمز عبور -->
         <CustomAuthInput @bind-Value="loginModel.Password"
                          Label="رمز عبور"
                          Type="password"
@@ -31,18 +41,37 @@
                          Dir="ltr"
                          ValidationFor="() => loginModel.Password">
             <Icon>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
             </Icon>
         </CustomAuthInput>
 
+        <!-- چک‌باکس مرا به خاطر بسپار -->
+        <div class="flex items-center justify-between pt-1 select-none">
+            <label class="inline-flex items-center gap-2 cursor-pointer group">
+                <InputCheckbox @bind-Value="loginModel.RememberMe" id="rememberMeCheckbox" class="matrix-checkbox w-4.5 h-4.5" />
+                <span class="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">مرا به خاطر بسپار</span>
+            </label>
+
+            <span class="text-[11px] font-mono text-cyan-400/80 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-500/20">SSL 256-BIT</span>
+        </div>
+
+        <!-- کپچای هوشمند سایبری -->
         <CaptchaView />
 
     </GenericAuthForm>
 
-    <div class="mt-6 text-center">
-        <p class="text-sm text-slate-400">
-            حساب کاربری ندارید؟
-            <a href="/register" class="font-bold text-blue-400 hover:text-blue-300 transition-colors">ثبت‌نام کنید</a>
+    <!-- فوتر هدایت به ثبت نام -->
+    <div class="mt-6 pt-5 border-t border-white/[0.08] text-center">
+        <p class="text-xs text-slate-400">
+            حساب کاربری فعال ندارید؟
+            <a href="/register" class="font-bold text-cyan-400 hover:text-cyan-300 transition-colors inline-flex items-center gap-1 mr-1">
+                <span>ثبت‌نام در سامانه</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
         </p>
     </div>
 </AuthBackground>

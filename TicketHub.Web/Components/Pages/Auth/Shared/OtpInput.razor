@@ -1,0 +1,138 @@
+@namespace TicketHub.Web.Components.Pages.Auth.Shared
+@using System.Linq.Expressions
+
+<div class="space-y-3 select-none" dir="ltr">
+    <!-- Hidden master input for EditForm / DataAnnotations validation & POST binding -->
+    <input type="text"
+           id="otpMasterHidden"
+           name="verifyModel.Code"
+           value="@Value"
+           class="sr-only"
+           tabindex="-1"
+           autocomplete="off" />
+
+    <!-- 6 Discrete Neon OTP Input Boxes -->
+    <div class="flex items-center justify-center gap-2 sm:gap-3" id="otp-container" onpaste="handleOtpPaste(event)">
+        @for (int i = 0; i < 6; i++)
+        {
+            var index = i;
+            var digit = (!string.IsNullOrEmpty(Value) && Value.Length > index) ? Value[index].ToString() : "";
+            <input type="text"
+                   id="@($"otp-box-{index}")"
+                   maxlength="1"
+                   inputmode="numeric"
+                   pattern="[0-9]*"
+                   value="@digit"
+                   disabled="@Disabled"
+                   class="@($"otp-digit-box {(string.IsNullOrEmpty(digit) ? "" : "filled")}")"
+                   oninput="handleOtpInput(this, @index)"
+                   onkeydown="handleOtpKey(event, this, @index)"
+                   autocomplete="off" />
+        }
+    </div>
+
+    @if (ValidationFor != null)
+    {
+        <div class="text-center" dir="rtl">
+            <ValidationMessage For="ValidationFor" class="text-xs text-rose-400 mt-1" />
+        </div>
+    }
+</div>
+
+<script>
+    function handleOtpInput(el, index) {
+        const val = el.value.replace(/[^0-9]/g, '');
+        if (val.length > 0) {
+            el.value = val[val.length - 1];
+            el.classList.add('filled');
+            const next = document.getElementById('otp-box-' + (index + 1));
+            if (next) {
+                next.focus();
+                next.select();
+            }
+        } else {
+            el.value = '';
+            el.classList.remove('filled');
+        }
+        updateOtpMaster();
+    }
+
+    function handleOtpKey(e, el, index) {
+        if (e.key === 'Backspace') {
+            if (!el.value && index > 0) {
+                e.preventDefault();
+                const prev = document.getElementById('otp-box-' + (index - 1));
+                if (prev) {
+                    prev.value = '';
+                    prev.classList.remove('filled');
+                    prev.focus();
+                    updateOtpMaster();
+                }
+            } else if (el.value) {
+                el.value = '';
+                el.classList.remove('filled');
+                updateOtpMaster();
+            }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            e.preventDefault();
+            document.getElementById('otp-box-' + (index - 1))?.focus();
+        } else if (e.key === 'ArrowRight' && index < 5) {
+            e.preventDefault();
+            document.getElementById('otp-box-' + (index + 1))?.focus();
+        }
+    }
+
+    function handleOtpPaste(e) {
+        e.preventDefault();
+        const clipData = (e.clipboardData || window.clipboardData).getData('text');
+        if (!clipData) return;
+        const digits = clipData.replace(/[^0-9]/g, '').slice(0, 6);
+        for (let i = 0; i < 6; i++) {
+            const box = document.getElementById('otp-box-' + i);
+            if (box) {
+                if (i < digits.length) {
+                    box.value = digits[i];
+                    box.classList.add('filled');
+                } else {
+                    box.value = '';
+                    box.classList.remove('filled');
+                }
+            }
+        }
+        updateOtpMaster();
+        const targetIndex = Math.min(digits.length, 5);
+        document.getElementById('otp-box-' + targetIndex)?.focus();
+    }
+
+    function updateOtpMaster() {
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+            const box = document.getElementById('otp-box-' + i);
+            if (box && box.value) {
+                code += box.value;
+            }
+        }
+        const master = document.getElementById('otpMasterHidden');
+        if (master) {
+            master.value = code;
+            master.dispatchEvent(new Event('change', { bubbles: true }));
+            master.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    // Auto-focus first box on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const firstBox = document.getElementById('otp-box-0');
+        if (firstBox && !firstBox.value) {
+            setTimeout(() => firstBox.focus(), 150);
+        }
+    });
+</script>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<string>>? ValueExpression { get; set; }
+    [Parameter] public Expression<Func<object?>>? ValidationFor { get; set; }
+    [Parameter] public bool Disabled { get; set; } = false;
+}

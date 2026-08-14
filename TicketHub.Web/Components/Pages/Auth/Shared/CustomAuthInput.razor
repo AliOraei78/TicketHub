@@ -1,28 +1,50 @@
-﻿<div>
+@namespace TicketHub.Web.Components.Pages.Auth.Shared
+@using System.Linq.Expressions
+
+<div class="space-y-1.5">
     @if (!string.IsNullOrEmpty(Label))
     {
-        <label class="block text-sm font-medium @LabelClass mb-1.5">@Label</label>
+        <label class="block text-xs font-bold text-slate-300">@Label</label>
     }
-    <div class="relative">
+    <div class="field-spark-wrap relative rounded-2xl">
         <InputText Value="@Value"
                    ValueChanged="ValueChanged"
                    ValueExpression="ValueExpression"
                    type="@Type"
                    disabled="@Disabled"
-                   class="@($"w-full {(HasIcon ? "pl-4 pr-11" : "px-4")} py-3 {InputClass} transition-all sm:text-sm")"
+                   id="@Id"
+                   class="@($"w-full {(HasIcon ? "pr-11" : "pr-4")} {(IsPasswordField ? "pl-11" : "pl-4")} py-3 bg-[#030714]/80 border border-slate-700/60 hover:border-cyan-500/40 focus:border-cyan-400 rounded-2xl text-slate-100 placeholder-slate-500 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] backdrop-blur-md")"
                    placeholder="@Placeholder"
                    dir="@Dir" />
 
         @if (Icon != null)
         {
-            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500">
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
                 @Icon
             </div>
         }
+
+        @if (IsPasswordField)
+        {
+            <button type="button"
+                    tabindex="-1"
+                    title="تغییر وضعیت نمایش رمز عبور"
+                    onclick="const wrap = this.closest('.field-spark-wrap'); const input = wrap.querySelector('input'); const isPass = input.type === 'password'; input.type = isPass ? 'text' : 'password'; this.querySelector('.eye-open').classList.toggle('hidden', isPass); this.querySelector('.eye-closed').classList.toggle('hidden', !isPass);"
+                    class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 hover:text-cyan-300 transition-colors cursor-pointer focus:outline-none z-10">
+                <svg class="eye-open h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg class="eye-closed h-4.5 w-4.5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+            </button>
+        }
     </div>
+
     @if (ValidationFor != null && !HideInlineError)
     {
-        <ValidationMessage For="ValidationFor" class="@($"text-xs {ErrorClass} mt-1.5")" />
+        <ValidationMessage For="ValidationFor" class="text-xs text-rose-400 mt-1" />
     }
     @if (!string.IsNullOrEmpty(HelperText))
     {
@@ -31,6 +53,7 @@
 </div>
 
 @code {
+    [Parameter] public string? Id { get; set; }
     [Parameter] public string? Label { get; set; }
     [Parameter] public string Value { get; set; } = "";
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
@@ -41,17 +64,9 @@
     [Parameter] public RenderFragment? Icon { get; set; }
     [Parameter] public Expression<Func<object?>>? ValidationFor { get; set; }
     [Parameter] public string? HelperText { get; set; }
-    [Parameter] public bool IsDark { get; set; } = true;
     [Parameter] public Expression<Func<string>>? ValueExpression { get; set; }
     [Parameter] public bool HideInlineError { get; set; } = false;
 
+    private bool IsPasswordField => Type == "password";
     private bool HasIcon => Icon != null;
-
-    private string LabelClass => IsDark ? "text-slate-300" : "text-slate-700";
-
-    private string InputClass => IsDark
-            ? "bg-slate-950/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
-            : "bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800";
-
-    private string ErrorClass => IsDark ? "text-rose-400" : "text-rose-500";
 }

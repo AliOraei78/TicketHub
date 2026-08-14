@@ -28,7 +28,7 @@ public partial class ConfirmEmail : ComponentBase
     protected bool isSuccess = false;
     protected string errorMessage = string.Empty;
     protected string successMessage = string.Empty;
-    protected int _remainingSeconds = 120;
+    protected int _remainingSeconds = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,35 +47,16 @@ public partial class ConfirmEmail : ComponentBase
             return;
         }
 
-        // جلوگیری از اجرای منطق لود اولیه در زمان سابمیت فرم
-        if (HttpContext?.Request.Method == "POST")
+        // محاسبه دقیق زمان باقی‌مانده انقضای توکن بر اساس دیتابیس
+        if (user.TokenExpiration.HasValue && user.TokenExpiration.Value > DateTime.UtcNow)
         {
-            if (user.TokenExpiration.HasValue && user.TokenExpiration.Value > DateTime.UtcNow)
-            {
-                var remaining = (int)Math.Ceiling((user.TokenExpiration.Value - DateTime.UtcNow).TotalSeconds);
-                StartTimer(remaining);
-            }
-            else
-            {
-                StartTimer(0);
-            }
-            return;
-        }
-
-        if (!user.TokenExpiration.HasValue || user.TokenExpiration.Value <= DateTime.UtcNow)
-        {
-            await ResendCode();
+            var remaining = (int)Math.Ceiling((user.TokenExpiration.Value - DateTime.UtcNow).TotalSeconds);
+            _remainingSeconds = remaining;
         }
         else
         {
-            var remaining = (int)Math.Ceiling((user.TokenExpiration.Value - DateTime.UtcNow).TotalSeconds);
-            StartTimer(remaining);
+            _remainingSeconds = 0;
         }
-    }
-
-    private void StartTimer(int seconds = 120)
-    {
-        _remainingSeconds = seconds;
     }
 
     protected async Task VerifyCode()
@@ -103,8 +84,9 @@ public partial class ConfirmEmail : ComponentBase
 
             if (user.TokenExpiration.HasValue && user.TokenExpiration.Value < DateTime.UtcNow)
             {
-                errorMessage = "کد تایید منقضی شده است. لطفا مجددا درخواست کنید.";
+                errorMessage = "کد تایید منقضی شده است. لطفاً بر روی ارسال مجدد کد کلیک کنید.";
                 isProcessing = false;
+                _remainingSeconds = 0;
                 return;
             }
 
@@ -112,7 +94,7 @@ public partial class ConfirmEmail : ComponentBase
             if (!isConfirmed)
             {
                 Logger.LogWarning("کد تایید نامعتبر برای ایمیل {Email} وارد شد.", Email);
-                errorMessage = "کد وارد شده نامعتبر است.";
+                errorMessage = "کد وارد شده نامعتبر یا اشتباه است.";
                 isProcessing = false;
                 return;
             }
@@ -160,14 +142,18 @@ public partial class ConfirmEmail : ComponentBase
                 return;
             }
 
-            await UserService.ResendConfirmationCodeAsync(Email!);
-            Logger.LogInformation("کد تایید جدید برای ایمیل {Email} ارسال شد.", Email);
-
-            verifyModel.Code = string.Empty;
-            successMessage = "کد جدید با موفقیت به ایمیل شما ارسال شد.";
-
-            // شروع دقیق از 120 ثانیه
-            StartTimer(120);
+            var result = await UserService.ResendConfirmationCodeAsync(Email!);
+            if (result.Success)
+            {
+                verifyModel.Code = string.Empty;
+                successMessage = result.Message ?? "کد جدید با موفقیت به ایمیل شما ارسال شد.";
+                _remainingSeconds = result.RemainingSeconds;
+            }
+            else
+            {
+                errorMessage = result.Message ?? "امکان ارسال مجدد کد در حال حاضر وجود ندارد.";
+                _remainingSeconds = result.RemainingSeconds;
+            }
         }
         catch (NavigationException)
         {

@@ -2362,5 +2362,139 @@ jdp-container .jdp-btn-close {
     display: block;
 }
 
+/* ==========================================================================
+   CYBER AUTH SPLIT-SCREEN & ADVANCED AUTHENTICATION STYLES
+   ========================================================================== */
+
+.auth-split-chassis {
+    background: radial-gradient(circle at 15% 20%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%),
+                #030712;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.auth-glass-card {
+    background: rgba(7, 12, 26, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9),
+                0 0 35px rgba(56, 189, 248, 0.12),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.auth-showcase-card {
+    background: linear-gradient(145deg, rgba(6, 11, 24, 0.92) 0%, rgba(3, 7, 18, 0.96) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8),
+                inset 0 0 30px rgba(56, 189, 248, 0.05);
+}
+
+/* Holographic Rotating Energy Orb */
+.auth-holo-orb {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-holo-orb::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px dashed rgba(56, 189, 248, 0.5);
+    animation: authSpinClockwise 14s linear infinite;
+}
+
+.auth-holo-orb::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    border: 1.5px dotted rgba(99, 102, 241, 0.4);
+    animation: authSpinCounter 20s linear infinite;
+}
+
+@keyframes authSpinClockwise {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes authSpinCounter {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+/* Discrete 6-Digit OTP Box */
+.otp-digit-box {
+    width: 3.25rem;
+    height: 3.75rem;
+    text-align: center;
+    font-family: monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(3, 7, 18, 0.8);
+    border: 1.5px solid rgba(56, 189, 248, 0.3);
+    border-radius: 1rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 10px rgba(56, 189, 248, 0.1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+
+.otp-digit-box:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), inset 0 0 8px rgba(56, 189, 248, 0.2);
+    transform: translateY(-2px) scale(1.05);
+    background: rgba(7, 16, 38, 0.95);
+    color: #ffffff;
+}
+
+.otp-digit-box.filled {
+    border-color: rgba(16, 185, 129, 0.6);
+    color: #34d399;
+    background: rgba(6, 24, 16, 0.6);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+@media (max-width: 640px) {
+    .otp-digit-box {
+        width: 2.6rem;
+        height: 3.2rem;
+        font-size: 1.25rem;
+        border-radius: 0.75rem;
+    }
+}
+
+/* ==========================================================================
+   BROWSER AUTOFILL DARK THEME OVERRIDES
+   ========================================================================== */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #040817 inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    caret-color: #38bdf8 !important;
+    transition: background-color 5000s ease-in-out 0s;
+    border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
+input:autofill {
+    background-color: #040817 !important;
+    color: #f1f5f9 !important;
+}
+
+
 
 

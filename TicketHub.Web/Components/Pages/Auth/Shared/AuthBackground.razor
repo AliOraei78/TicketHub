@@ -1,34 +1,67 @@
-﻿<div class="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden py-12">
-    <!-- Background Blobs -->
-    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
-    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-slate-800/50 rounded-full filter blur-[120px]"></div>
+@namespace TicketHub.Web.Components.Pages.Auth.Shared
 
-    <div class="relative z-10 w-full max-w-md px-6">
-        @if (ShowHeader)
-        {
-            <div class="text-center mb-8">
-                @if (ShowLogo)
+<div class="auth-split-chassis min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 select-none relative" dir="rtl">
+    <!-- Background Tactical Grid & Laser Glows -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute inset-0 cyber-command-grid opacity-35"></div>
+        <div class="absolute top-0 right-1/4 w-[600px] h-[300px] bg-indigo-600/15 blur-[150px] rounded-full"></div>
+        <div class="absolute bottom-0 left-1/3 w-[500px] h-[300px] bg-cyan-600/15 blur-[150px] rounded-full"></div>
+    </div>
+
+    <!-- Main Split-Screen Chassis Container -->
+    <div class="relative z-10 w-full max-w-6xl auth-glass-card rounded-3xl p-4 sm:p-6 lg:p-8 my-auto overflow-hidden">
+        
+        <!-- Mobile Miniature Branding Header (Hidden on Desktop) -->
+        <div class="lg:hidden text-center mb-6 pt-2">
+            <div class="inline-flex items-center gap-3 bg-[#040816]/90 px-4 py-2 rounded-2xl border border-cyan-500/30 shadow-[0_0_15px_rgba(56,189,248,0.25)] mb-3">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <span class="font-black text-white font-mono text-sm tracking-wide">TICKETHUB</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            @if (!string.IsNullOrEmpty(Title))
+            {
+                <h2 class="text-xl font-black text-white">@Title</h2>
+            }
+            @if (!string.IsNullOrEmpty(Subtitle))
+            {
+                <p class="text-xs text-slate-400 mt-1">@Subtitle</p>
+            }
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+            <!-- Left Column: Holographic Cyber Showcase (Visible on Desktop) -->
+            <div class="lg:col-span-5 h-full">
+                <AuthShowcasePanel BadgeText="@BadgeText" Title="@ShowcaseTitle" Subtitle="@ShowcaseSubtitle" />
+            </div>
+
+            <!-- Right Column: Interactive Glassmorphic Form Card -->
+            <div class="lg:col-span-7 flex flex-col justify-center bg-[#040817]/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
+                <!-- Laser Top Edge Sweep -->
+                <div class="cyber-laser-sweep"></div>
+
+                @if (ShowHeader)
                 {
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 transform hover:scale-105 transition-transform duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
-                        </svg>
+                    <div class="hidden lg:block mb-6 text-right">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono font-bold text-cyan-300 mb-2">
+                            <span>[AUTH // ACCESS_PANEL]</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Title))
+                        {
+                            <h2 class="text-2xl font-black text-white tracking-tight">@Title</h2>
+                        }
+                        @if (!string.IsNullOrEmpty(Subtitle))
+                        {
+                            <p class="text-xs text-slate-400 mt-1 font-medium leading-relaxed">@Subtitle</p>
+                        }
                     </div>
                 }
-                @if (!string.IsNullOrEmpty(Title))
-                {
-                    <h2 class="text-3xl font-black text-white tracking-tight">@Title</h2>
-                }
-                @if (!string.IsNullOrEmpty(Subtitle))
-                {
-                    <p class="mt-2 text-sm text-slate-400 font-medium">@Subtitle</p>
-                }
-            </div>
-        }
 
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-            @ChildContent
+                @ChildContent
+            </div>
         </div>
     </div>
 </div>
@@ -39,4 +72,7 @@
     [Parameter] public string? Subtitle { get; set; }
     [Parameter] public bool ShowLogo { get; set; } = false;
     [Parameter] public bool ShowHeader { get; set; } = true;
+    [Parameter] public string BadgeText { get; set; } = "SYSTEM_SECURITY // ONLINE";
+    [Parameter] public string ShowcaseTitle { get; set; } = "سامانه مدیریت یکپارچه تیکت‌هاب";
+    [Parameter] public string ShowcaseSubtitle { get; set; } = "دسترسی ایمن و پرسرعت به پنل هوشمند پشتیبانی و عملیات سازمان";
 }

@@ -1,0 +1,94 @@
+@namespace TicketHub.Web.Components.Pages.Auth.Shared
+
+<div class="hidden lg:flex flex-col justify-between p-10 xl:p-12 auth-showcase-card rounded-3xl relative overflow-hidden h-full select-none">
+    <!-- Ambient Holographic Glows -->
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <!-- Tactical Top Status -->
+    <div class="relative z-10 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-pink-500 flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.4)]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-indigo-300 font-mono tracking-tight">TICKETHUB</h1>
+                <p class="text-[9px] font-mono text-cyan-400 tracking-widest uppercase">ENTERPRISE PORTAL</p>
+            </div>
+        </div>
+
+        <div class="inline-flex items-center gap-2 bg-[#030814]/90 px-3 py-1.5 rounded-xl border border-emerald-500/30 text-emerald-300 text-[11px] font-mono shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="font-bold">SEC_NODE // ACTIVE</span>
+        </div>
+    </div>
+
+    <!-- Centerpiece: Holographic Energy Core & Showcase Highlights -->
+    <div class="relative z-10 my-auto py-8 flex flex-col items-center text-center">
+        <!-- Hologram Rotating Orb -->
+        <div class="auth-holo-orb mb-8 bg-slate-950/80 shadow-[0_0_40px_rgba(56,189,248,0.25)] border border-cyan-500/30">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-500/20 via-indigo-500/30 to-purple-500/20 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-300 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="space-y-2 mb-8">
+            <span class="text-[10px] font-mono font-bold text-cyan-400 tracking-wider bg-cyan-950/60 border border-cyan-500/30 px-3 py-1 rounded-full uppercase">@BadgeText</span>
+            <h2 class="text-2xl xl:text-3xl font-black text-white leading-tight">@Title</h2>
+            <p class="text-xs xl:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">@Subtitle</p>
+        </div>
+
+        <!-- Floating Feature Badges -->
+        <div class="grid grid-cols-1 gap-3 w-full max-w-md text-right">
+            <div class="flex items-center gap-3.5 p-3 rounded-2xl bg-[#070e22]/70 border border-white/[0.08] hover:border-cyan-500/40 transition-all shadow-md">
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0 text-cyan-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-xs font-bold text-white">اتوماسیون هوشمند جریان کاری</h4>
+                    <p class="text-[11px] text-slate-400 truncate">گردش کار پیشرفته و مدیریت خودکار تیکت‌ها</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3.5 p-3 rounded-2xl bg-[#070e22]/70 border border-white/[0.08] hover:border-indigo-500/40 transition-all shadow-md">
+                <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-xs font-bold text-white">امنیت چندلایه و محافظت داده‌ها</h4>
+                    <p class="text-[11px] text-slate-400 truncate">رمزنگاری پیشرفته و تفکیک دسترسی‌ها</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Telemetry Footer -->
+    <div class="relative z-10 pt-4 border-t border-white/[0.08] flex items-center justify-between text-[11px] font-mono text-slate-400">
+        <div class="flex items-center gap-2">
+            <span>UPTIME:</span>
+            <span class="text-cyan-400 font-bold">99.99%</span>
+            <span class="text-slate-600">//</span>
+            <span>LATENCY:</span>
+            <span class="text-emerald-400 font-bold">14ms</span>
+        </div>
+        <div class="text-slate-500">TICKETHUB v2.5</div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string BadgeText { get; set; } = "SYSTEM_SECURITY // ONLINE";
+    [Parameter] public string Title { get; set; } = "سامانه مدیریت یکپارچه تیکت‌هاب";
+    [Parameter] public string Subtitle { get; set; } = "دسترسی ایمن و پرسرعت به پنل هوشمند پشتیبانی و عملیات سازمان";
+}

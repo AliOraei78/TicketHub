@@ -286,9 +286,38 @@ public class UserService : IUserService
 
         var user = await _userRepository.GetByIdAsync(userId);
 
-        if (user == null || user.ConfirmationToken != token || user.TokenExpiration < DateTime.UtcNow)
+        if (user == null || string.IsNullOrEmpty(user.ConfirmationToken))
         {
-            _logger.LogWarning("تایید حساب ناموفق: کاربر یافت نشد یا توکن نامعتبر/منقضی برای کاربر {UserId}.", userId);
+            _logger.LogWarning("تایید حساب ناموفق: کاربر یا توکن یافت نشد برای شناسه {UserId}.", userId);
+            return false;
+        }
+
+        if (user.TokenExpiration.HasValue && user.TokenExpiration.Value < DateTime.UtcNow)
+        {
+            _logger.LogWarning("تایید حساب ناموفق: توکن منقضی شده است برای کاربر {UserId}.", userId);
+            return false;
+        }
+
+        bool isTokenValid = false;
+        if (user.ConfirmationToken.StartsWith("$2") && user.ConfirmationToken.Length >= 28)
+        {
+            try
+            {
+                isTokenValid = BCrypt.Net.BCrypt.Verify(token, user.ConfirmationToken);
+            }
+            catch
+            {
+                isTokenValid = false;
+            }
+        }
+        else
+        {
+            isTokenValid = user.ConfirmationToken == token;
+        }
+
+        if (!isTokenValid)
+        {
+            _logger.LogWarning("تایید حساب ناموفق: کد وارد شده نامعتبر است برای کاربر {UserId}.", userId);
             return false;
         }
 
@@ -302,10 +331,21 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task ResendConfirmationCodeAsync(string email)
+    public async Task<(bool Success, string? Message, int RemainingSeconds)> ResendConfirmationCodeAsync(string email)
     {
         var user = await _userRepository.GetByEmailAsync(email);
-        if (user == null || user.IsConfirmed) return;
+        if (user == null || user.IsConfirmed)
+        {
+            return (false, "کاربر یافت نشد یا قبلاً تایید شده است.", 0);
+        }
+
+        // بررسی محدودیت ۲ دقیقه‌ای ارسال توکن (Anti-Spam Rate Limiter)
+        if (user.TokenExpiration.HasValue && user.TokenExpiration.Value > DateTime.UtcNow)
+        {
+            var remaining = (int)Math.Ceiling((user.TokenExpiration.Value - DateTime.UtcNow).TotalSeconds);
+            _logger.LogWarning("درخواست ارسال مجدد کد برای {Email} رد شد. توکن قبلی هنوز معتبر است ({Remaining} ثانیه باقی‌مانده).", email, remaining);
+            return (false, $"کد تایید قبلی هنوز معتبر است. لطفاً {remaining} ثانیه دیگر مجدداً تلاش کنید.", remaining);
+        }
 
         string rawCode = new Random().Next(100000, 999999).ToString();
         user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);
@@ -322,6 +362,9 @@ public class UserService : IUserService
         </div>";
 
         await _emailService.SendEmailAsync(user.Email, "کد تایید جدید تیکت‌هاب", emailBody);
+        _logger.LogInformation("کد تایید جدید برای {Email} با انقضای ۲ دقیقه‌ای با موفقیت ارسال شد.", email);
+
+        return (true, "کد تایید جدید با موفقیت به ایمیل شما ارسال شد.", 120);
     }
 
 
@@ -341,9 +384,10 @@ public class UserService : IUserService
         {
             _logger.LogWarning("ورود متوقف شد: ایمیل {Email} تایید نشده است.", model.Email);
 
+            // فقط در صورتی که توکن قبلاً منقضی شده باشد کد جدید ارسال می‌شود
             if (!user.TokenExpiration.HasValue || user.TokenExpiration.Value <= DateTime.UtcNow)
             {
-                _logger.LogInformation("تولید و ارسال مجدد کد تایید برای ایمیل {Email}.", model.Email);
+                _logger.LogInformation("تولید و ارسال کد تایید جدید برای ایمیل {Email} (به علت انقضای کد قبلی).", model.Email);
 
                 string rawCode = new Random().Next(100000, 999999).ToString();
                 user.ConfirmationToken = BCrypt.Net.BCrypt.HashPassword(rawCode);

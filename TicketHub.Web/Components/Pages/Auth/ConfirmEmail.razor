@@ -1,8 +1,15 @@
-﻿@page "/confirm-email"
+@page "/confirm-email"
 @layout TicketHub.Web.Components.Layout.AuthLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 
-<AuthBackground ShowHeader="false">
+<PageTitle>تایید آدرس ایمیل | تیکت‌هاب</PageTitle>
+
+<AuthBackground Title="تایید آدرس ایمیل"
+                Subtitle="کد ۶ رقمی ارسال‌شده به ایمیل خود را در کادرهای زیر وارد کنید."
+                BadgeText="SECURITY // 2FA_VERIFY"
+                ShowcaseTitle="تایید هویت و ایمن‌سازی دسترسی"
+                ShowcaseSubtitle="لایه امنیتی اختصاصی تیکت‌هاب جهت احراز صحت آدرس ایمیل و حفاظت از دسترسی‌های سازمانی">
+
     <VerificationUI TModel="VerifyViewModel"
                     Model="verifyModel"
                     FormName="verifyForm"
@@ -10,55 +17,93 @@
                     IsProcessing="isProcessing"
                     ErrorMessage="@errorMessage"
                     SuccessMessage="@successMessage"
-                    SubmitButtonText="تایید حساب کاربری"
-                    OnSubmit="HandleFormSubmit" >
+                    SubmitButtonText="تایید و ورود به سامانه"
+                    OnSubmit="HandleFormSubmit">
+
+        <!-- بخش پیام موفقیت با انیمیشن درخشان -->
         <SuccessTemplate>
-            <div class="text-center">
-                <div class="text-emerald-400 mb-4 bg-emerald-400/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
-                    <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            <div class="text-center py-6 animate-[fadeIn_0.3s_ease-out]">
+                <div class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 border border-emerald-400 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                        <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-bold text-white mb-2">حساب کاربری تایید شد</h3>
-                <p class="text-slate-400 mb-6 leading-relaxed">
-                    ایمیل شما با موفقیت تایید شد.<br />
-                    تا <span class="font-bold text-blue-400 text-lg">@redirectCountdown ثانیه</span> دیگر به صفحه ورود منتقل می‌شوید...
+
+                <h3 class="text-2xl font-black text-white mb-2">حساب کاربری با موفقیت فعال شد!</h3>
+                <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                    ایمیل شما تایید شد.<br />
+                    تا <span class="font-bold font-mono text-cyan-300 text-lg bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40">@redirectCountdown</span> ثانیه دیگر به صفحه ورود منتقل می‌شوید...
                 </p>
-                <a href="/login" class="inline-flex justify-center items-center py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg w-full">
-                    بازگشت به صفحه ورود
+
+                <a href="/login" class="inline-flex justify-center items-center gap-2 py-3.5 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 transition-all shadow-[0_0_20px_rgba(56,189,248,0.35)] w-full">
+                    <span>انتقال مستقیم به صفحه ورود</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
                 </a>
             </div>
         </SuccessTemplate>
+
+        <!-- سرتیتر فرم تایید ایمیل -->
         <HeaderTemplate>
-            <div class="text-center">
-                <h3 class="text-2xl font-bold text-white mb-2">تایید ایمیل</h3>
-                <p class="text-slate-400 mb-6">کد ۶ رقمی ارسال شده به <strong>@Email</strong> را وارد کنید.</p>
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono font-bold text-cyan-300 mb-3">
+                    <span>[OTP // 6_DIGIT_PIN]</span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white mb-2">تایید آدرس ایمیل</h3>
+                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                    کد امنیتی ۶ رقمی ارسال‌شده به آدرس
+                    <span class="font-bold text-cyan-300 font-mono" dir="ltr">@Email</span>
+                    را وارد نمایید.
+                </p>
             </div>
         </HeaderTemplate>
-        <FormFields>
-            <CustomAuthInput @bind-Value="verifyModel.Code"
-                             Placeholder="------"
-                             Dir="ltr"
-                             ValidationFor="() => verifyModel.Code" />
-        </FormFields>
-        <TimerSection>
-            <!-- مدیریت وضعیت با Alpine.js -->
-            <div x-data="{ seconds: @_remainingSeconds }" x-init="setInterval(() => { if (seconds > 0) seconds--; }, 1000)">
 
-                <div x-show="seconds > 0" style="@(_remainingSeconds <= 0 ? "display: none;" : null)">
-                    <p class="text-sm text-slate-400">
-                        زمان باقی‌مانده تا انقضای کد:
-                        <span class="text-blue-400 font-mono font-bold" x-text="String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')"></span>
-                    </p>
+        <!-- فیلد ورودی ۶ رقمی مجزای OTP -->
+        <FormFields>
+            <OtpInput @bind-Value="verifyModel.Code"
+                      ValidationFor="() => verifyModel.Code"
+                      Disabled="@isProcessing" />
+        </FormFields>
+
+        <!-- تایمر دایره‌ای انرژی و دکمه ارسال مجدد با Alpine.js -->
+        <TimerSection>
+            <div x-data="{ seconds: @_remainingSeconds }"
+                 x-init="setInterval(() => { if (seconds > 0) seconds--; }, 1000)"
+                 class="w-full flex flex-col items-center">
+
+                <div x-show="seconds > 0"
+                     style="@(_remainingSeconds <= 0 ? "display: none;" : null)"
+                     class="flex items-center gap-2 text-xs text-slate-400">
+                    <svg class="w-4 h-4 text-cyan-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>زمان باقی‌مانده تا انقضای کد:</span>
+                    <span class="text-cyan-300 font-mono font-bold text-sm bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/30 shadow-[0_0_8px_rgba(56,189,248,0.3)]"
+                          x-text="String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')"></span>
                 </div>
 
-                <div x-show="seconds <= 0" style="@(_remainingSeconds > 0 ? "display: none;" : null)">
-                    <p class="text-sm text-rose-400 mb-2">کد منقضی شده است.</p>
-                    <!-- این دکمه حالا به عنوان بخشی از EditForm اصلی ارسال می‌شود -->
-                    <button type="submit" name="Action" value="Resend" disabled="@isProcessing" class="text-sm text-blue-400 hover:text-blue-300 font-bold transition-colors form-control-btn">
-                        ارسال مجدد کد تایید
+                <div x-show="seconds <= 0"
+                     style="@(_remainingSeconds > 0 ? "display: none;" : null)"
+                     class="flex flex-col items-center gap-2">
+                    <span class="text-xs text-rose-400 font-medium">کد امنیتی منقضی شده است.</span>
+                    <button type="submit"
+                            name="Action"
+                            value="Resend"
+                            disabled="@isProcessing"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#050b1d] hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 text-xs font-bold text-cyan-300 hover:text-cyan-200 shadow-md hover:shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>ارسال مجدد کد تایید</span>
                     </button>
                 </div>
-
             </div>
         </TimerSection>
+
     </VerificationUI>
+
 </AuthBackground>

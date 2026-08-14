@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using TicketHub.Application.Validations;
 
 namespace TicketHub.Application.Models;
@@ -11,4 +11,6 @@ public class LoginViewModel
 
     [Required(ErrorMessage = "وارد کردن رمز عبور الزامی است")]
     public string Password { get; set; } = "";
+
+    public bool RememberMe { get; set; } = false;
 }

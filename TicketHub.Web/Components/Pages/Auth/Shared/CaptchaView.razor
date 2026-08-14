@@ -1,29 +1,38 @@
-﻿<div class="flex flex-col gap-2 my-3">
-    <label class="text-xs text-slate-300">کد امنیتی</label>
+@namespace TicketHub.Web.Components.Pages.Auth.Shared
 
-    <div class="flex items-center gap-2">
-        <!-- باکس تصویر کپچا -->
-        <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center justify-center min-w-[120px] h-[50px] overflow-hidden">
-            <img id="dntCaptchaImg" src="" alt="کد امنیتی" class="w-full h-full object-cover cursor-pointer" onclick="loadDntCaptcha()" title="برای تغییر کپچا کلیک کنید" />
+<div class="space-y-1.5 my-3 select-none">
+    <label class="block text-xs font-bold text-slate-300">کد امنیتی</label>
+
+    <div class="flex items-center gap-2.5">
+        <!-- باکس تصویر کپچا با کادر سایبری -->
+        <div class="bg-[#020612] p-1 rounded-2xl border border-cyan-500/30 shadow-[0_0_12px_rgba(56,189,248,0.15)] flex items-center justify-center min-w-[130px] h-[48px] overflow-hidden flex-shrink-0 cursor-pointer group" onclick="loadDntCaptcha()" title="جهت دریافت کد جدید کلیک کنید">
+            <img id="dntCaptchaImg" src="" alt="کد امنیتی" class="w-full h-full object-contain rounded-xl group-hover:scale-105 transition-transform" />
         </div>
 
-        <!-- دکمه رفرش (دریافت مجدد تصویر بدون رفرش صفحه) -->
-        <button type="button" onclick="loadDntCaptcha()" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 text-slate-300 transition-colors" title="تغییر کد">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+        <!-- دکمه رفرش با انیمیشن چرخش ۳۶۰ درجه -->
+        <button type="button"
+                onclick="loadDntCaptcha()"
+                class="w-[48px] h-[48px] flex items-center justify-center bg-[#050b1d] hover:bg-cyan-950/80 rounded-2xl border border-slate-700/80 hover:border-cyan-400 text-slate-400 hover:text-cyan-300 shadow-md hover:shadow-[0_0_15px_rgba(56,189,248,0.35)] transition-all flex-shrink-0 cursor-pointer group focus:outline-none"
+                title="تغییر کد امنیتی">
+            <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
         </button>
+
+        <!-- فیلد ورودی کاربر -->
+        <div class="field-spark-wrap relative rounded-2xl flex-1">
+            <input type="text"
+                   id="CaptchaInputText"
+                   name="CaptchaInputText"
+                   class="w-full bg-[#030714]/80 border border-slate-700/60 hover:border-cyan-500/40 focus:border-cyan-400 rounded-2xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] text-left font-mono font-bold tracking-widest backdrop-blur-md"
+                   placeholder="------"
+                   dir="ltr"
+                   autocomplete="off"
+                   required />
+        </div>
     </div>
 
     <!-- فیلدهای مخفی برای انتقال توکن‌های رمزنگاری شده به سمت سرور -->
     <input type="hidden" id="DNTCaptchaText" name="DNTCaptchaText" />
     <input type="hidden" id="DNTCaptchaToken" name="DNTCaptchaToken" />
-
-    <!-- فیلد ورودی کاربر -->
-    <input type="text"
-           id="CaptchaInputText"
-           name="CaptchaInputText"
-           class="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-left"
-           placeholder="اعداد تصویر را وارد کنید"
-           dir="ltr"
-           autocomplete="off"
-           required />
 </div>
