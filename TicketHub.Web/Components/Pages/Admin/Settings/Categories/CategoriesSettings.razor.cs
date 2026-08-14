@@ -23,6 +23,11 @@ public partial class CategoriesSettings
     private bool showDeleteModal = false;
     private CategoryDto? categoryToDelete;
 
+    // Telemetry Statistics
+    private int TotalCategoriesCount => CatState.Value.Categories?.Count() ?? 0;
+    private int ActiveCategoriesCount => CatState.Value.Categories?.Count(c => c.IsActive) ?? 0;
+    private int InactiveCategoriesCount => CatState.Value.Categories?.Count(c => !c.IsActive) ?? 0;
+
     private IEnumerable<CategoryDto> FilteredCategories =>
         CatState.Value.Categories
             .Where(c => string.IsNullOrWhiteSpace(CatState.Value.SearchTerm) || c.Name.Contains(CatState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))

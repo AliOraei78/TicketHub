@@ -57,7 +57,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<TicketFieldsSettings>();
 
             // Assert page header
-            Assert.NotNull(cut.Find("h3:contains('لیست فیلدها')"));
+            Assert.NotNull(cut.Find("h1:contains('مدیریت فیلدهای داینامیک تیکت')"));
         }
 
         [Fact]

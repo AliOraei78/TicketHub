@@ -50,8 +50,8 @@ namespace TicketHub.Tests.bUnit
         {
             var cut = Render<CategoriesSettings>();
 
-            // Assert page header and grid title
-            Assert.NotNull(cut.Find("h3:contains('لیست انواع تیکت')"));
+            // Assert page header
+            Assert.NotNull(cut.Find("h1:contains('مدیریت انواع تیکت‌های سیستم')"));
         }
 
         [Fact]

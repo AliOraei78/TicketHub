@@ -115,8 +115,8 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<PermissionsSettings>();
 
             // Act
-            var filter = cut.FindComponent<GenericStatusFilter<bool?>>();
-            filter.InvokeAsync(() => filter.Instance.OnValueChanged.InvokeAsync(true));
+            var activeButton = cut.Find("button:contains('فعال')");
+            activeButton.Click();
 
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetPermissionFilterStatusAction>(a => a.Status == true)), Times.Once);

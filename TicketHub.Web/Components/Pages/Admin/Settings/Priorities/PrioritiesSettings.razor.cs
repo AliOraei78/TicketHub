@@ -23,6 +23,11 @@ public partial class PrioritiesSettings
     protected bool showDeleteModal = false;
     protected PriorityDto? itemToDelete;
 
+    // Telemetry Statistics
+    protected int TotalPrioritiesCount => PriState.Value.Priorities?.Count() ?? 0;
+    protected int ActivePrioritiesCount => PriState.Value.Priorities?.Count(p => p.IsActive) ?? 0;
+    protected int InactivePrioritiesCount => PriState.Value.Priorities?.Count(p => !p.IsActive) ?? 0;
+
     protected IEnumerable<PriorityDto> FilteredPriorities =>
         PriState.Value.Priorities
         .Where(p => string.IsNullOrWhiteSpace(PriState.Value.SearchTerm) || p.Name.Contains(PriState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))

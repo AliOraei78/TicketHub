@@ -22,6 +22,11 @@ public partial class StatusesSettings
     protected bool showDeleteModal = false;
     protected StatusDto? statusToDelete;
 
+    // Telemetry Statistics
+    protected int TotalStatusesCount => StatState.Value.Statuses?.Count() ?? 0;
+    protected int ActiveStatusesCount => StatState.Value.Statuses?.Count(s => s.IsActive) ?? 0;
+    protected int InactiveStatusesCount => StatState.Value.Statuses?.Count(s => !s.IsActive) ?? 0;
+
     protected IEnumerable<StatusDto> FilteredStatuses =>
         StatState.Value.Statuses
         .Where(s => string.IsNullOrWhiteSpace(StatState.Value.SearchTerm) || s.Name.Contains(StatState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
