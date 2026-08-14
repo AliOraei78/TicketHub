@@ -70,7 +70,7 @@ else
             }
             else
             {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isOpen ? "rotate-180 text-cyan-400" : "text-slate-500")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-300 @(isOpen ? "rotate-180" : "text-slate-500")" style="@(isOpen ? "color: var(--cockpit-aura-primary, #38bdf8);" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             }

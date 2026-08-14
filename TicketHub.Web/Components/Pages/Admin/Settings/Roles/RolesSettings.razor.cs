@@ -22,6 +22,11 @@ public partial class RolesSettings
     protected bool showDeleteModal = false;
     protected RoleDto? roleToDelete;
 
+    // Telemetry Statistics
+    protected int TotalRolesCount => RolState.Value.Roles.Count();
+    protected int ActiveRolesCount => RolState.Value.Roles.Count(r => r.IsActive);
+    protected int InactiveRolesCount => RolState.Value.Roles.Count(r => !r.IsActive);
+
     protected IEnumerable<RoleDto> FilteredRoles =>
         RolState.Value.Roles
         .Where(r => string.IsNullOrWhiteSpace(RolState.Value.SearchTerm) || r.Name.Contains(RolState.Value.SearchTerm, StringComparison.OrdinalIgnoreCase))
