@@ -15,3 +15,4 @@ For requests involving code modification, UI design, refactoring, or feature imp
 
 ## UI & Browser Testing
 - For UI/UX visual validation, browser rendering inspection, and interactive testing, you can use Chrome DevTools MCP tools (`chrome-devtools-mcp`).
+- **Automated Authentication Requirement:** Before navigating to protected pages (such as `/`, `/tickets`, `/projects`, `/users`, `/settings/*`, `/profile`) for UI/UX testing or visual inspection in Chrome, ALWAYS authenticate first by navigating to `/dev/login` (defaults to Admin, or `/dev/login?role=support|tech|user`). This bypasses the login captcha in Development mode and establishes an active 30-day authentication session.

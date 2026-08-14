@@ -763,8 +763,10 @@
 
             const element = canvas.getAttribute('data-element') || 'none';
             const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.max(Math.floor(rect.width), 200);
-            canvas.height = Math.max(Math.floor(rect.height), 120);
+            const targetW = Math.max(Math.floor(rect.width), 200);
+            const targetH = Math.max(Math.floor(rect.height), 120);
+            if (canvas.width !== targetW) canvas.width = targetW;
+            if (canvas.height !== targetH) canvas.height = targetH;
 
             let shaderSrc = null;
             if (element === 'fire') shaderSrc = FRAGMENT_FIRE_SRC;
@@ -778,6 +780,7 @@
                 const renderer = new WebGLShaderRenderer(canvas, shaderSrc);
                 activeRenderers.set(canvas, renderer);
                 viewportObserver.observe(canvas);
+                ensureVfxLoopRunning();
             }
         });
 
@@ -787,30 +790,51 @@
             if (activeRenderers.has(canvas)) return;
             const parent = canvas.parentElement || canvas;
             const rect = parent.getBoundingClientRect();
-            canvas.width = Math.max(Math.floor(rect.width), 160);
-            canvas.height = Math.max(Math.floor(rect.height), 32);
+            const targetW = Math.max(Math.floor(rect.width), 160);
+            const targetH = Math.max(Math.floor(rect.height), 32);
+            if (canvas.width !== targetW) canvas.width = targetW;
+            if (canvas.height !== targetH) canvas.height = targetH;
             const sim = new EkgMonitorSimulator(canvas);
             activeRenderers.set(canvas, sim);
             viewportObserver.observe(canvas);
+            ensureVfxLoopRunning();
         });
     }
 
-    // Main Render Loop with Page Visibility Sleep
+    // Main Render Loop with 60 FPS Capping & Page Visibility Sleep
     let isTabVisible = !document.hidden;
     let animFrameId = null;
+    let lastVfxFrameTime = 0;
+    const VFX_FRAME_INTERVAL = 1000 / 60; // 60 FPS cap (16.6ms)
+
+    function ensureVfxLoopRunning() {
+        if (isTabVisible && !animFrameId && activeRenderers.size > 0) {
+            animFrameId = requestAnimationFrame(renderVfxLoop);
+        }
+    }
 
     document.addEventListener('visibilitychange', () => {
         isTabVisible = !document.hidden;
-        if (isTabVisible && !animFrameId) {
-            animFrameId = requestAnimationFrame(renderVfxLoop);
+        if (isTabVisible) {
+            ensureVfxLoopRunning();
+        } else {
+            animFrameId = null;
         }
     });
 
     function renderVfxLoop(now) {
-        if (!isTabVisible) {
+        if (!isTabVisible || activeRenderers.size === 0) {
             animFrameId = null;
             return;
         }
+
+        animFrameId = requestAnimationFrame(renderVfxLoop);
+
+        const delta = now - lastVfxFrameTime;
+        if (delta < VFX_FRAME_INTERVAL) {
+            return;
+        }
+        lastVfxFrameTime = now - (delta % VFX_FRAME_INTERVAL);
 
         activeRenderers.forEach((renderer, canvas) => {
             if (!document.body.contains(canvas)) {
@@ -822,9 +846,8 @@
                 renderer.render(now);
             }
         });
-        animFrameId = requestAnimationFrame(renderVfxLoop);
     }
-    animFrameId = requestAnimationFrame(renderVfxLoop);
+    ensureVfxLoopRunning();
 
     // =========================================================================
     // 4. PASSIVE RAF-THROTTLED 3D TILT & INTERACTION
@@ -991,8 +1014,13 @@
     };
 
     // --- 7. Cockpit Aura & Telemetry HUD ---
-    window.setCockpitAura = function (auraName) {
+    window.setCockpitAura = function (auraName, playSound = false) {
         const root = document.getElementById('cyber-cockpit-root') || document.documentElement;
+        const currentAura = root.getAttribute('data-aura');
+        if (currentAura === auraName && document.body.getAttribute('data-aura') === auraName) {
+            return;
+        }
+
         root.setAttribute('data-aura', auraName);
         document.documentElement.setAttribute('data-aura', auraName);
         document.body.setAttribute('data-aura', auraName);
@@ -1009,8 +1037,10 @@
             }
         });
 
-        // Trigger reactive audio feedback
-        window.playCyberSound('aura');
+        // Trigger reactive audio feedback only on explicit user click
+        if (playSound) {
+            window.playCyberSound('aura');
+        }
     };
 
     window.toggleMatrixRain = function (enabled) {
@@ -1062,7 +1092,7 @@
         try {
             savedAura = localStorage.getItem('tickethub_cockpit_aura') || 'water';
         } catch (e) { }
-        window.setCockpitAura(savedAura);
+        window.setCockpitAura(savedAura, false);
 
         // Check Matrix Rain initial state
         try {
@@ -1102,7 +1132,7 @@
         }, 3500);
     }
 
-    // --- 8. Ambient Nebula Parallax Inertia ---
+    // --- 8. Ambient Nebula Parallax Inertia with Idle Sleep ---
     let nebulaParallaxInitialized = false;
     let targetParallaxX = 0;
     let targetParallaxY = 0;
@@ -1121,15 +1151,30 @@
             const y = (e.clientY / window.innerHeight) - 0.5;
             targetParallaxX = x * 24; // Subtle 24px displacement
             targetParallaxY = y * 18;
+            if (!parallaxRafId) {
+                parallaxRafId = requestAnimationFrame(animateParallax);
+            }
         }, { passive: true });
 
         function animateParallax() {
             if (!document.hidden && container) {
-                currentParallaxX += (targetParallaxX - currentParallaxX) * 0.04;
-                currentParallaxY += (targetParallaxY - currentParallaxY) * 0.04;
-                container.style.transform = `translate3d(${currentParallaxX.toFixed(2)}px, ${currentParallaxY.toFixed(2)}px, 0)`;
+                const diffX = targetParallaxX - currentParallaxX;
+                const diffY = targetParallaxY - currentParallaxY;
+
+                if (Math.abs(diffX) > 0.02 || Math.abs(diffY) > 0.02) {
+                    currentParallaxX += diffX * 0.04;
+                    currentParallaxY += diffY * 0.04;
+                    container.style.transform = `translate3d(${currentParallaxX.toFixed(2)}px, ${currentParallaxY.toFixed(2)}px, 0)`;
+                    parallaxRafId = requestAnimationFrame(animateParallax);
+                } else {
+                    currentParallaxX = targetParallaxX;
+                    currentParallaxY = targetParallaxY;
+                    container.style.transform = `translate3d(${currentParallaxX.toFixed(2)}px, ${currentParallaxY.toFixed(2)}px, 0)`;
+                    parallaxRafId = null; // Sleep when reached equilibrium!
+                }
+            } else {
+                parallaxRafId = null;
             }
-            parallaxRafId = requestAnimationFrame(animateParallax);
         }
 
         parallaxRafId = requestAnimationFrame(animateParallax);
@@ -1150,8 +1195,17 @@
         initAll();
     }
 
+    let initAllRafId = null;
+    function debouncedInitAll() {
+        if (initAllRafId) return;
+        initAllRafId = requestAnimationFrame(() => {
+            initAll();
+            initAllRafId = null;
+        });
+    }
+
     const observer = new MutationObserver(() => {
-        initAll();
+        debouncedInitAll();
     });
 
     observer.observe(document.body, { 

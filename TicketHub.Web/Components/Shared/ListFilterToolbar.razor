@@ -1,3 +1,5 @@
+@implements IDisposable
+
 @namespace TicketHub.Web.Components.Shared
 
 <div class="relative z-30 bg-[#070c1a]/90 backdrop-blur-xl p-2.5 px-4 rounded-2xl shadow-lg border border-cyan-500/25 flex flex-wrap lg:flex-nowrap gap-3 items-start justify-between select-none @Class">
@@ -60,13 +62,37 @@
     [Parameter] public string ItemName { get; set; } = "آیتم";
     [Parameter] public List<int> PageSizeOptions { get; set; } = new() { 10, 25, 50, 100 };
     [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public int DebounceInterval { get; set; } = 250;
 
     private bool isPageSizeOpen = false;
+    private System.Threading.CancellationTokenSource? _debounceCts;
 
     protected async Task OnSearchInputChanged(ChangeEventArgs e)
     {
         var value = e.Value?.ToString() ?? string.Empty;
-        await SearchTermChanged.InvokeAsync(value);
+        if (DebounceInterval <= 0)
+        {
+            await SearchTermChanged.InvokeAsync(value);
+            return;
+        }
+
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = new System.Threading.CancellationTokenSource();
+        var token = _debounceCts.Token;
+
+        try
+        {
+            await Task.Delay(DebounceInterval, token);
+            if (!token.IsCancellationRequested)
+            {
+                await SearchTermChanged.InvokeAsync(value);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected cancellation when typing continues
+        }
     }
 
     private void TogglePageSizeDropdown()
@@ -89,5 +115,11 @@
             PageSize = newSize;
             await PageSizeChanged.InvokeAsync(newSize);
         }
+    }
+
+    public void Dispose()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
     }
 }

@@ -402,4 +402,49 @@ app.MapGet("/api/captcha", (IDNTCaptchaApiProvider apiProvider) =>
 });
 // --------------------------------------
 
+// --------- Dev Quick-Login Endpoint (Development Only) ---------
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/dev/login", async (HttpContext context, IUserService userService, string? role) =>
+    {
+        var targetEmail = role switch
+        {
+            "support" => "a@mail.com",
+            "tech" => "b@mail.com",
+            "user" => "c@mail.com",
+            _ => "a.jenabi78@gmail.com" // default: admin
+        };
+
+        var user = await userService.GetByEmailAsync(targetEmail);
+        if (user == null)
+        {
+            return Results.Problem($"User with email '{targetEmail}' was not found.");
+        }
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Email, user.Email)
+        };
+
+        foreach (var r in user.RoleNames)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, r));
+        }
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
+        });
+
+        return Results.Redirect("/");
+    });
+}
+// -----------------------------------------------------------------
+
 app.Run();

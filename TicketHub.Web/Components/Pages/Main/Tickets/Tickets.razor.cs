@@ -2,6 +2,7 @@ using Fluxor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using TicketHub.Application.DTOs;
+using TicketHub.Application.Interfaces;
 using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Main.Tickets;
@@ -12,9 +13,13 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
     [Inject] protected IDispatcher Dispatcher { get; set; } = default!;
     [Inject] protected IActionSubscriber ActionSubscriber { get; set; } = default!;
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
+    [Inject] protected IPermissionService PermissionService { get; set; } = default!;
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    protected int CurrentUserId { get; set; } = 0;
+    protected bool HasFullAccess { get; set; } = false;
 
     protected bool IsCreateModalOpen { get; set; } = false;
     protected TicketDto NewTicket { get; set; } = new TicketDto();
@@ -123,13 +128,26 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
             InvokeAsync(StateHasChanged);
         });
 
-        var authState = await AuthState;
-        var roles = authState.User.Claims
-            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
-            .Select(c => c.Value)
-            .ToList();
+        if (AuthState != null)
+        {
+            var authState = await AuthState;
+            var user = authState.User;
+            var userIdString = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                               ?? user.FindFirst("sub")?.Value;
+            CurrentUserId = int.TryParse(userIdString, out var id) ? id : 0;
 
-        Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
+            if (PermissionService != null)
+            {
+                HasFullAccess = await PermissionService.HasAccessAsync(user, "/tickets", TicketHub.Application.Enums.PermissionType.Full);
+            }
+
+            var roles = user.Claims
+                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
+            Dispatcher.Dispatch(new LoadTicketInitialDataAction(roles));
+        }
     }
 
     public void Dispose()

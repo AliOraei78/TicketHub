@@ -1,4 +1,4 @@
-﻿@typeparam TItem
+@typeparam TItem
 
 @if (Items == null)
 {
@@ -27,7 +27,18 @@ else
     <div class="@ContainerClass">
         @foreach (var item in Items)
         {
-            @ItemTemplate(item)
+            @if (KeySelector != null)
+            {
+                <div @key="KeySelector(item)" class="contents">
+                    @ItemTemplate(item)
+                </div>
+            }
+            else
+            {
+                <div @key="item" class="contents">
+                    @ItemTemplate(item)
+                </div>
+            }
         }
     </div>
 }
@@ -35,6 +46,7 @@ else
 @code {
     [Parameter, EditorRequired] public IEnumerable<TItem>? Items { get; set; }
     [Parameter, EditorRequired] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+    [Parameter] public Func<TItem, object>? KeySelector { get; set; }
 
     [Parameter] public RenderFragment? LoadingTemplate { get; set; }
     [Parameter] public RenderFragment? EmptyTemplate { get; set; }

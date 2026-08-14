@@ -111,7 +111,9 @@ public class TicketsPageTests : BUnitComponentTestBase
         var searchInput = cut.Find("input[placeholder='جستجو در عنوان تیکت‌ها...']");
         searchInput.Input("خطا");
 
-        _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetTicketFiltersAction>(a => a.SearchTerm == "خطا" && a.CurrentPage == 1)), Times.Once);
+        cut.WaitForAssertion(() =>
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetTicketFiltersAction>(a => a.SearchTerm == "خطا" && a.CurrentPage == 1)), Times.Once)
+        );
     }
 
     [Fact]

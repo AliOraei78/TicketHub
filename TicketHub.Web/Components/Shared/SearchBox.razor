@@ -1,3 +1,5 @@
+@implements IDisposable
+
 @namespace TicketHub.Web.Components.Shared
 
 <div class="relative w-full h-[46px] flex items-center @Class">
@@ -31,16 +33,47 @@
     [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
     [Parameter] public string Class { get; set; } = string.Empty;
     [Parameter] public string InputClass { get; set; } = string.Empty;
+    [Parameter] public int DebounceInterval { get; set; } = 250;
+
+    private System.Threading.CancellationTokenSource? _debounceCts;
 
     protected async Task OnInputChanged(ChangeEventArgs e)
     {
         SearchTerm = e.Value?.ToString() ?? string.Empty;
-        await OnSearchChanged.InvokeAsync(SearchTerm);
+        if (DebounceInterval <= 0)
+        {
+            await OnSearchChanged.InvokeAsync(SearchTerm);
+            return;
+        }
+
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = new System.Threading.CancellationTokenSource();
+        var token = _debounceCts.Token;
+
+        try
+        {
+            await Task.Delay(DebounceInterval, token);
+            if (!token.IsCancellationRequested)
+            {
+                await OnSearchChanged.InvokeAsync(SearchTerm);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
     }
 
     private async Task ClearSearch()
     {
+        _debounceCts?.Cancel();
         SearchTerm = string.Empty;
         await OnSearchChanged.InvokeAsync(SearchTerm);
+    }
+
+    public void Dispose()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
     }
 }

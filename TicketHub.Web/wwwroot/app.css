@@ -1458,6 +1458,13 @@ jdp-container .jdp-btn {
     position: relative;
     overflow: hidden;
     isolation: isolate;
+    contain: layout paint;
+    will-change: transform;
+}
+
+.gamer-card-3d {
+    contain: layout paint;
+    will-change: transform;
 }
 
 /* Ambient Radial Glow on Hover */

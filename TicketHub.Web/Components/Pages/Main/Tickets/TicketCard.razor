@@ -164,11 +164,24 @@
     [Parameter]
     public EventCallback<TicketDto> OnDeleteClick { get; set; }
 
-    private bool _canDelete = false;
-    private bool _canSelect = false;
+    [Parameter]
+    public bool? CanDelete { get; set; }
+
+    [Parameter]
+    public bool? CanSelect { get; set; }
+
+    private bool _canDelete => CanDelete ?? _internalCanDelete;
+    private bool _canSelect => CanSelect ?? _internalCanSelect;
+    private bool _internalCanDelete = false;
+    private bool _internalCanSelect = false;
 
     protected override async Task OnParametersSetAsync()
     {
+        if (CanDelete.HasValue && CanSelect.HasValue)
+        {
+            return;
+        }
+
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -178,8 +191,8 @@
         bool isSender = (Ticket != null && currentUserId > 0 && Ticket.UserId == currentUserId);
         bool hasFullAccess = await PermissionService.HasAccessAsync(user, "/tickets", PermissionType.Full);
 
-        _canDelete = isSender || hasFullAccess;
-        _canSelect = hasFullAccess;
+        _internalCanDelete = isSender || hasFullAccess;
+        _internalCanSelect = hasFullAccess;
     }
 
     private async Task HandleClick()
