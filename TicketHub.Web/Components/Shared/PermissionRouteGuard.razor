@@ -1,35 +1,30 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using TicketHub.Application.Interfaces
 @inject IPermissionService PermissionService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
-@if (_isChecking)
-{
-    <LoadingSpinner />
-}
-else if (_hasAccess)
-{
-    @ChildContent
-}
-else
+@if (!_isChecking && !_hasAccess)
 {
     <PageTitle>یافت نشد</PageTitle>
     <LayoutView Layout="typeof(TicketHub.Web.Components.Layout.MainLayout)">
         <NotFoundView Message="ممکن است آدرس را اشتباه وارد کرده باشید یا دسترسی لازم به این بخش را نداشته باشید." />
     </LayoutView>
 }
+else
+{
+    @ChildContent
+}
 
 @code {
     [Parameter, EditorRequired] public RouteData RouteData { get; set; } = default!;
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
 
-    private bool _isChecking = true;
-    private bool _hasAccess = false;
+    private bool _isChecking = false;
+    private bool _hasAccess = true;
 
     protected override async Task OnParametersSetAsync()
     {
-        _isChecking = true;
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
 
         var relativePath = "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0];
