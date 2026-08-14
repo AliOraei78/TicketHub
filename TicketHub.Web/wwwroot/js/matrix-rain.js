@@ -1,5 +1,5 @@
 /**
- * Lightweight Matrix Digital Rain Canvas VFX for TicketHub System Logs
+ * Lightweight Continuous Matrix Digital Rain Canvas VFX for TicketHub
  */
 window.matrixRain = {
     animationId: null,
@@ -7,22 +7,12 @@ window.matrixRain = {
     ctx: null,
     columns: 0,
     drops: [],
-    characters: '0123456789ABCDEF01010101XYZアイウエオカキクケコサシスセソタチツテト',
+    characters: '0123456789ABCDEF01010101XYZｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ',
 
     init: function (canvasId) {
         this.destroy();
         this.canvas = document.getElementById(canvasId);
         if (!this.canvas) return;
-
-        this.canvas.style.position = 'fixed';
-        this.canvas.style.top = '0';
-        this.canvas.style.left = '0';
-        this.canvas.style.width = '100vw';
-        this.canvas.style.height = '100vh';
-        this.canvas.style.maxWidth = '100vw';
-        this.canvas.style.maxHeight = '100vh';
-        this.canvas.style.pointerEvents = 'none';
-        this.canvas.style.zIndex = '0';
 
         this.ctx = this.canvas.getContext('2d');
         if (!this.ctx) return;
@@ -30,16 +20,19 @@ window.matrixRain = {
         this.resize();
         window.addEventListener('resize', this.handleResize);
 
-        var fontSize = 14;
+        var fontSize = 15;
         this.columns = Math.floor(this.canvas.width / fontSize);
         this.drops = [];
+        var maxRows = Math.floor(this.canvas.height / fontSize);
+
+        // Pre-fill drops across the entire height so rain is constantly and seamlessly flowing
         for (var i = 0; i < this.columns; i++) {
-            this.drops[i] = Math.floor(Math.random() * -100);
+            this.drops[i] = Math.floor(Math.random() * maxRows);
         }
 
         var self = this;
         var lastTime = 0;
-        var fps = 25; // Smooth but low CPU usage
+        var fps = 30;
         var interval = 1000 / fps;
 
         function draw(time) {
@@ -48,29 +41,34 @@ window.matrixRain = {
             if (delta < interval) return;
             lastTime = time - (delta % interval);
 
-            // Semi-transparent black background to create trail effect
-            self.ctx.fillStyle = 'rgba(2, 8, 4, 0.08)';
+            // Semi-transparent overlay to create continuous decaying phosphor stream trail
+            self.ctx.fillStyle = 'rgba(3, 7, 18, 0.12)';
             self.ctx.fillRect(0, 0, self.canvas.width, self.canvas.height);
 
-            self.ctx.fillStyle = '#00ff66';
-            self.ctx.font = fontSize + 'px monospace';
+            self.ctx.font = 'bold ' + fontSize + 'px monospace';
 
             for (var i = 0; i < self.drops.length; i++) {
                 var char = self.characters.charAt(Math.floor(Math.random() * self.characters.length));
                 var x = i * fontSize;
                 var y = self.drops[i] * fontSize;
 
-                // Randomly draw some leading characters brighter
-                if (Math.random() > 0.85) {
-                    self.ctx.fillStyle = '#bbf7d0'; // Light bright green head
+                // Bright leading glow char
+                if (Math.random() > 0.75) {
+                    self.ctx.fillStyle = '#ffffff';
+                    self.ctx.shadowColor = '#00ff66';
+                    self.ctx.shadowBlur = 8;
                     self.ctx.fillText(char, x, y);
-                    self.ctx.fillStyle = '#00ff66'; // Reset back to matrix green
+                    self.ctx.shadowBlur = 0;
                 } else {
+                    self.ctx.fillStyle = '#10b981';
                     self.ctx.fillText(char, x, y);
                 }
 
-                if (y > self.canvas.height && Math.random() > 0.975) {
-                    self.drops[i] = 0;
+                // Seamless continuous reset without all columns pausing or grouping together
+                if (y > self.canvas.height) {
+                    if (Math.random() > 0.96 || y > self.canvas.height + 150) {
+                        self.drops[i] = Math.floor(Math.random() * -15);
+                    }
                 }
                 self.drops[i]++;
             }
@@ -81,14 +79,15 @@ window.matrixRain = {
 
     resize: function () {
         if (!this.canvas) return;
-        this.canvas.width = document.documentElement.clientWidth || window.innerWidth;
-        this.canvas.height = document.documentElement.clientHeight || window.innerHeight;
-        var fontSize = 14;
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        var fontSize = 15;
         this.columns = Math.floor(this.canvas.width / fontSize);
+        var maxRows = Math.floor(this.canvas.height / fontSize);
         if (this.drops.length !== this.columns) {
             this.drops = [];
             for (var i = 0; i < this.columns; i++) {
-                this.drops[i] = Math.floor(Math.random() * -50);
+                this.drops[i] = Math.floor(Math.random() * maxRows);
             }
         }
     },
@@ -105,8 +104,8 @@ window.matrixRain = {
             this.animationId = null;
         }
         window.removeEventListener('resize', this.handleResize);
-        this.canvas = null;
-        this.ctx = null;
-        this.drops = [];
+        if (this.ctx && this.canvas) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }
 };

@@ -12,6 +12,9 @@
         <div class="cyber-nebula-orb orb-3"></div>
     </div>
 
+    <!-- Global Matrix Rain Canvas -->
+    <canvas id="global-matrix-rain-canvas" class="fixed inset-0 pointer-events-none z-0" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; pointer-events: none; opacity: 0.35; display: none;"></canvas>
+
     <ToastContainer />
     <SectionOutlet SectionName="RootModal" />
 
@@ -84,11 +87,11 @@
             <div class="flex items-center gap-3 relative select-none">
                 <NotificationBell />
 
-                <!-- Gamer Rank Info & Avatar -->
+                <!-- User Profile & Avatar -->
                 <div class="flex items-center gap-3 cursor-pointer group" @onclick="ToggleProfileMenu">
-                    <div class="hidden sm:flex flex-col text-left">
-                        <span class="text-xs font-bold text-slate-100 group-hover:text-cyan-300 transition-colors">کارشناس ارشد</span>
-                        <span class="text-[9px] font-mono font-bold text-cyan-400 tracking-wider">LVL 99 GM</span>
+                    <div class="hidden sm:flex flex-col items-start text-right" style="text-align: right; align-items: flex-start;">
+                        <span class="text-xs font-bold text-slate-100 group-hover:text-cyan-300 transition-colors max-w-[130px] truncate text-right">@CurrentUserName</span>
+                        <span class="text-[10px] font-bold @PrimaryRoleColorClass tracking-wider text-right">@PrimaryRoleName</span>
                     </div>
 
                     <!-- Glowing Conic Energy Ring Avatar -->
@@ -105,10 +108,14 @@
                 {
                     <div class="fixed inset-0 z-40" @onclick="ToggleProfileMenu"></div>
 
-                    <div class="absolute top-12 left-0 w-52 bg-[#090e1d]/98 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(56,189,248,0.15)] z-50 py-2 animate-[fadeIn_0.15s_ease-out]">
-                        <div class="px-4 py-2 border-b border-white/[0.08] mb-1">
-                            <p class="text-xs font-bold text-white font-mono">COMMAND AGENT</p>
-                            <p class="text-[10px] text-cyan-400/80 font-mono">STATUS: ACTIVE</p>
+                    <div class="absolute top-12 left-0 w-56 bg-[#090e1d]/98 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(56,189,248,0.15)] z-50 py-2 animate-[fadeIn_0.15s_ease-out]">
+                        <div class="px-4 py-2.5 border-b border-white/[0.08] mb-1">
+                            <p class="text-xs font-bold text-white truncate">@CurrentUserName</p>
+                            <p class="text-[10px] @PrimaryRoleColorClass font-bold mt-0.5">@PrimaryRoleName</p>
+                            @if (!string.IsNullOrWhiteSpace(CurrentUserEmail))
+                            {
+                                <p class="text-[10px] text-slate-400 font-mono truncate mt-0.5">@CurrentUserEmail</p>
+                            }
                         </div>
 
                         <a href="/profile" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800/80 hover:text-cyan-300 transition-colors" @onclick="ToggleProfileMenu">

@@ -916,10 +916,87 @@
         });
     }
 
-    // --- 6. Cockpit Aura & Telemetry HUD ---
+    // --- 6. Cyber Audio Synthesizer (Web Audio API) ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                audioCtx = new AudioContextClass();
+            }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    window.playCyberSound = function (type) {
+        try {
+            const soundEnabled = localStorage.getItem('tickethub_sound_fx') !== 'false';
+            if (!soundEnabled) return;
+
+            const ctx = getAudioContext();
+            if (!ctx) return;
+
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(900, now);
+                osc.frequency.exponentialRampToValueAtTime(1400, now + 0.04);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            } else if (type === 'aura') {
+                // Futuristic Power-Surge Sound
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(440, now + 0.3);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'toggle') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            } else if (type === 'success') {
+                // Cyber Chime
+                [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.type = 'sine';
+                    o.frequency.value = freq;
+                    o.connect(g);
+                    g.connect(ctx.destination);
+                    const startTime = now + idx * 0.06;
+                    g.gain.setValueAtTime(0.07, startTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+                    o.start(startTime);
+                    o.stop(startTime + 0.25);
+                });
+            }
+        } catch (e) { }
+    };
+
+    // --- 7. Cockpit Aura & Telemetry HUD ---
     window.setCockpitAura = function (auraName) {
         const root = document.getElementById('cyber-cockpit-root') || document.documentElement;
         root.setAttribute('data-aura', auraName);
+        document.documentElement.setAttribute('data-aura', auraName);
+        document.body.setAttribute('data-aura', auraName);
+
         try {
             localStorage.setItem('tickethub_cockpit_aura', auraName);
         } catch (e) { }
@@ -931,6 +1008,53 @@
                 btn.classList.remove('active');
             }
         });
+
+        // Trigger reactive audio feedback
+        window.playCyberSound('aura');
+    };
+
+    window.toggleMatrixRain = function (enabled) {
+        try {
+            localStorage.setItem('tickethub_matrix_rain', enabled ? 'true' : 'false');
+        } catch (e) { }
+
+        const canvas = document.getElementById('global-matrix-rain-canvas');
+        if (canvas) {
+            if (enabled) {
+                canvas.style.display = 'block';
+                if (window.matrixRain) {
+                    window.matrixRain.init('global-matrix-rain-canvas');
+                }
+            } else {
+                canvas.style.display = 'none';
+                if (window.matrixRain) {
+                    window.matrixRain.destroy();
+                }
+            }
+        }
+        window.playCyberSound('toggle');
+    };
+
+    window.toggleAmbientNebula = function (enabled) {
+        try {
+            localStorage.setItem('tickethub_ambient_nebula', enabled ? 'true' : 'false');
+        } catch (e) { }
+
+        const container = document.getElementById('cyber-ambient-nebula-container');
+        if (container) {
+            container.style.opacity = enabled ? '1' : '0';
+            container.style.transition = 'opacity 0.5s ease-in-out';
+        }
+        window.playCyberSound('toggle');
+    };
+
+    window.toggleSoundFx = function (enabled) {
+        try {
+            localStorage.setItem('tickethub_sound_fx', enabled ? 'true' : 'false');
+        } catch (e) { }
+        if (enabled) {
+            window.playCyberSound('success');
+        }
     };
 
     function initCockpitAura() {
@@ -939,6 +1063,27 @@
             savedAura = localStorage.getItem('tickethub_cockpit_aura') || 'water';
         } catch (e) { }
         window.setCockpitAura(savedAura);
+
+        // Check Matrix Rain initial state
+        try {
+            const matrixRain = localStorage.getItem('tickethub_matrix_rain') === 'true';
+            if (matrixRain) {
+                const canvas = document.getElementById('global-matrix-rain-canvas');
+                if (canvas && window.matrixRain) {
+                    canvas.style.display = 'block';
+                    window.matrixRain.init('global-matrix-rain-canvas');
+                }
+            }
+        } catch (e) { }
+
+        // Check Nebula initial state
+        try {
+            const nebula = localStorage.getItem('tickethub_ambient_nebula') !== 'false';
+            const container = document.getElementById('cyber-ambient-nebula-container');
+            if (container) {
+                container.style.opacity = nebula ? '1' : '0';
+            }
+        } catch (e) { }
     }
 
     let telemetryInterval = null;
@@ -957,7 +1102,7 @@
         }, 3500);
     }
 
-    // --- 7. Ambient Nebula Parallax Inertia ---
+    // --- 8. Ambient Nebula Parallax Inertia ---
     let nebulaParallaxInitialized = false;
     let targetParallaxX = 0;
     let targetParallaxY = 0;
