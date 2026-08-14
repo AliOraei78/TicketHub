@@ -38,23 +38,22 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
 }
 
-/* انیمیشن ورود به صفحه */
+/* انیمیشن ورود فوق‌سریع و روان به صفحه بدون لگ گرافیکی */
 @keyframes pageFadeInUp {
     0% {
         opacity: 0;
-        transform: translateY(16px) scale(0.99);
-        filter: blur(4px);
+        transform: translateY(6px);
     }
 
     100% {
         opacity: 1;
-        transform: none;
-        filter: none;
+        transform: translateY(0);
     }
 }
 
 .page-transition-enter {
-    animation: pageFadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: pageFadeInUp 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
 }
 
 /* حذف کادر مزاحم از دور عناوین صفحات هنگام لود اولیه در بلیزور */

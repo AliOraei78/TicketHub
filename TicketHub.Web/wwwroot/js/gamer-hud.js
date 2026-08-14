@@ -572,6 +572,22 @@
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
+
+        destroy() {
+            try {
+                if (this.gl) {
+                    if (this.program) {
+                        this.gl.deleteProgram(this.program);
+                    }
+                    const loseExt = this.gl.getExtension('WEBGL_lose_context');
+                    if (loseExt) {
+                        loseExt.loseContext();
+                    }
+                    this.gl = null;
+                    this.program = null;
+                }
+            } catch (e) { }
+        }
     }
 
     // --- EKG MONITOR DUAL-STROKE SIMULATOR ---
@@ -839,6 +855,9 @@
         activeRenderers.forEach((renderer, canvas) => {
             if (!document.body.contains(canvas)) {
                 viewportObserver.unobserve(canvas);
+                if (renderer && typeof renderer.destroy === 'function') {
+                    renderer.destroy();
+                }
                 activeRenderers.delete(canvas);
                 return;
             }
@@ -1313,7 +1332,11 @@
         }
     };
 
+    let cockpitAuraInitialized = false;
     function initCockpitAura() {
+        if (cockpitAuraInitialized) return;
+        cockpitAuraInitialized = true;
+
         let savedAura = 'water';
         try {
             savedAura = localStorage.getItem('tickethub_cockpit_aura') || 'water';
@@ -1449,15 +1472,19 @@
         });
     }
 
+    let stealthModeInitialized = false;
     function initStealthMode() {
-        try {
-            isStealthMode = localStorage.getItem('tickethub_stealth_mode') === 'true';
-        } catch (e) { }
+        if (!stealthModeInitialized) {
+            stealthModeInitialized = true;
+            try {
+                isStealthMode = localStorage.getItem('tickethub_stealth_mode') === 'true';
+            } catch (e) { }
+        }
         applyStealthModeUI();
     }
 
     // =========================================================================
-    // 11. POWER-USER GLOBAL KEYBOARD SHORTCUTS ENGINE
+    // 11. POWER-USER GLOBAL KEYBOARD SHORTCUTS ENGINE (Bilingual English/Persian)
     // =========================================================================
     window.toggleShortcutsModal = function () {
         const modal = document.getElementById('cyber-shortcuts-modal');
@@ -1474,12 +1501,16 @@
         }
     };
 
+    let keyboardShortcutsInitialized = false;
     function initKeyboardShortcuts() {
+        if (keyboardShortcutsInitialized) return;
+        keyboardShortcutsInitialized = true;
+
         document.addEventListener('keydown', (e) => {
             const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
             const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable);
 
-            // Escape key closes shortcuts modal or open modals
+            // Escape key: closes shortcuts modal or open modals
             if (e.key === 'Escape' || e.keyCode === 27) {
                 const shortcutsModal = document.getElementById('cyber-shortcuts-modal');
                 if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
@@ -1497,27 +1528,27 @@
 
             if (isEditing) return;
 
-            // Shortcut: '?' -> Shortcuts Modal
-            if (e.key === '?' || e.key === '؟') {
+            // Shortcut: '?' or Shift+'/' or '؟' -> Shortcuts Modal
+            if (e.key === '?' || e.key === '؟' || ((e.key === '/' || e.code === 'Slash') && e.shiftKey)) {
                 e.preventDefault();
                 window.toggleShortcutsModal();
                 return;
             }
 
-            // Shortcut: '/' -> Quick Search Focus
-            if (e.key === '/') {
-                const searchInput = document.querySelector('input[data-search-input="true"], input[type="search"], .search-input, input[placeholder*="جستجو"]');
+            // Shortcut: '/' or Persian '÷' (Quick Search Focus)
+            if ((e.code === 'Slash' && !e.shiftKey) || e.key === '/' || e.key === '÷') {
+                const searchInput = document.querySelector('input[data-search-input="true"], input[placeholder*="جستجو"], input[type="search"], .search-input, input[id*="search"]');
                 if (searchInput) {
                     e.preventDefault();
                     searchInput.focus();
-                    if (searchInput.select) searchInput.select();
+                    if (typeof searchInput.select === 'function') searchInput.select();
                     window.playCyberSound('tap');
                     return;
                 }
             }
 
-            // Shortcut: 'c' or 'n' -> New Ticket
-            if (e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') {
+            // Shortcut: 'C' or 'N' or Persian 'ز' / 'د' -> New Ticket Modal
+            if (e.code === 'KeyC' || e.code === 'KeyN' || e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N' || e.key === 'ز' || e.key === 'د') {
                 const newTicketBtn = document.querySelector('[data-shortcut-new-ticket], button.btn-cyber-primary');
                 if (newTicketBtn) {
                     e.preventDefault();
@@ -1526,26 +1557,38 @@
                 }
             }
 
-            // Shortcut: 'e' -> Toggle Stealth Eco Mode
-            if (e.key === 'e' || e.key === 'E') {
+            // Shortcut: 'E' or Persian 'ث' -> Toggle Stealth Eco Mode
+            if (e.code === 'KeyE' || e.key === 'e' || e.key === 'E' || e.key === 'ث') {
                 e.preventDefault();
                 window.toggleStealthMode();
                 return;
             }
 
-            // Shortcut: '1' to '4' -> Quick Navigation
-            if (e.key === '1') {
-                const link = document.querySelector('a[href="/"], a[href="/home"]');
-                if (link) { e.preventDefault(); link.click(); }
-            } else if (e.key === '2') {
-                const link = document.querySelector('a[href="/tickets"]');
-                if (link) { e.preventDefault(); link.click(); }
-            } else if (e.key === '3') {
-                const link = document.querySelector('a[href="/projects"]');
-                if (link) { e.preventDefault(); link.click(); }
-            } else if (e.key === '4') {
-                const link = document.querySelector('a[href="/users"]');
-                if (link) { e.preventDefault(); link.click(); }
+            // Navigation Helper matching both relative and absolute NavLink hrefs
+            function navTo(target) {
+                const clean = target.replace(/^\//, '');
+                const selector = `a[href="${target}"], a[href="/${clean}"], a[href="${clean}"], a[href="${clean}/"]`;
+                const link = document.querySelector(selector);
+                if (link) {
+                    link.click();
+                } else {
+                    window.location.assign('/' + clean);
+                }
+            }
+
+            // Shortcut: '1' to '4' or Persian digits -> Quick Navigation
+            if (e.code === 'Digit1' || e.code === 'Numpad1' || e.key === '1' || e.key === '۱') {
+                e.preventDefault();
+                navTo('/');
+            } else if (e.code === 'Digit2' || e.code === 'Numpad2' || e.key === '2' || e.key === '۲') {
+                e.preventDefault();
+                navTo('/tickets');
+            } else if (e.code === 'Digit3' || e.code === 'Numpad3' || e.key === '3' || e.key === '۳') {
+                e.preventDefault();
+                navTo('/projects');
+            } else if (e.code === 'Digit4' || e.code === 'Numpad4' || e.key === '4' || e.key === '۴') {
+                e.preventDefault();
+                navTo('/users');
             }
         });
     }
@@ -1590,7 +1633,10 @@
         }
     }
 
+    let networkMonitorInitialized = false;
     function initNetworkMonitor() {
+        if (networkMonitorInitialized) return;
+        networkMonitorInitialized = true;
         window.addEventListener('offline', () => showNetworkToast(false));
         window.addEventListener('online', () => showNetworkToast(true));
     }
@@ -1618,7 +1664,10 @@
     function debouncedInitAll() {
         if (initAllRafId) return;
         initAllRafId = requestAnimationFrame(() => {
-            initAll();
+            initElementalCanvases();
+            init3DTilt();
+            initCounters();
+            applyStealthModeUI();
             initAllRafId = null;
         });
     }
