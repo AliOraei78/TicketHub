@@ -32,11 +32,14 @@
 
             <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
                 <button @onclick="OpenCreateModal"
-                        class="btn-cyber-primary focus-ring">
+                        data-shortcut-new-ticket
+                        class="btn-cyber-primary focus-ring cursor-pointer"
+                        title="ثبت کوئست / تیکت جدید (کلید میانبر: N یا C)">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                     </svg>
                     <span>ثبت کوئست / تیکت جدید</span>
+                    <kbd class="hidden sm:inline-flex px-1.5 py-0.2 text-[10px] font-mono text-cyan-300 bg-cyan-950/90 border border-cyan-500/50 rounded mr-1">N</kbd>
                 </button>
             </div>
         </div>

@@ -2657,6 +2657,47 @@ input:autofill {
     color: #f1f5f9 !important;
 }
 
+/* ==========================================================================
+   STEALTH / ECO ENTERPRISE PERFORMANCE MODE
+   ========================================================================== */
 
+.stealth-mode .element-vfx-canvas,
+.stealth-mode #global-matrix-rain-canvas,
+.stealth-mode #cyber-ambient-nebula-container {
+    display: none !important;
+}
 
+.stealth-mode .cyber-avatar-ring::before {
+    animation: none !important;
+}
+
+.stealth-mode .cyber-scanline {
+    display: none !important;
+}
+
+#hud-eco-mode-btn.active-eco {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    border-color: rgba(245, 158, 11, 0.8) !important;
+    color: #fef08a !important;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.35) !important;
+}
+
+/* ==========================================================================
+   CYBER KEYBOARD HOTKEYS & SHORTCUTS MODAL
+   ========================================================================== */
+
+.cyber-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    color: #38bdf8;
+    background-color: #030712;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
 

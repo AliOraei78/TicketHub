@@ -81,6 +81,22 @@
                     <span>ENGINE:</span>
                     <span class="text-slate-200 font-bold">.NET 10</span>
                 </div>
+
+                <!-- Stealth / Eco Performance Toggle -->
+                <button id="hud-eco-mode-btn" type="button" onclick="window.toggleStealthMode()"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#050811]/90 border border-amber-500/30 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)] text-xs font-bold select-none hover:border-amber-400/60 hover:text-amber-200 transition-all cursor-pointer focus-ring"
+                        title="تغییر حالت گرافیکی و عملکردی (کلید میانبر: E)">
+                    <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span class="hidden md:inline">حالت کم‌مصرف</span>
+                </button>
+
+                <!-- Keyboard Shortcuts Cheat Sheet Button -->
+                <button type="button" onclick="window.toggleShortcutsModal()"
+                        class="hidden sm:inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.1] text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 text-xs font-mono select-none transition-all cursor-pointer focus-ring"
+                        title="راهنمای کلیدهای میانبر (کلید میانبر: ?)">
+                    <span class="font-bold">⌨️</span>
+                    <kbd class="px-1 py-0.2 bg-slate-900 border border-slate-700/60 rounded text-[10px] text-cyan-300 font-mono">?</kbd>
+                </button>
             </div>
 
             <!-- Right Profile / Actions Quick Menu -->
@@ -144,6 +160,69 @@
                 </CustomErrorBoundary>
             </div>
         </main>
+    </div>
+
+    <!-- Cyberpunk Keyboard Shortcuts Helper Modal (Press '?' or click '[؟]') -->
+    <div id="cyber-shortcuts-modal" class="fixed inset-0 z-[99999] bg-[#030611]/85 backdrop-blur-xl hidden items-center justify-center p-4 animate-[fadeIn_0.15s_ease-out]">
+        <div class="fixed inset-0" onclick="window.toggleShortcutsModal()"></div>
+        <div class="relative z-10 w-full max-w-lg bg-[#070c1a]/98 border border-cyan-500/40 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(56,189,248,0.2)] p-6 text-white overflow-hidden modal-hud-chassis select-none">
+            <div class="cyber-scanline pointer-events-none opacity-40"></div>
+            
+            <div class="flex items-center justify-between border-b border-white/[0.08] pb-4 mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.3)]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-white flex items-center gap-2">
+                            <span>کلیدهای میانبر سایبری</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">COMMAND HOTKEYS</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">ناوبری و اجرای آنی دستورات با صفحه کلید</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.toggleShortcutsModal()" class="p-2 rounded-xl text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60 transition-all border border-slate-800 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Shortcuts Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-[#050811]/90 border border-white/[0.06] hover:border-cyan-500/40 transition-colors">
+                    <span class="text-xs font-semibold text-slate-200">جستجوی سریع</span>
+                    <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-cyan-300 text-xs font-mono rounded-lg shadow-sm font-bold">/</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-[#050811]/90 border border-white/[0.06] hover:border-cyan-500/40 transition-colors">
+                    <span class="text-xs font-semibold text-slate-200">ثبت تیکت جدید</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-cyan-300 text-xs font-mono rounded-lg shadow-sm font-bold">C</kbd>
+                        <span class="text-slate-500 text-xs">یا</span>
+                        <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-cyan-300 text-xs font-mono rounded-lg shadow-sm font-bold">N</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-[#050811]/90 border border-white/[0.06] hover:border-amber-500/40 transition-colors">
+                    <span class="text-xs font-semibold text-slate-200">حالت کم‌مصرف / کامل</span>
+                    <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-mono rounded-lg shadow-sm font-bold">E</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-[#050811]/90 border border-white/[0.06] hover:border-rose-500/40 transition-colors">
+                    <span class="text-xs font-semibold text-slate-200">بستن پنجره‌ها / مودال</span>
+                    <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-rose-300 text-xs font-mono rounded-lg shadow-sm font-bold">ESC</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-[#050811]/90 border border-white/[0.06] hover:border-purple-500/40 transition-colors">
+                    <span class="text-xs font-semibold text-slate-200">رفتن به داشبورد</span>
+                    <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-purple-300 text-xs font-mono rounded-lg shadow-sm font-bold">1</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-[#050811]/90 border border-white/[0.06] hover:border-purple-500/40 transition-colors">
+                    <span class="text-xs font-semibold text-slate-200">مدیریت تیکت‌ها</span>
+                    <kbd class="px-2 py-1 bg-slate-900 border border-slate-700 text-purple-300 text-xs font-mono rounded-lg shadow-sm font-bold">2</kbd>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-white/[0.08] flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                <span>💡 برای باز کردن دوباره این راهنما در هر جا، کلید <kbd class="font-mono text-cyan-300 font-bold">?</kbd> را فشار دهید.</span>
+                <span class="text-cyan-400 font-bold">TicketHub v1.0</span>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -1117,9 +1117,28 @@
                 osc.start(now);
                 osc.stop(now + 0.045);
             }
-            else if (type === 'click') {
-                // Fallback for legacy click invocations
+            else if (type === 'click' || type === 'tap') {
+                // Fallback for click/tap invocations
                 window.playCyberSound('menu');
+            }
+            else if (type === 'powerup' || type === 'open') {
+                window.playCyberSound('create');
+            }
+            else if (type === 'error') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(240, now);
+                osc.frequency.exponentialRampToValueAtTime(160, now + 0.08);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.04, now + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + 0.09);
             }
         } catch (e) { }
     };
@@ -1387,6 +1406,195 @@
         parallaxRafId = requestAnimationFrame(animateParallax);
     }
 
+    // =========================================================================
+    // 10. STEALTH / ECO PERFORMANCE MODE ENGINE
+    // =========================================================================
+    let isStealthMode = false;
+
+    window.toggleStealthMode = function (forceVal) {
+        if (typeof forceVal === 'boolean') {
+            isStealthMode = forceVal;
+        } else {
+            isStealthMode = !isStealthMode;
+        }
+
+        try {
+            localStorage.setItem('tickethub_stealth_mode', isStealthMode ? 'true' : 'false');
+        } catch (e) { }
+
+        applyStealthModeUI();
+        window.playCyberSound(isStealthMode ? 'toggle' : 'powerup');
+    };
+
+    function applyStealthModeUI() {
+        if (isStealthMode) {
+            document.documentElement.classList.add('stealth-mode');
+            document.body.classList.add('stealth-mode');
+            document.querySelectorAll('.element-vfx-canvas').forEach(c => c.style.display = 'none');
+        } else {
+            document.documentElement.classList.remove('stealth-mode');
+            document.body.classList.remove('stealth-mode');
+            document.querySelectorAll('.element-vfx-canvas').forEach(c => c.style.display = '');
+        }
+
+        const modeBtns = document.querySelectorAll('#hud-eco-mode-btn, .hud-eco-toggle-btn');
+        modeBtns.forEach(btn => {
+            if (isStealthMode) {
+                btn.classList.add('active-eco');
+                btn.setAttribute('title', 'حالت کم‌مصرف فعال است (کلید E)');
+            } else {
+                btn.classList.remove('active-eco');
+                btn.setAttribute('title', 'حالت گرافیکی کامل فعال است (کلید E)');
+            }
+        });
+    }
+
+    function initStealthMode() {
+        try {
+            isStealthMode = localStorage.getItem('tickethub_stealth_mode') === 'true';
+        } catch (e) { }
+        applyStealthModeUI();
+    }
+
+    // =========================================================================
+    // 11. POWER-USER GLOBAL KEYBOARD SHORTCUTS ENGINE
+    // =========================================================================
+    window.toggleShortcutsModal = function () {
+        const modal = document.getElementById('cyber-shortcuts-modal');
+        if (modal) {
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                window.playCyberSound('open');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                window.playCyberSound('close');
+            }
+        }
+    };
+
+    function initKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+            const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable);
+
+            // Escape key closes shortcuts modal or open modals
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                const shortcutsModal = document.getElementById('cyber-shortcuts-modal');
+                if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
+                    shortcutsModal.classList.add('hidden');
+                    shortcutsModal.classList.remove('flex');
+                    window.playCyberSound('close');
+                    return;
+                }
+                const openModalCloseBtn = document.querySelector('.modal-hud-chassis button[class*="hover:text-cyan-300"], .modal-hud-chassis button[class*="group"], .modal-hud-chassis .btn-cyber-ghost');
+                if (openModalCloseBtn) {
+                    openModalCloseBtn.click();
+                }
+                return;
+            }
+
+            if (isEditing) return;
+
+            // Shortcut: '?' -> Shortcuts Modal
+            if (e.key === '?' || e.key === '؟') {
+                e.preventDefault();
+                window.toggleShortcutsModal();
+                return;
+            }
+
+            // Shortcut: '/' -> Quick Search Focus
+            if (e.key === '/') {
+                const searchInput = document.querySelector('input[data-search-input="true"], input[type="search"], .search-input, input[placeholder*="جستجو"]');
+                if (searchInput) {
+                    e.preventDefault();
+                    searchInput.focus();
+                    if (searchInput.select) searchInput.select();
+                    window.playCyberSound('tap');
+                    return;
+                }
+            }
+
+            // Shortcut: 'c' or 'n' -> New Ticket
+            if (e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') {
+                const newTicketBtn = document.querySelector('[data-shortcut-new-ticket], button.btn-cyber-primary');
+                if (newTicketBtn) {
+                    e.preventDefault();
+                    newTicketBtn.click();
+                    return;
+                }
+            }
+
+            // Shortcut: 'e' -> Toggle Stealth Eco Mode
+            if (e.key === 'e' || e.key === 'E') {
+                e.preventDefault();
+                window.toggleStealthMode();
+                return;
+            }
+
+            // Shortcut: '1' to '4' -> Quick Navigation
+            if (e.key === '1') {
+                const link = document.querySelector('a[href="/"], a[href="/home"]');
+                if (link) { e.preventDefault(); link.click(); }
+            } else if (e.key === '2') {
+                const link = document.querySelector('a[href="/tickets"]');
+                if (link) { e.preventDefault(); link.click(); }
+            } else if (e.key === '3') {
+                const link = document.querySelector('a[href="/projects"]');
+                if (link) { e.preventDefault(); link.click(); }
+            } else if (e.key === '4') {
+                const link = document.querySelector('a[href="/users"]');
+                if (link) { e.preventDefault(); link.click(); }
+            }
+        });
+    }
+
+    // =========================================================================
+    // 12. REAL-TIME NETWORK CONNECTIVITY HUD MONITOR
+    // =========================================================================
+    function showNetworkToast(isOnline) {
+        let toast = document.getElementById('cyber-network-hud-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'cyber-network-hud-toast';
+            document.body.appendChild(toast);
+        }
+
+        if (!isOnline) {
+            toast.style.display = 'flex';
+            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100000] px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2.5 shadow-[0_0_35px_rgba(244,63,94,0.5)] backdrop-blur-2xl transition-all duration-300 bg-[#0c050a]/95 border border-rose-500/70 text-rose-200 select-none animate-bounce';
+            toast.innerHTML = `
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                </span>
+                <span>⚠️ ارتباط شبکه قطع شد // در حال تلاش برای اتصال مجدد...</span>
+            `;
+            window.playCyberSound('error');
+        } else {
+            toast.style.display = 'flex';
+            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100000] px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2.5 shadow-[0_0_35px_rgba(16,185,129,0.4)] backdrop-blur-2xl transition-all duration-300 bg-[#050f0c]/95 border border-emerald-500/70 text-emerald-200 select-none';
+            toast.innerHTML = `
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+                </span>
+                <span>⚡ ارتباط سایبری برقرار شد // سیستم آنلاین است</span>
+            `;
+            window.playCyberSound('success');
+            setTimeout(() => {
+                if (toast && toast.parentElement) {
+                    toast.style.display = 'none';
+                }
+            }, 3000);
+        }
+    }
+
+    function initNetworkMonitor() {
+        window.addEventListener('offline', () => showNetworkToast(false));
+        window.addEventListener('online', () => showNetworkToast(true));
+    }
+
     function initAll() {
         initElementalCanvases();
         init3DTilt();
@@ -1395,6 +1603,9 @@
         initCockpitTelemetry();
         initAmbientNebulaParallax();
         initCyberSoundDispatcher();
+        initStealthMode();
+        initKeyboardShortcuts();
+        initNetworkMonitor();
     }
 
     if (document.readyState === 'loading') {
@@ -1421,16 +1632,6 @@
         subtree: true, 
         attributes: true, 
         attributeFilter: ['data-target'] 
-    });
-
-    // Global ESC Key Listener for Modals
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' || e.keyCode === 27) {
-            const openModalCloseBtn = document.querySelector('.modal-hud-chassis button[class*="hover:text-cyan-300"], .modal-hud-chassis button[class*="group"], .modal-hud-chassis .btn-cyber-ghost');
-            if (openModalCloseBtn) {
-                openModalCloseBtn.click();
-            }
-        }
     });
 
     window.initGamerHud = initAll;
