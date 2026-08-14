@@ -11,11 +11,13 @@
                       OnDragStart="OnStatusDragStart"
                       OnItemAdd="AddStatusToCanvas">
         <HeaderContent>
-            <input type="text"
-                   @bind="StatusSearchTerm"
-                   @bind:event="oninput"
-                   placeholder="جستجو..."
-                   class="w-full text-xs bg-slate-900/80 border border-slate-700/80 rounded-xl px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:shadow-[0_0_10px_rgba(56,189,248,0.3)] transition-all" />
+            <div class="field-spark-wrap w-full">
+                <input type="text"
+                       @bind="StatusSearchTerm"
+                       @bind:event="oninput"
+                       placeholder="جستجو..."
+                       class="w-full text-xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 rounded-xl px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] transition-all focus-ring" />
+            </div>
         </HeaderContent>
         <ItemTemplate Context="status">
             <div class="flex items-center gap-2.5">

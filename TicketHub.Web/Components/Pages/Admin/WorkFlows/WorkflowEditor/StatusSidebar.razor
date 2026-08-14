@@ -7,7 +7,9 @@
         <p class="text-[11px] text-slate-400 mt-1 font-normal">وضعیت مورد نظر را انتخاب و به صفحه اضافه کنید</p>
     </div>
     <div class="p-3">
-        <input type="text" @bind="SearchTerm" @bind:event="oninput" placeholder="جستجوی وضعیت..." class="w-full h-[38px] px-3 bg-slate-900/80 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:shadow-[0_0_10px_rgba(56,189,248,0.3)] outline-none transition-all" />
+        <div class="field-spark-wrap w-full">
+            <input type="text" @bind="SearchTerm" @bind:event="oninput" placeholder="جستجوی وضعیت..." class="w-full h-[38px] px-3 bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] outline-none transition-all focus-ring" />
+        </div>
     </div>
     <div class="flex-1 overflow-y-auto p-3 pt-0 flex flex-col gap-2 custom-scrollbar">
         @foreach (var status in FilteredStatuses)

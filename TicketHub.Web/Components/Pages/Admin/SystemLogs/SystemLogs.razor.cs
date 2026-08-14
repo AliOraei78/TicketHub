@@ -375,21 +375,44 @@ public partial class SystemLogs : ComponentBase, IDisposable
             .Replace('٥', '5').Replace('٦', '6').Replace('٧', '7').Replace('٨', '8').Replace('٩', '9');
     }
 
+    protected async Task SetQuickFilter(string level)
+    {
+        selectedLevel = level;
+        await ApplyFilters();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("matrixRain.init", "matrix-rain-canvas");
+            }
+            catch { }
+        }
+    }
+
     protected string GetLevelBadgeClass(string level) => level?.Trim().ToLowerInvariant() switch
     {
-        "fatal" => "bg-red-950 text-red-200 border-red-800",
-        "error" => "bg-rose-50 text-rose-700 border-rose-200/60",
-        "warning" or "warn" => "bg-amber-50 text-amber-700 border-amber-200/60",
-        "information" or "info" => "bg-sky-50 text-sky-700 border-sky-200/60",
-        "debug" => "bg-indigo-50 text-indigo-700 border-indigo-200/60",
-        "verbose" or "trace" => "bg-slate-100 text-slate-600 border-slate-200",
-        _ => "bg-slate-50 text-slate-600 border-slate-200"
+        "fatal" => "bg-red-950/90 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)] animate-pulse",
+        "error" => "bg-rose-950/90 text-rose-300 border-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.5)]",
+        "warning" or "warn" => "bg-amber-950/90 text-amber-300 border-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]",
+        "information" or "info" => "bg-emerald-950/90 text-emerald-300 border-emerald-500/80 shadow-[0_0_10px_rgba(16,185,129,0.5)]",
+        "debug" => "bg-cyan-950/90 text-cyan-300 border-cyan-500/70 shadow-[0_0_8px_rgba(6,182,212,0.4)]",
+        "verbose" or "trace" => "bg-slate-900/90 text-slate-400 border-slate-700",
+        _ => "bg-slate-900/90 text-slate-300 border-slate-700"
     };
 
     public void Dispose()
     {
         cts?.Cancel();
         timer?.Dispose();
+        try
+        {
+            _ = JSRuntime.InvokeVoidAsync("matrixRain.destroy");
+        }
+        catch { }
     }
 
     protected async Task OnFromDateChanged(string val)

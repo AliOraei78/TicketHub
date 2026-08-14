@@ -2032,4 +2032,335 @@ jdp-container .jdp-btn {
     background: rgba(5, 9, 20, 0.96);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-}
+}
+
+/* ==========================================================================
+   Matrix Terminal HUD Theme Styles (Green & Obsidian Black)
+   ========================================================================== */
+.matrix-terminal-card {
+    background: rgba(2, 8, 4, 0.93);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(16, 185, 129, 0.08), inset 0 0 15px rgba(16, 185, 129, 0.04);
+}
+
+.matrix-crt-scanline {
+    position: relative;
+}
+
+.matrix-crt-scanline::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    z-index: 1;
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.matrix-glow-text {
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.7), 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.matrix-glow-subtle {
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.btn-matrix-primary {
+    position: relative;
+    background: linear-gradient(135deg, #052e16 0%, #10b981 100%);
+    color: #020804;
+    font-weight: 900;
+    border: 1px solid #34d399;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(110, 231, 183, 0.4);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-matrix-primary:hover {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    box-shadow: 0 0 25px rgba(52, 211, 153, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px) scale(1.02);
+}
+
+.btn-matrix-ghost {
+    background: rgba(2, 10, 5, 0.8);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    transition: all 0.2s ease;
+}
+
+.btn-matrix-ghost:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #34d399;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+}
+
+.matrix-code-block {
+    background: #010603;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9), 0 0 10px rgba(16, 185, 129, 0.1);
+}
+
+.matrix-radar-pulse {
+    animation: matrixRadarPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes matrixRadarPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.9;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+}
+
+/* ==========================================================================
+   Jalali Datepicker Dark Obsidian & Matrix Theme Overrides
+   ========================================================================== */
+jdp-container {
+    --jdp-day-size: 40px !important;
+    --jdp-color-0: #030712 !important;
+    --jdp-color-1: #070f22 !important;
+    --jdp-color-2: #0f1c3f !important;
+    --jdp-color-3: #1e3a5f !important;
+    --jdp-color-4: #94a3b8 !important;
+    --jdp-color-5: #f1f5f9 !important;
+    --jdp-primary: #10b981 !important;
+    --jdp-red: #f43f5e !important;
+    background: rgba(3, 8, 18, 0.97) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(56, 189, 248, 0.2), inset 0 0 15px rgba(56, 189, 248, 0.05) !important;
+    border-radius: 1.25rem !important;
+    color: #f1f5f9 !important;
+    padding: 0.75rem 0.25rem !important;
+    z-index: 999999 !important;
+}
+
+jdp-container .jdp-years, jdp-container .jdp-months {
+    color: #38bdf8 !important;
+    fill: #38bdf8 !important;
+    font-weight: 800 !important;
+}
+
+jdp-container .jdp-year select,
+jdp-container .jdp-month select,
+jdp-container .jdp-year input,
+jdp-container .jdp-month input {
+    background: #070f22 !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    border-radius: 0.6rem !important;
+    padding: 0.25rem 0.5rem !important;
+    font-weight: 700 !important;
+}
+
+jdp-container .jdp-year option,
+jdp-container .jdp-month option {
+    background: #030712 !important;
+    color: #f1f5f9 !important;
+}
+
+jdp-container .jdp-icon-plus,
+jdp-container .jdp-icon-minus {
+    background: #070f22 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    color: #38bdf8 !important;
+    border-radius: 0.6rem !important;
+    transition: all 0.2s ease !important;
+}
+
+jdp-container .jdp-icon-plus:hover,
+jdp-container .jdp-icon-minus:hover {
+    background: rgba(56, 189, 248, 0.2) !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
+}
+
+jdp-container .jdp-days-header {
+    background: rgba(11, 23, 50, 0.7) !important;
+    border-radius: 0.6rem !important;
+    color: #94a3b8 !important;
+    margin-top: 0.4rem !important;
+}
+
+jdp-container .jdp-day {
+    color: #e2e8f0 !important;
+    font-weight: 600 !important;
+    border-radius: 0.6rem !important;
+    transition: all 0.15s ease !important;
+}
+
+jdp-container .jdp-day:not(.disabled-day):hover {
+    background: rgba(56, 189, 248, 0.2) !important;
+    color: #38bdf8 !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
+}
+
+jdp-container .jdp-day.selected {
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%) !important;
+    color: #030712 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.8) !important;
+    border-radius: 0.6rem !important;
+}
+
+jdp-container .jdp-day.today {
+    border: 1px solid #38bdf8 !important;
+    color: #38bdf8 !important;
+}
+
+jdp-container .jdp-day.holiday-day,
+jdp-container .jdp-day.holly-day,
+jdp-container .jdp-day.last-week {
+    color: #fb7185 !important;
+}
+
+jdp-container .jdp-day.not-in-month {
+    opacity: 0.25 !important;
+}
+
+/* Time Selection Box (Hours & Minutes Dropdowns) */
+jdp-container .jdp-time-container {
+    padding: 0.5rem 0.25rem 0.25rem !important;
+    align-items: center !important;
+}
+
+jdp-container .jdp-time-container .jdp-time select {
+    background: #070f22 !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    border-radius: 0.75rem !important;
+    padding: 0.45rem 0.85rem 0.45rem 0.5rem !important;
+    font-family: monospace, sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 12px rgba(56, 189, 248, 0.15) !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    outline: none !important;
+}
+
+jdp-container .jdp-time-container .jdp-time select:hover,
+jdp-container .jdp-time-container .jdp-time select:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4), inset 0 2px 6px rgba(0, 0, 0, 0.8) !important;
+}
+
+jdp-container .jdp-time-container .jdp-time select option {
+    background: #030712 !important;
+    color: #f1f5f9 !important;
+    font-family: monospace, sans-serif !important;
+    font-weight: 600 !important;
+}
+
+jdp-container .jdp-time-container .jdp-time:after {
+    color: #38bdf8 !important;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.8) !important;
+    font-weight: 900 !important;
+}
+
+/* Footer Buttons ("امروز" و "خالی") */
+jdp-container .jdp-footer {
+    padding: 0.6rem 0.5rem 0.2rem !important;
+    gap: 0.5rem !important;
+}
+
+jdp-container .jdp-btn-today {
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%) !important;
+    color: #030712 !important;
+    font-weight: 800 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.4rem 0.9rem !important;
+    border: 1px solid #38bdf8 !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important;
+    transition: all 0.2s ease !important;
+}
+
+jdp-container .jdp-btn-today:hover {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.7) !important;
+    transform: translateY(-1px) !important;
+}
+
+jdp-container .jdp-btn-empty {
+    background: rgba(244, 63, 94, 0.15) !important;
+    color: #fb7185 !important;
+    font-weight: 800 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.4rem 0.9rem !important;
+    border: 1px solid rgba(244, 63, 94, 0.4) !important;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.2) !important;
+    transition: all 0.2s ease !important;
+}
+
+jdp-container .jdp-btn-empty:hover {
+    background: rgba(244, 63, 94, 0.3) !important;
+    border-color: #fb7185 !important;
+    box-shadow: 0 0 18px rgba(244, 63, 94, 0.5) !important;
+    transform: translateY(-1px) !important;
+}
+
+jdp-container .jdp-btn-close {
+    background: #0f1c3f !important;
+    color: #94a3b8 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.4rem 0.9rem !important;
+    border: 1px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+/* Custom Matrix Green & Black Checkbox */
+.matrix-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    background-color: #020804 !important;
+    border: 1.5px solid rgba(16, 185, 129, 0.5) !important;
+    border-radius: 0.35rem !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(16, 185, 129, 0.15) !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+}
+
+.matrix-checkbox:hover {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.4), inset 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+    transform: scale(1.05);
+}
+
+.matrix-checkbox:checked {
+    background: linear-gradient(135deg, #052e16 0%, #10b981 100%) !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.7), inset 0 0 6px rgba(255, 255, 255, 0.3) !important;
+}
+
+.matrix-checkbox:checked::after {
+    content: "";
+    width: 5px;
+    height: 9px;
+    border: solid #020804;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-0.5px, -0.5px);
+    display: block;
+}
+
+
+

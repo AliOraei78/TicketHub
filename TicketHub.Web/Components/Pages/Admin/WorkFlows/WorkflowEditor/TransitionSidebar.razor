@@ -30,7 +30,9 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-300 mb-1.5">عنوان انتقال</label>
-                <input type="text" @bind="Connection.Name" @bind:event="oninput" placeholder="عنوان مسیر انتقال..." class="w-full h-[42px] px-3.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:shadow-[0_0_12px_rgba(56,189,248,0.3)] text-xs outline-none transition-all" />
+                <div class="field-spark-wrap w-full">
+                    <input type="text" @bind="Connection.Name" @bind:event="oninput" placeholder="عنوان مسیر انتقال..." class="w-full h-[42px] px-3.5 bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 text-xs outline-none transition-all focus-ring" />
+                </div>
                 <ValidationMessage For="@(() => Connection.Name)" class="validation-message text-rose-400 text-red-500 text-xs mt-1" />
             </div>
 
@@ -58,7 +60,9 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-300 mb-1.5">مهلت انجام / SLA (دقیقه)</label>
-                <input type="number" min="0" @bind="Connection.DeadlineMinutes" placeholder="مثال: ۶۰ (اختیاری)" class="w-full h-[42px] px-3.5 bg-slate-900/80 border border-slate-700/80 rounded-xl text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:shadow-[0_0_12px_rgba(56,189,248,0.3)] text-xs outline-none transition-all" />
+                <div class="field-spark-wrap w-full">
+                    <input type="number" min="0" @bind="Connection.DeadlineMinutes" placeholder="مثال: ۶۰ (اختیاری)" class="w-full h-[42px] px-3.5 bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 text-xs outline-none transition-all focus-ring" />
+                </div>
             </div>
 
             <div class="pt-2">
@@ -101,7 +105,9 @@
 
                                     <div class="flex-1 min-w-0 flex flex-col gap-2">
                                         <div>
-                                            <input type="text" @bind="field.FieldName" @bind:event="oninput" placeholder="عنوان فیلد" class="w-full h-[38px] px-3 text-xs bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 outline-none focus:border-sky-400 transition-all pointer-events-auto" />
+                                            <div class="field-spark-wrap w-full">
+                                                <input type="text" @bind="field.FieldName" @bind:event="oninput" placeholder="عنوان فیلد" class="w-full h-[38px] px-3 text-xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 outline-none transition-all pointer-events-auto focus-ring" />
+                                            </div>
                                             <ValidationMessage For="@(() => field.FieldName)" class="text-rose-400 text-[10px] mt-0.5" />
                                         </div>
 
@@ -129,20 +135,28 @@
 
                                         <div class="grid transition-all duration-300 ease-in-out @(showOptions ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 mt-0")">
                                             <div class="overflow-hidden">
-                                                <input type="text" @bind="field.Options" @bind:event="oninput" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full h-[38px] px-3 text-xs bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 outline-none focus:border-sky-400 transition-all pointer-events-auto" />
+                                                <div class="field-spark-wrap w-full">
+                                                    <input type="text" @bind="field.Options" @bind:event="oninput" placeholder="گزینه‌ها را با کاما (,) جدا کنید" class="w-full h-[38px] px-3 text-xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 outline-none transition-all pointer-events-auto focus-ring" />
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="grid transition-all duration-300 ease-in-out @(showTextProps ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 mt-0")">
                                             <div class="overflow-hidden flex flex-col gap-2">
-                                                <input type="text" @bind="field.Placeholder" @bind:event="oninput" placeholder="متن جایگیر (Placeholder)" class="w-full h-[38px] px-3 text-xs bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 outline-none focus:border-sky-400 transition-all pointer-events-auto" />
+                                                <div class="field-spark-wrap w-full">
+                                                    <input type="text" @bind="field.Placeholder" @bind:event="oninput" placeholder="متن جایگیر (Placeholder)" class="w-full h-[38px] px-3 text-xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 outline-none transition-all pointer-events-auto focus-ring" />
+                                                </div>
                                                 @if (typeName.Contains("Number", StringComparison.OrdinalIgnoreCase))
                                                 {
-                                                    <input type="number" @bind="field.DefaultValue" @bind:event="oninput" placeholder="مقدار پیش‌فرض" class="w-full h-[38px] px-3 text-xs bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 outline-none focus:border-sky-400 transition-all pointer-events-auto" />
+                                                    <div class="field-spark-wrap w-full">
+                                                        <input type="number" @bind="field.DefaultValue" @bind:event="oninput" placeholder="مقدار پیش‌فرض" class="w-full h-[38px] px-3 text-xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 outline-none transition-all pointer-events-auto focus-ring" />
+                                                    </div>
                                                 }
                                                 else
                                                 {
-                                                    <input type="text" @bind="field.DefaultValue" @bind:event="oninput" placeholder="مقدار پیش‌فرض" class="w-full h-[38px] px-3 text-xs bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 outline-none focus:border-sky-400 transition-all pointer-events-auto" />
+                                                    <div class="field-spark-wrap w-full">
+                                                        <input type="text" @bind="field.DefaultValue" @bind:event="oninput" placeholder="مقدار پیش‌فرض" class="w-full h-[38px] px-3 text-xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] rounded-xl text-slate-100 placeholder:text-slate-500 outline-none transition-all pointer-events-auto focus-ring" />
+                                                    </div>
                                                 }
                                             </div>
                                         </div>

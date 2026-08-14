@@ -410,11 +410,11 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
         {
             return port switch
             {
-                "Top" => (node.X + 75, node.Y),
-                "Bottom" => (node.X + 75, node.Y + 72),
-                "Left" => (node.X, node.Y + 36),
-                "Right" => (node.X + 150, node.Y + 36),
-                _ => (node.X + 75, node.Y + 36)
+                "Top" => (node.X + 82, node.Y),
+                "Bottom" => (node.X + 82, node.Y + 66),
+                "Left" => (node.X, node.Y + 33),
+                "Right" => (node.X + 164, node.Y + 33),
+                _ => (node.X + 82, node.Y + 33)
             };
         }
 

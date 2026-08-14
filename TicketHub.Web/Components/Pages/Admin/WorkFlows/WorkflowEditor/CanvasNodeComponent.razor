@@ -9,22 +9,41 @@
 }
 
 <div draggable="false" 
-     class="absolute w-[160px] rounded-2xl cyber-node-chassis border-2 flex flex-col items-center justify-between p-3 select-none z-10 transition-all duration-200 @(IsSelected ? "border-sky-400 cyber-node-selected" : "hover:border-slate-400") @(IsConnecting ? "pointer-events-none" : "pointer-events-auto")"
-     style="@($"left: {Node.X}px; top: {Node.Y}px; background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border-color: {(IsSelected ? "#38bdf8" : statusColor)}; box-shadow: {nodeGlow}; cursor: {CursorStyle};")"
+     class="absolute w-[164px] h-[66px] rounded-2xl cyber-node-chassis border-2 flex items-center justify-center p-3 select-none z-10 transition-all duration-200 @(IsSelected ? "border-sky-400 cyber-node-selected scale-102" : "hover:border-slate-400") @(IsConnecting ? "pointer-events-none" : "pointer-events-auto")"
+     style="@($"left: {Node.X}px; top: {Node.Y}px; background-color: rgba(7, 12, 26, 0.94); backdrop-filter: blur(12px); border-color: {(IsSelected ? "#38bdf8" : statusColor)}; box-shadow: {nodeGlow}; cursor: {CursorStyle};")"
      @onpointerdown="e => OnPointerDown.InvokeAsync((e, Node))"
      @onclick="e => OnClick.InvokeAsync((e, Node))">
 
+    <!-- Connection Ports -->
     <NodePort PortName="Top" ClassName="-top-2.5 left-1/2 -translate-x-1/2" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
     <NodePort PortName="Bottom" ClassName="-bottom-2.5 left-1/2 -translate-x-1/2" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
     <NodePort PortName="Right" ClassName="top-1/2 -translate-y-1/2 -right-2.5" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
     <NodePort PortName="Left" ClassName="top-1/2 -translate-y-1/2 -left-2.5" Node="Node" IsConnecting="IsConnecting" ConnectingFromNode="ConnectingFromNode" OnPortPointerDown="OnPortPointerDown" OnPortPointerUp="OnPortPointerUp" />
+
+    <!-- Floating Holographic Badges (Initial ⭐ / Final 🏁) on Bottom Edge -->
+    @if (Node.IsInitial)
+    {
+        <div class="absolute -bottom-2.5 left-3 z-30 pointer-events-none">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/95 border border-amber-500/80 text-amber-300 text-[10px] font-black shadow-[0_0_10px_rgba(245,158,11,0.6)] backdrop-blur-md" title="وضعیت اولیه">
+                ⭐ شروع
+            </span>
+        </div>
+    }
+    @if (Node.IsFinal)
+    {
+        <div class="absolute -bottom-2.5 right-3 z-30 pointer-events-none">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/95 border border-emerald-500/80 text-emerald-300 text-[10px] font-black shadow-[0_0_10px_rgba(16,185,129,0.6)] backdrop-blur-md" title="وضعیت نهایی">
+                🏁 پایان
+            </span>
+        </div>
+    }
 
     @if (IsSelected)
     {
         <!-- Action Buttons (Initial ⭐ & Final 🏁) on Top-Right -->
         @if (ShowInitialButton)
         {
-            <div class="absolute -top-3.5 -right-3 flex gap-1.5 z-40 pointer-events-auto">
+            <div class="absolute -top-4 -right-3 flex gap-1.5 z-40 pointer-events-auto">
                 <button @onpointerdown="() => OnSetInitialNode.InvokeAsync(Node)" 
                         @onpointerdown:stopPropagation="true" 
                         class="w-7 h-7 rounded-xl @(Node.IsInitial ? "bg-amber-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.8)]" : "bg-[#070c1a] border border-amber-500/60 text-amber-400 hover:bg-amber-950/80") flex items-center justify-center transition-all hover:scale-120 focus-ring" 
@@ -46,7 +65,7 @@
         }
 
         <!-- Delete Button on Top-Left -->
-        <div class="absolute -top-3.5 -left-3 z-40 pointer-events-auto">
+        <div class="absolute -top-4 -left-3 z-40 pointer-events-auto">
             <button @onpointerdown="() => OnDelete.InvokeAsync(Node)" 
                     @onpointerdown:stopPropagation="true" 
                     class="w-7 h-7 rounded-xl bg-[#070c1a] border border-rose-500/70 hover:bg-rose-950/90 text-rose-400 flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all hover:scale-120 focus-ring" 
@@ -56,32 +75,10 @@
         </div>
     }
 
-    <!-- Top Status Color & Badges Header -->
-    <div class="w-full flex items-center justify-between pointer-events-none mb-1.5">
-        <div class="flex items-center gap-1.5">
-            <div class="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor]" style="background-color: @statusColor; color: @statusColor;"></div>
-            <span class="text-[10px] font-mono text-slate-400/80 font-bold">#@(Node.Status?.Id)</span>
-        </div>
-
-        <div class="flex items-center gap-1">
-            @if (Node.IsInitial)
-            {
-                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-950/90 border border-amber-500/60 text-amber-300 text-[9px] font-black shadow-[0_0_8px_rgba(245,158,11,0.4)]" title="وضعیت اولیه">
-                    ⭐ شروع
-                </span>
-            }
-            @if (Node.IsFinal)
-            {
-                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 text-[9px] font-black shadow-[0_0_8px_rgba(16,185,129,0.4)]" title="وضعیت نهایی">
-                    🏁 پایان
-                </span>
-            }
-        </div>
-    </div>
-
-    <!-- Status Title -->
-    <div class="w-full flex-1 flex flex-col items-center justify-center min-h-[34px] bg-slate-950/40 rounded-xl px-2 py-1 border border-white/5">
-        <span class="font-bold text-xs text-center block w-full truncate text-slate-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" title="@(Node.Status?.Name)">
+    <!-- Center Status Content -->
+    <div class="w-full flex items-center justify-center gap-2 pointer-events-none px-1">
+        <div class="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] shrink-0" style="background-color: @statusColor; color: @statusColor;"></div>
+        <span class="font-black text-sm text-center truncate text-slate-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight max-w-[115px]" title="@(Node.Status?.Name)">
             @(Node.Status?.Name)
         </span>
     </div>

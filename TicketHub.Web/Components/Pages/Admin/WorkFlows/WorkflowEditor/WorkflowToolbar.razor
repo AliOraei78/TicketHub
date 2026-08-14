@@ -3,20 +3,24 @@
 <div class="h-[84px] cyber-toolbar-glass px-6 py-2.5 z-20 flex-shrink-0 flex items-center select-none" dir="rtl">
     <div class="flex justify-between items-center w-full gap-4">
         <!-- Title & Description with Cyber styling -->
-        <div class="flex flex-col gap-1 flex-1 max-w-xl">
+        <div class="flex flex-col gap-1.5 flex-1 max-w-xl">
             <div class="flex items-center gap-2">
                 <span class="text-sky-400 font-mono text-xs font-black tracking-widest">[WORKFLOW]</span>
-                <input type="text" 
-                       value="@Name" 
-                       @oninput="OnNameInput" 
-                       placeholder="نام جریان کاری..." 
-                       class="text-base font-black text-slate-100 placeholder:text-slate-500 outline-none bg-slate-900/60 border border-slate-700/60 focus:border-sky-400 rounded-xl px-3 py-1 focus:shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all w-full tracking-tight" />
+                <div class="field-spark-wrap flex-1">
+                    <input type="text" 
+                           value="@Name" 
+                           @oninput="OnNameInput" 
+                           placeholder="نام جریان کاری..." 
+                           class="w-full text-base font-black text-slate-100 placeholder:text-slate-500 outline-none bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 rounded-xl px-3 py-1 focus:shadow-[0_0_15px_rgba(56,189,248,0.25)] transition-all tracking-tight focus-ring" />
+                </div>
             </div>
-            <input type="text" 
-                   value="@Description" 
-                   @oninput="OnDescriptionInput" 
-                   placeholder="توضیحات جریان کاری (اختیاری)..." 
-                   class="text-xs text-slate-300 placeholder:text-slate-600 outline-none bg-slate-900/40 border border-slate-800/80 focus:border-sky-500 rounded-xl px-3 py-1 transition-all w-full" />
+            <div class="field-spark-wrap w-full">
+                <input type="text" 
+                       value="@Description" 
+                       @oninput="OnDescriptionInput" 
+                       placeholder="توضیحات جریان کاری (اختیاری)..." 
+                       class="w-full text-xs text-slate-200 placeholder:text-slate-500 outline-none bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] border border-white/[0.12] focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 rounded-xl px-3 py-1 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all focus-ring" />
+            </div>
         </div>
 
         <!-- Telemetry Chips -->
