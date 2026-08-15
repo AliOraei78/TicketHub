@@ -27,8 +27,8 @@
             </div>
         </div>
 
-        <div class="dropdown-menu-container absolute top-full left-0 mt-1.5 z-[250] w-full bg-[#090e1d]/98 border border-cyan-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] overflow-hidden transition-all duration-300 backdrop-blur-2xl @(ShowDropdown ? "opacity-100 max-h-64" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
-            <div class="max-h-60 overflow-y-auto pt-1 pb-2 overscroll-contain custom-scrollbar">
+        <div class="dropdown-menu-container absolute top-full left-0 mt-1.5 z-[250] w-full bg-[#090e1d]/98 border border-cyan-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] overflow-hidden transition-all duration-300 backdrop-blur-2xl @(ShowDropdown ? "opacity-100 max-h-72" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+            <div class="max-h-64 overflow-y-auto pt-1.5 pb-3.5 overscroll-contain custom-scrollbar">
                 @if (!FilteredItems.Any())
                 {
                     <div class="px-4 py-6 text-center flex flex-col items-center justify-center opacity-80">

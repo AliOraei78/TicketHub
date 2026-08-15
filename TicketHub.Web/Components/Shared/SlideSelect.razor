@@ -21,14 +21,14 @@
         </div>
     </div>
 
-    <div class="dropdown-menu-container absolute top-full left-0 z-[250] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(IsOpen ? "opacity-100 max-h-64" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+    <div class="dropdown-menu-container absolute top-full left-0 z-[250] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(IsOpen ? "opacity-100 max-h-72" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
         @if (IsOpen)
         {
             <div class="p-2 border-b border-white/[0.08] bg-[#050811]/80">
                 <input type="text" @bind="SearchTerm" @bind:event="oninput" @onclick:stopPropagation class="w-full h-9 px-3 text-xs text-slate-100 bg-[#050811] border border-white/[0.1] rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/30 transition-all focus-ring placeholder-slate-500" placeholder="جستجو..." />
             </div>
         }
-        <div class="max-h-60 overflow-y-auto pt-1 pb-2 overscroll-contain custom-scrollbar">
+        <div class="max-h-64 overflow-y-auto pt-1.5 pb-3.5 overscroll-contain custom-scrollbar">
             @if (AllowClear)
             {
                 bool isClearSelected = EqualityComparer<TValue>.Default.Equals(Value, default);

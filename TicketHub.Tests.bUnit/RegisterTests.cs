@@ -76,7 +76,7 @@ namespace TicketHub.Tests.bUnit
 
             cut.Find("form").Submit();
 
-            cut.Markup.Should().Contain("کد امنیتی نامعتبر است یا منقضی شده است");
+            cut.Markup.Should().Contain("کد امنیتی وارد شده نادرست است یا منقضی شده است");
             _mockUserService.Verify(u => u.RegisterUserAsync(It.IsAny<UserDto>(), It.IsAny<string>()), Times.Never);
         }
 

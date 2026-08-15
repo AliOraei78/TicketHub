@@ -34,10 +34,21 @@ public partial class Register : ComponentBase
     protected async Task HandleRegister()
     {
         // --- اعتبارسنجی کپچا ---
+        if (HttpContext?.Request.HasFormContentType == true)
+        {
+            var captchaText = HttpContext.Request.Form["CaptchaInputText"].ToString();
+            if (string.IsNullOrWhiteSpace(captchaText))
+            {
+                errorMessage = "لطفاً کد امنیتی را وارد نمایید.";
+                isLoading = false;
+                return;
+            }
+        }
+
         bool isValidCaptcha = CaptchaValidator.HasRequestValidCaptchaEntry();
         if (!isValidCaptcha)
         {
-            errorMessage = "کد امنیتی نامعتبر است یا منقضی شده است.";
+            errorMessage = "کد امنیتی وارد شده نادرست است یا منقضی شده است.";
             isLoading = false;
             return;
         }
