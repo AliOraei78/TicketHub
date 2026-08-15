@@ -172,14 +172,11 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
+        try
         {
-            try
-            {
-                await JS.InvokeVoidAsync("ensureDashboardVfxReady");
-            }
-            catch { }
+            await JS.InvokeVoidAsync("ensureDashboardVfxReady");
         }
+        catch { }
     }
 
     private async Task HandleLiveTicketEventAsync(int ticketId)

@@ -59,29 +59,6 @@
     [Parameter] public string UnitText { get; set; } = string.Empty;
     [Parameter] public bool IsLoading { get; set; } = false;
 
-    private string _lastTitle = string.Empty;
-    private string _lastValue = string.Empty;
-    private string _lastElementType = string.Empty;
-    private string _lastBadgeText = string.Empty;
-
-    protected override bool ShouldRender()
-    {
-        bool changed = Title != _lastTitle || 
-                       Value != _lastValue || 
-                       ElementType != _lastElementType || 
-                       BadgeText != _lastBadgeText;
-
-        if (changed)
-        {
-            _lastTitle = Title;
-            _lastValue = Value;
-            _lastElementType = ElementType;
-            _lastBadgeText = BadgeText;
-        }
-
-        return changed;
-    }
-
     private string GetElementClass() => ElementType.ToLowerInvariant() switch
     {
         "water" => "element-water",
