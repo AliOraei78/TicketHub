@@ -150,5 +150,67 @@ namespace TicketHub.Tests.bUnit
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteStatusAction>(a => a.Id == 1)), Times.Once);
         }
+
+        [Fact]
+        public void TelemetryCards_RenderTotalActiveAndInactiveCounts()
+        {
+            var statuses = new List<StatusDto>
+            {
+                new StatusDto { Id = 1, Name = "Open", IsActive = true },
+                new StatusDto { Id = 2, Name = "In Progress", IsActive = true },
+                new StatusDto { Id = 3, Name = "Archived", IsActive = false }
+            };
+
+            _mockState.Setup(s => s.Value).Returns(new StatusState(false, statuses, string.Empty, null));
+
+            var cut = Render<StatusesSettings>();
+
+            cut.Markup.Should().Contain("کل وضعیت‌ها");
+            cut.Markup.Should().Contain("وضعیت‌های فعال");
+            cut.Markup.Should().Contain("وضعیت‌های غیرفعال");
+        }
+
+        [Fact]
+        public void HandleSearch_DispatchesSetSearchAction()
+        {
+            var cut = Render<StatusesSettings>();
+
+            var searchBox = cut.FindComponent<SearchBox>();
+            searchBox.InvokeAsync(() => searchBox.Instance.OnSearchChanged.InvokeAsync("Progress"));
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetStatusSearchAction>(a => a.Term == "Progress")), Times.Once);
+        }
+
+        [Fact]
+        public void FilterByStatus_DispatchesSetFilterStatusAction()
+        {
+            var cut = Render<StatusesSettings>();
+
+            var activeFilterBtn = cut.Find("button:contains('فعال')");
+            activeFilterBtn.Click();
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetStatusFilterStatusAction>(a => a.Status == true)), Times.Once);
+        }
+
+        [Fact]
+        public void DeleteStatus_CancelModal_ClosesWithoutDispatchingDelete()
+        {
+            var status = new StatusDto { Id = 1, Name = "Open", IsActive = true };
+            _mockState.Setup(s => s.Value).Returns(new StatusState(false, new List<StatusDto> { status }, string.Empty, null));
+
+            var cut = Render<StatusesSettings>();
+
+            var deleteButton = cut.Find("button[title='حذف']");
+            deleteButton.Click();
+
+            var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
+            confirmModal.Instance.IsOpen.Should().BeTrue();
+
+            // Cancel
+            confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<DeleteStatusAction>()), Times.Never);
+        }
     }
 }
+

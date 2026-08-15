@@ -5,6 +5,8 @@ using Moq;
 using System.Collections.Generic;
 using TicketHub.Application.DTOs;
 using TicketHub.Web.Components.Pages.Admin.Settings.Categories;
+using TicketHub.Web.Components.Shared;
+using TicketHub.Web.Store;
 using Xunit;
 
 namespace TicketHub.Tests.bUnit
@@ -117,6 +119,81 @@ namespace TicketHub.Tests.bUnit
 
             // Assert modal appears with the correct description
             var modalBody = cut.Find("div.fixed.inset-0").OuterHtml;
-            modalBody.Should().Contain("آیا از حذف «Test Category» مطمئن هستید؟");        }
+            modalBody.Should().Contain("آیا از حذف «Test Category» مطمئن هستید؟");
+        }
+
+        [Fact]
+        public void TelemetryCards_RenderTotalActiveAndInactiveCounts()
+        {
+            var categories = new List<CategoryDto>
+            {
+                new CategoryDto { Id = 1, Name = "Cat1", IsActive = true },
+                new CategoryDto { Id = 2, Name = "Cat2", IsActive = true },
+                new CategoryDto { Id = 3, Name = "Cat3", IsActive = false }
+            };
+
+            _mockCatState.Setup(s => s.Value).Returns(new TicketHub.Web.Store.CategoryState(
+                false,
+                categories,
+                string.Empty,
+                null,
+                new List<int>()
+            ));
+
+            var cut = Render<CategoriesSettings>();
+
+            cut.Markup.Should().Contain("کل انواع تیکت");
+            cut.Markup.Should().Contain("دسته‌های فعال");
+            cut.Markup.Should().Contain("دسته‌های غیرفعال");
+        }
+
+        [Fact]
+        public void HandleSearch_DispatchesSetSearchAction()
+        {
+            var cut = Render<CategoriesSettings>();
+
+            var searchBox = cut.FindComponent<SearchBox>();
+            searchBox.InvokeAsync(() => searchBox.Instance.OnSearchChanged.InvokeAsync("Security"));
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetCategorySearchAction>(a => a.Term == "Security")), Times.Once);
+        }
+
+        [Fact]
+        public void FilterByStatus_DispatchesSetFilterStatusAction()
+        {
+            var cut = Render<CategoriesSettings>();
+
+            var activeFilterBtn = cut.Find("button:contains('فعال')");
+            activeFilterBtn.Click();
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetCategoryFilterStatusAction>(a => a.Status == true)), Times.Once);
+        }
+
+        [Fact]
+        public void DeleteCategory_CancelModal_ClosesWithoutDispatchingDelete()
+        {
+            var category = new CategoryDto { Id = 1, Name = "Test Category", IsActive = true };
+            _mockCatState.Setup(s => s.Value).Returns(new TicketHub.Web.Store.CategoryState(
+                false,
+                new List<CategoryDto> { category },
+                string.Empty,
+                null,
+                new List<int>()
+            ));
+
+            var cut = Render<CategoriesSettings>();
+
+            var deleteBtn = cut.Find("button[title='حذف']");
+            deleteBtn.Click();
+
+            var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
+            confirmModal.Instance.IsOpen.Should().BeTrue();
+
+            // Cancel
+            confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<DeleteCategoryAction>()), Times.Never);
+        }
     }
 }
+

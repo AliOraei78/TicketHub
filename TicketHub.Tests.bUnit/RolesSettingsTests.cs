@@ -127,5 +127,60 @@ namespace TicketHub.Tests.bUnit
             // Assert dispatch
             cut.WaitForAssertion(() => _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteRoleAction>(a => a.Id == 1)), Times.Once), TimeSpan.FromSeconds(2));
         }
+
+        [Fact]
+        public void TelemetryCards_RenderTotalActiveAndInactiveCounts()
+        {
+            var roles = new List<RoleDto>
+            {
+                new RoleDto { Id = 1, Name = "Admin", IsActive = true },
+                new RoleDto { Id = 2, Name = "Support", IsActive = true },
+                new RoleDto { Id = 3, Name = "Guest", IsActive = false }
+            };
+
+            _mockState.Setup(s => s.Value).Returns(new RoleState(false, roles, string.Empty, null));
+
+            var cut = Render<RolesSettings>();
+
+            cut.Markup.Should().Contain("کل نقش‌ها");
+            cut.Markup.Should().Contain("نقش‌های فعال");
+            cut.Markup.Should().Contain("نقش‌های غیرفعال");
+        }
+
+        [Fact]
+        public void EditRole_LoadsRoleIntoForm()
+        {
+            var role = new RoleDto { Id = 10, Name = "Lead Developer", IsActive = true };
+            _mockState.Setup(s => s.Value).Returns(new RoleState(false, new List<RoleDto> { role }, string.Empty, null));
+
+            var cut = Render<RolesSettings>();
+
+            var editBtn = cut.Find("button[title='ویرایش']");
+            editBtn.Click();
+
+            cut.Markup.Should().Contain("ویرایش نقش");
+            cut.Markup.Should().Contain("Lead Developer");
+        }
+
+        [Fact]
+        public void DeleteRole_CancelModal_ClosesWithoutDispatchingDelete()
+        {
+            var role = new RoleDto { Id = 1, Name = "Admin Role", IsActive = true };
+            _mockState.Setup(s => s.Value).Returns(new RoleState(false, new List<RoleDto> { role }, string.Empty, null));
+
+            var cut = Render<RolesSettings>();
+
+            var deleteButton = cut.Find("button[title='حذف']");
+            deleteButton.Click();
+
+            var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
+            confirmModal.Instance.IsOpen.Should().BeTrue();
+
+            // Cancel
+            confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<DeleteRoleAction>()), Times.Never);
+        }
     }
 }
+
