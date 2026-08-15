@@ -271,6 +271,60 @@ namespace TicketHub.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Global Query Filter & Index for ISoftDeletable entities
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                {
+                    var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
+                    var property = System.Linq.Expressions.Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+                    var falseConstant = System.Linq.Expressions.Expression.Constant(false);
+                    var body = System.Linq.Expressions.Expression.Equal(property, falseConstant);
+                    var lambda = System.Linq.Expressions.Expression.Lambda(body, parameter);
+                    entityType.SetQueryFilter(lambda);
+
+                    modelBuilder.Entity(entityType.ClrType)
+                        .HasIndex(nameof(ISoftDeletable.IsDeleted));
+                }
+            }
+        }
+
+        public override int SaveChanges()
+        {
+            ApplySoftDelete();
+            return base.SaveChanges();
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            ApplySoftDelete();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplySoftDelete();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            ApplySoftDelete();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void ApplySoftDelete()
+        {
+            foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+                    entry.Entity.IsDeleted = true;
+                    entry.Entity.DeletedAtUtc = DateTime.UtcNow;
+                }
+            }
         }
     }
 }

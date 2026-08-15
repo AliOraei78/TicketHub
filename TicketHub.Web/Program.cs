@@ -31,6 +31,7 @@ using MassTransit;
 using TicketHub.Application.Behaviors;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
+using TicketHub.Web.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -56,6 +57,9 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
     options.Level = CompressionLevel.Fastest;
 });
+
+builder.Services.AddTicketHubRateLimiting();
+builder.Services.AddTicketHubHealthChecks();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(options =>
@@ -361,6 +365,7 @@ app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UseStaticFiles();
+app.UseRateLimiter();
 app.UseAntiforgery();
 
 // این دو خط حتماً قبل از MapRazorComponents باشند
@@ -395,12 +400,13 @@ app.MapRazorComponents<App>()
 app.MapHub<TicketHub.Web.Hubs.TicketHubHub>("/hubs/tickethub");
 app.MapControllers();
 app.MapDefaultControllerRoute();
+app.MapTicketHubHealthChecks();
 
 app.MapPost("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
     return TypedResults.LocalRedirect("/login");
-});
+}).RequireRateLimiting(RateLimitingExtensions.AuthPolicy);
 
 // --------- API کپچای داینامیک ---------
 app.MapGet("/api/captcha", (IDNTCaptchaApiProvider apiProvider) =>
@@ -412,7 +418,7 @@ app.MapGet("/api/captcha", (IDNTCaptchaApiProvider apiProvider) =>
     });
 
     return Results.Ok(result);
-});
+}).RequireRateLimiting(RateLimitingExtensions.AntiSpamPolicy);
 // --------------------------------------
 
 // --------- Dev Quick-Login Endpoint (Development Only) ---------
@@ -459,6 +465,19 @@ if (app.Environment.IsDevelopment())
         return Results.Redirect("/");
     });
 }
-// -----------------------------------------------------------------
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<TicketHub.Infrastructure.Data.AppDbContext>>();
+        using var dbContext = dbFactory.CreateDbContext();
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Could not automatically migrate database on startup.");
+    }
+}
 
 app.Run();

@@ -1,7 +1,8 @@
-// TicketHub.Core/Entities/Status.cs
+using TicketHub.Core.Interfaces;
+
 namespace TicketHub.Core.Entities
 {
-    public class Status
+    public class Status : ISoftDeletable
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -10,6 +11,8 @@ namespace TicketHub.Core.Entities
         public bool NeedApproval { get; set; } = false;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAtUtc { get; set; }
         // 1-to-many relationship: One status can have many tickets
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 

@@ -1,9 +1,10 @@
 using System;
 using TicketHub.Core.Enums;
+using TicketHub.Core.Interfaces;
 
 namespace TicketHub.Core.Entities;
 
-public class Notification
+public class Notification : ISoftDeletable
 {
     public int Id { get; set; }
     public int UserId { get; set; }
@@ -16,6 +17,8 @@ public class Notification
     public bool IsRead { get; set; } = false;
     public DateTime? ReadAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAtUtc { get; set; }
 
     public virtual User? User { get; set; }
 }

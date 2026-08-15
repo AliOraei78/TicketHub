@@ -1,10 +1,14 @@
-﻿namespace TicketHub.Core.Entities;
+using TicketHub.Core.Interfaces;
 
-public class Comment
+namespace TicketHub.Core.Entities;
+
+public class Comment : ISoftDeletable
 {
     public int Id { get; set; }
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAtUtc { get; set; }
 
     // Comment.cs
     public int? TicketId { get; set; }
