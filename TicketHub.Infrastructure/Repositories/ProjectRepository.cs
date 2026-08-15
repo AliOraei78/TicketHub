@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
 using TicketHub.Infrastructure.Data;
@@ -15,7 +15,7 @@ public class ProjectRepository : GenericRepository<Project>, IProjectRepository
 
         return await context.Set<Project>()
             .Include(p => p.Workflow)
-            .ThenInclude(w => w.WorkflowStatuses)
+            .ThenInclude(w => w!.WorkflowStatuses)
             .FirstOrDefaultAsync(p => p.Id == projectId);
     }
 }

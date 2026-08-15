@@ -17,8 +17,10 @@ public partial class ConfirmEmail : ComponentBase
 
     public string? Email { get; set; }
 
+#pragma warning disable BL0008
     [SupplyParameterFromForm(FormName = "verifyForm")]
     protected VerifyViewModel verifyModel { get; set; } = new();
+#pragma warning restore BL0008
 
     [SupplyParameterFromForm(FormName = "verifyForm", Name = "Action")]
     public string? Action { get; set; }
@@ -32,6 +34,7 @@ public partial class ConfirmEmail : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        verifyModel ??= new();
         Email = HttpContext?.Request.Cookies["TempEmail"];
 
         if (string.IsNullOrEmpty(Email))

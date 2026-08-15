@@ -16,8 +16,10 @@ public partial class Register : ComponentBase
 
     [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
+#pragma warning disable BL0008
     [SupplyParameterFromForm]
-    protected RegisterViewModel registerModel { get; set; }
+    protected RegisterViewModel registerModel { get; set; } = new();
+#pragma warning restore BL0008
 
     protected bool isCaptchaValid = false;
     protected string? errorMessage;

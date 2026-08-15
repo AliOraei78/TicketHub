@@ -278,7 +278,7 @@
                 <!-- Input Box -->
                 <div class="pt-2 border-t border-white/[0.08] shrink-0">
                     <div class="flex items-center gap-2 bg-[#050811] p-2 rounded-2xl border border-white/[0.1] focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400 transition-all">
-                        <input type="text" @bind="NewCommentContent" @onkeyup='(e) => { if (e.Key == "Enter") AddCommentAsync(); }' placeholder="نظر خود را بنویسید..." class="flex-grow bg-transparent px-3 py-1.5 text-xs text-slate-100 border-none outline-none focus:outline-none placeholder-slate-500 font-normal" />
+                        <input type="text" @bind="NewCommentContent" @onkeyup='async (e) => { if (e.Key == "Enter") await AddCommentAsync(); }' placeholder="نظر خود را بنویسید..." class="flex-grow bg-transparent px-3 py-1.5 text-xs text-slate-100 border-none outline-none focus:outline-none placeholder-slate-500 font-normal" />
                         <button type="button" @onclick="AddCommentAsync" disabled="@(IsSubmittingComment || string.IsNullOrWhiteSpace(NewCommentContent))" class="btn-cyber-primary px-4 py-2 text-xs font-bold rounded-xl disabled:opacity-40 flex items-center gap-1 shrink-0 cursor-pointer">
                             @if (IsSubmittingComment)
                             {

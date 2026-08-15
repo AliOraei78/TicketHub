@@ -14,7 +14,7 @@ using TicketHub.Core.Common;
 
 namespace TicketHub.Tests.bUnit
 {
-    public class WorkflowEditorTests : TestContext
+    public class WorkflowEditorTests : BunitContext
     {
         private readonly Mock<IDispatcher> _mockDispatcher;
         private readonly Mock<IState<WorkflowEditorState>> _mockState;

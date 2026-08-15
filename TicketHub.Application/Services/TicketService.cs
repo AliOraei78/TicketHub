@@ -322,11 +322,11 @@ public class TicketService : ITicketService
         // 🌟 فیکس مشکل عدم بروزرسانی priority / status / category / workflowStatus:
         // پاک کردن Navigation Propertyها تا EF Core مقادیر کلید خارجی جدید را ذخیره کند
         ticketInDb.Priority = null;
-        ticketInDb.Status = null;
+        ticketInDb.Status = null!;
         ticketInDb.Category = null;
         ticketInDb.WorkflowStatus = null;
-        ticketInDb.Project = null;
-        ticketInDb.User = null;
+        ticketInDb.Project = null!;
+        ticketInDb.User = null!;
 
         await _ticketRepository.UpdateAsync(ticketInDb);
 
@@ -438,13 +438,11 @@ public class TicketService : ITicketService
 
     public async Task ExecuteTransitionAsync(ExecuteTransitionDto dto, int currentUserId)
     {
-        _logger.LogInformation("اجرای انتقال {TransitionId} روی تیکت {TicketId}", dto.TransitionId, dto.TicketId);
-
         var ticketInDb = await _ticketRepository.GetTicketWithProjectAndStatusAsync(dto.TicketId);
-
         if (ticketInDb == null) throw new NotFoundException("تیکت", dto.TicketId);
 
         var transition = await _workflowRepository.GetTransitionWithDetailsAsync(dto.TransitionId);
+        if (transition == null) throw new NotFoundException("انتقال جریان کار", dto.TransitionId);
 
         if (!transition.IsActive)
         {
@@ -474,8 +472,8 @@ public class TicketService : ITicketService
             TransitionId = transition.Id,
             TransitionTitle = transition.Name,
             UserId = currentUserId,
-            WorkFlowId = ticketInDb.Project.WorkflowId,
-            WorkFlowName = ticketInDb.Project.Workflow?.Name ?? string.Empty,
+            WorkFlowId = ticketInDb.Project?.WorkflowId ?? 0,
+            WorkFlowName = ticketInDb.Project?.Workflow?.Name ?? string.Empty,
             FromStatusId = transition.FromStatus?.StatusId ?? 0,
             FromStatusName = transition.FromStatus?.Status?.Name,
             ToStatusId = transition.ToStatus?.StatusId ?? 0,

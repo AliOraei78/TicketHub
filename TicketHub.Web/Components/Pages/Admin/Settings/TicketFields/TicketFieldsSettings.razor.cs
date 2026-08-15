@@ -165,18 +165,17 @@ public partial class TicketFieldsSettings
 
     private RenderFragment GetFieldTypeIcon(TicketHub.Application.Enums.FieldTypeEnum type) => builder =>
     {
-        var seq = 0;
-        builder.OpenElement(seq++, "svg");
-        builder.AddAttribute(seq++, "xmlns", "http://www.w3.org/2000/svg");
-        builder.AddAttribute(seq++, "class", "h-4 w-4");
-        builder.AddAttribute(seq++, "fill", "none");
-        builder.AddAttribute(seq++, "viewBox", "0 0 24 24");
-        builder.AddAttribute(seq++, "stroke", "currentColor");
+        builder.OpenElement(0, "svg");
+        builder.AddAttribute(1, "xmlns", "http://www.w3.org/2000/svg");
+        builder.AddAttribute(2, "class", "h-4 w-4");
+        builder.AddAttribute(3, "fill", "none");
+        builder.AddAttribute(4, "viewBox", "0 0 24 24");
+        builder.AddAttribute(5, "stroke", "currentColor");
 
-        builder.OpenElement(seq++, "path");
-        builder.AddAttribute(seq++, "stroke-linecap", "round");
-        builder.AddAttribute(seq++, "stroke-linejoin", "round");
-        builder.AddAttribute(seq++, "stroke-width", "2");
+        builder.OpenElement(6, "path");
+        builder.AddAttribute(7, "stroke-linecap", "round");
+        builder.AddAttribute(8, "stroke-linejoin", "round");
+        builder.AddAttribute(9, "stroke-width", "2");
 
         var pathD = type switch
         {
@@ -192,7 +191,7 @@ public partial class TicketFieldsSettings
             _ => "M4 6h16M4 12h16M4 18h7"
         };
 
-        builder.AddAttribute(seq++, "d", pathD);
+        builder.AddAttribute(10, "d", pathD);
         builder.CloseElement();
         builder.CloseElement();
     };

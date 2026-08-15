@@ -103,7 +103,7 @@ namespace TicketHub.Tests.bUnit
             return _outletRef.Wrapper.FindComponent<TComponent>();
         }
 
-        public IRenderedComponent<TComponent> Render<TComponent>(Action<ComponentParameterCollectionBuilder<TComponent>> parameterBuilder) where TComponent : IComponent
+        public new IRenderedComponent<TComponent> Render<TComponent>(Action<ComponentParameterCollectionBuilder<TComponent>> parameterBuilder) where TComponent : IComponent
         {
             _outletRef.Wrapper = base.Render<TestModalWrapper>(p => p.AddChildContent<TComponent>(parameterBuilder));
             return _outletRef.Wrapper.FindComponent<TComponent>();

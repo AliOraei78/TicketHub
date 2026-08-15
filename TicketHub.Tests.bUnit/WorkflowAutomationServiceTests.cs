@@ -113,7 +113,7 @@ namespace TicketHub.Tests.bUnit
             await service.ProcessAutomaticTransitionsAsync();
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(42, 200, 20, It.Is<TicketHistory>(h => h.Comment.Contains("انتقال خودکار"))), Times.Once);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(42, 200, 20, It.Is<TicketHistory>(h => h.Comment != null && h.Comment.Contains("انتقال خودکار"))), Times.Once);
             _mockEventBroker.Verify(b => b.PublishTransitionOccurredAsync(42), Times.Once);
             _mockEventBroker.Verify(b => b.PublishTicketUpdatedAsync(42), Times.Once);
         }
@@ -519,7 +519,7 @@ namespace TicketHub.Tests.bUnit
                 88,
                 600,
                 60,
-                It.Is<TicketHistory>(h => h.Comment.Contains("Deadline Exceeded") || h.Comment.Contains("اتمام مهلت زمانی"))),
+                It.Is<TicketHistory>(h => h.Comment != null && (h.Comment.Contains("Deadline Exceeded") || h.Comment.Contains("اتمام مهلت زمانی")))),
                 Times.Once);
 
             _mockEventBroker.Verify(b => b.PublishTransitionOccurredAsync(88), Times.Once);

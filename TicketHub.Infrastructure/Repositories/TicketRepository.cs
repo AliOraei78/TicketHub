@@ -187,10 +187,10 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
         using var context = await _factory.CreateDbContextAsync();
         return await context.Set<Ticket>()
             .Include(t => t.Project)
-                .ThenInclude(p => p.Workflow)
+                .ThenInclude(p => p!.Workflow)
             .Include(t => t.Status)
             .Include(t => t.WorkflowStatus)
-                .ThenInclude(ws => ws.Status)
+                .ThenInclude(ws => ws!.Status)
             .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == id);
     }

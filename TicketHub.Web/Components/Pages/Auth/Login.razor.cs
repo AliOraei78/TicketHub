@@ -17,8 +17,10 @@ public partial class Login : ComponentBase
     [Inject] protected ILogger<Login> Logger { get; set; } = default!;
     [Inject] protected IDNTCaptchaValidatorService CaptchaValidator { get; set; } = default!;
 
+#pragma warning disable BL0008
     [SupplyParameterFromForm]
     public LoginViewModel loginModel { get; set; } = new();
+#pragma warning restore BL0008
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
