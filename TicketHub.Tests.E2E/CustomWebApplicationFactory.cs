@@ -20,6 +20,7 @@ namespace TicketHub.Tests.E2E
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         private readonly string _dbConnectionString;
+        private IHost? _kestrelHost;
 
         public CustomWebApplicationFactory()
         {
@@ -28,33 +29,40 @@ namespace TicketHub.Tests.E2E
             
             // Set environment variable so Program.cs (Hangfire, EF, MassTransit) reads the test connection string
             Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _dbConnectionString);
+            Environment.SetEnvironmentVariable("RabbitMQ__Host", ""); // Use InMemory MassTransit during E2E tests
         }
 
         public string ServerAddress { get; private set; } = "http://127.0.0.1:0";
-        private IHost _host = default!;
 
         protected override IHost CreateHost(IHostBuilder builder)
         {
-            // Configure the actual Kestrel server
+            // 1. Build test server for WebApplicationFactory internal management
+            var testHost = builder.Build();
+
+            // 2. Build and start the real Kestrel host on an ephemeral port for Playwright browser automation
             builder.ConfigureWebHost(webHostBuilder =>
             {
                 webHostBuilder.UseKestrel();
-                webHostBuilder.UseUrls(ServerAddress);
+                webHostBuilder.UseUrls("http://127.0.0.1:0");
                 webHostBuilder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
+                webHostBuilder.UseSetting("RabbitMQ:Host", "");
             });
 
-            _host = builder.Build();
-            _host.Start();
+            _kestrelHost = builder.Build();
+            _kestrelHost.Start();
             
-            var server = _host.Services.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>();
+            var server = _kestrelHost.Services.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>();
             var addresses = server.Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
-            ServerAddress = addresses?.Addresses.FirstOrDefault() ?? ServerAddress;
+            ServerAddress = addresses?.Addresses.FirstOrDefault() ?? "http://127.0.0.1:5000";
             
-            return _host;
+            return testHost;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            builder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
+            builder.UseSetting("RabbitMQ:Host", "");
+
             builder.ConfigureTestServices(services =>
             {
                 // Remove existing DbContext configuration
@@ -64,7 +72,7 @@ namespace TicketHub.Tests.E2E
                 var factoryDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDbContextFactory<AppDbContext>));
                 if (factoryDescriptor != null) services.Remove(factoryDescriptor);
 
-                // Add DB Context pointing to Testcontainer
+                // Add DB Context pointing to Test DB
                 services.AddDbContextFactory<AppDbContext>(options =>
                 {
                     options.UseSqlServer(_dbConnectionString)
@@ -82,10 +90,11 @@ namespace TicketHub.Tests.E2E
 
         public async Task InitializeAsync()
         {
-            // (Docker disabled for local env)
-            
+            // Ensure server is started
+            CreateDefaultClient();
+
             // Ensure DB is created and migrated
-            using var scope = Services.CreateScope();
+            using var scope = (_kestrelHost?.Services ?? Services).CreateScope();
             var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             using var context = factory.CreateDbContext();
             await context.Database.MigrateAsync();
@@ -93,8 +102,12 @@ namespace TicketHub.Tests.E2E
 
         new public async Task DisposeAsync()
         {
-            // await _dbContainer.DisposeAsync();
-            _host?.Dispose();
+            if (_kestrelHost != null)
+            {
+                await _kestrelHost.StopAsync();
+                _kestrelHost.Dispose();
+            }
+            base.Dispose();
         }
     }
 
