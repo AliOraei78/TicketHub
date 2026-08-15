@@ -7,7 +7,7 @@ using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Main.Tickets;
 
-public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDisposable
+public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent
 {
     [Inject] protected IState<TicketState> TicketState { get; set; } = default!;
     [Inject] protected IDispatcher Dispatcher { get; set; } = default!;
@@ -150,9 +150,13 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent, IDi
         }
     }
 
-    public void Dispose()
+    protected override async ValueTask DisposeAsyncCore(bool disposing)
     {
-        ActionSubscriber.UnsubscribeFromAllActions(this);
+        if (disposing)
+        {
+            ActionSubscriber.UnsubscribeFromAllActions(this);
+        }
+        await base.DisposeAsyncCore(disposing);
     }
 
     protected async Task OpenCreateModal()

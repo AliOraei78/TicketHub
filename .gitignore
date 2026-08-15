@@ -443,3 +443,9 @@ appsettings.Local.json
 # Documentation scratch
 Journey.md
 
+# Test & Code Coverage Results
+[Tt]est[Rr]esults/
+coverage/
+*.cobertura.xml
+
+

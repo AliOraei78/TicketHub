@@ -98,21 +98,21 @@ namespace TicketHub.Tests.E2E
 
             // ── Select Project
             var projectRoot = Page.Locator("div.relative:has(> label:has-text('پروژه مربوطه'))");
-            await projectRoot.Locator("div.cursor-pointer").ClickAsync();
+            await projectRoot.Locator("div.cursor-pointer").First.ClickAsync();
             await WaitForBlazorAsync(Page, 500);
             await projectRoot.Locator("li:has-text('عمومی')").First.ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 500);
 
             // ── Select Priority
             var priorityRoot = Page.Locator("div.relative:has(> label:has-text('اولویت'))");
-            await priorityRoot.Locator("div.cursor-pointer").ClickAsync();
+            await priorityRoot.Locator("div.cursor-pointer").First.ClickAsync();
             await WaitForBlazorAsync(Page, 500);
             await priorityRoot.Locator("li:has-text('متوسط')").First.ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 500);
 
             // ── Select Category
             var categoryRoot = Page.Locator("div.relative:has(> label:has-text('دسته‌بندی'))");
-            await categoryRoot.Locator("div.cursor-pointer").ClickAsync();
+            await categoryRoot.Locator("div.cursor-pointer").First.ClickAsync();
             await WaitForBlazorAsync(Page, 500);
             await categoryRoot.Locator("li:has-text('عمومی')").First.ClickAsync(new() { Force = true });
             

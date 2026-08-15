@@ -140,7 +140,7 @@ namespace TicketHub.Tests.E2E
             await modalLocator.WaitForAsync();
 
             // Click confirm delete
-            await Page.ClickAsync("button:has-text('حذف'), button:has-text('بله')");
+            await Page.Locator("button:has-text('بله، حذف کن'), button:has-text('حذف')").First.ClickAsync();
 
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });

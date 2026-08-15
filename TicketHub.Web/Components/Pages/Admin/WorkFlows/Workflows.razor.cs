@@ -5,7 +5,7 @@ using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.WorkFlows;
 
-public partial class Workflows : IDisposable
+public partial class Workflows
 {
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] public IState<WorkflowState> WfState { get; set; } = default!;
@@ -35,10 +35,14 @@ public partial class Workflows : IDisposable
         Dispatcher.Dispatch(new LoadWorkflowInitialDataAction());
     }
 
-    public void Dispose()
+    protected override async ValueTask DisposeAsyncCore(bool disposing)
     {
-        _searchCts?.Cancel();
-        _searchCts?.Dispose();
+        if (disposing)
+        {
+            _searchCts?.Cancel();
+            _searchCts?.Dispose();
+        }
+        await base.DisposeAsyncCore(disposing);
     }
 
     private void OpenCreateWorkflow() => Navigation.NavigateTo("/workflows/editor");

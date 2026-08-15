@@ -106,7 +106,30 @@ namespace TicketHub.Tests.E2E
             // Ensure server is started
             CreateDefaultClient();
 
-            // Ensure DB is created and migrated
+            // 1. Ensure SQL Server is reachable and create target database from master
+            var connBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_dbConnectionString);
+            var targetDbName = connBuilder.InitialCatalog;
+            connBuilder.InitialCatalog = "master";
+            var masterConnStr = connBuilder.ConnectionString;
+
+            for (int retry = 0; retry < 15; retry++)
+            {
+                try
+                {
+                    using var masterConn = new Microsoft.Data.SqlClient.SqlConnection(masterConnStr);
+                    await masterConn.OpenAsync();
+                    using var cmd = masterConn.CreateCommand();
+                    cmd.CommandText = $"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '{targetDbName}') CREATE DATABASE [{targetDbName}];";
+                    await cmd.ExecuteNonQueryAsync();
+                    break;
+                }
+                catch when (retry < 14)
+                {
+                    await Task.Delay(1000);
+                }
+            }
+
+            // 2. Ensure DB is migrated
             using var scope = (_kestrelHost?.Services ?? Services).CreateScope();
             var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             using var context = factory.CreateDbContext();

@@ -23,6 +23,11 @@ namespace TicketHub.Tests.E2E
             Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
             Context = await Browser.NewContextAsync();
             Page = await Context.NewPageAsync();
+            Page.SetDefaultTimeout(60000);
+            Page.SetDefaultNavigationTimeout(60000);
+
+            // Establish active authentication session for all E2E tests
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
         }
 
         public async Task DisposeAsync()

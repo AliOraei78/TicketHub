@@ -5,7 +5,7 @@ using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.Users;
 
-public partial class Users : IDisposable
+public partial class Users
 {
     [Inject] public IState<UserState> UsrState { get; set; } = default!;
     [Inject] public IDispatcher Dispatcher { get; set; } = default!;
@@ -44,9 +44,13 @@ public partial class Users : IDisposable
         Dispatcher.Dispatch(new LoadUserInitialDataAction());
     }
 
-    public void Dispose()
+    protected override async ValueTask DisposeAsyncCore(bool disposing)
     {
-        ActionSubscriber.UnsubscribeFromAllActions(this);
+        if (disposing)
+        {
+            ActionSubscriber.UnsubscribeFromAllActions(this);
+        }
+        await base.DisposeAsyncCore(disposing);
     }
 
     // Filters

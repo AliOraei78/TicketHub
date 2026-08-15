@@ -161,7 +161,7 @@ namespace TicketHub.Tests.E2E
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
             // 5. Click bulk delete for the remaining 2
-            await Page.ClickAsync("button:has-text('حذف')");
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف')");
             var bulkDeleteModal = Page.Locator("text=مطمئن هستید").First;
             await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
             await Page.ClickAsync("button:has-text('بله، حذف کن')");

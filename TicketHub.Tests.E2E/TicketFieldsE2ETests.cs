@@ -198,7 +198,7 @@ namespace TicketHub.Tests.E2E
             var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('2 مورد انتخاب شده')").First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
-            await Page.ClickAsync("button:has-text('حذف')");
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف')");
             var bulkDeleteModal = Page.Locator("text=مطمئن هستید").First;
             await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
             await Page.ClickAsync("button:has-text('بله، حذف کن')");

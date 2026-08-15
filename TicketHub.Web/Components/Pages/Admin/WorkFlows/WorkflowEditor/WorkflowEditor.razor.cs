@@ -7,7 +7,7 @@ using TicketHub.Web.Store;
 
 namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
 {
-    public partial class WorkflowEditor : IDisposable
+    public partial class WorkflowEditor
     {
         [Parameter] public int? Id { get; set; }
 
@@ -69,9 +69,13 @@ namespace TicketHub.Web.Components.Pages.Admin.WorkFlows.WorkflowEditor
             Dispatcher.Dispatch(new LoadEditorDataAction(Id));
         }
 
-        public void Dispose()
+        protected override async ValueTask DisposeAsyncCore(bool disposing)
         {
-            ActionSubscriber.UnsubscribeFromAllActions(this);
+            if (disposing)
+            {
+                ActionSubscriber.UnsubscribeFromAllActions(this);
+            }
+            await base.DisposeAsyncCore(disposing);
         }
 
         private void SaveWorkflowAsync()
