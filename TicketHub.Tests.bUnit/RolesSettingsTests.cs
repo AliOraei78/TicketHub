@@ -54,8 +54,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<RolesSettings>();
 
             // Assert
-            Assert.Contains("Admin Role", cut.Markup);
-            
+            cut.Markup.Should().Contain("Admin Role");            
             // Check if LoadRolesAction was dispatched
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadRolesAction>()), Times.Once);
         }
@@ -72,9 +71,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             var validationMessages = cut.FindAll(".validation-message, .text-red-500");
-            Assert.NotEmpty(validationMessages);
-            Assert.Contains("نام نقش الزامی است", cut.Markup);
-        }
+            validationMessages.Should().NotBeEmpty();            cut.Markup.Should().Contain("نام نقش الزامی است");        }
 
         [Fact]
         public void HandleSearch_DispatchesAction()
@@ -123,8 +120,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
-            Assert.True(confirmModal.Instance.IsOpen);
-
+            confirmModal.Instance.IsOpen.Should().BeTrue();
             // Act - Confirm delete
             confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
 

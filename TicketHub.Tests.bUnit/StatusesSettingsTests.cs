@@ -54,7 +54,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<StatusesSettings>();
 
             // Assert
-            Assert.Contains(cut.FindAll("td"), td => td.InnerHtml.Contains("Open"));
+            cut.FindAll("td").Should().Contain(td => td.InnerHtml.Contains("Open"));
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadStatusesAction>()), Times.Once);
         }
 
@@ -90,8 +90,7 @@ namespace TicketHub.Tests.bUnit
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<SaveStatusAction>()), Times.Never);
             var validationMessages = cut.FindAll(".text-red-500");
-            Assert.NotEmpty(validationMessages);
-        }
+            validationMessages.Should().NotBeEmpty();        }
 
         [Fact]
         public void EditStatus_PopulatesForm_And_DispatchesSaveActionWithIsEditingTrue()
@@ -113,9 +112,7 @@ namespace TicketHub.Tests.bUnit
 
             // Verify form populated (IsEditing = true should change button text)
             var saveButton = cut.Find("button[type='submit']");
-            Assert.Contains("ذخیره تغییرات", saveButton.TextContent);
-            Assert.Equal("Open", cut.Find("input[placeholder='مثال: In Progress']").Attributes["value"]?.Value);
-
+            saveButton.TextContent.Should().Contain("ذخیره تغییرات");            cut.Find("input[placeholder='مثال: In Progress']").Attributes["value"]?.Value.Should().Be("Open");
             // Change name
             cut.Find("input[placeholder='مثال: In Progress']").Change("Closed");
             
@@ -146,8 +143,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
-            Assert.NotNull(confirmModal);
-            
+            confirmModal.Should().NotBeNull();            
             // Act
             confirmModal.Find("button.bg-rose-600").Click(); // Click confirm on the modal
 

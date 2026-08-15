@@ -64,11 +64,10 @@ public class NotificationServiceTests
         var result = await _notificationService.CreateNotificationAsync(createDto);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.Id > 0);
-        Assert.Equal("پاسخ جدید", result.Title);
-        Assert.False(result.IsRead);
-
+        result.Should().NotBeNull();
+        result.Id.Should().BeGreaterThan(0);
+        result.Title.Should().Be("پاسخ جدید");
+        result.IsRead.Should().BeFalse();
         // Verify Real-time broker was called
         _mockEventBroker.Verify(b => b.PublishNotificationAsync(1, It.Is<NotificationDto>(n => n.Id == result.Id)), Times.Once);
     }
@@ -87,10 +86,7 @@ public class NotificationServiceTests
         var countUser3 = await _notificationService.GetUnreadCountAsync(3);
 
         // Assert
-        Assert.Equal(2, countUser1);
-        Assert.Equal(1, countUser2);
-        Assert.Equal(0, countUser3);
-    }
+        countUser1.Should().Be(2);        countUser2.Should().Be(1);        countUser3.Should().Be(0);    }
 
     [Fact]
     public async Task MarkAsReadAsync_ShouldMarkNotificationAsRead_ForCorrectUser()
@@ -100,14 +96,12 @@ public class NotificationServiceTests
 
         // Act - User 2 tries to mark User 1's notification (should fail)
         var failResult = await _notificationService.MarkAsReadAsync(n.Id, userId: 2);
-        Assert.False(failResult);
-
+        failResult.Should().BeFalse();
         // Act - User 1 marks own notification
         var successResult = await _notificationService.MarkAsReadAsync(n.Id, userId: 1);
-        Assert.True(successResult);
-
+        successResult.Should().BeTrue();
         var unread = await _notificationService.GetUnreadCountAsync(1);
-        Assert.Equal(0, unread);
+        unread.Should().Be(0);
     }
 
     [Fact]
@@ -122,9 +116,9 @@ public class NotificationServiceTests
         var markedCount = await _notificationService.MarkAllAsReadAsync(1);
 
         // Assert
-        Assert.Equal(2, markedCount);
-        Assert.Equal(0, await _notificationService.GetUnreadCountAsync(1));
-        Assert.Equal(1, await _notificationService.GetUnreadCountAsync(2)); // User 2 still has 1 unread
+        markedCount.Should().Be(2);
+        (await _notificationService.GetUnreadCountAsync(1)).Should().Be(0);
+        (await _notificationService.GetUnreadCountAsync(2)).Should().Be(1); // User 2 still has 1 unread
     }
 
     [Fact]
@@ -134,12 +128,12 @@ public class NotificationServiceTests
         var n = await _notificationService.CreateNotificationAsync(new CreateNotificationDto { UserId = 1, Title = "N1", Message = "M1" });
 
         // Act & Assert - User 2 cannot delete
-        await Assert.ThrowsAsync<TicketHub.Core.Common.Exceptions.ForbiddenException>(() =>
-            _notificationService.DeleteNotificationAsync(n.Id, userId: 2));
+        var act = () => _notificationService.DeleteNotificationAsync(n.Id, userId: 2);
+        await act.Should().ThrowAsync<TicketHub.Core.Common.Exceptions.ForbiddenException>();
 
         // Act - User 1 deletes
         await _notificationService.DeleteNotificationAsync(n.Id, userId: 1);
         var unread = await _notificationService.GetUnreadCountAsync(1);
-        Assert.Equal(0, unread);
+        unread.Should().Be(0);
     }
 }

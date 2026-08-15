@@ -654,9 +654,9 @@ namespace TicketHub.Tests.bUnit
             using (var verifyContext = await factory.CreateDbContextAsync())
             {
                 var updatedTicket = await verifyContext.Set<Ticket>().FindAsync(90);
-                Assert.NotNull(updatedTicket);
-                Assert.NotNull(updatedTicket.DueDate);
-                Assert.True(updatedTicket.DueDate.Value > DateTime.UtcNow.AddMinutes(50)); // Reset to ~60 min from now
+                updatedTicket.Should().NotBeNull();
+                updatedTicket.DueDate.Should().NotBeNull();
+                updatedTicket.DueDate.Value.Should().BeAfter(DateTime.UtcNow.AddMinutes(50)); // Reset to ~60 min from now
             }
         }
 
@@ -853,8 +853,8 @@ namespace TicketHub.Tests.bUnit
             var result = validator.Validate(workflow);
 
             // Assert
-            Assert.False(result.IsValid);
-            Assert.Contains(result.Errors, e => e.ErrorMessage.Contains("حداکثر یک انتقال خودکار"));
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage.Contains("حداکثر یک انتقال خودکار"));
         }
 
         [Fact]
@@ -881,7 +881,7 @@ namespace TicketHub.Tests.bUnit
             var result = validator.Validate(workflow);
 
             // Assert
-            Assert.True(result.IsValid);
+            result.IsValid.Should().BeTrue();
         }
 
         [Fact]
@@ -903,8 +903,8 @@ namespace TicketHub.Tests.bUnit
             var result = validator.Validate(workflow);
 
             // Assert
-            Assert.False(result.IsValid);
-            Assert.Contains(result.Errors, e => e.ErrorMessage.Contains("همزمان به عنوان وضعیت اولیه و نهایی"));
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage.Contains("همزمان به عنوان وضعیت اولیه و نهایی"));
         }
 
         [Fact]
@@ -928,8 +928,7 @@ namespace TicketHub.Tests.bUnit
             var result = validator.Validate(workflow);
 
             // Assert
-            Assert.True(result.IsValid);
-        }
+            result.IsValid.Should().BeTrue();        }
 
         #endregion
     }

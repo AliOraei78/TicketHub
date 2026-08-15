@@ -45,8 +45,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Users>();
 
             // Assert page header
-            Assert.NotNull(cut.Find("h1:contains('مدیریت کاربران')"));
-        }
+            cut.Find("h1:contains('مدیریت کاربران')").Should().NotBeNull();        }
 
         [Fact]
         public void UserForm_RendersInputs_Correctly()
@@ -58,11 +57,7 @@ namespace TicketHub.Tests.bUnit
             createBtn.Click();
 
             // Find form elements in UserFormModal
-            Assert.NotNull(cut.Find("input[type='text']"));
-            Assert.NotNull(cut.Find("input[type='email']"));
-            Assert.NotNull(cut.Find("input[type='tel']"));
-            Assert.NotNull(cut.Find("input[type='password']"));
-        }
+            cut.Find("input[type='text']").Should().NotBeNull();            cut.Find("input[type='email']").Should().NotBeNull();            cut.Find("input[type='tel']").Should().NotBeNull();            cut.Find("input[type='password']").Should().NotBeNull();        }
 
         [Fact]
         public void SubmitEmptyForm_ShowsValidationMessages()
@@ -79,8 +74,7 @@ namespace TicketHub.Tests.bUnit
 
             // Verify validation messages render
             var validationMessages = cut.FindAll(".validation-message, .text-red-500");
-            Assert.NotEmpty(validationMessages);
-        }
+            validationMessages.Should().NotBeEmpty();        }
 
         [Fact]
         public void ValidForm_Submits_Successfully()
@@ -138,8 +132,6 @@ namespace TicketHub.Tests.bUnit
             deleteBtn.Click();
 
             var confirmModal = cut.FindComponent<TicketHub.Web.Components.Shared.ConfirmDeleteModal>();
-            Assert.True(confirmModal.Instance.IsOpen, "ConfirmDeleteModal IsOpen should be true");
-            Assert.Contains("آیا از حذف کاربر Test User مطمئن هستید؟", confirmModal.Instance.Description);
-        }
+            confirmModal.Instance.IsOpen.Should().BeTrue("ConfirmDeleteModal IsOpen should be true");            confirmModal.Instance.Description.Should().Contain("آیا از حذف کاربر Test User مطمئن هستید؟");        }
     }
 }

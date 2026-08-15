@@ -33,9 +33,7 @@ public class MediatRBehaviorTests
         var result = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        Assert.Equal("Cached Result", result);
-        Assert.False(nextCalled, "Next handler should not be invoked on Cache Hit!");
-    }
+        result.Should().Be("Cached Result");        nextCalled.Should().BeFalse("Next handler should not be invoked on Cache Hit!");    }
 
     [Fact]
     public async Task CachingBehavior_InvokesNextHandlerAndSetsCache_WhenCacheMiss()
@@ -56,8 +54,7 @@ public class MediatRBehaviorTests
         var result = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        Assert.Equal("Fresh Result", result);
-        mockCacheService.Verify(s => s.SetAsync("test_cache_key", "Fresh Result", It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()), Times.Once);
+        result.Should().Be("Fresh Result");        mockCacheService.Verify(s => s.SetAsync("test_cache_key", "Fresh Result", It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     public class TestCacheRequest : ICacheableRequest

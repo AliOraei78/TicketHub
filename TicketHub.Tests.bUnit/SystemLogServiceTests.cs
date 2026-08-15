@@ -32,9 +32,7 @@ namespace TicketHub.Tests.bUnit
 
             var result = await service.GetLogsAsync();
 
-            Assert.NotNull(result);
-            Assert.Empty(result);
-        }
+            result.Should().NotBeNull();            result.Should().BeEmpty();        }
 
         [Fact]
         public async Task GetLogsAsync_RendersTemplatePlaceholders_WithPropertyValues()
@@ -46,17 +44,8 @@ namespace TicketHub.Tests.bUnit
             var service = new SystemLogService(_tempLogsDir);
             var logs = await service.GetLogsAsync();
 
-            Assert.Single(logs);
-            var entry = logs[0];
-            Assert.Equal("Information", entry.Level);
-            Assert.Equal("HTTP GET /api/tickets responded 200 in 15.42 ms", entry.Message);
-            Assert.Equal("trace-123", entry.TraceId);
-            Assert.Equal("span-456", entry.SpanId);
-            Assert.Equal("corr-789", entry.CorrelationId);
-            Assert.Equal("TicketController", entry.SourceContext);
-            Assert.Equal("GET", entry.Properties["RequestMethod"]);
-            Assert.Equal("200", entry.Properties["StatusCode"]);
-        }
+            logs.Should().ContainSingle();            var entry = logs[0];
+            entry.Level.Should().Be("Information");            entry.Message.Should().Be("HTTP GET /api/tickets responded 200 in 15.42 ms");            entry.TraceId.Should().Be("trace-123");            entry.SpanId.Should().Be("span-456");            entry.CorrelationId.Should().Be("corr-789");            entry.SourceContext.Should().Be("TicketController");            entry.Properties["RequestMethod"].Should().Be("GET");            entry.Properties["StatusCode"].Should().Be("200");        }
 
         [Fact]
         public async Task GetLogsAsync_FiltersByLogLevel()
@@ -70,11 +59,7 @@ namespace TicketHub.Tests.bUnit
             var service = new SystemLogService(_tempLogsDir);
             var errorLogs = await service.GetLogsAsync(level: "Error");
 
-            Assert.Single(errorLogs);
-            Assert.Equal("Error", errorLogs[0].Level);
-            Assert.Equal("Error message", errorLogs[0].Message);
-            Assert.Equal("System.Exception: failed", errorLogs[0].Exception);
-        }
+            errorLogs.Should().ContainSingle();            errorLogs[0].Level.Should().Be("Error");            errorLogs[0].Message.Should().Be("Error message");            errorLogs[0].Exception.Should().Be("System.Exception: failed");        }
 
         [Fact]
         public async Task GetLogsAsync_SearchesAcrossMessageExceptionAndProperties()
@@ -88,14 +73,10 @@ namespace TicketHub.Tests.bUnit
 
             // Search in properties
             var propertySearchResult = await service.GetLogsAsync(search: "User_100");
-            Assert.Single(propertySearchResult);
-            Assert.Equal("User logged in", propertySearchResult[0].Message);
-
+            propertySearchResult.Should().ContainSingle();            propertySearchResult[0].Message.Should().Be("User logged in");
             // Search in exception
             var exceptionSearchResult = await service.GetLogsAsync(search: "SqlException");
-            Assert.Single(exceptionSearchResult);
-            Assert.Equal("DB Operation failed", exceptionSearchResult[0].Message);
-        }
+            exceptionSearchResult.Should().ContainSingle();            exceptionSearchResult[0].Message.Should().Be("DB Operation failed");        }
 
         [Fact]
         public async Task GetLogsAsync_FiltersByDateRange_PruningFilesOutsideRange()
@@ -115,9 +96,7 @@ namespace TicketHub.Tests.bUnit
 
             var result = await service.GetLogsAsync(fromDate: fromDate, toDate: toDate);
 
-            Assert.Single(result);
-            Assert.Equal("Day 10 log", result[0].Message);
-        }
+            result.Should().ContainSingle();            result[0].Message.Should().Be("Day 10 log");        }
 
         [Fact]
         public void LogExportFormatter_ToFormattedText_FormatsLogCorrectly()
@@ -141,15 +120,7 @@ namespace TicketHub.Tests.bUnit
 
             var formatted = TicketHub.Application.Common.LogExportFormatter.ToFormattedText(log);
 
-            Assert.Contains("[ERROR]", formatted);
-            Assert.Contains("TicketService", formatted);
-            Assert.Contains("Database operation timed out", formatted);
-            Assert.Contains("TraceId=trace-abc", formatted);
-            Assert.Contains("SpanId=span-def", formatted);
-            Assert.Contains("CorrelationId=corr-ghi", formatted);
-            Assert.Contains("UserId: 42", formatted);
-            Assert.Contains("SqlException: Timeout", formatted);
-        }
+            formatted.Should().Contain("[ERROR]");            formatted.Should().Contain("TicketService");            formatted.Should().Contain("Database operation timed out");            formatted.Should().Contain("TraceId=trace-abc");            formatted.Should().Contain("SpanId=span-def");            formatted.Should().Contain("CorrelationId=corr-ghi");            formatted.Should().Contain("UserId: 42");            formatted.Should().Contain("SqlException: Timeout");        }
 
         [Fact]
         public void LogExportFormatter_ToBatchFormattedText_And_ToJson_WorkCorrectly()
@@ -161,15 +132,9 @@ namespace TicketHub.Tests.bUnit
             };
 
             var batchText = TicketHub.Application.Common.LogExportFormatter.ToBatchFormattedText(logs);
-            Assert.Contains("تعداد لاگ‌ها: 2", batchText);
-            Assert.Contains("Log 1", batchText);
-            Assert.Contains("Log 2", batchText);
-
+            batchText.Should().Contain("تعداد لاگ‌ها: 2");            batchText.Should().Contain("Log 1");            batchText.Should().Contain("Log 2");
             var json = TicketHub.Application.Common.LogExportFormatter.ToJson(logs);
-            Assert.Contains("Log 1", json);
-            Assert.Contains("Log 2", json);
-            Assert.Contains("Information", json);
-        }
+            json.Should().Contain("Log 1");            json.Should().Contain("Log 2");            json.Should().Contain("Information");        }
     }
 }
 

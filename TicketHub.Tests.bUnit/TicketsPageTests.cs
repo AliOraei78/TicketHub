@@ -83,15 +83,15 @@ public class TicketsPageTests : BUnitComponentTestBase
         var cut = Render<Tickets>();
 
         // Assert page header
-        Assert.NotNull(cut.Find("h1:contains('مدیریت تیکت‌ها')"));
+        cut.Find("h1:contains('مدیریت تیکت‌ها')").Should().NotBeNull();
 
         // Assert pagination is rendered and displays TotalItems 18
         var paginationEl = cut.Find("span:contains('18')");
-        Assert.NotNull(paginationEl);
+        paginationEl.Should().NotBeNull();
 
         // Assert default page size in dropdown button contains 6
         var pageSizeButton = cut.Find("button:contains('6 تیکت در صفحه')");
-        Assert.NotNull(pageSizeButton);
+        pageSizeButton.Should().NotBeNull();
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class TicketsPageTests : BUnitComponentTestBase
         // Toggle selection for ticket 1
         await cut.InvokeAsync(() => cut.Instance.ToggleTicketSelection(1, true));
 
-        Assert.Contains("مورد انتخاب شده", ModalMarkup);
+        ModalMarkup.Should().Contain("مورد انتخاب شده");
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class TicketsPageTests : BUnitComponentTestBase
         bulkDeleteBtn.Click();
 
         // Confirm modal opens in portal
-        Assert.Contains("حذف تیکت", ModalMarkup);
+        ModalMarkup.Should().Contain("حذف تیکت");
 
         // Click confirm in modal
         var confirmBtn = cut.Find("button:contains('بله، حذف کن')");

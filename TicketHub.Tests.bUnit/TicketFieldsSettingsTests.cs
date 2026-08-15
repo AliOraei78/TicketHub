@@ -57,8 +57,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<TicketFieldsSettings>();
 
             // Assert page header
-            Assert.NotNull(cut.Find("h1:contains('مدیریت فیلدهای داینامیک تیکت')"));
-        }
+            cut.Find("h1:contains('مدیریت فیلدهای داینامیک تیکت')").Should().NotBeNull();        }
 
         [Fact]
         public void DeleteModal_Renders_When_OpenDeleteModal_Invoked()
@@ -71,7 +70,6 @@ namespace TicketHub.Tests.bUnit
             
             // For now, testing empty state grid
             var emptyState = cut.FindAll("td").Count == 0 || cut.Markup.Contains("فیلدی");
-            Assert.True(emptyState);
-        }
+            emptyState.Should().BeTrue();        }
     }
 }

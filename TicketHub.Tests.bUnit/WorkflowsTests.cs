@@ -61,8 +61,7 @@ namespace TicketHub.Tests.bUnit
         {
             var cut = Render<Workflows>();
 
-            Assert.Contains("جریان‌های کاری", cut.Markup);
-        }
+            cut.Markup.Should().Contain("جریان‌های کاری");        }
 
         [Fact]
         public void ClickCreate_NavigatesToEditor()
@@ -76,8 +75,7 @@ namespace TicketHub.Tests.bUnit
             createButton.Click();
 
             // Assert
-            Assert.Contains("/workflows/editor", navMan.Uri);
-        }
+            navMan.Uri.Should().Contain("/workflows/editor");        }
 
         [Fact]
         public void WorkflowCardGrid_RendersWorkflows()
@@ -107,8 +105,6 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Workflows>();
             
             // Assert
-            Assert.Contains("Basic Support", cut.Markup);
-            Assert.Contains("Bug Tracking", cut.Markup);
-        }
+            cut.Markup.Should().Contain("Basic Support");            cut.Markup.Should().Contain("Bug Tracking");        }
     }
 }

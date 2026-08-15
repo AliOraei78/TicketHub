@@ -72,12 +72,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Profile>();
 
             // Verify Master Persona Banner Rendered
-            Assert.Contains("علی اورعی", cut.Markup);
-            Assert.Contains("ali@tickethub.io", cut.Markup);
-            Assert.Contains("#USR-0042", cut.Markup);
-            Assert.Contains("مدیر ارشد", cut.Markup);
-            Assert.Contains("پشتیبان فنی", cut.Markup);
-        }
+            cut.Markup.Should().Contain("علی اورعی");            cut.Markup.Should().Contain("ali@tickethub.io");            cut.Markup.Should().Contain("#USR-0042");            cut.Markup.Should().Contain("مدیر ارشد");            cut.Markup.Should().Contain("پشتیبان فنی");        }
 
         [Fact]
         public void TabSwitching_Shows_CorrectTabSections()
@@ -85,21 +80,16 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Profile>();
 
             // Default Tab 1: Identity Info
-            Assert.Contains("اطلاعات فردی و شناسنامه کاربری", cut.Markup);
-
+            cut.Markup.Should().Contain("اطلاعات فردی و شناسنامه کاربری");
             // Switch to Tab 2: Security
             var securityTabBtn = cut.Find("button:contains('امنیت و کلید عبور')");
             securityTabBtn.Click();
 
-            Assert.Contains("مدیریت کلمات عبور و سطح امنیت حساب", cut.Markup);
-
+            cut.Markup.Should().Contain("مدیریت کلمات عبور و سطح امنیت حساب");
             // Switch to Tab 3: Cockpit HUD Customizer
             var hudTabBtn = cut.Find("button:contains('شخصی‌سازی کاک‌پیت و هود')");
             hudTabBtn.Click();
 
-            Assert.Contains("مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت", cut.Markup);
-            Assert.Contains("CYBER_WATER", cut.Markup);
-            Assert.Contains("NEON_FLAME", cut.Markup);
-        }
+            cut.Markup.Should().Contain("مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت");            cut.Markup.Should().Contain("CYBER_WATER");            cut.Markup.Should().Contain("NEON_FLAME");        }
     }
 }

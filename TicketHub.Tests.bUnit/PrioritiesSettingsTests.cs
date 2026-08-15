@@ -54,7 +54,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<PrioritiesSettings>();
 
             // Assert
-            Assert.Contains(cut.FindAll("td"), td => td.InnerHtml.Contains("High"));
+            cut.FindAll("td").Should().Contain(td => td.InnerHtml.Contains("High"));
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadPrioritiesAction>()), Times.Once);
         }
 
@@ -90,8 +90,7 @@ namespace TicketHub.Tests.bUnit
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<SavePriorityAction>()), Times.Never);
             var validationMessages = cut.FindAll(".text-red-500");
-            Assert.NotEmpty(validationMessages);
-        }
+            validationMessages.Should().NotBeEmpty();        }
 
         [Fact]
         public void EditPriority_PopulatesForm_And_DispatchesSaveActionWithIsEditingTrue()
@@ -113,12 +112,9 @@ namespace TicketHub.Tests.bUnit
 
             // Verify form populated (IsEditing = true should change button text)
             var saveButton = cut.Find("button[type='submit']");
-            Assert.Contains("ذخیره تغییرات", saveButton.TextContent);
-            
+            saveButton.TextContent.Should().Contain("ذخیره تغییرات");            
             var inputs = cut.FindAll("input.appearance-none");
-            Assert.Equal("High", inputs[0].Attributes["value"]?.Value);
-            Assert.Equal("10", inputs[1].Attributes["value"]?.Value);
-
+            inputs[0].Attributes["value"]?.Value.Should().Be("High");            inputs[1].Attributes["value"]?.Value.Should().Be("10");
             // Change name (query again to avoid stale element exception)
             cut.FindAll("input.appearance-none")[0].Change("Critical");
             
@@ -149,8 +145,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
-            Assert.NotNull(confirmModal);
-            
+            confirmModal.Should().NotBeNull();            
             // Act
             confirmModal.Find("button.bg-rose-600").Click(); // Click confirm on the modal
 

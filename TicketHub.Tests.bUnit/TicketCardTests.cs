@@ -61,15 +61,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.CanSelect, true)
             );
 
-            Assert.Contains("#15", cut.Markup);
-            Assert.Contains("باگ لاگین در نسخه وب", cut.Markup);
-            Assert.Contains("پورتال مرکزی", cut.Markup);
-            Assert.Contains("علی رضایی", cut.Markup);
-            Assert.Contains("در حال بررسی", cut.Markup);
-            Assert.Contains("بحرانی", cut.Markup);
-            Assert.Contains("EPIC", cut.Markup);
-            Assert.Contains("مانده", cut.Markup);
-        }
+            cut.Markup.Should().Contain("#15");            cut.Markup.Should().Contain("باگ لاگین در نسخه وب");            cut.Markup.Should().Contain("پورتال مرکزی");            cut.Markup.Should().Contain("علی رضایی");            cut.Markup.Should().Contain("در حال بررسی");            cut.Markup.Should().Contain("بحرانی");            cut.Markup.Should().Contain("EPIC");            cut.Markup.Should().Contain("مانده");        }
 
         [Fact]
         public void Render_OverdueTicket_DisplaysOverdueBadge_AndPulseAlert()
@@ -87,9 +79,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.Ticket, ticket)
             );
 
-            Assert.Contains("OVERDUE", cut.Markup);
-            Assert.Contains("گذشته", cut.Markup);
-        }
+            cut.Markup.Should().Contain("OVERDUE");            cut.Markup.Should().Contain("گذشته");        }
 
         [Fact]
         public void Click_Card_InvokesOnClickCallback()
@@ -104,8 +94,7 @@ namespace TicketHub.Tests.bUnit
 
             cut.Find(".cyber-quest-capsule").Click();
 
-            Assert.Equal(88, clickedId);
-        }
+            clickedId.Should().Be(88);        }
 
         [Fact]
         public void Click_Action_InvokesOnActionClickCallback()
@@ -121,9 +110,7 @@ namespace TicketHub.Tests.bUnit
             var actionBtn = cut.Find("button[title='عملیات و تغییر وضعیت']");
             actionBtn.Click();
 
-            Assert.NotNull(clickedTicket);
-            Assert.Equal(77, clickedTicket.Id);
-        }
+            clickedTicket.Should().NotBeNull();            clickedTicket.Id.Should().Be(77);        }
 
         [Fact]
         public void Click_Delete_InvokesOnDeleteClickCallback()
@@ -140,9 +127,7 @@ namespace TicketHub.Tests.bUnit
             var deleteBtn = cut.Find("button[title='حذف تیکت']");
             deleteBtn.Click();
 
-            Assert.NotNull(deletedTicket);
-            Assert.Equal(99, deletedTicket.Id);
-        }
+            deletedTicket.Should().NotBeNull();            deletedTicket.Id.Should().Be(99);        }
 
         [Fact]
         public void Toggle_Checkbox_InvokesIsSelectedChanged()
@@ -160,7 +145,6 @@ namespace TicketHub.Tests.bUnit
             var checkbox = cut.Find("input[type='checkbox']");
             checkbox.Change(true);
 
-            Assert.True(selectionValue);
-        }
+            selectionValue.Should().BeTrue();        }
     }
 }

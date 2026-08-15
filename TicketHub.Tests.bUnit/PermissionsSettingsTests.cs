@@ -70,9 +70,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<PermissionsSettings>();
 
             // Assert
-            Assert.Contains("Admin Permission", cut.Markup);
-            Assert.Contains("admin.access", cut.Markup);
-            
+            cut.Markup.Should().Contain("Admin Permission");            cut.Markup.Should().Contain("admin.access");            
             // Check if LoadPermissionsAction was dispatched
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadPermissionsAction>()), Times.Once);
         }
@@ -89,9 +87,9 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             var validationMessages = cut.FindAll(".validation-message, .text-red-500");
-            Assert.NotEmpty(validationMessages);
-            Assert.Contains("عنوان دسترسی الزامی است", cut.Markup);
-            Assert.Contains("کلید منبع", cut.Markup); // Part of "کلید منبع (ResourceKey) الزامی است."
+            validationMessages.Should().NotBeEmpty();
+            cut.Markup.Should().Contain("عنوان دسترسی الزامی است");
+            cut.Markup.Should().Contain("کلید منبع"); // Part of "کلید منبع (ResourceKey) الزامی است."
         }
 
         [Fact]
@@ -143,8 +141,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
-            Assert.True(confirmModal.Instance.IsOpen);
-
+            confirmModal.Instance.IsOpen.Should().BeTrue();
             // Act - Confirm delete
             confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
 

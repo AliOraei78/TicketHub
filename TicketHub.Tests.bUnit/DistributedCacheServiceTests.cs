@@ -33,10 +33,7 @@ public class DistributedCacheServiceTests
         var result = await _service.GetAsync<TestCacheModel>("test_key");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(1, result.Id);
-        Assert.Equal("TestItem", result.Name);
-    }
+        result.Should().NotBeNull();        result.Id.Should().Be(1);        result.Name.Should().Be("TestItem");    }
 
     [Fact]
     public async Task GetAsync_ReturnsDefault_WhenKeyDoesNotExistInCache()
@@ -49,8 +46,7 @@ public class DistributedCacheServiceTests
         var result = await _service.GetAsync<TestCacheModel>("missing_key");
 
         // Assert
-        Assert.Null(result);
-    }
+        result.Should().BeNull();    }
 
     [Fact]
     public async Task GetAsync_HandlesCacheException_WithGracefulFallback()
@@ -63,8 +59,7 @@ public class DistributedCacheServiceTests
         var result = await _service.GetAsync<TestCacheModel>("offline_key");
 
         // Assert: Should NOT throw exception, must return null (Graceful Fallback)
-        Assert.Null(result);
-    }
+        result.Should().BeNull();    }
 
     private class TestCacheModel
     {

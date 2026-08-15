@@ -40,8 +40,8 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<TicketFieldForm>();
             
             // Verify base elements rendered
-            Assert.NotNull(cut.Find("input[placeholder='مثال: شماره موبایل']"));
-            Assert.NotNull(cut.Find("input[type='number']")); // Sort order
+            cut.Find("input[placeholder='مثال: شماره موبایل']").Should().NotBeNull();
+            cut.Find("input[type='number']").Should().NotBeNull(); // Sort order
         }
 
         [Fact]
@@ -54,8 +54,8 @@ namespace TicketHub.Tests.bUnit
 
             // Verify validation messages render
             var validationMessages = cut.FindAll(".validation-message, .text-rose-500");
-            Assert.NotEmpty(validationMessages);
-            Assert.Contains(validationMessages, m => m.TextContent.Contains("نام فیلد الزامی است"));
+            validationMessages.Should().NotBeEmpty();
+            validationMessages.Should().Contain(m => m.TextContent.Contains("نام فیلد الزامی است"));
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace TicketHub.Tests.bUnit
 
             // Using standard placeholder text to find the options input
             var optionsInput = cut.Find("input[placeholder='گزینه ۱، گزینه ۲، گزینه ۳']");
-            Assert.NotNull(optionsInput);
+            optionsInput.Should().NotBeNull();
         }
 
         [Fact]
@@ -91,7 +91,7 @@ namespace TicketHub.Tests.bUnit
             cut.Find("form").Submit();
 
             // Verify callback triggered
-            Assert.True(submitted);
+            submitted.Should().BeTrue();
         }
     }
 }

@@ -56,8 +56,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Projects>();
 
             // Assert
-            Assert.Contains("Project Alpha", cut.Markup);
-            
+            cut.Markup.Should().Contain("Project Alpha");            
             // Check if LoadProjectsAction was dispatched
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadProjectsAction>()), Times.Once);
         }
@@ -76,8 +75,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert - Search in the wrapper since content renders via SectionContent
             var validationMessages = outletRef.Wrapper!.FindAll(".validation-message, .text-rose-400");
-            Assert.NotEmpty(validationMessages);
-        }
+            validationMessages.Should().NotBeEmpty();        }
 
 
         [Fact]
@@ -92,10 +90,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             var form = cut.FindComponent<ProjectForm>();
-            Assert.True(form.Instance.IsOpen);
-            Assert.Equal("ایجاد پروژه جدید", form.Instance.Title);
-            Assert.Equal(0, form.Instance.Model.Id);
-        }
+            form.Instance.IsOpen.Should().BeTrue();            form.Instance.Title.Should().Be("ایجاد پروژه جدید");            form.Instance.Model.Id.Should().Be(0);        }
 
         [Fact]
         public void HandleSearch_DispatchesAction()
@@ -133,8 +128,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
-            Assert.True(confirmModal.Instance.IsOpen);
-
+            confirmModal.Instance.IsOpen.Should().BeTrue();
             // Act - Confirm delete
             confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
 

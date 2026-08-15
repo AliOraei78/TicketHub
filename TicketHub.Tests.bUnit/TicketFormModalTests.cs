@@ -30,10 +30,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, new List<TicketFieldDto>())
             );
 
-            Assert.Contains("ایجاد تیکت پشتیبانی جدید", ModalMarkup);
-            Assert.Contains("عنوان تیکت", ModalMarkup);
-            Assert.Contains("توضیحات تیکت", ModalMarkup);
-        }
+            ModalMarkup.Should().Contain("ایجاد تیکت پشتیبانی جدید");            ModalMarkup.Should().Contain("عنوان تیکت");            ModalMarkup.Should().Contain("توضیحات تیکت");        }
 
         [Fact]
         public void Submit_EmptyForm_ShowsValidationErrors()
@@ -49,9 +46,7 @@ namespace TicketHub.Tests.bUnit
 
             cut.Find("form").Submit();
 
-            Assert.Contains("عنوان تیکت الزامی است.", ModalMarkup);
-            Assert.Contains("توضیحات تیکت الزامی است.", ModalMarkup);
-        }
+            ModalMarkup.Should().Contain("عنوان تیکت الزامی است.");            ModalMarkup.Should().Contain("توضیحات تیکت الزامی است.");        }
 
         [Fact]
         public void Render_DynamicFields_Successfully()
@@ -71,9 +66,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, dynamicFields)
             );
 
-            Assert.Contains("تست فیلد متنی", ModalMarkup);
-            Assert.Contains("تست فیلد کشویی", ModalMarkup);
-        }
+            ModalMarkup.Should().Contain("تست فیلد متنی");            ModalMarkup.Should().Contain("تست فیلد کشویی");        }
 
         [Fact]
         public void ValidSubmit_TriggersEventCallback()
@@ -102,8 +95,7 @@ namespace TicketHub.Tests.bUnit
 
             cut.Find("form").Submit();
 
-            Assert.True(submitted);
-        }
+            submitted.Should().BeTrue();        }
 
         [Fact]
         public void DynamicField_RequiredValidation_PreventsSubmitWhenEmpty()
@@ -138,9 +130,7 @@ namespace TicketHub.Tests.bUnit
             cut.Find("form").Submit();
 
             // Submit should NOT be called because dynamic field is required and empty
-            Assert.False(submitted);
-            Assert.Contains("تکمیل فیلد «کد رهگیری الزامی» الزامی است.", ModalMarkup);
-        }
+            submitted.Should().BeFalse();            ModalMarkup.Should().Contain("تکمیل فیلد «کد رهگیری الزامی» الزامی است.");        }
 
         [Fact]
         public void CategoryChanged_RendersProjectCategories()
@@ -160,8 +150,7 @@ namespace TicketHub.Tests.bUnit
             );
 
             // Assert categories are rendered in modal
-            Assert.Contains("پشتیبانی فنی", ModalMarkup);
-        }
+            ModalMarkup.Should().Contain("پشتیبانی فنی");        }
 
         [Fact]
         public void Cancel_Button_TriggersOnCancelCallback()
@@ -180,7 +169,6 @@ namespace TicketHub.Tests.bUnit
             var cancelButton = cut.Find("button.btn-cyber-ghost");
             cancelButton.Click();
 
-            Assert.True(cancelled);
-        }
+            cancelled.Should().BeTrue();        }
     }
 }

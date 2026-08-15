@@ -51,8 +51,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<CategoriesSettings>();
 
             // Assert page header
-            Assert.NotNull(cut.Find("h1:contains('مدیریت انواع تیکت‌های سیستم')"));
-        }
+            cut.Find("h1:contains('مدیریت انواع تیکت‌های سیستم')").Should().NotBeNull();        }
 
         [Fact]
         public void CategoryForm_RendersInputs_Correctly()
@@ -60,9 +59,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<CategoriesSettings>();
 
             // Find form elements in CategoryForm
-            Assert.NotNull(cut.Find("input[placeholder='مثال: پشتیبانی فنی']"));
-            Assert.NotNull(cut.Find("input[id='categoryIsActive']"));
-        }
+            cut.Find("input[placeholder='مثال: پشتیبانی فنی']").Should().NotBeNull();            cut.Find("input[id='categoryIsActive']").Should().NotBeNull();        }
 
         [Fact]
         public void EmptyInputs_Trigger_ValidationErrors()
@@ -75,7 +72,7 @@ namespace TicketHub.Tests.bUnit
 
             // Should show validation error for Name
             var validationMsgs = cut.FindAll(".text-red-500");
-            Assert.Contains(validationMsgs, el => el.TextContent.Contains("نام دسته‌بندی الزامی است"));
+            validationMsgs.Should().Contain(el => el.TextContent.Contains("نام دسته‌بندی الزامی است"));
         }
 
         [Fact]
@@ -120,7 +117,6 @@ namespace TicketHub.Tests.bUnit
 
             // Assert modal appears with the correct description
             var modalBody = cut.Find("div.fixed.inset-0").OuterHtml;
-            Assert.Contains("آیا از حذف «Test Category» مطمئن هستید؟", modalBody);
-        }
+            modalBody.Should().Contain("آیا از حذف «Test Category» مطمئن هستید؟");        }
     }
 }

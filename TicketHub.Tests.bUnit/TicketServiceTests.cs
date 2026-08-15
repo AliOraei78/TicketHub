@@ -106,7 +106,8 @@ namespace TicketHub.Tests.bUnit
 
             var dto = new TicketDto { Title = "" };
 
-            await Assert.ThrowsAsync<ValidationException>(() => _ticketService.CreateAsync(dto));
+            var act = () => _ticketService.CreateAsync(dto);
+            await act.Should().ThrowAsync<ValidationException>();
             _mockTicketRepo.Verify(r => r.AddAsync(It.IsAny<Ticket>()), Times.Never);
         }
 
@@ -156,7 +157,8 @@ namespace TicketHub.Tests.bUnit
         {
             _mockTicketRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Ticket?)null);
 
-            await Assert.ThrowsAsync<NotFoundException>(() => _ticketService.GetByIdAsync(999));
+            var act = () => _ticketService.GetByIdAsync(999);
+            await act.Should().ThrowAsync<NotFoundException>();
         }
 
         [Fact]
@@ -185,7 +187,8 @@ namespace TicketHub.Tests.bUnit
             };
             _mockTicketRepo.Setup(r => r.GetByIdAsync(55)).ReturnsAsync(ticket);
 
-            await Assert.ThrowsAsync<ForbiddenException>(() => _ticketService.GetByIdAsync(55));
+            var act = () => _ticketService.GetByIdAsync(55);
+            await act.Should().ThrowAsync<ForbiddenException>();
         }
 
         [Fact]
@@ -207,7 +210,8 @@ namespace TicketHub.Tests.bUnit
         {
             _mockTicketRepo.Setup(r => r.GetByIdAsync(404)).ReturnsAsync((Ticket?)null);
 
-            await Assert.ThrowsAsync<NotFoundException>(() => _ticketService.DeleteAsync(404));
+            var act = () => _ticketService.DeleteAsync(404);
+            await act.Should().ThrowAsync<NotFoundException>();
         }
 
         [Fact]
@@ -334,7 +338,8 @@ namespace TicketHub.Tests.bUnit
 
             var executeDto = new ExecuteTransitionDto { TicketId = 31, TransitionId = 202 };
 
-            await Assert.ThrowsAsync<ValidationException>(() => _ticketService.ExecuteTransitionAsync(executeDto, 1));
+            var act = () => _ticketService.ExecuteTransitionAsync(executeDto, 1);
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]
@@ -345,13 +350,13 @@ namespace TicketHub.Tests.bUnit
 
             var summary = await _ticketService.GetTicketTelemetrySummaryAsync();
 
-            Assert.NotNull(summary);
-            Assert.Equal(3, summary.TotalTickets);
-            Assert.Equal(1, summary.NewTicketsCount);
-            Assert.Equal(1, summary.InProgressCount);
-            Assert.Equal(1, summary.ResolvedCount);
-            Assert.Equal(1, summary.CriticalCount);
-            Assert.Equal(1, summary.OverdueCount);
+            summary.Should().NotBeNull();
+            summary.TotalTickets.Should().Be(3);
+            summary.NewTicketsCount.Should().Be(1);
+            summary.InProgressCount.Should().Be(1);
+            summary.ResolvedCount.Should().Be(1);
+            summary.CriticalCount.Should().Be(1);
+            summary.OverdueCount.Should().Be(1);
         }
     }
 }

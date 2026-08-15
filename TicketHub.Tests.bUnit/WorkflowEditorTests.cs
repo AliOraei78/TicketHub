@@ -140,7 +140,6 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             var validationMsgs = cut.FindAll(".validation-message, .text-red-500");
-            Assert.NotEmpty(validationMsgs);
-        }
+            validationMsgs.Should().NotBeEmpty();        }
     }
 }

@@ -55,9 +55,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
 
         // Assert
         var badge = cut.Find("span.bg-rose-500");
-        Assert.NotNull(badge);
-        Assert.Contains("3", badge.TextContent);
-    }
+        badge.Should().NotBeNull();        badge.TextContent.Should().Contain("3");    }
 
     [Fact]
     public async Task NotificationBell_ClickingBell_ShouldOpenDropdown_AndShowNotifications()
@@ -80,10 +78,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
         await bellBtn.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Assert - Dropdown is rendered
-        Assert.Contains("مرکز اعلانات", cut.Markup);
-        Assert.Contains("پاسخ جدید کارشناس", cut.Markup);
-        Assert.Contains("مشکل شما بررسی شد.", cut.Markup);
-    }
+        cut.Markup.Should().Contain("مرکز اعلانات");        cut.Markup.Should().Contain("پاسخ جدید کارشناس");        cut.Markup.Should().Contain("مشکل شما بررسی شد.");    }
 
     [Fact]
     public async Task NotificationBell_RealtimeEvent_ShouldDynamicallyIncreaseBadge()
@@ -99,8 +94,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
         var cut = Render<NotificationBell>();
 
         // Initial check: no badge
-        Assert.Empty(cut.FindAll("span.bg-rose-500"));
-
+        cut.FindAll("span.bg-rose-500").Should().BeEmpty();
         // Act - Trigger Real-Time Notification via EventBroker for User 1
         var newNotif = new NotificationDto
         {
@@ -118,9 +112,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
 
         // Assert - Badge should now appear with count 1
         var badge = cut.Find("span.bg-rose-500");
-        Assert.NotNull(badge);
-        Assert.Contains("1", badge.TextContent);
-    }
+        badge.Should().NotBeNull();        badge.TextContent.Should().Contain("1");    }
 
     [Fact]
     public async Task NotificationBell_MarkAllAsRead_ShouldCallService_AndClearBadge()
@@ -149,8 +141,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
 
         // Assert - Service called
         _mockNotificationService.Verify(s => s.MarkAllAsReadAsync(1), Times.Once);
-        Assert.Empty(cut.FindAll("span.bg-rose-500"));
-    }
+        cut.FindAll("span.bg-rose-500").Should().BeEmpty();    }
 
     [Fact]
     public async Task NotificationBell_ClickingNotificationItem_ShouldOpenDetailsModal()
@@ -189,9 +180,7 @@ public class NotificationBellComponentTests : BUnitComponentTestBase
         // Assert - Modal is opened with details and MarkAsRead was called
         _mockNotificationService.Verify(s => s.MarkAsReadAsync(42, 1), Times.Once);
         var modalMessage = cut.Find("p.text-sm");
-        Assert.Contains("شرح پیام تست برای باز شدن مودال", modalMessage.TextContent);
-        var actionBtn = cut.Find("button:contains('مشاهده تیکت')");
-        Assert.NotNull(actionBtn);
-    }
+        modalMessage.TextContent.Should().Contain("شرح پیام تست برای باز شدن مودال");        var actionBtn = cut.Find("button:contains('مشاهده تیکت')");
+        actionBtn.Should().NotBeNull();    }
 }
 

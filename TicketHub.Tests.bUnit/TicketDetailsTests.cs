@@ -131,8 +131,7 @@ namespace TicketHub.Tests.bUnit
             var nav = Services.GetRequiredService<NavigationManager>();
             Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 999));
 
-            Assert.EndsWith("/tickets", nav.Uri);
-        }
+            nav.Uri.Should().EndWith("/tickets");        }
 
         [Fact]
         public void TicketDetails_ForbiddenException_ShowsToastAndNavigatesToTicketsList()
@@ -143,8 +142,7 @@ namespace TicketHub.Tests.bUnit
             Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 888));
 
             _mockToastService.Verify(t => t.ShowWarning(It.Is<string>(s => s.Contains("عدم دسترسی")), "عدم دسترسی"), Times.Once);
-            Assert.EndsWith("/tickets", nav.Uri);
-        }
+            nav.Uri.Should().EndWith("/tickets");        }
 
         [Fact]
         public void TicketDetails_Renders3CardLayout_AndHeaderMetadataCorrectly()
@@ -152,24 +150,13 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 42));
 
             // Header metadata
-            Assert.Contains("#42", cut.Markup);
-            Assert.Contains("پروژه: پروژه عمومی", cut.Markup);
-            Assert.Contains("دسته: باگ و خطا", cut.Markup);
-            Assert.Contains("خطای بارگذاری در مرحله دوم", cut.Markup);
-            Assert.Contains("توضیحات کامل خطای بارگذاری بازی در مرحله دوم", cut.Markup);
-
+            cut.Markup.Should().Contain("#42");            cut.Markup.Should().Contain("پروژه: پروژه عمومی");            cut.Markup.Should().Contain("دسته: باگ و خطا");            cut.Markup.Should().Contain("خطای بارگذاری در مرحله دوم");            cut.Markup.Should().Contain("توضیحات کامل خطای بارگذاری بازی در مرحله دوم");
             // Card 1 (Attachments & Overview)
-            Assert.Contains("crash_log.txt", cut.Markup);
-
+            cut.Markup.Should().Contain("crash_log.txt");
             // Card 2 (Comments Stream)
-            Assert.Contains("نظرات و گفتگو", cut.Markup);
-            Assert.Contains("نظر اول تستی", cut.Markup);
-
+            cut.Markup.Should().Contain("نظرات و گفتگو");            cut.Markup.Should().Contain("نظر اول تستی");
             // Card 3 (Status & Transitions Timeline)
-            Assert.Contains("وضعیت و انتقالات", cut.Markup);
-            Assert.Contains("شروع بررسی", cut.Markup);
-            Assert.Contains("شروع کار روی لاگ‌ها", cut.Markup);
-        }
+            cut.Markup.Should().Contain("وضعیت و انتقالات");            cut.Markup.Should().Contain("شروع بررسی");            cut.Markup.Should().Contain("شروع کار روی لاگ‌ها");        }
 
         [Fact]
         public void InlineEdit_Title_EnablesInput_AndSavesTitle()
@@ -264,12 +251,10 @@ namespace TicketHub.Tests.bUnit
             // Trigger OnCommentAdded
             var newComment = new CommentDto { Id = 2, TicketId = 42, Content = "کامنت زنده دریافتی", User = new UserDto { Name = "پشتیبان" }, CreatedAt = DateTime.UtcNow };
             _mockEventBroker.Raise(e => e.OnCommentAdded += null, 42, newComment);
-            Assert.Contains("کامنت زنده دریافتی", cut.Markup);
-
+            cut.Markup.Should().Contain("کامنت زنده دریافتی");
             // Trigger OnCommentDeleted
             _mockEventBroker.Raise(e => e.OnCommentDeleted += null, 42, 1);
-            Assert.DoesNotContain("نظر اول تستی", cut.Markup);
-
+            cut.Markup.Should().NotContain("نظر اول تستی");
             // Trigger OnTransitionOccurred
             _mockEventBroker.Raise(e => e.OnTransitionOccurred += null, 42);
             _mockTicketService.Verify(t => t.GetTransitionsByTicketIdAsync(42), Times.AtLeast(2));
@@ -284,7 +269,6 @@ namespace TicketHub.Tests.bUnit
             var backBtn = cut.Find("button:contains('بازگشت به لیست تیکت‌ها')");
             backBtn.Click();
 
-            Assert.EndsWith("/tickets", nav.Uri);
-        }
+            nav.Uri.Should().EndWith("/tickets");        }
     }
 }
