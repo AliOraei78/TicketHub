@@ -8,14 +8,14 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${DB_PASSWORD:-Ali433433_StrongPass!}"
+      MSSQL_SA_PASSWORD: "${DB_PASSWORD:-Password123!}"
       MSSQL_PID: "Developer"
     ports:
       - "${DB_PORT:-1433}:1433"
     volumes:
       - mssql_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Ali433433_StrongPass!}' -Q 'SELECT 1' -C || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Ali433433_StrongPass!}' -Q 'SELECT 1'"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Password123!}' -Q 'SELECT 1' -C || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Password123!}' -Q 'SELECT 1'"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -81,7 +81,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=TicketHubDb;User Id=sa;Password=${DB_PASSWORD:-Ali433433_StrongPass!};TrustServerCertificate=True;MultipleActiveResultSets=true;
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=TicketHubDb;User Id=sa;Password=${DB_PASSWORD:-Password123!};TrustServerCertificate=True;MultipleActiveResultSets=true;
       - ConnectionStrings__Redis=redis:6379,abortConnect=false
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_USER:-guest}

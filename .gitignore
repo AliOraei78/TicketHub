@@ -433,5 +433,13 @@ appsettings.Production.json
 appsettings.Local.json
 /TicketHub.Web/Tailwind/tailwindcss.exe
 
+# Uploaded User Attachments
+/TicketHub.Web/wwwroot/uploads/*
+!/TicketHub.Web/wwwroot/uploads/.gitkeep
+!/TicketHub.Web/wwwroot/uploads/attachments/
+/TicketHub.Web/wwwroot/uploads/attachments/*
+!/TicketHub.Web/wwwroot/uploads/attachments/.gitkeep
+
 # Documentation scratch
 Journey.md
+
