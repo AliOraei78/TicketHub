@@ -4,7 +4,8 @@ using Xunit;
 
 namespace TicketHub.Tests.E2E
 {
-    public class PrioritiesE2ETests : PlaywrightTestBase, IClassFixture<CustomWebApplicationFactory>
+    [Collection("E2E Tests")]
+    public class PrioritiesE2ETests : PlaywrightTestBase
     {
         public PrioritiesE2ETests(CustomWebApplicationFactory factory) : base(factory)
         {

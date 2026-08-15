@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,13 +11,17 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Testcontainers.MsSql;
 using TicketHub.Infrastructure.Data;
 using TicketHub.Web;
 using Xunit;
 
 namespace TicketHub.Tests.E2E
 {
+    [CollectionDefinition("E2E Tests", DisableParallelization = true)]
+    public class E2ETestCollection : ICollectionFixture<CustomWebApplicationFactory>
+    {
+    }
+
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         private readonly string _dbConnectionString;
@@ -25,11 +30,12 @@ namespace TicketHub.Tests.E2E
         public CustomWebApplicationFactory()
         {
             _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING") 
-                ?? "Server=127.0.0.1,1433;Database=TicketHubDb_Test;User Id=sa;Password=Ali433433_StrongPass!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
+                ?? "Server=127.0.0.1,1433;Database=TicketHubDb_Test;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
             
-            // Set environment variable so Program.cs (Hangfire, EF, MassTransit) reads the test connection string
+            // Set environment variable so Program.cs reads test connection string and in-memory services
             Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _dbConnectionString);
-            Environment.SetEnvironmentVariable("RabbitMQ__Host", ""); // Use InMemory MassTransit during E2E tests
+            Environment.SetEnvironmentVariable("ConnectionStrings__Redis", ""); // Use DistributedMemoryCache
+            Environment.SetEnvironmentVariable("RabbitMQ__Host", ""); // Use InMemory MassTransit
         }
 
         public string ServerAddress { get; private set; } = "http://127.0.0.1:0";
@@ -45,6 +51,7 @@ namespace TicketHub.Tests.E2E
                 webHostBuilder.UseKestrel();
                 webHostBuilder.UseUrls("http://127.0.0.1:0");
                 webHostBuilder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
+                webHostBuilder.UseSetting("ConnectionStrings:Redis", "");
                 webHostBuilder.UseSetting("RabbitMQ:Host", "");
             });
 
@@ -61,6 +68,7 @@ namespace TicketHub.Tests.E2E
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
+            builder.UseSetting("ConnectionStrings:Redis", "");
             builder.UseSetting("RabbitMQ:Host", "");
 
             builder.ConfigureTestServices(services =>
@@ -78,6 +86,11 @@ namespace TicketHub.Tests.E2E
                     options.UseSqlServer(_dbConnectionString)
                            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
                 });
+
+                // Ensure DistributedMemoryCache is registered for in-memory caching
+                var cacheDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDistributedCache));
+                if (cacheDescriptor != null) services.Remove(cacheDescriptor);
+                services.AddDistributedMemoryCache();
 
                 // Mock Authentication
                 services.AddAuthentication(options =>
@@ -106,6 +119,7 @@ namespace TicketHub.Tests.E2E
             {
                 await _kestrelHost.StopAsync();
                 _kestrelHost.Dispose();
+                _kestrelHost = null;
             }
             base.Dispose();
         }
