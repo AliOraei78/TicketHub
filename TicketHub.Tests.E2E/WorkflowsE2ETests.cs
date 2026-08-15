@@ -425,7 +425,7 @@ namespace TicketHub.Tests.E2E
             // 2- add status B using drag and drop to the right side of status A
 
             var canvas = Page.Locator(".canvas-pattern");
-
+            await canvas.WaitForAsync(new() { Timeout = 10000 });
             var canvasBox = (await canvas.BoundingBoxAsync())!;
 
             
@@ -686,7 +686,9 @@ namespace TicketHub.Tests.E2E
 
             // Connect A to B
             var statusAOnCanvas = Page.Locator(".canvas-pattern > div:has-text('باز')").First;
+            await statusAOnCanvas.WaitForAsync(new() { Timeout = 10000 });
             var statusBOnCanvas = Page.Locator(".canvas-pattern > div:has-text('در انتظار تایید')").First;
+            await statusBOnCanvas.WaitForAsync(new() { Timeout = 10000 });
             
             var sBox = (await statusAOnCanvas.BoundingBoxAsync())!;
             var tBox = (await statusBOnCanvas.BoundingBoxAsync())!;
