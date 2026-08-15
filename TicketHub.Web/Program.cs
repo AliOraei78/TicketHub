@@ -232,7 +232,8 @@ builder.Services.AddHangfire(configuration => configuration
         SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
         QueuePollInterval = TimeSpan.Zero,
         UseRecommendedIsolationLevel = true,
-        DisableGlobalLocks = true
+        DisableGlobalLocks = true,
+        PrepareSchemaIfNecessary = true
     }));
 
 builder.Services.AddHangfireServer(options =>

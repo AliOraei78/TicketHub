@@ -19,21 +19,28 @@ namespace TicketHub.Tests.E2E
 {
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
-        private readonly string _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING") ?? "Server=.;Database=TicketHubDb_Test;User Id=sa;Password=Ali433433;TrustServerCertificate=True;MultipleActiveResultSets=true;";
+        private readonly string _dbConnectionString;
+
+        public CustomWebApplicationFactory()
+        {
+            _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING") 
+                ?? "Server=127.0.0.1,1433;Database=TicketHubDb_Test;User Id=sa;Password=Ali433433_StrongPass!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
+            
+            // Set environment variable so Program.cs (Hangfire, EF, MassTransit) reads the test connection string
+            Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _dbConnectionString);
+        }
 
         public string ServerAddress { get; private set; } = "http://127.0.0.1:0";
         private IHost _host = default!;
 
         protected override IHost CreateHost(IHostBuilder builder)
         {
-            // Create a dummy host that uses TestServer for WebApplicationFactory internal use
-            var dummyHost = builder.Build();
-
             // Configure the actual Kestrel server
             builder.ConfigureWebHost(webHostBuilder =>
             {
                 webHostBuilder.UseKestrel();
                 webHostBuilder.UseUrls(ServerAddress);
+                webHostBuilder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
             });
 
             _host = builder.Build();
@@ -43,7 +50,7 @@ namespace TicketHub.Tests.E2E
             var addresses = server.Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
             ServerAddress = addresses?.Addresses.FirstOrDefault() ?? ServerAddress;
             
-            return dummyHost;
+            return _host;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
