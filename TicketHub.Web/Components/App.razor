@@ -20,6 +20,193 @@
 </head>
 <body>
     <Routes @rendermode="PageRenderMode" />
+
+    <!-- =========================================================================
+         CYBER COCKPIT BLAZOR RECONNECTION MODAL (#components-reconnect-modal)
+         ========================================================================= -->
+    <div id="components-reconnect-modal" class="components-reconnect-hide" role="dialog" aria-modal="true" aria-labelledby="reconnect-title">
+        <!-- Ambient Hologram Glow & Mesh -->
+        <div class="reconnect-modal-mesh" aria-hidden="true"></div>
+        <div class="reconnect-ambient-orb" aria-hidden="true"></div>
+
+        <!-- Cockpit Frame Chassis -->
+        <div class="reconnect-chassis">
+            <!-- Corner Telemetry Brackets -->
+            <div class="reconnect-corner-tl" aria-hidden="true"></div>
+            <div class="reconnect-corner-tr" aria-hidden="true"></div>
+            <div class="reconnect-corner-bl" aria-hidden="true"></div>
+            <div class="reconnect-corner-br" aria-hidden="true"></div>
+
+            <!-- ================= STATE 1: RECONNECTING ================= -->
+            <div class="reconnect-view-reconnecting">
+                <!-- Animated Radar / Gyroscope Hologram -->
+                <div class="reconnect-hologram-wrap" aria-hidden="true">
+                    <div class="reconnect-radar-ring"></div>
+                    <div class="reconnect-radar-sweep"></div>
+                    <div class="reconnect-sonar-wave"></div>
+                    <div class="reconnect-core-icon">
+                        <svg class="w-7 h-7 text-cyan-300 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Header & Badge -->
+                <div class="reconnect-badge reconnect-badge-cyan">
+                    <span class="reconnect-badge-dot bg-cyan-400"></span>
+                    <span>قطع موقت اتصال // SIGNAL_LOST</span>
+                </div>
+
+                <h2 id="reconnect-title" class="reconnect-title">
+                    در حال تلاش برای برقراری مجدد ارتباط...
+                </h2>
+                <p class="reconnect-desc">
+                    اتصال به سرور موقتاً قطع شده است. سامانه به طور خودکار در حال تلاش برای اتصال مجدد و همگام‌سازی اطلاعات مدار است.
+                </p>
+
+                <!-- Diagnostic Telemetry Box -->
+                <div class="reconnect-telemetry-box">
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">CIRCUIT_UPLINK:</span>
+                        <span class="reconnect-telemetry-val text-cyan-400">RECONNECTING_LOOP</span>
+                    </div>
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">BROKER_CHANNEL:</span>
+                        <span class="reconnect-telemetry-val text-indigo-300">WSS://TICKETHUB/HUB</span>
+                    </div>
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">STATUS_TIMER:</span>
+                        <span id="reconnect-timer-display" class="reconnect-telemetry-val text-amber-300">00:01</span>
+                    </div>
+                    <div class="reconnect-progress-bar" aria-hidden="true">
+                        <div class="reconnect-progress-beam"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="reconnect-actions">
+                    <button type="button" onclick="window.triggerBlazorReconnect()" class="btn-reconnect-primary">
+                        <svg class="w-4 h-4 text-cyan-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>تلاش فوری مجدد</span>
+                        <kbd class="cyber-kbd ml-1">R</kbd>
+                    </button>
+                    <button type="button" onclick="location.reload()" class="btn-reconnect-secondary">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>تازه‌سازی صفحه</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= STATE 2: FAILED ================= -->
+            <div class="reconnect-view-failed">
+                <!-- Animated Warning Hologram -->
+                <div class="reconnect-hologram-wrap" aria-hidden="true">
+                    <div class="reconnect-warning-pulse"></div>
+                    <div class="reconnect-core-icon reconnect-core-amber">
+                        <svg class="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Header & Badge -->
+                <div class="reconnect-badge reconnect-badge-amber">
+                    <span class="reconnect-badge-dot bg-amber-400"></span>
+                    <span>پایان مهلت تلاش خودکار // RETRY_TIMEOUT</span>
+                </div>
+
+                <h2 class="reconnect-title text-amber-300">
+                    ارتباط با سرور برقرار نشد
+                </h2>
+                <p class="reconnect-desc">
+                    تلاش‌های خودکار برای اتصال مجدد با موفقیت انجام نشد. لطفاً وضعیت اینترنت خود را چک کرده و مجدداً تلاش نمایید.
+                </p>
+
+                <!-- Diagnostic Box -->
+                <div class="reconnect-telemetry-box reconnect-telemetry-amber">
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">ERROR_DIAG:</span>
+                        <span class="reconnect-telemetry-val text-amber-400">SERVER_UNREACHABLE</span>
+                    </div>
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">RECOMMENDED:</span>
+                        <span class="reconnect-telemetry-val text-slate-300">MANUAL_RETRY_OR_PAGE_RELOAD</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="reconnect-actions">
+                    <button type="button" onclick="window.triggerBlazorReconnect()" class="btn-reconnect-amber">
+                        <svg class="w-4 h-4 text-amber-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>تلاش مجدد دستی</span>
+                        <kbd class="cyber-kbd ml-1">R</kbd>
+                    </button>
+                    <button type="button" onclick="location.reload()" class="btn-reconnect-secondary">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>تازه‌سازی صفحه</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= STATE 3: REJECTED ================= -->
+            <div class="reconnect-view-rejected">
+                <!-- Animated Critical Rose Hologram -->
+                <div class="reconnect-hologram-wrap" aria-hidden="true">
+                    <div class="reconnect-rose-pulse"></div>
+                    <div class="reconnect-core-icon reconnect-core-rose">
+                        <svg class="w-8 h-8 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Header & Badge -->
+                <div class="reconnect-badge reconnect-badge-rose">
+                    <span class="reconnect-badge-dot bg-rose-400"></span>
+                    <span>نشست سرور منقضی شد // CIRCUIT_TERMINATED</span>
+                </div>
+
+                <h2 class="reconnect-title text-rose-300">
+                    نشست ارتباطی سرور خاتمه یافت
+                </h2>
+                <p class="reconnect-desc">
+                    سرور به‌روزرسانی شده یا چرخه اتصال قبلی منقضی گردیده است. جهت همگام‌سازی کامل و بارگذاری مجدد، لطفاً سامانه را تازه‌سازی کنید.
+                </p>
+
+                <!-- Diagnostic Box -->
+                <div class="reconnect-telemetry-box reconnect-telemetry-rose">
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">CIRCUIT_STATE:</span>
+                        <span class="reconnect-telemetry-val text-rose-400">EXPIRED_OR_REBOOTED</span>
+                    </div>
+                    <div class="reconnect-telemetry-row">
+                        <span class="reconnect-telemetry-key">RECOVERY:</span>
+                        <span class="reconnect-telemetry-val text-slate-300">FULL_APP_RELOAD</span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="reconnect-actions">
+                    <button type="button" onclick="location.reload()" class="btn-reconnect-rose">
+                        <svg class="w-4 h-4 text-rose-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>راه‌اندازی و بارگذاری مجدد سامانه</span>
+                        <kbd class="cyber-kbd ml-1">Enter</kbd>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="_framework/blazor.web.js"></script>
     <script defer src="js/alpine.min.js"></script>
 
@@ -146,6 +333,86 @@
                 console.error("Download failed:", e);
             }
         };
+
+        // =====================================================================
+        // CYBER RECONNECT MODAL HANDLERS & TELEMETRY TIMER
+        // =====================================================================
+        window.triggerBlazorReconnect = function() {
+            if (window.Blazor && typeof window.Blazor.reconnect === 'function') {
+                window.Blazor.reconnect();
+            } else {
+                window.location.reload();
+            }
+        };
+
+        (function () {
+            var reconnectTimer = null;
+            var secondsElapsed = 0;
+
+            function updateReconnectState() {
+                var modal = document.getElementById('components-reconnect-modal');
+                var timerDisplay = document.getElementById('reconnect-timer-display');
+                if (!modal) return;
+
+                var isVisible = !modal.classList.contains('components-reconnect-hide') &&
+                    (modal.classList.contains('components-reconnect-show') ||
+                     modal.classList.contains('components-reconnect-failed') ||
+                     modal.classList.contains('components-reconnect-rejected'));
+
+                if (isVisible) {
+                    if (!reconnectTimer) {
+                        secondsElapsed = 0;
+                        if (timerDisplay) timerDisplay.textContent = '00:00';
+                        reconnectTimer = setInterval(function () {
+                            secondsElapsed++;
+                            if (timerDisplay) {
+                                var m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                                var s = String(secondsElapsed % 60).padStart(2, '0');
+                                timerDisplay.textContent = m + ':' + s;
+                            }
+                        }, 1000);
+                    }
+                } else {
+                    if (reconnectTimer) {
+                        clearInterval(reconnectTimer);
+                        reconnectTimer = null;
+                        secondsElapsed = 0;
+                    }
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = document.getElementById('components-reconnect-modal');
+                if (modal && window.MutationObserver) {
+                    var observer = new MutationObserver(updateReconnectState);
+                    observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+                }
+            });
+
+            window.addEventListener('keydown', function (e) {
+                var modal = document.getElementById('components-reconnect-modal');
+                if (!modal) return;
+
+                var isVisible = !modal.classList.contains('components-reconnect-hide') &&
+                    (modal.classList.contains('components-reconnect-show') ||
+                     modal.classList.contains('components-reconnect-failed') ||
+                     modal.classList.contains('components-reconnect-rejected'));
+
+                if (isVisible) {
+                    if (e.key === 'r' || e.key === 'R') {
+                        e.preventDefault();
+                        window.triggerBlazorReconnect();
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (modal.classList.contains('components-reconnect-rejected')) {
+                            window.location.reload();
+                        } else {
+                            window.triggerBlazorReconnect();
+                        }
+                    }
+                }
+            });
+        })();
     </script>
 
     <style>
