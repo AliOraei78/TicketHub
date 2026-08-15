@@ -427,12 +427,11 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# Ignore configuration files
-appsettings.json
+# Ignore local configuration overrides
 appsettings.Development.json
 appsettings.Production.json
+appsettings.Local.json
 /TicketHub.Web/Tailwind/tailwindcss.exe
 
-# Ignore DbInitializer because it contains default credentials
-TicketHub.Infrastructure/Data/DbInitializer.cs
+# Documentation scratch
 Journey.md

@@ -111,14 +111,17 @@ namespace TicketHub.Tests.E2E
             using var scope = _serviceProvider.CreateScope();
             var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             using var context = await factory.CreateDbContextAsync();
-            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == "a.jenabi78@gmail.com");
+            var adminEmail = "admin@tickethub.io";
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail)
+                         ?? await context.Users.FirstOrDefaultAsync();
             var userId = adminUser?.Id.ToString() ?? "1";
+            var userEmail = adminUser?.Email ?? adminEmail;
 
             var claims = new[] 
             { 
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, "AdminUser"),
-                new Claim(ClaimTypes.Email, "a.jenabi78@gmail.com"),
+                new Claim(ClaimTypes.Name, adminUser?.Name ?? "AdminUser"),
+                new Claim(ClaimTypes.Email, userEmail),
                 new Claim(ClaimTypes.Role, "ادمین") 
             };
             var identity = new ClaimsIdentity(claims, "Test");

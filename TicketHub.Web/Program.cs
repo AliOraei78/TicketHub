@@ -338,7 +338,7 @@ using (var scope = app.Services.CreateScope())
         using var context = factory.CreateDbContext();
 
         // فراخوانی متد برای ساخت دیتابیس و داده‌ها
-        await DbInitializer.InitializeAsync(context);
+        await DbInitializer.InitializeAsync(context, app.Configuration);
     }
     catch (Exception ex)
     {
@@ -419,12 +419,13 @@ if (app.Environment.IsDevelopment())
 {
     app.MapGet("/dev/login", async (HttpContext context, IUserService userService, string? role) =>
     {
+        var defaultAdminEmail = app.Configuration["InitialAdmin:Email"] ?? "admin@tickethub.io";
         var targetEmail = role switch
         {
-            "support" => "a@mail.com",
-            "tech" => "b@mail.com",
-            "user" => "c@mail.com",
-            _ => "a.jenabi78@gmail.com" // default: admin
+            "support" => "support@tickethub.io",
+            "tech" => "tech@tickethub.io",
+            "user" => "user@tickethub.io",
+            _ => defaultAdminEmail // default: admin
         };
 
         var user = await userService.GetByEmailAsync(targetEmail);
