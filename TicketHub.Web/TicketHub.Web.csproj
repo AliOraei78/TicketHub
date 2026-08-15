@@ -39,7 +39,7 @@
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
   </ItemGroup>
 	
-  <Target Name="BuildTailwind" BeforeTargets="Build">
+  <Target Name="BuildTailwind" BeforeTargets="Build" Condition="Exists('Tailwind\tailwindcss.exe')">
     <Exec Command="Tailwind\tailwindcss.exe -i wwwroot\app.css -o wwwroot\app.min.css --minify" />
   </Target>
 	

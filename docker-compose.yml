@@ -1,18 +1,98 @@
 services:
+  # =========================================================================
+  # 1. SQL Server 2022 Database
+  # =========================================================================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: tickethub-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${DB_PASSWORD:-Ali433433_StrongPass!}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "${DB_PORT:-1433}:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Ali433433_StrongPass!}' -Q 'SELECT 1' -C || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Ali433433_StrongPass!}' -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # =========================================================================
+  # 2. Redis Distributed Cache & SignalR Backplane
+  # =========================================================================
   redis:
     image: redis:alpine
     container_name: tickethub-redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
-    restart: always
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
+  # =========================================================================
+  # 3. RabbitMQ Message Broker (MassTransit Outbox / Email Queue)
+  # =========================================================================
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: tickethub-rabbitmq
+    restart: unless-stopped
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    restart: always
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-guest}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASS:-guest}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # =========================================================================
+  # 4. TicketHub Web Application (.NET 10 Blazor Server)
+  # =========================================================================
+  tickethub-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tickethub-web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-5000}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=TicketHubDb;User Id=sa;Password=${DB_PASSWORD:-Ali433433_StrongPass!};TrustServerCertificate=True;MultipleActiveResultSets=true;
+      - ConnectionStrings__Redis=redis:6379,abortConnect=false
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASS:-guest}
+    volumes:
+      - app_logs:/app/logs
+      - app_uploads:/app/wwwroot/uploads
+
+volumes:
+  mssql_data:
+  redis_data:
+  rabbitmq_data:
+  app_logs:
+  app_uploads:
