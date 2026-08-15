@@ -21,7 +21,10 @@ namespace TicketHub.Tests.E2E
         {
             PlaywrightInstance = await Playwright.CreateAsync();
             Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            Context = await Browser.NewContextAsync();
+            Context = await Browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                ViewportSize = new ViewportSize { Width = 1440, Height = 900 }
+            });
             Page = await Context.NewPageAsync();
             Page.SetDefaultTimeout(60000);
             Page.SetDefaultNavigationTimeout(60000);

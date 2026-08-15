@@ -186,17 +186,17 @@ namespace TicketHub.Tests.E2E
 
             // Select Project
             var projectRoot = Page.Locator("div.relative:has(> label:has-text('پروژه مربوطه'))");
-            await projectRoot.Locator(".field-spark-wrap > div").ClickAsync();
-            await WaitForBlazorAsync(400);
-            await projectRoot.Locator(".dropdown-menu-container .max-h-60 > div").First.ClickAsync(new() { Force = true });
-            await WaitForBlazorAsync(400);
+            await projectRoot.Locator(".field-spark-wrap div.cursor-pointer").First.ClickAsync();
+            await WaitForBlazorAsync(500);
+            await projectRoot.Locator(".dropdown-menu-container div.cursor-pointer:has-text('عمومی')").First.ClickAsync();
+            await WaitForBlazorAsync(500);
 
             // Select Priority
             var priorityRoot = Page.Locator("div.relative:has(> label:has-text('اولویت'))");
-            await priorityRoot.Locator(".field-spark-wrap > div").ClickAsync();
-            await WaitForBlazorAsync(400);
-            await priorityRoot.Locator(".dropdown-menu-container .max-h-60 > div").First.ClickAsync(new() { Force = true });
-            await WaitForBlazorAsync(400);
+            await priorityRoot.Locator(".field-spark-wrap div.cursor-pointer").First.ClickAsync();
+            await WaitForBlazorAsync(500);
+            await priorityRoot.Locator(".dropdown-menu-container div.cursor-pointer:has-text('متوسط')").First.ClickAsync();
+            await WaitForBlazorAsync(500);
 
             // Submit Ticket
             var submitButton = Page.Locator("button[type='submit']:has-text('ثبت تیکت')");

@@ -2,6 +2,7 @@ using Microsoft.Playwright;
 using System;
 using System.Threading.Tasks;
 using Xunit;
+using FluentAssertions;
 
 namespace TicketHub.Tests.E2E
 {
@@ -15,10 +16,10 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task Create_TicketField_Successfully()
         {
-            // Navigate to the component/page
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
-            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلدهای تیکت')").First;
+            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
 
             var newFieldName = "فیلد تست E2E " + Guid.NewGuid().ToString().Substring(0, 5);
@@ -26,10 +27,8 @@ namespace TicketHub.Tests.E2E
             await Page.FillAsync("input[type='number']", "10");
 
             // Open SlideSelect and choose option
-            await Page.ClickAsync("text=انتخاب نوع فیلد...");
-            await Task.Delay(500);
-            await Page.ClickAsync("li:has-text('متن کوتاه (Text)')");
-            await Task.Delay(300);
+            await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
+            await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
 
             // Submit form
             await Page.ClickAsync("button:has-text('ثبت فیلد')");
@@ -41,23 +40,23 @@ namespace TicketHub.Tests.E2E
             // Verify grid contains the newly created record
             var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = newFieldName }).First;
             await rowLocator.WaitForAsync();
-            (await rowLocator.IsVisibleAsync()).Should().BeTrue();        }
+            (await rowLocator.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task Edit_TicketField_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
-            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلدهای تیکت')").First;
+            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
 
             var newFieldName = "فیلد ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", newFieldName);
             await Page.FillAsync("input[type='number']", "20");
-            await Page.ClickAsync("text=انتخاب نوع فیلد...");
-            await Task.Delay(500);
-            await Page.ClickAsync("li:has-text('متن کوتاه (Text)')");
-            await Task.Delay(300);
+            await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
+            await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
             await Page.ClickAsync("button:has-text('ثبت فیلد')");
 
             var toastLocator = Page.Locator("text=ایجاد شد").First;
@@ -69,14 +68,14 @@ namespace TicketHub.Tests.E2E
             // Click edit button in the row
             await rowLocator.Locator("button[title='ویرایش']").ClickAsync();
 
-            // Wait for form to enter edit mode to prevent Blazor overwriting our input
+            // Wait for form to enter edit mode
             var editHeaderLocator = Page.Locator("h3:has-text('ویرایش فیلد')");
             await editHeaderLocator.WaitForAsync();
 
             // Modify Name
             var updatedName = newFieldName + " ویرایش شده";
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", updatedName);
-            await Page.Keyboard.PressAsync("Tab"); // Ensure Blazor updates the model
+            await Page.Keyboard.PressAsync("Tab");
             await Page.ClickAsync("button:has-text('ذخیره تغییرات')"); 
 
             // Wait for success toast
@@ -86,23 +85,23 @@ namespace TicketHub.Tests.E2E
             // Verify grid updated
             var updatedRow = Page.Locator("tr", new PageLocatorOptions { HasTextString = updatedName }).First;
             await updatedRow.WaitForAsync();
-            (await updatedRow.IsVisibleAsync()).Should().BeTrue();        }
+            (await updatedRow.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task Delete_TicketField_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
-            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلدهای تیکت')").First;
+            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
 
             var newFieldName = "فیلد حذفی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", newFieldName);
             await Page.FillAsync("input[type='number']", "30");
-            await Page.ClickAsync("text=انتخاب نوع فیلد...");
-            await Task.Delay(500);
-            await Page.ClickAsync("li:has-text('متن کوتاه (Text)')");
-            await Task.Delay(300);
+            await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
+            await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
             await Page.ClickAsync("button:has-text('ثبت فیلد')");
 
             var toastLocator = Page.Locator("text=ایجاد شد").First;
@@ -126,15 +125,16 @@ namespace TicketHub.Tests.E2E
 
             // Verify row is gone
             await rowLocator.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden });
-            (await rowLocator.IsVisibleAsync()).Should().BeFalse();        }
+            (await rowLocator.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task Submit_EmptyForm_ShowsValidationMessages()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
-            // Wait for page
-            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلدهای تیکت')").First;
+            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
 
             // Click submit without filling anything
@@ -143,14 +143,16 @@ namespace TicketHub.Tests.E2E
             // Verify validation error for empty Name
             var errorLocator = Page.Locator("text=نام فیلد الزامی است").First;
             await errorLocator.WaitForAsync();
-            (await errorLocator.IsVisibleAsync()).Should().BeTrue();        }
+            (await errorLocator.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task TicketFieldsSettings_BulkActions_Scenario()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
-            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلدهای تیکت')").First;
+            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
 
             var prefix = "BulkField_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
@@ -159,10 +161,8 @@ namespace TicketHub.Tests.E2E
                 await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", $"{prefix}{i}");
                 await Page.FillAsync("input[type='number']", $"{i}");
                 
-                await Page.ClickAsync("text=انتخاب نوع فیلد...");
-                await Task.Delay(500);
-                await Page.ClickAsync("li:has-text('متن کوتاه (Text)')");
-                await Task.Delay(300);
+                await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
+                await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
                 
                 await Page.ClickAsync("button:has-text('ثبت فیلد')");
                 
@@ -176,37 +176,78 @@ namespace TicketHub.Tests.E2E
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
-                var checkbox = row.Locator("input[type='checkbox']");
-                await checkbox.CheckAsync();
-                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('{i} مورد انتخاب شده')").First;
+                await row.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
                 await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
 
             var rowToDelete = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}1" });
+            await rowToDelete.ScrollIntoViewIfNeededAsync();
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
-            await deleteBtn.ClickAsync();
+            await deleteBtn.ClickAsync(new() { Force = true });
             
-            var modalLocator = Page.Locator("text=آیا از حذف").First;
-            await modalLocator.WaitForAsync(new() { Timeout = 10000 });
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            await modalConfirm1.ClickAsync(new() { Force = true });
             
-            var deleteToastLocator = Page.Locator("text=فیلد تیکت با موفقیت حذف شد.").First;
+            var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
-            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('2 مورد انتخاب شده')").First;
+            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
-            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف')");
+            
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
             var bulkDeleteModal = Page.Locator("text=مطمئن هستید").First;
             await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            
+            var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await modalConfirm2.ClickAsync(new() { Force = true });
 
-            var pluralToast = Page.Locator("text=2 فیلد تیکت با موفقیت حذف شدند.").First;
-            await pluralToast.WaitForAsync(new() { Timeout = 10000 });
+            var pluralToast = Page.Locator("text=با موفقیت حذف").Last;
+            await pluralToast.WaitForAsync(new() { Timeout = 15000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
+
+            // Test Activate/Deactivate
+            for(int i = 4; i <= 5; i++)
+            {
+                await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", $"{prefix}{i}");
+                await Page.FillAsync("input[type='number']", $"{i}");
+                await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
+                await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
+                await Page.ClickAsync("button:has-text('ثبت فیلد')");
+                
+                var toastLocator = Page.Locator("text=ایجاد شد").First;
+                await toastLocator.WaitForAsync(new() { Timeout = 10000 });
+                await Page.Mouse.ClickAsync(10, 10);
+                await Page.WaitForTimeoutAsync(500);
+            }
+
+            for(int i = 4; i <= 5; i++)
+            {
+                var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
+                await row.ScrollIntoViewIfNeededAsync();
+                await row.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
+                await countLocator.WaitForAsync(new() { Timeout = 10000 });
+            }
+
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('غیرفعال‌سازی')");
+            var pluralDeactivateToast = Page.Locator("text=با موفقیت غیر").Last;
+            await pluralDeactivateToast.WaitForAsync(new() { Timeout = 15000 });
+            await Page.Mouse.ClickAsync(10, 10);
+            await Page.WaitForTimeoutAsync(600);
+
+            var rowSingular = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}4" });
+            await rowSingular.ScrollIntoViewIfNeededAsync();
+            await rowSingular.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('فعال‌سازی')");
+            var singularActivateToast = Page.Locator("text=با موفقیت فعال").Last;
+            await singularActivateToast.WaitForAsync(new() { Timeout = 15000 });
         }
 
         [Fact]
@@ -218,17 +259,15 @@ namespace TicketHub.Tests.E2E
             var fieldName = "فیلد لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", fieldName);
             await Page.FillAsync("input[type='number']", "1");
-            await Page.ClickAsync("text=انتخاب نوع فیلد...");
-            await Task.Delay(500);
-            await Page.ClickAsync("li:has-text('متن کوتاه (Text)')");
-            await Task.Delay(300);
+            await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
+            await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
             await Page.ClickAsync("button:has-text('ثبت فیلد')");
 
             var toastLocator = Page.Locator("text=ایجاد شد").First;
             await toastLocator.WaitForAsync(new() { Timeout = 10000 });
 
             // Click edit
-            var rowLocator = Page.Locator("tr:has(td:has-text('" + fieldName + "'))").First;
+            var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = fieldName });
             await rowLocator.Locator("button[title='ویرایش']").ClickAsync();
 
             var editHeader = Page.Locator("h3:has-text('ویرایش فیلد')").First;
@@ -248,7 +287,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
-            await Page.WaitForSelectorAsync("h1:has-text('مدیریت فیلدهای داینامیک تیکت')");
+            await Page.WaitForSelectorAsync("h1:has-text('مدیریت فیلد')");
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

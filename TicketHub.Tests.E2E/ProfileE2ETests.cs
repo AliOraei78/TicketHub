@@ -82,7 +82,7 @@ namespace TicketHub.Tests.E2E
             await Page.ClickAsync("button:has-text('امنیت و کلید عبور')");
 
             // Click Auto Generate
-            await Page.ClickAsync("button:has-text('تولید رمز عبور فوق امن')");
+            await Page.ClickAsync("button:has-text('تولید رمز عبور')");
 
             var statusMsg = Page.Locator("text=رمز عبور فوق‌العاده امن تولید شد").First;
             await statusMsg.WaitForAsync(new() { Timeout = 10000 });

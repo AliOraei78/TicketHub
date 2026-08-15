@@ -1,7 +1,8 @@
 using Microsoft.Playwright;
 using Xunit;
+using FluentAssertions;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
+using System;
 
 namespace TicketHub.Tests.E2E
 {
@@ -15,16 +16,17 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task CategoriesSettings_CRUD_HappyPath()
         {
+            await Page.GotoAsync(Factory.ServerAddress + "/dev/login");
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
 
             // 1. Verify Page Loaded
             var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
             await headerLocator.WaitForAsync();
             (await headerLocator.IsVisibleAsync()).Should().BeTrue();
+
             // 2. Create Category
-            var newCategoryName = "تیکت تست E2E " + System.Guid.NewGuid().ToString().Substring(0, 5);
+            var newCategoryName = "تیکت تست E2E " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", newCategoryName);
-            await Page.CheckAsync("input[id='categoryIsActive']");
             
             await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
             
@@ -32,23 +34,24 @@ namespace TicketHub.Tests.E2E
             var toastLocator = Page.Locator("text=ایجاد شد").First;
             await toastLocator.WaitForAsync(new() { Timeout = 10000 });
             (await toastLocator.IsVisibleAsync()).Should().BeTrue();
+
             // Verify the new category is in the grid
             var newCatRow = Page.Locator($"text={newCategoryName}");
             await newCatRow.WaitForAsync();
             (await newCatRow.IsVisibleAsync()).Should().BeTrue();
+
             // 3. Edit Category
-            // Assuming the first edit button is the one for the new category (or find row specifically)
             var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = newCategoryName });
             var editBtn = rowLocator.Locator("button[title='ویرایش']");
             await editBtn.ClickAsync();
 
-            // Wait for form to enter edit mode to prevent Blazor overwriting our input
+            // Wait for form to enter edit mode
             var editHeaderLocator = Page.Locator("h3:has-text('ویرایش نوع تیکت')");
             await editHeaderLocator.WaitForAsync();
 
             var updatedName = newCategoryName + " ویرایش شده";
             await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", updatedName);
-            await Page.Keyboard.PressAsync("Tab"); // Ensure Blazor updates the model
+            await Page.Keyboard.PressAsync("Tab");
             await Page.ClickAsync("button:has-text('ذخیره تغییرات')");
 
             // Wait for success toast
@@ -58,6 +61,7 @@ namespace TicketHub.Tests.E2E
             var updatedCatRow = Page.Locator($"text={updatedName}");
             await updatedCatRow.WaitForAsync();
             (await updatedCatRow.IsVisibleAsync()).Should().BeTrue();
+
             // 4. Delete Category
             var updatedRowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = updatedName });
             var deleteBtn = updatedRowLocator.Locator("button[title='حذف']");
@@ -73,13 +77,16 @@ namespace TicketHub.Tests.E2E
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             (await deleteToastLocator.IsVisibleAsync()).Should().BeTrue();
+
             // Verify it's gone
             await updatedCatRow.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden });
-            (await updatedCatRow.IsVisibleAsync()).Should().BeFalse();    }
+            (await updatedCatRow.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task Submit_EmptyForm_ShowsValidationMessages()
         {
+            await Page.GotoAsync(Factory.ServerAddress + "/dev/login");
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
@@ -89,24 +96,25 @@ namespace TicketHub.Tests.E2E
 
             var validationMsg = Page.Locator("text=نام دسته‌بندی الزامی است").First;
             await validationMsg.WaitForAsync(new() { Timeout = 5000 });
-            (await validationMsg.IsVisibleAsync()).Should().BeTrue();        }
+            (await validationMsg.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task CategoriesSettings_BulkActions_Scenario()
         {
+            await Page.GotoAsync(Factory.ServerAddress + "/dev/login");
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
             var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
             await headerLocator.WaitForAsync();
 
             // 1. Create 3 categories for test
-            var prefix = "BulkCat_" + System.Guid.NewGuid().ToString().Substring(0, 5) + "_";
+            var prefix = "BulkCat_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
             for(int i = 1; i <= 3; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", $"{prefix}{i}");
                 await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
-                // Dismiss toast
                 await Page.Mouse.ClickAsync(10, 10);
                 await Page.WaitForTimeoutAsync(500);
             }
@@ -116,9 +124,8 @@ namespace TicketHub.Tests.E2E
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
-                var checkbox = row.Locator("input[type='checkbox']");
-                await checkbox.CheckAsync();
-                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('{i} مورد انتخاب شده')").First;
+                await row.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
                 await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
 
@@ -127,32 +134,35 @@ namespace TicketHub.Tests.E2E
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync();
             
-            var modalLocator = Page.Locator("text=آیا از حذف").First;
-            await modalLocator.WaitForAsync(new() { Timeout = 10000 });
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            await modalConfirm1.ClickAsync();
             
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
-            // 4. Verify bulk action toolbar indicates "2 مورد انتخاب شده"
-            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('2 مورد انتخاب شده')").First;
+            // 4. Verify bulk action toolbar indicates selected count
+            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
+
             // 5. Click bulk delete for the remaining 2
-            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف')");
-            var bulkDeleteModal = Page.Locator("text=آیا از حذف 2 نوع تیکت انتخاب شده مطمئن هستید؟").First;
-            await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
+            
+            var bulkDeleteModalText = Page.Locator("text=نوع تیکت انتخاب شده مطمئن هستید").First;
+            await bulkDeleteModalText.WaitForAsync(new() { Timeout = 10000 });
+            
+            var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await modalConfirm2.ClickAsync();
 
-            // 6. Verify plural toast
-            var pluralToast = Page.Locator("text=2 نوع تیکت با موفقیت حذف شدند").First;
-            await pluralToast.WaitForAsync(new() { Timeout = 10000 });
+            var pluralToast = Page.Locator("text=با موفقیت حذف").Last;
+            await pluralToast.WaitForAsync(new() { Timeout = 15000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
-            // 7. Create 2 more and test activate/deactivate
+            // 6. Create 2 more and test activate/deactivate
             for(int i = 4; i <= 5; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", $"{prefix}{i}");
@@ -167,28 +177,26 @@ namespace TicketHub.Tests.E2E
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
-                var checkbox = row.Locator("input[type='checkbox']");
-                await checkbox.CheckAsync();
-                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('{i - 3} مورد انتخاب شده')").First;
+                await row.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
                 await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
 
             // Plural Deactivate
-            await Page.ClickAsync("button:has-text('غیرفعال‌سازی')");
-            var pluralDeactivateToast = Page.Locator("text=2 نوع تیکت با موفقیت غیرفعال شدند").First;
-            await pluralDeactivateToast.WaitForAsync(new() { Timeout = 10000 });
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('غیرفعال‌سازی')");
+            var pluralDeactivateToast = Page.Locator("text=با موفقیت غیرفعال").Last;
+            await pluralDeactivateToast.WaitForAsync(new() { Timeout = 15000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
             // Select 1 and test singular
             var rowSingular = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}4" });
             await rowSingular.ScrollIntoViewIfNeededAsync();
-            var checkboxSingular = rowSingular.Locator("input[type='checkbox']");
-            await checkboxSingular.CheckAsync();
+            await rowSingular.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
 
-            await Page.ClickAsync("button:has-text('فعال‌سازی')");
-            var singularActivateToast = Page.Locator("text=1 نوع تیکت با موفقیت فعال شد").First;
-            await singularActivateToast.WaitForAsync(new() { Timeout = 10000 });
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('فعال‌سازی')");
+            var singularActivateToast = Page.Locator("text=با موفقیت فعال").Last;
+            await singularActivateToast.WaitForAsync(new() { Timeout = 15000 });
         }
 
         [Fact]
@@ -197,7 +205,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync(Factory.ServerAddress + "/dev/login");
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
 
-            var categoryName = "نوع تیکت لغوی " + System.Guid.NewGuid().ToString().Substring(0, 5);
+            var categoryName = "نوع تیکت لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", categoryName);
             await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
 

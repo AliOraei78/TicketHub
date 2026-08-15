@@ -17,7 +17,7 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/register");
 
-            var title = Page.Locator("text=ایجاد حساب کاربری").First;
+            var title = Page.Locator("h2:visible:has-text('ایجاد حساب کاربری')").First;
             await title.WaitForAsync();
             (await title.IsVisibleAsync()).Should().BeTrue();
 
@@ -52,7 +52,8 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForURLAsync("**/login");
             Page.Url.Should().Contain("/login");
 
-            var loginHeader = Page.Locator("text=ورود به سامانه").First;
+            var loginHeader = Page.Locator("h2:visible:has-text('ورود به سامانه')").First;
+            await loginHeader.WaitForAsync();
             (await loginHeader.IsVisibleAsync()).Should().BeTrue();
         }
     }

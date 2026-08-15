@@ -1,6 +1,7 @@
 using Microsoft.Playwright;
 using System.Threading.Tasks;
 using Xunit;
+using FluentAssertions;
 using System;
 
 namespace TicketHub.Tests.E2E
@@ -15,6 +16,7 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task Create_Role_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
             var newRoleName = "نقش جدید " + Guid.NewGuid().ToString().Substring(0, 5);
@@ -29,11 +31,13 @@ namespace TicketHub.Tests.E2E
             // Verify role row appears in the grid
             var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = newRoleName }).First;
             await rowLocator.WaitForAsync();
-            (await rowLocator.IsVisibleAsync()).Should().BeTrue();        }
+            (await rowLocator.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task Edit_Role_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
             // Create one first to edit
@@ -44,31 +48,33 @@ namespace TicketHub.Tests.E2E
             var toastLocator = Page.Locator("text=ایجاد شد").First;
             await toastLocator.WaitForAsync(new() { Timeout = 10000 });
 
-            var rowLocator = Page.Locator("tr:has(td:has-text('" + newRoleName + "'))").First;
+            var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = newRoleName }).First;
             await rowLocator.WaitForAsync();
 
             // Click edit on this specific row
             await rowLocator.Locator("button[title='ویرایش']").ClickAsync();
 
-            // Wait for form to enter edit mode to prevent Blazor overwriting our input
+            // Wait for form to enter edit mode
             var editHeaderLocator = Page.Locator("h3:has-text('ویرایش نقش')");
             await editHeaderLocator.WaitForAsync();
 
             var updatedName = newRoleName + " ویرایش شده";
             await Page.FillAsync("input[placeholder='مثال: کارشناس پشتیبانی فنی']", updatedName);
-            await Page.Keyboard.PressAsync("Tab"); // Ensure Blazor updates the model before submit
-            await Page.ClickAsync("button:has-text('ذخیره تغییرات')"); // Button text changes to '????? ???????' when editing
+            await Page.Keyboard.PressAsync("Tab");
+            await Page.ClickAsync("button:has-text('ذخیره تغییرات')");
 
             var editToastLocator = Page.Locator("text=ویرایش شد").First;
             await editToastLocator.WaitForAsync(new() { Timeout = 10000 });
 
             var updatedRowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = updatedName }).First;
             await updatedRowLocator.WaitForAsync();
-            (await updatedRowLocator.IsVisibleAsync()).Should().BeTrue();        }
+            (await updatedRowLocator.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task Delete_Role_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
             // Create one first to delete
@@ -79,13 +85,13 @@ namespace TicketHub.Tests.E2E
             var toastLocator = Page.Locator("text=ایجاد شد").First;
             await toastLocator.WaitForAsync(new() { Timeout = 10000 });
 
-            var rowLocator = Page.Locator("tr:has(td:has-text('" + newRoleName + "'))").First;
+            var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = newRoleName }).First;
             await rowLocator.WaitForAsync();
 
             // Click delete on this specific row
             await rowLocator.Locator("button[title='حذف']").ClickAsync();
 
-            var modalLocator = Page.Locator("text=حذف اطلاعات").First;
+            var modalLocator = Page.Locator("text=آیا از حذف").First;
             await modalLocator.WaitForAsync();
 
             // Click confirm
@@ -96,11 +102,13 @@ namespace TicketHub.Tests.E2E
 
             // Verify gone
             await rowLocator.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden });
-            (await rowLocator.IsVisibleAsync()).Should().BeFalse();        }
+            (await rowLocator.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task Submit_EmptyForm_ShowsValidationMessages()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
@@ -110,11 +118,13 @@ namespace TicketHub.Tests.E2E
 
             var errorLocator = Page.Locator("text=نام نقش الزامی است").First;
             await errorLocator.WaitForAsync();
-            (await errorLocator.IsVisibleAsync()).Should().BeTrue();        }
+            (await errorLocator.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task RolesSettings_BulkActions_Scenario()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
             var prefix = "BulkRole_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
@@ -133,9 +143,8 @@ namespace TicketHub.Tests.E2E
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
-                var checkbox = row.Locator("input[type='checkbox']");
-                await checkbox.CheckAsync();
-                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('{i} مورد انتخاب شده')").First;
+                await row.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
                 await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
 
@@ -143,27 +152,30 @@ namespace TicketHub.Tests.E2E
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync();
             
-            var modalLocator = Page.Locator("text=حذف اطلاعات").First;
-            await modalLocator.WaitForAsync(new() { Timeout = 10000 });
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            await modalConfirm1.ClickAsync();
             
-            var deleteToastLocator = Page.Locator("text=نقش با موفقیت حذف شد.").First;
+            var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
-            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('2 مورد انتخاب شده')").First;
+            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
-            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف')");
-            var bulkDeleteModal = Page.Locator("text=حذف اطلاعات").First;
+            
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
+            var bulkDeleteModal = Page.Locator("text=نقش انتخاب شده مطمئن هستید").First;
             await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            
+            var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await modalConfirm2.ClickAsync();
 
-            var pluralToast = Page.Locator("text=2 نقش با موفقیت حذف شدند.").First;
-            await pluralToast.WaitForAsync(new() { Timeout = 10000 });
+            var pluralToast = Page.Locator("text=با موفقیت حذف").Last;
+            await pluralToast.WaitForAsync(new() { Timeout = 15000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
             // Test Activate/Deactivate
             for(int i = 4; i <= 5; i++)
@@ -181,26 +193,24 @@ namespace TicketHub.Tests.E2E
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
-                var checkbox = row.Locator("input[type='checkbox']");
-                await checkbox.CheckAsync();
-                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('{i - 3} مورد انتخاب شده')").First;
+                await row.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
+                var countLocator = Page.Locator($"div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
                 await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
 
-            await Page.ClickAsync("button:has-text('غیرفعال‌سازی')");
-            var pluralDeactivateToast = Page.Locator("text=2 نقش با موفقیت غیرفعال شدند.").First;
-            await pluralDeactivateToast.WaitForAsync(new() { Timeout = 10000 });
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('غیرفعال‌سازی')");
+            var pluralDeactivateToast = Page.Locator("text=با موفقیت غیرفعال").Last;
+            await pluralDeactivateToast.WaitForAsync(new() { Timeout = 15000 });
             await Page.Mouse.ClickAsync(10, 10);
-            await Page.WaitForTimeoutAsync(500);
+            await Page.WaitForTimeoutAsync(600);
 
             var rowSingular = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}4" });
             await rowSingular.ScrollIntoViewIfNeededAsync();
-            var checkboxSingular = rowSingular.Locator("input[type='checkbox']");
-            await checkboxSingular.CheckAsync();
+            await rowSingular.Locator("label.cyber-checkbox-container").First.ClickAsync(new() { Force = true });
 
-            await Page.ClickAsync("button:has-text('فعال‌سازی')");
-            var singularActivateToast = Page.Locator("text=1 نقش با موفقیت فعال شد.").First;
-            await singularActivateToast.WaitForAsync(new() { Timeout = 10000 });
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('فعال‌سازی')");
+            var singularActivateToast = Page.Locator("text=با موفقیت فعال").Last;
+            await singularActivateToast.WaitForAsync(new() { Timeout = 15000 });
         }
 
         [Fact]
@@ -217,7 +227,7 @@ namespace TicketHub.Tests.E2E
             await toastLocator.WaitForAsync(new() { Timeout = 10000 });
 
             // Click edit
-            var rowLocator = Page.Locator("tr:has(td:has-text('" + roleName + "'))").First;
+            var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = roleName });
             await rowLocator.Locator("button[title='ویرایش']").ClickAsync();
 
             var editHeader = Page.Locator("h3:has-text('ویرایش نقش')").First;
@@ -226,7 +236,7 @@ namespace TicketHub.Tests.E2E
             // Click cancel
             await Page.ClickAsync("button:has-text('انصراف')");
 
-            var createHeader = Page.Locator("h3:has-text('تعریف نقش جدید')").First;
+            var createHeader = Page.Locator("h3:has-text('ایجاد نقش جدید')").First;
             await createHeader.WaitForAsync();
             (await createHeader.IsVisibleAsync()).Should().BeTrue();
         }

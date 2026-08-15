@@ -1,3 +1,5 @@
+@inject NavigationManager NavigationManager
+
 @code {
     [Parameter] public string Href { get; set; } = "";
     [Parameter] public string Title { get; set; } = "";
@@ -10,6 +12,15 @@
     [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
 
     private bool isOpen = false;
+
+    protected override void OnInitialized()
+    {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        if (Title == "تنظیمات سیستم" && relative.StartsWith("settings", StringComparison.OrdinalIgnoreCase))
+        {
+            isOpen = true;
+        }
+    }
 
     private string GetNavItemClass(bool hasSubMenu)
     {
@@ -81,8 +92,8 @@ else
             }
         </button>
 
-        <div class="grid transition-all duration-300 ease-in-out @(isOpen && !IsCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")">
-            <div class="overflow-hidden">
+        <div class="grid transition-all duration-300 ease-in-out @(isOpen && !IsCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none")">
+            <div class="min-h-0 overflow-hidden">
                 <div class="pr-3 pl-0 py-1 space-y-1 border-r border-slate-800/80 mr-3.5 ml-2">
                     @ChildContent
                 </div>

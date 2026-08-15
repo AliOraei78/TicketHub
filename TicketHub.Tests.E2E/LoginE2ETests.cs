@@ -17,7 +17,7 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/login");
 
-            var title = Page.Locator("text=ورود به سامانه").First;
+            var title = Page.Locator("h2:visible:has-text('ورود به سامانه')").First;
             await title.WaitForAsync();
             (await title.IsVisibleAsync()).Should().BeTrue();
 

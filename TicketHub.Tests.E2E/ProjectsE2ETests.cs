@@ -16,28 +16,30 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task TelemetryCards_RenderAllFiveMetrics()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت پروژه‌ها')").First;
             await headerLocator.WaitForAsync();
 
             // Verify all 5 telemetry segments exist
-            (await Page.Locator("text=کل پروژه‌ها").IsVisibleAsync()).Should().BeTrue();
-            (await Page.Locator("text=پروژه‌های فعال").IsVisibleAsync()).Should().BeTrue();
-            (await Page.Locator("text=غیرفعال").IsVisibleAsync()).Should().BeTrue();
-            (await Page.Locator("text=جریان‌های کاری").IsVisibleAsync()).Should().BeTrue();
-            (await Page.Locator("text=ماتریس نقش‌ها").IsVisibleAsync()).Should().BeTrue();
+            (await Page.Locator(".telemetry-pill-segment:has-text('کل پروژه‌ها')").First.IsVisibleAsync()).Should().BeTrue();
+            (await Page.Locator(".telemetry-pill-segment:has-text('پروژه‌های فعال')").First.IsVisibleAsync()).Should().BeTrue();
+            (await Page.Locator(".telemetry-pill-segment:has-text('غیرفعال')").First.IsVisibleAsync()).Should().BeTrue();
+            (await Page.Locator(".telemetry-pill-segment:has-text('جریان‌های کاری')").First.IsVisibleAsync()).Should().BeTrue();
+            (await Page.Locator(".telemetry-pill-segment:has-text('ماتریس نقش‌ها')").First.IsVisibleAsync()).Should().BeTrue();
         }
 
         [Fact]
         public async Task Create_Project_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             // Click create button
             await Page.ClickAsync("button:has-text('ایجاد پروژه جدید')");
             
-            var headerLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید'), text=[SYS // NEW_PROJECT]").First;
+            var headerLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید')").First;
             await headerLocator.WaitForAsync();
 
             var newProjectName = "پروژه سایبری E2E " + Guid.NewGuid().ToString().Substring(0, 5);
@@ -58,11 +60,12 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task CreateProject_CancelModal_DoesNotCreateProject()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             await Page.ClickAsync("button:has-text('ایجاد پروژه جدید')");
 
-            var headerLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید'), text=[SYS // NEW_PROJECT]").First;
+            var headerLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید')").First;
             await headerLocator.WaitForAsync();
 
             var cancelledProjectName = "پروژه منصرف شده " + Guid.NewGuid().ToString().Substring(0, 5);
@@ -82,6 +85,7 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task Edit_Project_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             // Create one first
@@ -98,9 +102,9 @@ namespace TicketHub.Tests.E2E
             await cardLocator.WaitForAsync();
 
             // Click edit on this specific card
-            await cardLocator.Locator("button[title='ویرایش پروژه']").ClickAsync();
+            await cardLocator.Locator("button[title='ویرایش پروژه']").ClickAsync(new() { Force = true });
 
-            var editHeaderLocator = Page.Locator("h2:has-text('ویرایش پروژه'), text=[SYS // EDIT_PROJECT]").First;
+            var editHeaderLocator = Page.Locator("h2:has-text('ویرایش پروژه')").First;
             await editHeaderLocator.WaitForAsync();
 
             var updatedName = newProjectName + " ویرایش شده";
@@ -119,6 +123,7 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task Delete_Project_Successfully()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             await Page.ClickAsync("button:has-text('ایجاد پروژه جدید')");
@@ -134,9 +139,9 @@ namespace TicketHub.Tests.E2E
             await cardLocator.WaitForAsync();
 
             // Click delete on this specific card
-            await cardLocator.Locator("button[title='حذف پروژه']").ClickAsync();
+            await cardLocator.Locator("button[title='حذف پروژه']").ClickAsync(new() { Force = true });
 
-            var modalLocator = Page.Locator("text=آیا از حذف پروژه").First;
+            var modalLocator = Page.Locator("text=آیا از حذف").First;
             await modalLocator.WaitForAsync();
 
             // Click confirm delete
@@ -153,11 +158,13 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task DeleteProject_CancelModal_DoesNotDeleteProject()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             await Page.ClickAsync("button:has-text('ایجاد پروژه جدید')");
             var newProjectName = "پروژه حفظ شده " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='نام پروژه را وارد کنید']", newProjectName);
+            await Page.FillAsync("textarea[placeholder='درباره این پروژه بنویسید...']", "توضیحات پروژه تستی");
             await Page.ClickAsync("button:has-text('ثبت پروژه')");
 
             var toastLocator = Page.Locator("text=ایجاد شد").First;
@@ -167,9 +174,9 @@ namespace TicketHub.Tests.E2E
             await cardLocator.WaitForAsync();
 
             // Click delete
-            await cardLocator.Locator("button[title='حذف پروژه']").ClickAsync();
+            await cardLocator.Locator("button[title='حذف پروژه']").ClickAsync(new() { Force = true });
 
-            var modalLocator = Page.Locator("text=آیا از حذف پروژه").First;
+            var modalLocator = Page.Locator("text=آیا از حذف").First;
             await modalLocator.WaitForAsync();
 
             // Click cancel
@@ -185,6 +192,7 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task Submit_EmptyForm_ShowsValidationMessages()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت پروژه‌ها')").First;
@@ -192,19 +200,20 @@ namespace TicketHub.Tests.E2E
 
             await Page.ClickAsync("button:has-text('ایجاد پروژه جدید')");
 
-            var formHeaderLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید'), text=[SYS // NEW_PROJECT]").First;
+            var formHeaderLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید')").First;
             await formHeaderLocator.WaitForAsync();
 
-            await Page.ClickAsync("button:has-text('ثبت پروژه')");
+            await Page.Locator("button[type='submit']:has-text('ثبت پروژه')").ClickAsync(new() { Force = true });
 
-            var errorLocator = Page.Locator(".validation-message, text=الزامی").First;
-            await errorLocator.WaitForAsync();
+            var errorLocator = Page.Locator("text=نام پروژه الزامی است").First;
+            await errorLocator.WaitForAsync(new() { Timeout = 10000 });
             (await errorLocator.IsVisibleAsync()).Should().BeTrue();
         }
 
         [Fact]
         public async Task SearchProjects_InRealTime_FiltersGrid()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             // Type non-existent query
@@ -224,6 +233,7 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task FilterProjects_By3StateStatusButtons_FiltersCards()
         {
+            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
             // Click Active filter

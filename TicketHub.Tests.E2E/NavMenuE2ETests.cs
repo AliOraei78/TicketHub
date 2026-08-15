@@ -68,31 +68,38 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/");
 
-            // Expand Settings accordion if not open
-            var settingsBtn = Page.Locator("aside button:has-text('تنظیمات سیستم')").First;
-            if (await settingsBtn.IsVisibleAsync())
-            {
-                await settingsBtn.ClickAsync();
-                await Task.Delay(300);
-            }
-
             // Navigate to Roles
             var rolesLink = Page.Locator("aside a[href='settings/roles']").First;
-            await rolesLink.WaitForAsync();
+            if (!await rolesLink.IsVisibleAsync())
+            {
+                var settingsBtn = Page.Locator("aside button:has-text('تنظیمات سیستم')").First;
+                await settingsBtn.ClickAsync();
+                await rolesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            }
             await rolesLink.ClickAsync();
             await Page.WaitForURLAsync("**/settings/roles");
             Page.Url.Should().Contain("/settings/roles");
 
             // Navigate to Statuses
             var statusesLink = Page.Locator("aside a[href='settings/statuses']").First;
-            await statusesLink.WaitForAsync();
+            if (!await statusesLink.IsVisibleAsync())
+            {
+                var settingsBtn = Page.Locator("aside button:has-text('تنظیمات سیستم')").First;
+                await settingsBtn.ClickAsync();
+                await statusesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            }
             await statusesLink.ClickAsync();
             await Page.WaitForURLAsync("**/settings/statuses");
             Page.Url.Should().Contain("/settings/statuses");
 
             // Navigate to Categories
             var categoriesLink = Page.Locator("aside a[href='settings/categories']").First;
-            await categoriesLink.WaitForAsync();
+            if (!await categoriesLink.IsVisibleAsync())
+            {
+                var settingsBtn = Page.Locator("aside button:has-text('تنظیمات سیستم')").First;
+                await settingsBtn.ClickAsync();
+                await categoriesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            }
             await categoriesLink.ClickAsync();
             await Page.WaitForURLAsync("**/settings/categories");
             Page.Url.Should().Contain("/settings/categories");

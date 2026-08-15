@@ -30,7 +30,7 @@ namespace TicketHub.Tests.E2E
         public CustomWebApplicationFactory()
         {
             _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING") 
-                ?? "Server=127.0.0.1,1433;Database=TicketHubDb_Test;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
+                ?? "Server=127.0.0.1,14333;Database=TicketHubDb_Test;User Id=sa;Password=Ali433433_StrongPass!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
             
             // Set environment variable so Program.cs reads test connection string and in-memory services
             Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _dbConnectionString);
@@ -40,8 +40,42 @@ namespace TicketHub.Tests.E2E
 
         public string ServerAddress { get; private set; } = "http://127.0.0.1:0";
 
+        private void EnsureDatabaseExists()
+        {
+            try
+            {
+                var connBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_dbConnectionString);
+                var targetDbName = connBuilder.InitialCatalog;
+                connBuilder.InitialCatalog = "master";
+                var masterConnStr = connBuilder.ConnectionString;
+
+                for (int retry = 0; retry < 15; retry++)
+                {
+                    try
+                    {
+                        using var masterConn = new Microsoft.Data.SqlClient.SqlConnection(masterConnStr);
+                        masterConn.Open();
+                        using var cmd = masterConn.CreateCommand();
+                        cmd.CommandText = $"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '{targetDbName}') CREATE DATABASE [{targetDbName}];";
+                        cmd.ExecuteNonQuery();
+                        break;
+                    }
+                    catch when (retry < 14)
+                    {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback to let EF Core handle it
+            }
+        }
+
         protected override IHost CreateHost(IHostBuilder builder)
         {
+            EnsureDatabaseExists();
+
             // 1. Build test server for WebApplicationFactory internal management
             var testHost = builder.Build();
 
@@ -103,9 +137,6 @@ namespace TicketHub.Tests.E2E
 
         public async Task InitializeAsync()
         {
-            // Ensure server is started
-            CreateDefaultClient();
-
             // 1. Ensure SQL Server is reachable and create target database from master
             var connBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_dbConnectionString);
             var targetDbName = connBuilder.InitialCatalog;
@@ -129,7 +160,10 @@ namespace TicketHub.Tests.E2E
                 }
             }
 
-            // 2. Ensure DB is migrated
+            // 2. Ensure server is started (which triggers Program.cs migration & Hangfire)
+            CreateDefaultClient();
+
+            // 3. Ensure DB is migrated
             using var scope = (_kestrelHost?.Services ?? Services).CreateScope();
             var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             using var context = factory.CreateDbContext();
