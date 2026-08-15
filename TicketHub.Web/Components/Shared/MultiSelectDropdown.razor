@@ -13,22 +13,72 @@
     <div class="relative @(ShowDropdown ? "z-[200]" : "z-10") h-[46px] flex items-center" dir="rtl">
         <div class="field-spark-wrap w-full h-[46px] flex items-center">
             <div class="relative w-full h-[46px] flex items-center">
-                <input type="text"
-                       @bind="SearchTerm"
-                       @bind:event="oninput"
-                       @onclick="OpenDropdown"
-                       placeholder="@Placeholder"
-                       class="w-full h-[46px] pr-4.5 pl-11 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-sm text-slate-100 placeholder-slate-500 focus-ring" />
-                <div class="absolute inset-y-0 left-5 flex items-center cursor-pointer z-10" @onclick="ToggleDropdown" @onclick:stopPropagation>
-                    <svg class="w-4 h-4 text-slate-400 hover:text-cyan-400 transition-transform duration-300 @(ShowDropdown ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div @onclick="ToggleDropdown"
+                     tabindex="0"
+                     class="w-full h-[46px] pr-4.5 pl-10 border border-white/[0.12] rounded-2xl focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all shadow-2xs bg-[#050811]/90 hover:bg-[#050811] focus:bg-[#050811] text-sm text-slate-100 flex items-center justify-between cursor-pointer select-none focus-ring">
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                        @if (SelectedValues == null || !SelectedValues.Any())
+                        {
+                            <span class="text-slate-500 text-xs sm:text-sm truncate">@Placeholder</span>
+                        }
+                        else if (!ShowSelectedTags)
+                        {
+                            if (SelectedValues.Count == 1)
+                            {
+                                var singleItem = GetItem(SelectedValues[0]);
+                                <span class="text-cyan-300 font-semibold text-xs truncate">
+                                    @(singleItem != null ? DisplaySelector(singleItem) : Placeholder)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-slate-200 font-semibold text-xs truncate">@Placeholder</span>
+                                <span class="bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-full shrink-0">
+                                    @SelectedValues.Count.ToPersianNumbers()
+                                </span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-slate-500 text-xs sm:text-sm truncate">@Placeholder</span>
+                        }
+                    </div>
+
+                    @if (SelectedValues != null && SelectedValues.Any())
+                    {
+                        <button type="button"
+                                @onclick="ClearAll"
+                                @onclick:stopPropagation
+                                class="text-slate-400 hover:text-rose-400 transition-colors p-0.5 mr-1 shrink-0 focus-ring"
+                                title="پاک کردن تمام انتخاب‌ها">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    }
+                </div>
+
+                <div class="absolute inset-y-0 left-3 flex items-center cursor-pointer z-10 pointer-events-none">
+                    <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 @(ShowDropdown ? "rotate-180 text-cyan-400" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="dropdown-menu-container absolute top-full left-0 mt-1.5 z-[250] w-full bg-[#090e1d]/98 border border-cyan-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] overflow-hidden transition-all duration-300 backdrop-blur-2xl @(ShowDropdown ? "opacity-100 max-h-72" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
-            <div class="max-h-64 overflow-y-auto pt-1.5 pb-3.5 overscroll-contain custom-scrollbar">
+        <div class="dropdown-menu-container absolute top-full left-0 mt-1.5 z-[250] w-full bg-[#090e1d]/98 border border-cyan-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] overflow-hidden transition-all duration-300 backdrop-blur-2xl @(ShowDropdown ? "opacity-100 max-h-[380px] flex flex-col" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+            @if (Items != null && Items.Count() > 5)
+            {
+                <div class="p-1.5 border-b border-white/[0.08] bg-[#050811]/80 shrink-0">
+                    <input type="text"
+                           @bind="SearchTerm"
+                           @bind:event="oninput"
+                           @onclick:stopPropagation
+                           class="w-full h-8 px-2.5 text-xs text-slate-100 bg-[#050811] border border-white/[0.1] rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/30 transition-all focus-ring placeholder-slate-500"
+                           placeholder="جستجو..." />
+                </div>
+            }
+            <div class="max-h-[300px] overflow-y-auto pt-1 pb-2 overscroll-contain custom-scrollbar">
                 @if (!FilteredItems.Any())
                 {
                     <div class="px-4 py-6 text-center flex flex-col items-center justify-center opacity-80">
@@ -43,7 +93,7 @@
                 {
                     @if (FilteredItems.Count() > 2)
                     {
-                        <div @onclick="ToggleSelectAll" class="px-3 py-2 mx-2 my-1 hover:bg-cyan-950/60 rounded-xl cursor-pointer flex items-center justify-between transition-colors border-b border-white/[0.08] mb-1 pb-2 select-none">
+                        <div @onclick="ToggleSelectAll" class="px-3 py-1.5 mx-1.5 my-0.5 hover:bg-cyan-950/60 rounded-xl cursor-pointer flex items-center justify-between transition-colors border-b border-white/[0.08] mb-1 pb-1.5 select-none">
                             <span class="text-xs font-bold text-slate-200">انتخاب / لغو همه</span>
                             <div class="cyber-checkbox-box @(AreAllSelected ? "checked" : "")">
                                 <svg class="cyber-checkbox-icon @(AreAllSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,8 +106,8 @@
                     {
                         var val = ValueSelector(item);
                         var display = DisplaySelector(item);
-                        var isSelected = SelectedValues.Contains(val);
-                        <div @onclick="() => ToggleSelection(val)" class="px-3 py-2 mx-2 my-1 hover:bg-cyan-950/60 hover:text-cyan-300 rounded-xl cursor-pointer flex items-center justify-between group transition-colors select-none">
+                        var isSelected = SelectedValues?.Contains(val) == true;
+                        <div @onclick="() => ToggleSelection(val)" class="px-3 py-1.5 mx-1.5 my-0.5 hover:bg-cyan-950/60 hover:text-cyan-300 rounded-xl cursor-pointer flex items-center justify-between group transition-colors select-none">
                             <span class="text-xs font-medium text-slate-200 group-hover:text-cyan-300 truncate block max-w-[85%]" title="@display">@display</span>
                             <div class="cyber-checkbox-box @(isSelected ? "checked" : "")">
                                 <svg class="cyber-checkbox-icon @(isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,12 +120,12 @@
             </div>
         </div>
     </div>
-    @if (SelectedValues != null && SelectedValues.Any())
+    @if (ShowSelectedTags && SelectedValues != null && SelectedValues.Any())
     {
         <div class="flex flex-wrap gap-1.5 mt-1.5">
             @foreach (var val in SelectedValues)
             {
-                var item = Items.FirstOrDefault(i => EqualityComparer<TValue>.Default.Equals(ValueSelector(i), val));
+                var item = GetItem(val);
                 if (item != null)
                 {
                     <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(56,189,248,0.2)] px-2 py-0.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 max-w-full">

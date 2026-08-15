@@ -154,7 +154,8 @@
                                   Items="TicketState.Value.AvailableProjects"
                                   @bind-SelectedValues="SelectedProjectIds"
                                   ValueSelector="p => p.Id"
-                                  DisplaySelector="p => p.Name" />
+                                  DisplaySelector="p => p.Name"
+                                  ShowSelectedTags="false" />
         </div>
         <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
             <MultiSelectDropdown TItem="StatusDto" TValue="int"
@@ -162,7 +163,8 @@
                                   Items="TicketState.Value.AvailableStatuses"
                                   @bind-SelectedValues="SelectedStatusIds"
                                   ValueSelector="s => s.Id"
-                                  DisplaySelector="s => s.Name" />
+                                  DisplaySelector="s => s.Name"
+                                  ShowSelectedTags="false" />
         </div>
         <div class="w-full sm:w-40 md:w-44 flex items-center h-[46px]">
             <MultiSelectDropdown TItem="PriorityDto" TValue="int"
@@ -170,7 +172,8 @@
                                   Items="TicketState.Value.AvailablePriorities"
                                   @bind-SelectedValues="SelectedPriorityIds"
                                   ValueSelector="p => p.Id"
-                                  DisplaySelector="p => p.Name" />
+                                  DisplaySelector="p => p.Name"
+                                  ShowSelectedTags="false" />
         </div>
 
         <!-- Cyber Sorting Control Component -->

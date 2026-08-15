@@ -21,19 +21,19 @@
         </div>
     </div>
 
-    <div class="dropdown-menu-container absolute top-full left-0 z-[250] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(IsOpen ? "opacity-100 max-h-72" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
-        @if (IsOpen)
+    <div class="dropdown-menu-container absolute top-full left-0 z-[250] w-full mt-1.5 bg-[#090e1d]/98 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(56,189,248,0.15)] border border-cyan-500/30 overflow-hidden transition-all duration-300 backdrop-blur-2xl @(IsOpen ? "opacity-100 max-h-[380px] flex flex-col" : "opacity-0 max-h-0 border-transparent pointer-events-none")">
+        @if (IsOpen && ((FilteredItems != null && FilteredItems.Count() > 5) || !string.IsNullOrEmpty(SearchTerm)))
         {
-            <div class="p-2 border-b border-white/[0.08] bg-[#050811]/80">
-                <input type="text" @bind="SearchTerm" @bind:event="oninput" @onclick:stopPropagation class="w-full h-9 px-3 text-xs text-slate-100 bg-[#050811] border border-white/[0.1] rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/30 transition-all focus-ring placeholder-slate-500" placeholder="جستجو..." />
+            <div class="p-1.5 border-b border-white/[0.08] bg-[#050811]/80 shrink-0">
+                <input type="text" @bind="SearchTerm" @bind:event="oninput" @onclick:stopPropagation class="w-full h-8 px-2.5 text-xs text-slate-100 bg-[#050811] border border-white/[0.1] rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/30 transition-all focus-ring placeholder-slate-500" placeholder="جستجو..." />
             </div>
         }
-        <div class="max-h-64 overflow-y-auto pt-1.5 pb-3.5 overscroll-contain custom-scrollbar">
+        <div class="max-h-[300px] overflow-y-auto pt-1 pb-2 overscroll-contain custom-scrollbar">
             @if (AllowClear)
             {
                 bool isClearSelected = EqualityComparer<TValue>.Default.Equals(Value, default);
                 <div @onclick="() => Select(default!)"
-                     class="px-3 py-2 mx-2 my-1 rounded-xl cursor-pointer flex items-center justify-between group transition-all select-none @(isClearSelected ? "bg-cyan-950/60 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(56,189,248,0.2)]" : "hover:bg-cyan-950/40 text-slate-400 hover:text-cyan-300")">
+                     class="px-3 py-1.5 mx-1.5 my-0.5 rounded-xl cursor-pointer flex items-center justify-between group transition-all select-none @(isClearSelected ? "bg-cyan-950/60 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(56,189,248,0.2)]" : "hover:bg-cyan-950/40 text-slate-400 hover:text-cyan-300")">
                     <span class="text-xs font-medium">@ClearText</span>
                     <div class="cyber-checkbox-box @(isClearSelected ? "checked" : "")">
                         <svg class="cyber-checkbox-icon @(isClearSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,7 +50,7 @@
                     var text = TextSelector(item);
                     bool isSelected = EqualityComparer<TValue>.Default.Equals(val, Value);
                     <div @onclick="() => Select(val)"
-                         class="px-3 py-2 mx-2 my-1 rounded-xl cursor-pointer flex items-center justify-between group transition-all select-none @(isSelected ? "bg-cyan-950/60 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(56,189,248,0.2)]" : "hover:bg-cyan-950/40 text-slate-200 hover:text-cyan-300")">
+                         class="px-3 py-1.5 mx-1.5 my-0.5 rounded-xl cursor-pointer flex items-center justify-between group transition-all select-none @(isSelected ? "bg-cyan-950/60 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(56,189,248,0.2)]" : "hover:bg-cyan-950/40 text-slate-200 hover:text-cyan-300")">
                         <span class="text-xs font-medium group-hover:text-cyan-300 truncate block max-w-[85%]" title="@text">@text</span>
                         <div class="cyber-checkbox-box @(isSelected ? "checked" : "")">
                             <svg class="cyber-checkbox-icon @(isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0")" fill="none" viewBox="0 0 24 24" stroke="currentColor">

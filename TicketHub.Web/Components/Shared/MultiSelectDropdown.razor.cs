@@ -17,6 +17,12 @@ public partial class MultiSelectDropdown<TItem, TValue> : ComponentBase
     [Parameter] public string BadgeBgClass { get; set; } = "bg-indigo-50";
     [Parameter] public string BadgeTextClass { get; set; } = "text-indigo-700";
     [Parameter] public string BadgeButtonClass { get; set; } = "text-indigo-500 hover:text-indigo-900";
+    [Parameter] public bool ShowSelectedTags { get; set; } = true;
+
+    protected async Task ClearAll()
+    {
+        await SelectedValuesChanged.InvokeAsync(new List<TValue>());
+    }
 
     protected string SearchTerm { get; set; } = string.Empty;
     protected bool ShowDropdown { get; set; } = false;
@@ -86,5 +92,11 @@ public partial class MultiSelectDropdown<TItem, TValue> : ComponentBase
         }
 
         await SelectedValuesChanged.InvokeAsync(newValues);
+    }
+
+    protected TItem? GetItem(TValue val)
+    {
+        if (Items == null) return default;
+        return Items.FirstOrDefault(i => EqualityComparer<TValue>.Default.Equals(ValueSelector(i), val));
     }
 }
