@@ -142,11 +142,70 @@ namespace TicketHub.Tests.bUnit
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
             confirmModal.Instance.IsOpen.Should().BeTrue();
-            // Act - Confirm delete
-            confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
+            confirmModal.Find("button.bg-rose-600").Click();
 
-            // Assert dispatch
-            cut.WaitForAssertion(() => _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeletePermissionAction>(a => a.Id == 1)), Times.Once), TimeSpan.FromSeconds(2));
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeletePermissionAction>(a => a.Id == 1)), Times.Once);
+        }
+
+        [Fact]
+        public void TelemetryCards_RenderTotalActiveAndInactiveCounts()
+        {
+            var permissions = new List<PermissionDto>
+            {
+                new PermissionDto { Id = 1, Title = "P1", ResourceKey = "res1", IsActive = true },
+                new PermissionDto { Id = 2, Title = "P2", ResourceKey = "res2", IsActive = true },
+                new PermissionDto { Id = 3, Title = "P3", ResourceKey = "res3", IsActive = false }
+            };
+
+            _mockState.Setup(s => s.Value).Returns(new PermissionState(false, permissions, new List<RoleDto>(), string.Empty, null, new()));
+
+            var cut = Render<PermissionsSettings>();
+
+            cut.Markup.Should().Contain("کل دسترسی‌ها");
+            cut.Markup.Should().Contain("دسترسی‌های فعال");
+            cut.Markup.Should().Contain("دسترسی‌های غیرفعال");
+        }
+
+        [Fact]
+        public void EditPermission_PopulatesForm_And_DispatchesSaveActionWithIsEditingTrue()
+        {
+            var permission = new PermissionDto { Id = 1, Title = "OldTitle", ResourceKey = "res.old", Type = PermissionType.Full, IsActive = true };
+            _mockState.Setup(s => s.Value).Returns(new PermissionState(false, new List<PermissionDto> { permission }, new List<RoleDto>(), string.Empty, null, new()));
+
+            var cut = Render<PermissionsSettings>();
+
+            var editBtn = cut.Find("button[title='ویرایش']");
+            editBtn.Click();
+
+            var saveBtn = cut.Find("button[type='submit']");
+            saveBtn.TextContent.Should().Contain("ذخیره تغییرات");
+
+            cut.Find("input[placeholder='مثال: مدیریت کاربران']").Change("UpdatedTitle");
+
+            var form = cut.Find("form");
+            form.Submit();
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SavePermissionAction>(a => a.Permission.Title == "UpdatedTitle" && a.IsEditing == true)), Times.Once);
+        }
+
+        [Fact]
+        public void DeletePermission_CancelModal_ClosesWithoutDispatchingDelete()
+        {
+            var permission = new PermissionDto { Id = 1, Title = "Admin", ResourceKey = "admin", IsActive = true };
+            _mockState.Setup(s => s.Value).Returns(new PermissionState(false, new List<PermissionDto> { permission }, new List<RoleDto>(), string.Empty, null, new()));
+
+            var cut = Render<PermissionsSettings>();
+
+            var deleteButton = cut.Find("button[title='حذف']");
+            deleteButton.Click();
+
+            var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
+            confirmModal.Instance.IsOpen.Should().BeTrue();
+
+            confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<DeletePermissionAction>()), Times.Never);
         }
     }
 }
+

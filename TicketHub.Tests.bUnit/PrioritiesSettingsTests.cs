@@ -152,5 +152,67 @@ namespace TicketHub.Tests.bUnit
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeletePriorityAction>(a => a.Id == 1)), Times.Once);
         }
+
+        [Fact]
+        public void TelemetryCards_RenderTotalActiveAndInactiveCounts()
+        {
+            var priorities = new List<PriorityDto>
+            {
+                new PriorityDto { Id = 1, Name = "High", IsActive = true },
+                new PriorityDto { Id = 2, Name = "Medium", IsActive = true },
+                new PriorityDto { Id = 3, Name = "Low", IsActive = false }
+            };
+
+            _mockState.Setup(s => s.Value).Returns(new PriorityState(false, priorities, string.Empty, null));
+
+            var cut = Render<PrioritiesSettings>();
+
+            cut.Markup.Should().Contain("کل اولویت‌ها");
+            cut.Markup.Should().Contain("اولویت‌های فعال");
+            cut.Markup.Should().Contain("اولویت‌های غیرفعال");
+        }
+
+        [Fact]
+        public void HandleSearch_DispatchesSetSearchAction()
+        {
+            var cut = Render<PrioritiesSettings>();
+
+            var searchBox = cut.FindComponent<SearchBox>();
+            searchBox.InvokeAsync(() => searchBox.Instance.OnSearchChanged.InvokeAsync("Critical"));
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetPrioritySearchAction>(a => a.Term == "Critical")), Times.Once);
+        }
+
+        [Fact]
+        public void FilterByStatus_DispatchesSetFilterStatusAction()
+        {
+            var cut = Render<PrioritiesSettings>();
+
+            var activeFilterBtn = cut.Find("button:contains('فعال')");
+            activeFilterBtn.Click();
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetPriorityFilterStatusAction>(a => a.Status == true)), Times.Once);
+        }
+
+        [Fact]
+        public void DeletePriority_CancelModal_ClosesWithoutDispatchingDelete()
+        {
+            var priority = new PriorityDto { Id = 1, Name = "High", IsActive = true };
+            _mockState.Setup(s => s.Value).Returns(new PriorityState(false, new List<PriorityDto> { priority }, string.Empty, null));
+
+            var cut = Render<PrioritiesSettings>();
+
+            var deleteButton = cut.Find("button[title='حذف']");
+            deleteButton.Click();
+
+            var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
+            confirmModal.Instance.IsOpen.Should().BeTrue();
+
+            // Cancel
+            confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
+
+            _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<DeletePriorityAction>()), Times.Never);
+        }
     }
 }
+
