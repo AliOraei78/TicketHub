@@ -33,6 +33,9 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
         }
 
+        protected static Task WaitForBlazorAsync(int ms = 800) => Task.Delay(ms);
+        protected static Task WaitForBlazorAsync(IPage page, int ms = 800) => Task.Delay(ms);
+
         public async Task DisposeAsync()
         {
             await Page.CloseAsync();

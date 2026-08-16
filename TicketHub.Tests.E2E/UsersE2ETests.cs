@@ -138,13 +138,13 @@ namespace TicketHub.Tests.E2E
             await rowLocator.WaitForAsync();
 
             // Click delete on this specific row
-            await rowLocator.Locator("button[title='حذف']").ClickAsync(new() { Force = true });
+            var deleteBtn = rowLocator.Locator("button[title='حذف']").First;
+            await deleteBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            await deleteBtn.ClickAsync();
 
-            var modalLocator = Page.Locator("text=مطمئن هستید").First;
-            await modalLocator.WaitForAsync();
-
-            // Click confirm
-            await Page.ClickAsync("button:has-text('بله، حذف کن')");
+            var confirmBtn = Page.Locator("button:has-text('بله، حذف کن')").First;
+            await confirmBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            await confirmBtn.ClickAsync();
 
             var deleteToastLocator = Page.Locator("text=با موفقیت حذف شد.").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });

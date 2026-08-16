@@ -3,6 +3,7 @@
 **/.vs
 **/.vscode
 **/.agents
+.env*
 **/bin
 **/obj
 **/TestResults

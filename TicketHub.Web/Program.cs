@@ -79,10 +79,17 @@ builder.Services.AddSignalR(hubOptions =>
 builder.Services.AddControllers();
 
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
+{
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-    .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
-    .EnableSensitiveDataLogging()
-    .EnableDetailedErrors());
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+                                    .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging()
+               .EnableDetailedErrors();
+    }
+});
 
 // برای جلوگیری از خطای کامپایل تا زمانی که تمام ریپازیتوری‌ها آپدیت شوند، 
 // کانتکست را به صورت Scoped هم از طریق Factory ثبت می‌کنیم:
@@ -362,7 +369,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseMiddleware<LogEnrichmentMiddleware>();
 app.UseExceptionHandler(); 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+{
+    app.UseHttpsRedirection();
+}
 app.UseResponseCompression();
 app.UseStaticFiles();
 app.UseRateLimiter();

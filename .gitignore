@@ -428,6 +428,9 @@ FodyWeavers.xsd
 *.msp
 
 # Ignore local configuration overrides
+.env
+.env.local
+.env.*.local
 appsettings.Development.json
 appsettings.Production.json
 appsettings.Local.json
@@ -453,7 +456,10 @@ coverage/
 PRODUCT.md
 .uizze/
 .agents/
+.analyses/
+.researches/
 **/AGENTS.md
 **/agents.md
 **/SKILL.md
 **/skill.md
+

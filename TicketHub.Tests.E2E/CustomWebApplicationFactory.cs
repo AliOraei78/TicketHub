@@ -118,7 +118,8 @@ namespace TicketHub.Tests.E2E
                 services.AddDbContextFactory<AppDbContext>(options =>
                 {
                     options.UseSqlServer(_dbConnectionString)
-                           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+                           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+                                                    .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });
 
                 // Ensure DistributedMemoryCache is registered for in-memory caching

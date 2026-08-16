@@ -108,8 +108,6 @@ namespace TicketHub.Tests.E2E
             }
         }
 
-        private static Task WaitForBlazorAsync(IPage page, int ms = 800)
-            => Task.Delay(ms);
 
         [Fact]
         public async Task CreateTicket_WithAllFieldTypes_ShouldSucceed()

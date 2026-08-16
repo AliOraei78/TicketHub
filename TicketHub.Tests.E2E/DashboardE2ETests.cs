@@ -12,7 +12,6 @@ namespace TicketHub.Tests.E2E
         {
         }
 
-        private static Task WaitForBlazorAsync(int ms = 800) => Task.Delay(ms);
 
         [Fact]
         public async Task Dashboard_LoadsSuccessfully_DisplaysWelcomeBannerAndQuickStatsCards()

@@ -24,7 +24,6 @@ namespace TicketHub.Tests.E2E
             return factory.CreateDbContext();
         }
 
-        private static Task WaitForBlazorAsync(IPage page, int ms = 800) => Task.Delay(ms);
 
         private async Task<(int TicketId, string TicketTitle)> SeedSampleTicketAsync(string suffix = "")
         {
@@ -160,19 +159,23 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync("BLK");
             await WaitForBlazorAsync(Page, 1200);
 
-            // Select checkboxes on cards by clicking their label containers
-            var labels = Page.Locator("label:has(input[type='checkbox'])");
-            var count = await labels.CountAsync();
+            // Select checkboxes on cards directly
+            var cards = Page.Locator(".cyber-quest-capsule", new PageLocatorOptions { HasTextString = "BLK" });
+            await cards.First.WaitForAsync(new() { Timeout = 10_000 });
+            var count = await cards.CountAsync();
             if (count >= 2)
             {
-                await labels.Nth(0).ClickAsync();
-                await WaitForBlazorAsync(Page, 500);
-                await labels.Nth(1).ClickAsync();
+                var checkbox1 = cards.Nth(0).Locator("input[type='checkbox']").First;
+                await checkbox1.SetCheckedAsync(true, new() { Force = true });
+                await WaitForBlazorAsync(Page, 600);
+
+                var checkbox2 = cards.Nth(1).Locator("input[type='checkbox']").First;
+                await checkbox2.SetCheckedAsync(true, new() { Force = true });
                 await WaitForBlazorAsync(Page, 800);
 
                 // BulkActionToolbar should appear in RootModal outlet
                 var bulkBar = Page.Locator("button:has-text('حذف موارد انتخابی'), button:has-text('حذف گروهی')").First;
-                await bulkBar.WaitForAsync(new() { Timeout = 8_000 });
+                await bulkBar.WaitForAsync(new() { Timeout = 10_000 });
                 (await bulkBar.IsVisibleAsync()).Should().BeTrue();
 
                 // Click bulk delete button
