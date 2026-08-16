@@ -162,16 +162,19 @@ namespace TicketHub.Tests.E2E
                 await Page.WaitForTimeoutAsync(500);
             }
 
+            // 2. Select all 3
+            var searchInput = Page.Locator("input[placeholder='جستجوی دسترسی...']");
+            await searchInput.FillAsync(prefix);
+            await Page.WaitForTimeoutAsync(600);
+
             for(int i = 1; i <= 3; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
                 await row.Locator("label.cyber-checkbox-container input, input[type='checkbox']").First.ClickAsync(new() { Force = true });
-                await Page.WaitForTimeoutAsync(300);
+                var countLocator = Page.Locator("div.fixed.bottom-6", new() { HasTextString = $"{i}" }).First;
+                await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
-            var countLocator = Page.Locator("div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
-            await countLocator.WaitForAsync(new() { Timeout = 10000 });
-            await Page.WaitForTimeoutAsync(400);
 
             var rowToDelete = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}1" });
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
@@ -186,7 +189,7 @@ namespace TicketHub.Tests.E2E
             await Page.Mouse.ClickAsync(10, 10);
             await Page.WaitForTimeoutAsync(600);
 
-            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
+            var selectedCountIndicator = Page.Locator("div.fixed.bottom-6", new() { HasTextString = "2" }).First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
             
@@ -217,16 +220,17 @@ namespace TicketHub.Tests.E2E
                 await Page.WaitForTimeoutAsync(500);
             }
 
+            await searchInput.FillAsync(prefix);
+            await Page.WaitForTimeoutAsync(600);
+
             for(int i = 4; i <= 5; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
                 await row.Locator("label.cyber-checkbox-container input, input[type='checkbox']").First.ClickAsync(new() { Force = true });
-                await Page.WaitForTimeoutAsync(300);
+                var countLocator = Page.Locator("div.fixed.bottom-6", new() { HasTextString = $"{i - 3}" }).First;
+                await countLocator.WaitForAsync(new() { Timeout = 10000 });
             }
-            var bulkBar2 = Page.Locator("div.fixed.bottom-6:has-text('مورد انتخاب شده')").First;
-            await bulkBar2.WaitForAsync(new() { Timeout = 10000 });
-            await Page.WaitForTimeoutAsync(400);
 
             await Page.Locator("div.fixed.bottom-6 button:has-text('غیرفعال‌سازی')").First.ClickAsync(new() { Force = true });
             var pluralDeactivateToast = Page.Locator("text=با موفقیت غیر").Last;
@@ -237,7 +241,8 @@ namespace TicketHub.Tests.E2E
             var rowSingular = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}4" });
             await rowSingular.ScrollIntoViewIfNeededAsync();
             await rowSingular.Locator("label.cyber-checkbox-container input, input[type='checkbox']").First.ClickAsync(new() { Force = true });
-            await Page.WaitForTimeoutAsync(300);
+            var countSingular = Page.Locator("div.fixed.bottom-6", new() { HasTextString = "1" }).First;
+            await countSingular.WaitForAsync(new() { Timeout = 10000 });
 
             await Page.Locator("div.fixed.bottom-6 button:has-text('فعال‌سازی')").First.ClickAsync(new() { Force = true });
             var singularActivateToast = Page.Locator("text=با موفقیت فعال").Last;

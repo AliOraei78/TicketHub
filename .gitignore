@@ -449,3 +449,11 @@ coverage/
 *.cobertura.xml
 
 
+# Product & Agent Configurations
+PRODUCT.md
+.uizze/
+.agents/
+**/AGENTS.md
+**/agents.md
+**/SKILL.md
+**/skill.md
