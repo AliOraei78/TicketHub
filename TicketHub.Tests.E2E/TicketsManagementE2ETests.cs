@@ -159,33 +159,30 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync("BLK");
             await WaitForBlazorAsync(Page, 1200);
 
-            // Select checkboxes on cards directly
-            var cards = Page.Locator(".cyber-quest-capsule", new PageLocatorOptions { HasTextString = "BLK" });
-            await cards.First.WaitForAsync(new() { Timeout = 10_000 });
-            var count = await cards.CountAsync();
-            if (count >= 2)
-            {
-                var checkbox1 = cards.Nth(0).Locator("input[type='checkbox']").First;
-                await checkbox1.ClickAsync(new() { Force = true });
-                await WaitForBlazorAsync(Page, 600);
+            // Select first two checkboxes with fresh locator evaluation
+            var checkboxes = Page.Locator("input[type='checkbox']");
+            await checkboxes.First.WaitForAsync(new() { Timeout = 10_000 });
 
-                var checkbox2 = cards.Nth(1).Locator("input[type='checkbox']").First;
-                await checkbox2.ClickAsync(new() { Force = true });
-                await WaitForBlazorAsync(Page, 800);
+            await Page.Locator("input[type='checkbox']").Nth(0).ClickAsync(new() { Force = true });
+            await WaitForBlazorAsync(Page, 600);
 
-                // BulkActionToolbar should appear in RootModal outlet
-                var bulkBar = Page.Locator("button:has-text('حذف موارد انتخابی'), button:has-text('حذف گروهی')").First;
-                await bulkBar.WaitForAsync(new() { Timeout = 10_000 });
-                (await bulkBar.IsVisibleAsync()).Should().BeTrue();
+            await Page.Locator("input[type='checkbox']").Nth(1).ClickAsync(new() { Force = true });
+            await WaitForBlazorAsync(Page, 800);
 
-                // Click bulk delete button
-                await bulkBar.ClickAsync();
-                await WaitForBlazorAsync(Page, 800);
+            // BulkActionToolbar should appear in RootModal outlet
+            var bulkBar = Page.Locator("button:has-text('حذف موارد انتخابی'), button:has-text('حذف گروهی')").First;
+            await bulkBar.WaitForAsync(new() { Timeout = 10_000 });
+            (await bulkBar.IsVisibleAsync()).Should().BeTrue();
 
-                // Confirm bulk deletion
-                var confirmBtn = Page.Locator("button:has-text('بله، حذف کن'), button.btn-cyber-danger").First;
-                await confirmBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 1500);
+            // Click bulk delete button
+            await bulkBar.ClickAsync();
+            await WaitForBlazorAsync(Page, 800);
+
+            // Confirm bulk deletion
+            var confirmBtn = Page.Locator("button:has-text('بله، حذف کن'), button.btn-cyber-danger").First;
+            await confirmBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+            await confirmBtn.ClickAsync();
+            await WaitForBlazorAsync(Page, 1500);
 
                 // Verify at least one or both deleted in DB
                 await using var ctx = CreateDbContext();

@@ -78,10 +78,10 @@ namespace TicketHub.Tests.E2E
             {
                 var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 500);
+                await WaitForBlazorAsync(Page, 600);
             }
             await rolesLink.ClickAsync(new() { Force = true });
-            await Page.WaitForURLAsync("**/settings/roles");
+            await Page.WaitForURLAsync("**/settings/roles", new() { WaitUntil = WaitUntilState.Commit });
             Page.Url.Should().Contain("/settings/roles");
 
             // Navigate to Statuses
@@ -90,10 +90,10 @@ namespace TicketHub.Tests.E2E
             {
                 var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 500);
+                await WaitForBlazorAsync(Page, 600);
             }
             await statusesLink.ClickAsync(new() { Force = true });
-            await Page.WaitForURLAsync("**/settings/statuses");
+            await Page.WaitForURLAsync("**/settings/statuses", new() { WaitUntil = WaitUntilState.Commit });
             Page.Url.Should().Contain("/settings/statuses");
 
             // Navigate to Categories
@@ -102,10 +102,10 @@ namespace TicketHub.Tests.E2E
             {
                 var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 500);
+                await WaitForBlazorAsync(Page, 600);
             }
             await categoriesLink.ClickAsync(new() { Force = true });
-            await Page.WaitForURLAsync("**/settings/categories");
+            await Page.WaitForURLAsync("**/settings/categories", new() { WaitUntil = WaitUntilState.Commit });
             Page.Url.Should().Contain("/settings/categories");
         }
     }
