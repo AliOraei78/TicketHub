@@ -247,29 +247,50 @@
     <script defer src="js/alpine.min.js"></script>
 
     <script>
-        window.loadDntCaptcha = function() {
-        var img = document.getElementById('dntCaptchaImg');
-        if (!img) return;
+        window.loadDntCaptcha = function (retries = 3) {
+            var img = document.getElementById('dntCaptchaImg');
+            if (!img) return;
 
-        fetch('/api/captcha')
-        .then(response => response.json())
-        .then(data => {
-        img.src = data.dntCaptchaImgUrl;
-        document.getElementById('DNTCaptchaText').value = data.dntCaptchaTextValue;
-        document.getElementById('DNTCaptchaToken').value = data.dntCaptchaTokenValue;
-        var input = document.getElementById('CaptchaInputText');
-        if (input) input.value = '';
-        })
-        .catch(error => console.error('خطا در دریافت کپچا:', error));
+            fetch('/api/captcha?t=' + Date.now())
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data && data.dntCaptchaImgUrl) {
+                        img.src = data.dntCaptchaImgUrl;
+                        var textEl = document.getElementById('DNTCaptchaText');
+                        if (textEl) textEl.value = data.dntCaptchaTextValue;
+                        var tokenEl = document.getElementById('DNTCaptchaToken');
+                        if (tokenEl) tokenEl.value = data.dntCaptchaTokenValue;
+                        var input = document.getElementById('CaptchaInputText');
+                        if (input) input.value = '';
+                    }
+                })
+                .catch(function (error) {
+                    console.warn('Captcha load retry...', error);
+                    if (retries > 0) {
+                        setTimeout(function () { window.loadDntCaptcha(retries - 1); }, 600);
+                    }
+                });
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-        if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
+            if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
         });
 
-        Blazor.addEventListener('enhancedload', function () {
-        if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
-        });
+        if (window.Blazor && window.Blazor.addEventListener) {
+            window.Blazor.addEventListener('enhancedload', function () {
+                if (document.getElementById('dntCaptchaImg')) window.loadDntCaptcha();
+            });
+        }
+
+        setInterval(function () {
+            var img = document.getElementById('dntCaptchaImg');
+            if (img && (!img.src || img.src.startsWith('data:image/svg') || img.src === window.location.href)) {
+                window.loadDntCaptcha();
+            }
+        }, 500);
     </script>
     <script src="_content/Bit.BlazorUI/scripts/bit.blazorui.js"></script>
     <script src="js/jalalidatepicker.min.js"></script>

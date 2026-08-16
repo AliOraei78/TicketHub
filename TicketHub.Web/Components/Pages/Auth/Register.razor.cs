@@ -13,6 +13,7 @@ public partial class Register : ComponentBase
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected ILogger<Register> Logger { get; set; } = default!;
     [Inject] protected IDNTCaptchaValidatorService CaptchaValidator { get; set; } = default!;
+    [Inject] protected IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
@@ -28,15 +29,29 @@ public partial class Register : ComponentBase
 
     protected override void OnInitialized()
     {
+        var user = HttpContext?.User ?? HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/", replace: true);
+            return;
+        }
         registerModel ??= new();
     }
 
     protected async Task HandleRegister()
     {
-        // --- اعتبارسنجی کپچا ---
-        if (HttpContext?.Request.HasFormContentType == true)
+        var httpContext = HttpContext ?? HttpContextAccessor.HttpContext;
+        if (httpContext == null)
         {
-            var captchaText = HttpContext.Request.Form["CaptchaInputText"].ToString();
+            Logger.LogWarning("HttpContext is null in HandleRegister. Forcing browser reload to static SSR.");
+            Navigation.NavigateTo("/register", forceLoad: true);
+            return;
+        }
+
+        // --- اعتبارسنجی کپچا ---
+        if (httpContext.Request.HasFormContentType == true)
+        {
+            var captchaText = httpContext.Request.Form["CaptchaInputText"].ToString();
             if (string.IsNullOrWhiteSpace(captchaText))
             {
                 errorMessage = "لطفاً کد امنیتی را وارد نمایید.";
@@ -55,7 +70,6 @@ public partial class Register : ComponentBase
         // -----------------------
 
         isLoading = true;
-        StateHasChanged();
 
         try
         {
@@ -73,7 +87,7 @@ public partial class Register : ComponentBase
             showSuccessMessage = true;
 
             // ذخیره ایمیل در کوکی موقت 15 دقیقه‌ای برای استفاده در صفحه تایید ایمیل
-            HttpContext?.Response.Cookies.Append("TempEmail", registerModel.Email, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.UtcNow.AddMinutes(15) });
+            httpContext.Response.Cookies.Append("TempEmail", registerModel.Email, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.UtcNow.AddMinutes(15) });
 
             Navigation.NavigateTo("/confirm-email");
         }

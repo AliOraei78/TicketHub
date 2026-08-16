@@ -4,6 +4,7 @@ using Microsoft.JSInterop;
 using TicketHub.Application.Common;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
+using TicketHub.Core.Common;
 
 namespace TicketHub.Web.Components.Pages.Admin.SystemLogs;
 
@@ -55,15 +56,20 @@ public partial class SystemLogs : ComponentBase, IDisposable
 
     protected bool ValidateDateRange(out DateTime? fromDate, out DateTime? toDate)
     {
-        fromDate = ParsePersianToGregorian(fromDateStr, isEndOfDay: false);
-        toDate = ParsePersianToGregorian(toDateStr, isEndOfDay: true);
+        var rawFrom = ParsePersianToGregorian(fromDateStr, isEndOfDay: false);
+        var rawTo = ParsePersianToGregorian(toDateStr, isEndOfDay: true);
 
-        if (fromDate.HasValue && toDate.HasValue && fromDate.Value > toDate.Value)
+        if (rawFrom.HasValue && rawTo.HasValue && rawFrom.Value > rawTo.Value)
         {
             isDateRangeInvalid = true;
             dateRangeErrorMessage = "تاریخ «از تاریخ» نمی‌تواند بزرگتر از «تا تاریخ» باشد. لطفاً بازه انتخابی را اصلاح نمایید.";
+            fromDate = null;
+            toDate = null;
             return false;
         }
+
+        fromDate = rawFrom?.FromTehranTimeToUtc();
+        toDate = rawTo?.FromTehranTimeToUtc();
 
         isDateRangeInvalid = false;
         dateRangeErrorMessage = string.Empty;
@@ -225,7 +231,8 @@ public partial class SystemLogs : ComponentBase, IDisposable
         if (!selectedLogs.Any()) return;
 
         var formatted = LogExportFormatter.ToBatchFormattedText(selectedLogs);
-        var fileName = $"TicketHub_Logs_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+        var nowTehran = DateTime.UtcNow.ToTehranTime();
+        var fileName = $"TicketHub_Logs_{nowTehran:yyyyMMdd_HHmmss}.txt";
 
         try
         {
@@ -300,8 +307,9 @@ public partial class SystemLogs : ComponentBase, IDisposable
 
     protected string GetPersianFormattedDate(DateTime dt)
     {
+        var tehranDt = dt.ToTehranTime();
         var pc = new PersianCalendar();
-        return $"{pc.GetYear(dt)}/{pc.GetMonth(dt):D2}/{pc.GetDayOfMonth(dt):D2} {dt:HH:mm:ss}";
+        return $"{pc.GetYear(tehranDt)}/{pc.GetMonth(tehranDt):D2}/{pc.GetDayOfMonth(tehranDt):D2} {tehranDt:HH:mm:ss}";
     }
 
     private DateTime? ParsePersianToGregorian(string persianDateStr, bool isEndOfDay = false)

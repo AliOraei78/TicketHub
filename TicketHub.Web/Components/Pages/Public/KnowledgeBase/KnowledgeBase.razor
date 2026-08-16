@@ -264,7 +264,7 @@
         </div>
 
         <div class="flex items-center gap-3 flex-shrink-0">
-            <a href="/login" class="btn-cyber-primary text-xs px-4 py-2.5 font-bold">
+            <a href="/login" data-enhance="false" class="btn-cyber-primary text-xs px-4 py-2.5 font-bold">
                 <span>ثبت تیکت پشتیبانی</span>
             </a>
         </div>
@@ -301,7 +301,7 @@
             if (uri.Contains("#faq-section") || uri.EndsWith("/faq"))
             {
                 hasScrolledToFaq = true;
-                await Task.Delay(150);
+                await Task.Delay(250);
                 try
                 {
                     await JS.InvokeVoidAsync("window.scrollToElement", "faq-section");

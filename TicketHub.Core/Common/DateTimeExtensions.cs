@@ -33,6 +33,32 @@ public static class DateTimeExtensions
         }
     }
 
+    public static DateTime ToTehranTime(this DateTimeOffset dateTimeOffset)
+    {
+        return dateTimeOffset.UtcDateTime.ToTehranTime();
+    }
+
+    public static DateTime FromTehranTimeToUtc(this DateTime tehranDateTime)
+    {
+        try
+        {
+            TimeZoneInfo tehranZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
+            return TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(tehranDateTime, DateTimeKind.Unspecified), tehranZone);
+        }
+        catch
+        {
+            try
+            {
+                TimeZoneInfo tehranZoneAlt = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tehran");
+                return TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(tehranDateTime, DateTimeKind.Unspecified), tehranZoneAlt);
+            }
+            catch
+            {
+                return tehranDateTime.AddHours(-3.5);
+            }
+        }
+    }
+
     public static string ToPersianDateTimeString(this DateTime dateTime, bool includeSeconds = false)
     {
         var pc = new PersianCalendar();

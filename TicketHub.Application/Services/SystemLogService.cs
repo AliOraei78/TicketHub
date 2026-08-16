@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
+using TicketHub.Core.Common;
 using TicketHub.Core.Common.Exceptions;
 
 namespace TicketHub.Application.Services;
@@ -95,14 +96,14 @@ public class SystemLogService : ISystemLogService
                         {
                             if (DateTimeOffset.TryParse(ts.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dto))
                             {
-                                timestamp = dto.LocalDateTime;
+                                timestamp = dto.UtcDateTime;
                             }
                         }
                         else if (root.TryGetProperty("@t", out var t) && t.ValueKind == JsonValueKind.String)
                         {
                             if (DateTimeOffset.TryParse(t.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dto))
                             {
-                                timestamp = dto.LocalDateTime;
+                                timestamp = dto.UtcDateTime;
                             }
                         }
 
@@ -228,13 +229,13 @@ public class SystemLogService : ISystemLogService
 
                 if (fromDate.HasValue)
                 {
-                    var fromDateOnly = DateOnly.FromDateTime(fromDate.Value);
+                    var fromDateOnly = DateOnly.FromDateTime(fromDate.Value).AddDays(-1);
                     if (fileDate < fromDateOnly) continue;
                 }
 
                 if (toDate.HasValue)
                 {
-                    var toDateOnly = DateOnly.FromDateTime(toDate.Value);
+                    var toDateOnly = DateOnly.FromDateTime(toDate.Value).AddDays(1);
                     if (fileDate > toDateOnly) continue;
                 }
             }

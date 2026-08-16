@@ -441,7 +441,7 @@ app.MapGet("/api/captcha", (IDNTCaptchaApiProvider apiProvider) =>
     });
 
     return Results.Ok(result);
-}).RequireRateLimiting(RateLimitingExtensions.AntiSpamPolicy);
+}).RequireRateLimiting(RateLimitingExtensions.CaptchaPolicy);
 // --------------------------------------
 
 // --------- Dev Quick-Login Endpoint (Development Only) ---------

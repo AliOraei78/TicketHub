@@ -2,6 +2,7 @@
 @inherits LayoutComponentBase
 @using TicketHub.Web.Components.Shared
 @using TicketHub.Web.Components.Layout.Shared
+@using Microsoft.AspNetCore.Components.Authorization
 
 <div class="min-h-screen flex flex-col bg-[#05070f] font-['Vazirmatn'] text-slate-200 selection:bg-cyan-500/20 selection:text-cyan-300 relative overflow-x-hidden" dir="rtl">
     
@@ -35,15 +36,27 @@
 
         <!-- Right Actions: Login & Portal Links -->
         <div class="flex items-center gap-2.5">
-            <a href="/login" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 hover:text-cyan-300 hover:bg-white/[0.05] transition-all border border-white/10 flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                <span>ورود به سامانه</span>
-            </a>
-            <a href="/register" class="btn-cyber-primary text-xs px-3.5 py-1.5 font-bold hidden sm:inline-flex">
-                <span>ثبت‌نام کاربر</span>
-            </a>
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/" class="btn-cyber-primary text-xs px-3.5 py-1.5 font-bold inline-flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        <span>ورود به داشبورد</span>
+                    </a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/login" data-enhance="false" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 hover:text-cyan-300 hover:bg-white/[0.05] transition-all border border-white/10 flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        <span>ورود به سامانه</span>
+                    </a>
+                    <a href="/register" data-enhance="false" class="btn-cyber-primary text-xs px-3.5 py-1.5 font-bold hidden sm:inline-flex">
+                        <span>ثبت‌نام کاربر</span>
+                    </a>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
     </header>
 
@@ -65,7 +78,14 @@
             <div class="flex items-center gap-4 text-slate-400">
                 <a href="/kb" class="hover:text-cyan-300 transition-colors">پایگاه دانش</a>
                 <a href="/kb#faq-section" onclick="window.scrollToElement('faq-section')" class="hover:text-cyan-300 transition-colors cursor-pointer">سوالات متداول</a>
-                <a href="/login" class="hover:text-cyan-300 transition-colors">پنل پشتیبانی</a>
+                <AuthorizeView>
+                    <Authorized>
+                        <a href="/" class="hover:text-cyan-300 transition-colors">داشبورد مدیریت</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="/login" data-enhance="false" class="hover:text-cyan-300 transition-colors">ورود به سامانه</a>
+                    </NotAuthorized>
+                </AuthorizeView>
             </div>
         </div>
     </footer>

@@ -11,6 +11,7 @@ public static class RateLimitingExtensions
 {
     public const string AuthPolicy = "auth-policy";
     public const string AntiSpamPolicy = "anti-spam-policy";
+    public const string CaptchaPolicy = "captcha-policy";
 
     public static IServiceCollection AddTicketHubRateLimiting(this IServiceCollection services)
     {
@@ -50,6 +51,15 @@ public static class RateLimitingExtensions
                 opt.SegmentsPerWindow = 6;
                 opt.QueueLimit = 0;
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            });
+
+            // 3. Captcha policy: Max 60 requests per 1 minute window (For dynamic captcha image generation & reloads)
+            options.AddFixedWindowLimiter(CaptchaPolicy, opt =>
+            {
+                opt.PermitLimit = 60;
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 5;
             });
 
             // 3. Global IP-based partition rate limiter for general requests

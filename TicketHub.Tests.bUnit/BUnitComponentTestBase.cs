@@ -93,6 +93,9 @@ namespace TicketHub.Tests.bUnit
             var mockCacheService = new Mock<TicketHub.Application.Interfaces.ICacheService>();
             Services.AddSingleton(mockCacheService.Object);
 
+            // Register HttpContextAccessor
+            Services.AddHttpContextAccessor();
+
             // Register all FluentValidation validators from the Application assembly
             Services.AddValidatorsFromAssembly(typeof(RoleDtoValidator).Assembly);
         }

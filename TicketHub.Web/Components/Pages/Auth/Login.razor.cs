@@ -16,6 +16,7 @@ public partial class Login : ComponentBase
     [Inject] protected IEmailService EmailService { get; set; } = default!;
     [Inject] protected ILogger<Login> Logger { get; set; } = default!;
     [Inject] protected IDNTCaptchaValidatorService CaptchaValidator { get; set; } = default!;
+    [Inject] protected IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
 #pragma warning disable BL0008
     [SupplyParameterFromForm]
@@ -28,24 +29,34 @@ public partial class Login : ComponentBase
     protected string? errorMessage;
     protected bool isLoading = false;
 
+    protected override void OnInitialized()
+    {
+        var user = HttpContext?.User ?? HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+    }
+
     protected async Task HandleLogin()
     {
         isLoading = true;
         errorMessage = null;
-        StateHasChanged();
 
         try
         {
-            if (HttpContext == null)
+            var httpContext = HttpContext ?? HttpContextAccessor.HttpContext;
+            if (httpContext == null)
             {
-                errorMessage = "خطای ارتباط با سرور رخ داد.";
+                Logger.LogWarning("HttpContext is null in HandleLogin. Forcing browser reload to static SSR.");
+                Navigation.NavigateTo("/login", forceLoad: true);
                 return;
             }
 
             // --- اعتبارسنجی کپچا ---
-            if (HttpContext.Request.HasFormContentType)
+            if (httpContext.Request.HasFormContentType)
             {
-                var captchaText = HttpContext.Request.Form["CaptchaInputText"].ToString();
+                var captchaText = httpContext.Request.Form["CaptchaInputText"].ToString();
                 if (string.IsNullOrWhiteSpace(captchaText))
                 {
                     errorMessage = "لطفاً کد امنیتی را وارد نمایید.";
@@ -71,7 +82,7 @@ public partial class Login : ComponentBase
                 {
                     Logger.LogInformation("ورود {Email} نیازمند تایید ایمیل است. انتقال به صفحه تایید.", loginModel.Email);
 
-                    HttpContext.Response.Cookies.Append("TempEmail", result.Email!, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.UtcNow.AddMinutes(15) });
+                    httpContext.Response.Cookies.Append("TempEmail", result.Email!, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.UtcNow.AddMinutes(15) });
 
                     Navigation.NavigateTo("/confirm-email");
                     return;
@@ -98,7 +109,7 @@ public partial class Login : ComponentBase
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
+            await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
             {
                 IsPersistent = loginModel.RememberMe,
                 ExpiresUtc = loginModel.RememberMe

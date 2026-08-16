@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using TicketHub.Application.Models;
+using TicketHub.Core.Common;
 
 namespace TicketHub.Application.Common;
 
@@ -19,7 +20,8 @@ public static class LogExportFormatter
     {
         var sb = new StringBuilder();
         var pc = new PersianCalendar();
-        var jalaliDate = $"{pc.GetYear(log.Timestamp):D4}/{pc.GetMonth(log.Timestamp):D2}/{pc.GetDayOfMonth(log.Timestamp):D2} {log.Timestamp:HH:mm:ss.fff}";
+        var tehranDt = log.Timestamp.ToTehranTime();
+        var jalaliDate = $"{pc.GetYear(tehranDt):D4}/{pc.GetMonth(tehranDt):D2}/{pc.GetDayOfMonth(tehranDt):D2} {tehranDt:HH:mm:ss.fff}";
 
         sb.AppendLine("======================================================================");
         sb.AppendLine($"[{jalaliDate}] [{log.Level.ToUpperInvariant()}] {(string.IsNullOrWhiteSpace(log.SourceContext) ? "System" : log.SourceContext)}");
@@ -58,7 +60,10 @@ public static class LogExportFormatter
     public static string ToBatchFormattedText(IEnumerable<LogEntry> logs)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"# خروجی گزارش لاگ‌های سیستم ({DateTime.Now:yyyy/MM/dd HH:mm:ss})");
+        var nowTehran = DateTime.UtcNow.ToTehranTime();
+        var pc = new PersianCalendar();
+        var jalaliReportDate = $"{pc.GetYear(nowTehran):D4}/{pc.GetMonth(nowTehran):D2}/{pc.GetDayOfMonth(nowTehran):D2} {nowTehran:HH:mm:ss}";
+        sb.AppendLine($"# خروجی گزارش لاگ‌های سیستم ({jalaliReportDate})");
         sb.AppendLine($"# تعداد لاگ‌ها: {logs.Count()}");
         sb.AppendLine();
 
