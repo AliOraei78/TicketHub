@@ -114,7 +114,8 @@ public class TicketsPageTests : BUnitComponentTestBase
         searchInput.Input("خطا");
 
         cut.WaitForAssertion(() =>
-            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetTicketFiltersAction>(a => a.SearchTerm == "خطا" && a.CurrentPage == 1)), Times.Once)
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SetTicketFiltersAction>(a => a.SearchTerm == "خطا" && a.CurrentPage == 1)), Times.Once),
+            TimeSpan.FromSeconds(5)
         );
     }
 

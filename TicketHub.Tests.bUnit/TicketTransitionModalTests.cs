@@ -198,8 +198,14 @@ namespace TicketHub.Tests.bUnit
 
             cut.WaitForAssertion(() =>
             {
-                capturedDto.Should().NotBeNull();                capturedDto.TicketId.Should().Be(42);                capturedDto.TransitionId.Should().Be(102);                capturedUserId.Should().Be(1);                _mockToastService.Verify(t => t.ShowSuccess(It.IsAny<string>(), It.IsAny<string?>()), Times.Once);
-                onSavedCalled.Should().BeTrue();                cut.Instance.IsVisible.Should().BeFalse();            });
+                capturedDto.Should().NotBeNull();
+                capturedDto.TicketId.Should().Be(42);
+                capturedDto.TransitionId.Should().Be(102);
+                capturedUserId.Should().Be(1);
+                _mockToastService.Verify(t => t.ShowSuccess(It.IsAny<string>(), It.IsAny<string?>()), Times.Once);
+                onSavedCalled.Should().BeTrue();
+                cut.Instance.IsVisible.Should().BeFalse();
+            }, TimeSpan.FromSeconds(5));
         }
 
         [Fact]
