@@ -1,0 +1,29 @@
+# ==============================================================================
+# TicketHub Robots.txt Configuration
+# ==============================================================================
+User-agent: *
+
+# Allow Public & Authentication Pages
+Allow: /login
+Allow: /register
+Allow: /confirm-email
+Allow: /favicon.png
+Allow: /images/
+Allow: /css/
+Allow: /fonts/
+
+# Disallow Private Dashboards, Internal APIs and Administrative Systems
+Disallow: /home
+Disallow: /tickets/
+Disallow: /admin/
+Disallow: /profile
+Disallow: /health
+Disallow: /healthz
+Disallow: /system-logs
+Disallow: /api/
+Disallow: /dev/
+Disallow: /hub/
+Disallow: /_blazor/
+
+# Sitemap Location
+Sitemap: https://tickethub.local/sitemap.xml
