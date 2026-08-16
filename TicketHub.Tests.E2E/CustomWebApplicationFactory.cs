@@ -102,7 +102,9 @@ namespace TicketHub.Tests.E2E
             public KestrelHostWrapper(IHost host)
             {
                 _host = host;
+#pragma warning disable ASPDEPR004, ASPDEPR008
                 _dummyServer = new TestServer(new WebHostBuilder().Configure(app => { }));
+#pragma warning restore ASPDEPR004, ASPDEPR008
                 Services = new CustomServiceProvider(host.Services, _dummyServer);
             }
 

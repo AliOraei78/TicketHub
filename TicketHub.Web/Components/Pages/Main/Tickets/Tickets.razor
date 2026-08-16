@@ -184,14 +184,9 @@
         </div>
     </ListFilterToolbar>
 
-    @if (SelectedTicketIds.Any())
-    {
-        <div class="w-full flex justify-end fade-in-item">
-            <BulkActionToolbar SelectedCount="SelectedTicketIds.Count"
-                               OnCancel="ClearSelection"
-                               OnDelete="OpenBulkDeleteModal" />
-        </div>
-    }
+    <BulkActionToolbar SelectedCount="SelectedTicketIds.Count"
+                       OnCancel="ClearSelection"
+                       OnDelete="OpenBulkDeleteModal" />
 
     <!-- Tickets List (3 Columns x 3 Rows = 9 Tickets) -->
     @if (TicketState.Value.IsLoading && !FilteredTickets.Any())

@@ -233,6 +233,7 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent
         IsBulkDelete = false;
         DeleteModalDescription = $"آیا از حذف تیکت '{ticket.Title}' اطمینان دارید؟";
         IsDeleteModalOpen = true;
+        StateHasChanged();
     }
 
     protected void OpenBulkDeleteModal()
@@ -241,6 +242,7 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent
         TicketToDelete = null;
         DeleteModalDescription = $"آیا از حذف {SelectedTicketIds.Count} تیکت انتخاب شده اطمینان دارید؟";
         IsDeleteModalOpen = true;
+        StateHasChanged();
     }
 
     protected void ConfirmDeleteAsync()
@@ -268,12 +270,15 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent
             Dispatcher.Dispatch(new DeleteTicketAction(TicketToDelete.Id, TicketToDelete.Title));
             TicketToDelete = null;
         }
+
+        StateHasChanged();
     }
 
     protected void CancelDelete()
     {
         IsDeleteModalOpen = false;
         TicketToDelete = null;
+        StateHasChanged();
     }
 
     protected async Task HandleActionClick(TicketDto ticket)

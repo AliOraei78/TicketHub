@@ -155,24 +155,24 @@ namespace TicketHub.Tests.E2E
             await WaitForBlazorAsync(Page, 1000);
 
             // Select checkbox on the first quest capsule
-            var firstCheckbox = Page.Locator(".cyber-quest-capsule input[type='checkbox']").First;
+            var firstCheckbox = Page.Locator(".cyber-quest-capsule label.cyber-checkbox-container input, .cyber-quest-capsule input[type='checkbox']").First;
             await firstCheckbox.WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = 10_000 });
             await firstCheckbox.ClickAsync(new() { Force = true });
-            await WaitForBlazorAsync(Page, 800);
+            await WaitForBlazorAsync(Page, 1000);
 
-            // BulkActionToolbar should appear in RootModal outlet
-            var bulkBar = Page.Locator("button:has-text('حذف موارد انتخابی'), button:has-text('حذف گروهی')").First;
-            await bulkBar.WaitForAsync(new() { Timeout = 10_000 });
-            (await bulkBar.IsVisibleAsync()).Should().BeTrue();
+            // BulkActionToolbar should appear
+            var bulkDeleteBtn = Page.Locator("div.fixed.bottom-6 button:has-text('حذف گروهی'), div.fixed.bottom-6 button:has-text('حذف موارد انتخابی')").First;
+            await bulkDeleteBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+            (await bulkDeleteBtn.IsVisibleAsync()).Should().BeTrue();
 
             // Click bulk delete button
-            await bulkBar.ClickAsync();
-            await WaitForBlazorAsync(Page, 800);
+            await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Confirm bulk deletion
-            var confirmBtn = Page.Locator("button:has-text('بله، حذف کن'), button.btn-cyber-danger").First;
+            var confirmBtn = Page.Locator("button:has-text('بله، حذف کن')").First;
             await confirmBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
-            await confirmBtn.ClickAsync();
+            await confirmBtn.ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 1500);
 
             // Verify at least one or both deleted in DB
