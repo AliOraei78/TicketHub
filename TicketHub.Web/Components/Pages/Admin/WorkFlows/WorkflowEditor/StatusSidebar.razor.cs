@@ -10,7 +10,7 @@ public partial class StatusSidebar : ComponentBase
     [Parameter] public EventCallback<StatusDto> OnStatusAdd { get; set; }
 
     protected string SearchTerm { get; set; } = string.Empty;
-    protected IEnumerable<StatusDto> FilteredStatuses => string.IsNullOrEmpty(SearchTerm) 
-        ? Statuses 
+    protected IEnumerable<StatusDto> FilteredStatuses => string.IsNullOrEmpty(SearchTerm)
+        ? Statuses
         : Statuses.Where(s => s.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase));
 }

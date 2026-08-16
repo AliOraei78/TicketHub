@@ -16,7 +16,7 @@ public class WorkflowStatus
     public double PositionX { get; set; }
     public double PositionY { get; set; }
     public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
-    
+
     public ICollection<Transition> FromTransitions { get; set; } = new List<Transition>();
     public ICollection<Transition> ToTransitions { get; set; } = new List<Transition>();
 }

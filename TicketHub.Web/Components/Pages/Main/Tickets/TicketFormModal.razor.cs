@@ -59,9 +59,9 @@ public partial class TicketFormModal : ComponentBase
     {
         DynamicValidationErrors.Clear();
         MapDynamicFieldsToModel();
-        
+
         bool isValid = editContext.Validate();
-        
+
         foreach (var field in DynamicFieldModels)
         {
             if (field.IsRequired)
@@ -75,7 +75,7 @@ public partial class TicketFormModal : ComponentBase
                 }
             }
         }
-        
+
         if (isValid)
         {
             if (OnSubmit.HasDelegate)

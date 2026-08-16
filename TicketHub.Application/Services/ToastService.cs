@@ -3,6 +3,7 @@ using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
 
 namespace TicketHub.Application.Services;
+
 public class ToastService : IToastService
 {
     public event Action? OnChanged;

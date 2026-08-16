@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TicketHub.Application.DTOs;
+
 public class CommentDto
 {
     public int Id { get; set; }

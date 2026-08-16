@@ -102,7 +102,7 @@ namespace TicketHub.Tests.bUnit
 
             // Enter Name and select FieldType via SlideSelect
             cut.Find("input[placeholder='مثال: شماره موبایل']").Change("DeviceIMEI");
-            
+
             var slideSelect = cut.FindComponent<SlideSelect<FieldTypeDto, int>>();
             slideSelect.InvokeAsync(() => slideSelect.Instance.ValueChanged.InvokeAsync(1));
 

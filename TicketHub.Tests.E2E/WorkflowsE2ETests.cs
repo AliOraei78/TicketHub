@@ -48,14 +48,16 @@ namespace TicketHub.Tests.E2E
             var canvasBox = (await canvas.BoundingBoxAsync())!;
 
             var statusBItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "در انتظار تایید" }).First;
-            await statusBItem.DragToAsync(canvas, new LocatorDragToOptions {
+            await statusBItem.DragToAsync(canvas, new LocatorDragToOptions
+            {
                 TargetPosition = new() { X = canvasBox.Width / 2 + 250, Y = canvasBox.Height / 2 }
             });
             await WaitForBlazorAsync(Page, 500);
 
             // 3- add status c using drag and drop below status b
             var statusCItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "بسته شده" }).First;
-            await statusCItem.DragToAsync(canvas, new LocatorDragToOptions {
+            await statusCItem.DragToAsync(canvas, new LocatorDragToOptions
+            {
                 TargetPosition = new() { X = canvasBox.Width / 2 + 250, Y = canvasBox.Height / 2 + 200 }
             });
             await WaitForBlazorAsync(Page, 500);
@@ -147,7 +149,7 @@ namespace TicketHub.Tests.E2E
             var adminRoleBtn = Page.Locator("button:has-text('ادمین'), button:has-text('مدیر سیستم')").First;
             if (await adminRoleBtn.IsVisibleAsync()) await adminRoleBtn.ClickAsync();
 
-            var fieldTypes = new[] 
+            var fieldTypes = new[]
             {
                 "متن کوتاه (Text)",
                 "متن طولانی (TextArea)",
@@ -209,7 +211,7 @@ namespace TicketHub.Tests.E2E
             }
 
             // Fill title for transition 2 (B -> C)
-            if (await transitionPaths.CountAsync() > 1) 
+            if (await transitionPaths.CountAsync() > 1)
             {
                 await transitionPaths.Nth(1).ClickAsync(new() { Force = true });
                 await WaitForBlazorAsync(Page, 500);
@@ -218,7 +220,7 @@ namespace TicketHub.Tests.E2E
             }
 
             // Fill title for transition 3 (C -> A)
-            if (await transitionPaths.CountAsync() > 2) 
+            if (await transitionPaths.CountAsync() > 2)
             {
                 await transitionPaths.Nth(2).ClickAsync(new() { Force = true });
                 await WaitForBlazorAsync(Page, 500);
@@ -262,14 +264,16 @@ namespace TicketHub.Tests.E2E
             var canvasBox = (await canvas.BoundingBoxAsync())!;
 
             var statusBItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "در انتظار تایید" });
-            await statusBItem.DragToAsync(canvas, new LocatorDragToOptions {
+            await statusBItem.DragToAsync(canvas, new LocatorDragToOptions
+            {
                 TargetPosition = new() { X = canvasBox.Width / 2 + 250, Y = canvasBox.Height / 2 }
             });
             await WaitForBlazorAsync(Page, 500);
 
             // 3- add status c using drag and drop below status b
             var statusCItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "بسته شده" });
-            await statusCItem.DragToAsync(canvas, new LocatorDragToOptions {
+            await statusCItem.DragToAsync(canvas, new LocatorDragToOptions
+            {
                 TargetPosition = new() { X = canvasBox.Width / 2 + 250, Y = canvasBox.Height / 2 + 200 }
             });
             await WaitForBlazorAsync(Page, 500);
@@ -376,28 +380,30 @@ namespace TicketHub.Tests.E2E
             await Page.ClickAsync("button:has-text('ایجاد جریان کاری جدید')");
             await Page.WaitForURLAsync("**/workflows/editor");
             await WaitForBlazorAsync(Page, 800);
-            
+
             var canvas = Page.Locator(".cyber-canvas");
             var canvasBox = (await canvas.BoundingBoxAsync())!;
-            
+
             var statusAItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "باز" });
-            await statusAItem.DragToAsync(canvas, new LocatorDragToOptions {
+            await statusAItem.DragToAsync(canvas, new LocatorDragToOptions
+            {
                 TargetPosition = new() { X = (canvasBox.Width / 4) * 3, Y = canvasBox.Height / 2 }
             });
             await Task.Delay(500);
 
             var statusBItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "در انتظار تایید" });
-            await statusBItem.DragToAsync(canvas, new LocatorDragToOptions {
+            await statusBItem.DragToAsync(canvas, new LocatorDragToOptions
+            {
                 TargetPosition = new() { X = canvasBox.Width / 4, Y = canvasBox.Height / 2 }
             });
             await Task.Delay(500);
 
             var statusAOnCanvas = Page.Locator(".cyber-canvas .cyber-node-chassis:has-text('باز'), .cyber-canvas > div:has-text('باز')").First;
             var statusBOnCanvas = Page.Locator(".cyber-canvas .cyber-node-chassis:has-text('در انتظار تایید'), .cyber-canvas > div:has-text('در انتظار تایید')").First;
-              
+
             var statusAPortLeft = statusAOnCanvas.Locator("div[title='Left']");
             var statusBPortRight = statusBOnCanvas.Locator("div[title='Right']");
-            
+
             var sBox = (await statusAPortLeft.BoundingBoxAsync())!;
             var tBox = (await statusBPortRight.BoundingBoxAsync())!;
             await Page.Mouse.MoveAsync(sBox.X + sBox.Width / 2, sBox.Y + sBox.Height / 2);
@@ -410,18 +416,18 @@ namespace TicketHub.Tests.E2E
 
             await Page.ClickAsync("button:has-text('+ افزودن فیلد')");
             await Task.Delay(200);
-            
+
             await Page.ClickAsync("button:has-text('ذخیره جریان کار')");
 
             var wfNameValidationMsg = Page.Locator("text=نام جریان کاری الزامی است.");
             await wfNameValidationMsg.WaitForAsync(new() { Timeout = 5000 });
-            
+
             var transitionNameValidationMsg = Page.Locator("text=نام انتقال الزامی است.");
             await transitionNameValidationMsg.WaitForAsync(new() { Timeout = 5000 });
-            
+
             var dynamicFieldNameValidationMsg = Page.Locator("text=نام فیلد الزامی است.");
             await dynamicFieldNameValidationMsg.WaitForAsync(new() { Timeout = 5000 });
- 
+
             var dynamicInitialStateValidationMsg = Page.Locator("text=دقیقاً یک وضعیت باید به عنوان وضعیت اولیه جریان کاری انتخاب شود.");
             await dynamicInitialStateValidationMsg.WaitForAsync(new() { Timeout = 5000 });
         }
@@ -431,14 +437,14 @@ namespace TicketHub.Tests.E2E
             await Page.ClickAsync("button:has-text('ایجاد جریان کاری جدید')");
             await Page.WaitForURLAsync("**/workflows/editor");
             await WaitForBlazorAsync(Page, 1000);
-            
+
             // Wait for data to load
             var statusAItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "باز" });
             await statusAItem.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
-            
+
             await Page.WaitForSelectorAsync("input[placeholder='نام جریان کاری...']");
             await Page.FillAsync("input[placeholder='نام جریان کاری...']", name);
-            
+
             // Add Status A
             await statusAItem.Locator("button").ClickAsync();
             await WaitForBlazorAsync(Page, 500);
@@ -453,7 +459,7 @@ namespace TicketHub.Tests.E2E
             await statusAOnCanvas.WaitForAsync(new() { Timeout = 10000 });
             var statusBOnCanvas = Page.Locator(".cyber-canvas .cyber-node-chassis:has-text('در انتظار تایید'), .cyber-canvas > div:has-text('در انتظار تایید')").First;
             await statusBOnCanvas.WaitForAsync(new() { Timeout = 10000 });
-            
+
             var sBox = (await statusAOnCanvas.BoundingBoxAsync())!;
             var tBox = (await statusBOnCanvas.BoundingBoxAsync())!;
             await Page.Mouse.MoveAsync(sBox.X + sBox.Width / 2, sBox.Y + sBox.Height / 2);
@@ -466,11 +472,11 @@ namespace TicketHub.Tests.E2E
 
             // Fill connection name in sidebar
             var transitionTitleInput = Page.Locator("label").Filter(new() { HasText = "عنوان انتقال" }).Locator("..").Locator("input").First;
-            if(await transitionTitleInput.IsVisibleAsync())
+            if (await transitionTitleInput.IsVisibleAsync())
             {
-               await transitionTitleInput.FillAsync("تایید");
-               await Page.ClickAsync("button[title='بستن']");
-               await Task.Delay(200);
+                await transitionTitleInput.FillAsync("تایید");
+                await Page.ClickAsync("button[title='بستن']");
+                await Task.Delay(200);
             }
 
             // Set initial status
@@ -510,7 +516,7 @@ namespace TicketHub.Tests.E2E
             await WaitForBlazorAsync(Page, 1000);
 
             string prefix = $"BulkTest_{Guid.NewGuid().ToString("N").Substring(0, 4)}_";
-            
+
             // 1. Create 3 workflows
             for (int i = 1; i <= 3; i++)
             {
@@ -523,7 +529,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await WaitForBlazorAsync(Page, 1200);
 
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 var card = Page.Locator($".circuit-tracer-card:has-text('{prefix}{i}')").First;
                 await card.Locator("label.cyber-checkbox-container input, input[type='checkbox']").First.ClickAsync(new() { Force = true });
@@ -537,7 +543,7 @@ namespace TicketHub.Tests.E2E
             // 3. Delete 1 via row action
             var firstCard = Page.Locator($".circuit-tracer-card:has-text('{prefix}1')").First;
             await firstCard.Locator("button[title='حذف جریان کار']").First.ClickAsync(new() { Force = true });
-            
+
             var confirmBtn = Page.Locator("button:has-text('بله، حذف کن')").First;
             await confirmBtn.ClickAsync(new() { Force = true });
 
@@ -559,23 +565,23 @@ namespace TicketHub.Tests.E2E
             var toastBulkMultiple = Page.Locator("text=2 جریان کاری حذف شدند.").First;
             await toastBulkMultiple.WaitForAsync(new() { Timeout = 5000 });
             await toastBulkMultiple.WaitForAsync(new() { State = WaitForSelectorState.Hidden });
-            
+
             // 6. Create 1 more to test single bulk delete
             await CreateValidWorkflowAsync($"{prefix}4");
-            
+
             // Search to ensure it is on the first page
             searchInput = Page.Locator("input[placeholder='جستجوی جریان کاری...']");
             await searchInput.FillAsync($"{prefix}4");
             await WaitForBlazorAsync(Page, 1200);
-            
+
             // 7. Select 1
             var fourthCard = Page.Locator($".circuit-tracer-card:has-text('{prefix}4')").First;
             await fourthCard.Locator("label.cyber-checkbox-container input, input[type='checkbox']").First.ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 400);
-            
+
             await bulkBar.WaitForAsync(new() { Timeout = 5000 });
             (await bulkBar.InnerTextAsync()).Should().Contain("1");
-            
+
             // 8. Delete via bulk action
             await Page.Locator("div.fixed.bottom-6, div.fixed").Locator("button:has-text('حذف'), button:has-text('حذف گروهی')").First.ClickAsync(new() { Force = true });
             var confirmBtnBulkSingle = Page.Locator("button:has-text('بله، حذف کن')").First;
@@ -594,13 +600,13 @@ namespace TicketHub.Tests.E2E
             await WaitForBlazorAsync(Page, 1000);
 
             string prefix = $"PgTest_{Guid.NewGuid().ToString("N").Substring(0, 4)}_";
-            
+
             // 1. Create 9 workflows directly in DB for speed
             using (var scope = Factory.Services.CreateScope())
             {
                 var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
                 using var context = dbFactory.CreateDbContext();
-                
+
                 for (int i = 1; i <= 9; i++)
                 {
                     context.Workflows.Add(new TicketHub.Core.Entities.Workflow { Name = $"{prefix}{i}", IsActive = true, CreatedAt = DateTime.UtcNow });
@@ -619,7 +625,7 @@ namespace TicketHub.Tests.E2E
             await WaitForBlazorAsync(Page, 1200);
 
             // 3. Select 2 items from the first page
-            for(int i = 1; i <= 2; i++)
+            for (int i = 1; i <= 2; i++)
             {
                 var card = Page.Locator($".circuit-tracer-card:has-text('{prefix}{i}')").First;
                 if (await card.IsVisibleAsync())

@@ -49,7 +49,8 @@ namespace TicketHub.Tests.E2E
             var projectChartCard = Page.Locator("h3:has-text('سهم بخش‌ها و قلمروها از کل تیکت‌ها')");
             (await projectChartCard.IsVisibleAsync()).Should().BeTrue();
             var slaChartCard = Page.Locator("h3:has-text('نوار سلامت و پاسخگویی به موقع (SLA HP)')");
-            (await slaChartCard.IsVisibleAsync()).Should().BeTrue();        }
+            (await slaChartCard.IsVisibleAsync()).Should().BeTrue();
+        }
 
         [Fact]
         public async Task TrendChart_Click_OpensZoomModal_AndClosesViaCloseButton()
@@ -73,7 +74,8 @@ namespace TicketHub.Tests.E2E
             await closeButton.ClickAsync();
 
             await modalTitle.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5_000 });
-            (await modalTitle.IsVisibleAsync()).Should().BeFalse();        }
+            (await modalTitle.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task PriorityChart_Click_OpensPriorityModal_AndClosesViaXButton()
@@ -95,7 +97,8 @@ namespace TicketHub.Tests.E2E
             await xButton.ClickAsync();
 
             await modalTitle.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5_000 });
-            (await modalTitle.IsVisibleAsync()).Should().BeFalse();        }
+            (await modalTitle.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task ProjectWorkloadChart_Click_OpensProjectModal_AndClosesSuccessfully()
@@ -117,7 +120,8 @@ namespace TicketHub.Tests.E2E
             await closeButton.ClickAsync();
 
             await modalTitle.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5_000 });
-            (await modalTitle.IsVisibleAsync()).Should().BeFalse();        }
+            (await modalTitle.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task SlaHealthChart_Click_OpensSlaModal_AndClosesSuccessfully()
@@ -141,7 +145,8 @@ namespace TicketHub.Tests.E2E
             await closeButton.ClickAsync();
 
             await modalTitle.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5_000 });
-            (await modalTitle.IsVisibleAsync()).Should().BeFalse();        }
+            (await modalTitle.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task CreateTicketModal_CanBeOpenedFromDashboard_AndCancelled()
@@ -164,7 +169,8 @@ namespace TicketHub.Tests.E2E
             await cancelBtn.ClickAsync();
 
             await formHeader.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5_000 });
-            (await formHeader.IsVisibleAsync()).Should().BeFalse();        }
+            (await formHeader.IsVisibleAsync()).Should().BeFalse();
+        }
 
         [Fact]
         public async Task CreateTicketFromDashboard_SubmitsSuccessfully()
@@ -203,6 +209,7 @@ namespace TicketHub.Tests.E2E
 
             // Verify modal closes
             await formHeader.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 10_000 });
-            (await formHeader.IsVisibleAsync()).Should().BeFalse();        }
+            (await formHeader.IsVisibleAsync()).Should().BeFalse();
+        }
     }
 }

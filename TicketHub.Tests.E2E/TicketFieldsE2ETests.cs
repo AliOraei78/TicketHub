@@ -76,7 +76,7 @@ namespace TicketHub.Tests.E2E
             var updatedName = newFieldName + " ویرایش شده";
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", updatedName);
             await Page.Keyboard.PressAsync("Tab");
-            await Page.ClickAsync("button:has-text('ذخیره تغییرات')"); 
+            await Page.ClickAsync("button:has-text('ذخیره تغییرات')");
 
             // Wait for success toast
             var editToastLocator = Page.Locator("text=ویرایش شد").First;
@@ -160,12 +160,12 @@ namespace TicketHub.Tests.E2E
             {
                 await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", $"{prefix}{i}");
                 await Page.FillAsync("input[type='number']", $"{i}");
-                
+
                 await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
                 await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
-                
+
                 await Page.ClickAsync("button:has-text('ثبت فیلد')");
-                
+
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
                 await Page.Mouse.ClickAsync(10, 10);
@@ -190,11 +190,11 @@ namespace TicketHub.Tests.E2E
             await rowToDelete.ScrollIntoViewIfNeededAsync();
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync(new() { Force = true });
-            
+
             var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
             await modalConfirm1.ClickAsync(new() { Force = true });
-            
+
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
@@ -203,11 +203,11 @@ namespace TicketHub.Tests.E2E
             var selectedCountIndicator = Page.Locator("div.fixed.bottom-6", new() { HasTextString = "2" }).First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
-            
+
             await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
             var bulkDeleteModal = Page.Locator("text=مطمئن هستید").First;
             await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
-            
+
             var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm2.ClickAsync(new() { Force = true });
 
@@ -217,14 +217,14 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForTimeoutAsync(600);
 
             // Test Activate/Deactivate
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", $"{prefix}{i}");
                 await Page.FillAsync("input[type='number']", $"{i}");
                 await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع فیلد')");
                 await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('متن')");
                 await Page.ClickAsync("button:has-text('ثبت فیلد')");
-                
+
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
                 await Page.Mouse.ClickAsync(10, 10);
@@ -234,7 +234,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();

@@ -10,5 +10,5 @@ public class PermissionDto
     public PermissionType Type { get; set; }
     public bool IsActive { get; set; } = true;
 
-    public List<int> RoleIds { get; set; } = new List<int>(); 
+    public List<int> RoleIds { get; set; } = new List<int>();
 }

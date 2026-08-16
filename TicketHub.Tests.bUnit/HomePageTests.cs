@@ -171,7 +171,8 @@ public class HomePageTests : BUnitComponentTestBase
     {
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("خوش آمدید، مدیر کل سیستم");        cut.Markup.Should().Contain("مرکز پایش و حل مشکلات بازیکنان");        cut.Markup.Should().Contain("ثبت کوئست / تیکت جدید");    }
+        cut.Markup.Should().Contain("خوش آمدید، مدیر کل سیستم"); cut.Markup.Should().Contain("مرکز پایش و حل مشکلات بازیکنان"); cut.Markup.Should().Contain("ثبت کوئست / تیکت جدید");
+    }
 
     [Fact]
     public void Render_Dashboard_Dispatches_LoadTicketInitialDataAction_WithUserRoles()
@@ -188,17 +189,18 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // 1. Water (All tickets)
-        cut.Markup.Should().Contain("کل تیکت‌ها");        cut.Markup.Should().Contain("🌊 ALL");        cut.Markup.Should().Contain("10");
+        cut.Markup.Should().Contain("کل تیکت‌ها"); cut.Markup.Should().Contain("🌊 ALL"); cut.Markup.Should().Contain("10");
         // 2. Lightning (New tickets)
-        cut.Markup.Should().Contain("اقدام نشده");        cut.Markup.Should().Contain("⚡ NEW");        cut.Markup.Should().Contain("5");
+        cut.Markup.Should().Contain("اقدام نشده"); cut.Markup.Should().Contain("⚡ NEW"); cut.Markup.Should().Contain("5");
         // 3. Toxic (In progress)
-        cut.Markup.Should().Contain("در حال بررسی");        cut.Markup.Should().Contain("🧪 ACTIVE");        cut.Markup.Should().Contain("3");
+        cut.Markup.Should().Contain("در حال بررسی"); cut.Markup.Should().Contain("🧪 ACTIVE"); cut.Markup.Should().Contain("3");
         // 4. Fire (Critical)
-        cut.Markup.Should().Contain("بحرانی");        cut.Markup.Should().Contain("🔥 CRITICAL");        cut.Markup.Should().Contain("2");
+        cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("🔥 CRITICAL"); cut.Markup.Should().Contain("2");
         // 5. Void (Overdue)
-        cut.Markup.Should().Contain("منقضی شده");        cut.Markup.Should().Contain("🌀 OVERDUE");        cut.Markup.Should().Contain("1");
+        cut.Markup.Should().Contain("منقضی شده"); cut.Markup.Should().Contain("🌀 OVERDUE"); cut.Markup.Should().Contain("1");
         // 6. Smoke (Resolved)
-        cut.Markup.Should().Contain("خاتمه یافته");        cut.Markup.Should().Contain("💨 RESOLVED");        cut.Markup.Should().Contain("2");    }
+        cut.Markup.Should().Contain("خاتمه یافته"); cut.Markup.Should().Contain("💨 RESOLVED"); cut.Markup.Should().Contain("2");
+    }
 
     [Fact]
     public void Render_Dashboard_DisplaysTrendChart_And_PriorityDistribution()
@@ -206,9 +208,10 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // Trend chart
-        cut.Markup.Should().Contain("روند ورودی تیکت‌ها (۷ روز گذشته)");        cut.Markup.Should().Contain("نمودار لیزری نوسانات ترافیک و لاگ هفتگی");
+        cut.Markup.Should().Contain("روند ورودی تیکت‌ها (۷ روز گذشته)"); cut.Markup.Should().Contain("نمودار لیزری نوسانات ترافیک و لاگ هفتگی");
         // Priority Distribution
-        cut.Markup.Should().Contain("توزیع تیکت‌ها بر اساس اولویت و رنک");        cut.Markup.Should().Contain("بحرانی");        cut.Markup.Should().Contain("[LVL 4]");    }
+        cut.Markup.Should().Contain("توزیع تیکت‌ها بر اساس اولویت و رنک"); cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("[LVL 4]");
+    }
 
     [Fact]
     public void Render_Dashboard_DisplaysProjectWorkload_And_SlaHealthBar()
@@ -216,9 +219,10 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // Project Workload
-        cut.Markup.Should().Contain("سهم بخش‌ها و قلمروها از کل تیکت‌ها");        cut.Markup.Should().Contain("پروژه عمومی");
+        cut.Markup.Should().Contain("سهم بخش‌ها و قلمروها از کل تیکت‌ها"); cut.Markup.Should().Contain("پروژه عمومی");
         // SLA Health Bar
-        cut.Markup.Should().Contain("نوار سلامت و پاسخگویی به موقع (SLA HP)");        cut.Markup.Should().Contain("🛡️ OPTIMAL (ایمن)");        cut.Markup.Should().Contain("90% HP");    }
+        cut.Markup.Should().Contain("نوار سلامت و پاسخگویی به موقع (SLA HP)"); cut.Markup.Should().Contain("🛡️ OPTIMAL (ایمن)"); cut.Markup.Should().Contain("90% HP");
+    }
 
     [Fact]
     public void SlaHealthBar_DisplaysWarning_WhenSlaBetween60And84()
@@ -240,7 +244,8 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("⚠️ WARNING (هشدار)");        cut.Markup.Should().Contain("70% HP");    }
+        cut.Markup.Should().Contain("⚠️ WARNING (هشدار)"); cut.Markup.Should().Contain("70% HP");
+    }
 
     [Fact]
     public void SlaHealthBar_DisplaysCritical_WhenSlaBelow60()
@@ -262,7 +267,8 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("🚨 CRITICAL (بحرانی)");        cut.Markup.Should().Contain("40% HP");    }
+        cut.Markup.Should().Contain("🚨 CRITICAL (بحرانی)"); cut.Markup.Should().Contain("40% HP");
+    }
 
     [Fact]
     public void OpenCreateTicketModal_DispatchesInitialDataActions()
@@ -287,13 +293,14 @@ public class HomePageTests : BUnitComponentTestBase
         trendCard.Click();
 
         // Verify Chart Zoom Modal renders in SectionOutlet
-        cut.Find("h3:contains('تحلیل جامع روند ورودی تیکت‌ها')").Should().NotBeNull();        cut.Find("span:contains('SYS-TELEMETRY')").Should().NotBeNull();
+        cut.Find("h3:contains('تحلیل جامع روند ورودی تیکت‌ها')").Should().NotBeNull(); cut.Find("span:contains('SYS-TELEMETRY')").Should().NotBeNull();
         // Click close button
         var closeButton = cut.Find("button:contains('بستن پنجره')");
         closeButton.Click();
 
         // Verify modal is closed
-        cut.FindAll("h3:contains('تحلیل جامع روند ورودی تیکت‌ها')").Should().BeEmpty();    }
+        cut.FindAll("h3:contains('تحلیل جامع روند ورودی تیکت‌ها')").Should().BeEmpty();
+    }
 
     [Fact]
     public void OpenChartModal_PriorityCardClick_OpensPriorityModal()
@@ -303,7 +310,8 @@ public class HomePageTests : BUnitComponentTestBase
         var priorityCard = cut.FindAll("div.element-card.gamer-card-3d").First(el => el.TextContent.Contains("توزیع تیکت‌ها"));
         priorityCard.Click();
 
-        cut.Find("h3:contains('توزیع تفکیکی اولویت‌های سیستم')").Should().NotBeNull();        cut.Find("span:contains('سطح اولویت: 4')").Should().NotBeNull();    }
+        cut.Find("h3:contains('توزیع تفکیکی اولویت‌های سیستم')").Should().NotBeNull(); cut.Find("span:contains('سطح اولویت: 4')").Should().NotBeNull();
+    }
 
     [Fact]
     public void OpenChartModal_ProjectCardClick_OpensProjectModal()
@@ -313,7 +321,8 @@ public class HomePageTests : BUnitComponentTestBase
         var projectCard = cut.FindAll("div.element-card.gamer-card-3d").First(el => el.TextContent.Contains("سهم بخش‌ها"));
         projectCard.Click();
 
-        cut.Find("h3:contains('سهم پروژه‌ها از لود کاری سیستم')").Should().NotBeNull();        cut.Find("span:contains('پروژه عمومی')").Should().NotBeNull();    }
+        cut.Find("h3:contains('سهم پروژه‌ها از لود کاری سیستم')").Should().NotBeNull(); cut.Find("span:contains('پروژه عمومی')").Should().NotBeNull();
+    }
 
     [Fact]
     public void OpenChartModal_SlaCardClick_OpensSlaModal()
@@ -323,7 +332,8 @@ public class HomePageTests : BUnitComponentTestBase
         var slaCard = cut.FindAll("div.element-card.gamer-card-3d").First(el => el.TextContent.Contains("نوار سلامت"));
         slaCard.Click();
 
-        cut.Find("h3:contains('پایش دقیق شاخص زمان‌بندی (SLA)')").Should().NotBeNull();        cut.Find("span:contains('میزان پایبندی به زمان‌بندی (SLA)')").Should().NotBeNull();    }
+        cut.Find("h3:contains('پایش دقیق شاخص زمان‌بندی (SLA)')").Should().NotBeNull(); cut.Find("span:contains('میزان پایبندی به زمان‌بندی (SLA)')").Should().NotBeNull();
+    }
 
     [Fact]
     public void Fluxor_SaveTicketSuccessAction_ClosesModal_AndRefreshesDashboard()
@@ -334,7 +344,7 @@ public class HomePageTests : BUnitComponentTestBase
         cut.Find("button:contains('ثبت کوئست / تیکت جدید')").Click();
 
         // Trigger action callback
-        _saveTicketCallback.Should().NotBeNull();        cut.InvokeAsync(() => _saveTicketCallback!(new SaveTicketSuccessAction()));
+        _saveTicketCallback.Should().NotBeNull(); cut.InvokeAsync(() => _saveTicketCallback!(new SaveTicketSuccessAction()));
 
         // Verify ticket service was refreshed
         _mockTicketService.Verify(t => t.GetTicketTelemetrySummaryAsync(
@@ -358,9 +368,10 @@ public class HomePageTests : BUnitComponentTestBase
             SlaOnTimePercentage = 95
         };
 
-        _ticketsLoadedCallback.Should().NotBeNull();        cut.InvokeAsync(() => _ticketsLoadedCallback!(new TicketsLoadedAction(new List<TicketDto>(), 45, 1, updatedTelemetry)));
+        _ticketsLoadedCallback.Should().NotBeNull(); cut.InvokeAsync(() => _ticketsLoadedCallback!(new TicketsLoadedAction(new List<TicketDto>(), 45, 1, updatedTelemetry)));
 
-        cut.Markup.Should().Contain("45");    }
+        cut.Markup.Should().Contain("45");
+    }
 
     [Fact]
     public async Task CacheService_LoadsFromCache_WhenCachedSummaryExists()
@@ -394,7 +405,8 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("99");        cut.Markup.Should().Contain("پروژه کش شده");    }
+        cut.Markup.Should().Contain("99"); cut.Markup.Should().Contain("پروژه کش شده");
+    }
 
     [Fact]
     public void HandleCategoryChanged_Dispatches_LoadDynamicFieldsAction_WhenCategoryIdProvided()
@@ -450,7 +462,7 @@ public class HomePageTests : BUnitComponentTestBase
 
         // Rarity Tag Tests
         var overdueTicket = new TicketDto { DueDate = DateTime.UtcNow.AddHours(-2) };
-        home.GetRarityTag(overdueTicket).Should().Contain("BOSS RAID");        home.GetRarityTagClass(overdueTicket).Should().Contain("bg-rose-950");
+        home.GetRarityTag(overdueTicket).Should().Contain("BOSS RAID"); home.GetRarityTagClass(overdueTicket).Should().Contain("bg-rose-950");
         var epicTicket = new TicketDto { Priority = new PriorityDto { Level = 4, Name = "بحرانی" } };
         home.GetRarityTag(epicTicket).Should().Contain("EPIC");
         var rareTicket = new TicketDto { Priority = new PriorityDto { Level = 3, Name = "زیاد" } };
@@ -460,7 +472,7 @@ public class HomePageTests : BUnitComponentTestBase
         var commonTicket = new TicketDto { Priority = new PriorityDto { Level = 1, Name = "کم" } };
         home.GetRarityTag(commonTicket).Should().Contain("COMMON");
         // Priority CSS Class Tests
-        home.GetPriorityClass("بحرانی").Should().Contain("purple");        home.GetPriorityClass("زیاد").Should().Contain("rose");        home.GetPriorityClass("متوسط").Should().Contain("amber");        home.GetPriorityClass("کم").Should().Contain("emerald");
+        home.GetPriorityClass("بحرانی").Should().Contain("purple"); home.GetPriorityClass("زیاد").Should().Contain("rose"); home.GetPriorityClass("متوسط").Should().Contain("amber"); home.GetPriorityClass("کم").Should().Contain("emerald");
         // SLA Remaining formatting
         var noDueDateTicket = new TicketDto { DueDate = null };
         home.GetSlaRemainingTimeText(noDueDateTicket).Should().Be("بدون مهلت");
@@ -477,9 +489,10 @@ public class HomePageTests : BUnitComponentTestBase
         var linePath = home.BuildSvgLinePath(sampleTrend, 400, 120);
         var areaPath = home.BuildSvgAreaPath(sampleTrend, 400, 120);
 
-        linePath.Should().StartWith("M ");        areaPath.Should().Contain(" Z");
+        linePath.Should().StartWith("M "); areaPath.Should().Contain(" Z");
         // Null and Empty SVG paths
-        home.BuildSvgLinePath(null, 400, 120).Should().Be(string.Empty);        home.BuildSvgLinePath(new List<DailyTrendDto>(), 400, 120).Should().Be(string.Empty);        home.BuildSvgAreaPath(null, 400, 120).Should().Be(string.Empty);    }
+        home.BuildSvgLinePath(null, 400, 120).Should().Be(string.Empty); home.BuildSvgLinePath(new List<DailyTrendDto>(), 400, 120).Should().Be(string.Empty); home.BuildSvgAreaPath(null, 400, 120).Should().Be(string.Empty);
+    }
 
     [Fact]
     public void QuestTabs_FiltersRecentTicketsCorrectly()
@@ -502,11 +515,12 @@ public class HomePageTests : BUnitComponentTestBase
         // Tab: overdue
         home.SetQuestTab("overdue");
         var overdueList = home.GetFilteredRecentTickets().ToList();
-        overdueList.Should().ContainSingle();        overdueList[0].Title.Should().Be("تیکت معوقه");
+        overdueList.Should().ContainSingle(); overdueList[0].Title.Should().Be("تیکت معوقه");
         // Tab: critical
         home.SetQuestTab("critical");
         var criticalList = home.GetFilteredRecentTickets().ToList();
-        criticalList.Should().ContainSingle();        criticalList[0].Title.Should().Be("تیکت بحرانی");    }
+        criticalList.Should().ContainSingle(); criticalList[0].Title.Should().Be("تیکت بحرانی");
+    }
 
     [Fact]
     public void ChartModalBeamClass_ReturnsCorrectStyling_ForEachModalType()
@@ -523,7 +537,8 @@ public class HomePageTests : BUnitComponentTestBase
         home.SetActiveModalType("sla");
         home.GetChartModalBeamClass().Should().Be("modal-dual-beam-emerald-rose");
         home.SetActiveModalType("unknown");
-        home.GetChartModalBeamClass().Should().Be("modal-laser-ring");    }
+        home.GetChartModalBeamClass().Should().Be("modal-laser-ring");
+    }
 
     [Fact]
     public void SlaHpClass_ReturnsStatusBasedOnHealthPercentage()
@@ -536,7 +551,8 @@ public class HomePageTests : BUnitComponentTestBase
         home.SetSlaOnTimePercentage(75);
         home.GetSlaHpClass().Should().Be("hp-warning");
         home.SetSlaOnTimePercentage(95);
-        home.GetSlaHpClass().Should().Be(string.Empty);    }
+        home.GetSlaHpClass().Should().Be(string.Empty);
+    }
 
     [Fact]
     public void CapsuleBorderGlowClass_ReturnsExpectedGlows()
@@ -553,7 +569,8 @@ public class HomePageTests : BUnitComponentTestBase
         var mediumPriority = new TicketDto { Priority = new PriorityDto { Level = 2 } };
         home.GetCapsuleBorderGlowClass(mediumPriority).Should().Contain("border-sky-500");
         var lowPriority = new TicketDto { Priority = new PriorityDto { Level = 1 } };
-        home.GetCapsuleBorderGlowClass(lowPriority).Should().Contain("border-emerald-500");    }
+        home.GetCapsuleBorderGlowClass(lowPriority).Should().Contain("border-emerald-500");
+    }
 
     [Fact]
     public void RealTimeEventBroker_TriggersDashboardRefresh_OnTicketUpdated_And_OnTransitionOccurred()
@@ -594,7 +611,8 @@ public class HomePageTests : BUnitComponentTestBase
 
         home.NavigateToDetails(42);
 
-        nav.Uri.Should().EndWith("/tickets/42");    }
+        nav.Uri.Should().EndWith("/tickets/42");
+    }
 }
 
 public class TestableHome : Home

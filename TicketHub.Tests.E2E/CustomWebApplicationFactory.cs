@@ -28,9 +28,9 @@ namespace TicketHub.Tests.E2E
 
         public CustomWebApplicationFactory()
         {
-            _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING") 
+            _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING")
                 ?? "Server=127.0.0.1,14333;Database=TicketHubDb_Test;User Id=sa;Password=Ali433433_StrongPass!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
-            
+
             // Set environment variable so Program.cs reads test connection string and in-memory services
             Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _dbConnectionString);
             Environment.SetEnvironmentVariable("ConnectionStrings__Redis", ""); // Use DistributedMemoryCache
@@ -151,7 +151,7 @@ namespace TicketHub.Tests.E2E
                 // Remove existing DbContext configuration
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
                 if (descriptor != null) services.Remove(descriptor);
-                
+
                 var factoryDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDbContextFactory<AppDbContext>));
                 if (factoryDescriptor != null) services.Remove(factoryDescriptor);
 
@@ -245,12 +245,12 @@ namespace TicketHub.Tests.E2E
             var userId = adminUser?.Id.ToString() ?? "1";
             var userEmail = adminUser?.Email ?? adminEmail;
 
-            var claims = new[] 
-            { 
+            var claims = new[]
+            {
                 new Claim(ClaimTypes.NameIdentifier, userId),
                 new Claim(ClaimTypes.Name, adminUser?.Name ?? "AdminUser"),
                 new Claim(ClaimTypes.Email, userEmail),
-                new Claim(ClaimTypes.Role, "ادمین") 
+                new Claim(ClaimTypes.Role, "ادمین")
             };
             var identity = new ClaimsIdentity(claims, "Test");
             var principal = new ClaimsPrincipal(identity);

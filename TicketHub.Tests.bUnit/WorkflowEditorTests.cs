@@ -63,14 +63,14 @@ namespace TicketHub.Tests.bUnit
         {
             // Act
             var cut = Render<WorkflowEditor>();
-            
+
             var toolbarNameInput = cut.Find("input[placeholder='نام جریان کاری...']");
             toolbarNameInput.Input("My Test Workflow");
 
             // We can directly invoke private methods using reflection or just test that if the state has nodes/connections, it saves them correctly.
             // Since Blazor Canvas Drag & Drop is tricky to mock in bUnit without deep JSInterop mocks,
             // we will simulate the SaveAction directly with populated Nodes/Connections to ensure the component handles transitions and transition fields.
-            
+
             var nodes = new List<CanvasNodeDto>
             {
                 new CanvasNodeDto { Id = Guid.NewGuid(), Status = new StatusDto { Id = 1, Name = "Open" }, X = 100, Y = 100 },
@@ -80,13 +80,13 @@ namespace TicketHub.Tests.bUnit
             var connectionId = Guid.NewGuid();
             var connections = new List<CanvasConnection>
             {
-                new CanvasConnection 
-                { 
-                    Id = connectionId, 
-                    FromNodeId = nodes[0].Id, 
-                    ToNodeId = nodes[1].Id, 
-                    SourcePort = "Right", 
-                    TargetPort = "Left", 
+                new CanvasConnection
+                {
+                    Id = connectionId,
+                    FromNodeId = nodes[0].Id,
+                    ToNodeId = nodes[1].Id,
+                    SourcePort = "Right",
+                    TargetPort = "Left",
                     Name = "Start Work",
                     CustomFields = new List<CanvasTransitionField>
                     {
@@ -106,9 +106,9 @@ namespace TicketHub.Tests.bUnit
             var saveButton = cut.Find("button.bg-blue-600"); // Save button in toolbar
             saveButton.Click();
 
-            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SaveWorkflowEditorAction>(a => 
-                a.Name == "My Test Workflow" && 
-                a.Nodes.Count == 2 && 
+            _mockDispatcher.Verify(d => d.Dispatch(It.Is<SaveWorkflowEditorAction>(a =>
+                a.Name == "My Test Workflow" &&
+                a.Nodes.Count == 2 &&
                 a.Connections.Count == 1 &&
                 a.Connections[0].CustomFields.Count == 5)), Times.Once);
         }
@@ -116,12 +116,12 @@ namespace TicketHub.Tests.bUnit
         [Fact]
         public void TransitionSidebar_EmptyName_ShowsValidationErrors()
         {
-            var conn = new CanvasConnection 
-            { 
-                Id = Guid.NewGuid(), 
-                FromNodeId = Guid.NewGuid(), 
-                ToNodeId = Guid.NewGuid(), 
-                Name = "" 
+            var conn = new CanvasConnection
+            {
+                Id = Guid.NewGuid(),
+                FromNodeId = Guid.NewGuid(),
+                ToNodeId = Guid.NewGuid(),
+                Name = ""
             };
 
             JSInterop.SetupVoid("initJalaliDatePicker", _ => true);
@@ -140,6 +140,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             var validationMsgs = cut.FindAll(".validation-message, .text-red-500");
-            validationMsgs.Should().NotBeEmpty();        }
+            validationMsgs.Should().NotBeEmpty();
+        }
     }
 }

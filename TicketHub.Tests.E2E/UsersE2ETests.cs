@@ -91,7 +91,7 @@ namespace TicketHub.Tests.E2E
 
             await Page.FillAsync("input[placeholder='نام کامل']", updatedName);
             await Page.Keyboard.PressAsync("Tab");
-            await Page.ClickAsync("button:has-text('ذخیره تغییرات')"); 
+            await Page.ClickAsync("button:has-text('ذخیره تغییرات')");
 
             var editToastLocator = Page.Locator("text=تغییرات کاربر با موفقیت ذخیره شد.").First;
             await editToastLocator.WaitForAsync(new() { Timeout = 10000 });
@@ -223,11 +223,11 @@ namespace TicketHub.Tests.E2E
             var rowToDelete = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}1" });
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync(new() { Force = true });
-            
+
             var modalLocator = Page.Locator("text=مطمئن هستید").First;
             await modalLocator.WaitForAsync();
             await Page.ClickAsync("button:has-text('بله، حذف کن')");
-            
+
             var deleteToastLocator = Page.Locator("text=با موفقیت حذف شد.").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);

@@ -199,7 +199,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
     public async Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history)
     {
         using var context = await _factory.CreateDbContextAsync();
-        
+
         var ticket = await context.Set<Ticket>().FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket != null)
         {
@@ -208,7 +208,7 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             {
                 ticket.WorkflowStatusId = workflowStatusId.Value;
             }
-            
+
             context.Set<TicketHistory>().Add(history);
             await context.SaveChangesAsync();
         }

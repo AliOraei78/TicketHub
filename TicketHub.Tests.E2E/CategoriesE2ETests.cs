@@ -27,9 +27,9 @@ namespace TicketHub.Tests.E2E
             // 2. Create Category
             var newCategoryName = "تیکت تست E2E " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", newCategoryName);
-            
+
             await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
-            
+
             // Wait for success toast
             var toastLocator = Page.Locator("text=ایجاد شد").First;
             await toastLocator.WaitForAsync(new() { Timeout = 10000 });
@@ -109,7 +109,7 @@ namespace TicketHub.Tests.E2E
 
             // 1. Create 3 categories for test
             var prefix = "BulkCat_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", $"{prefix}{i}");
                 await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
@@ -124,7 +124,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
@@ -137,11 +137,11 @@ namespace TicketHub.Tests.E2E
             var rowToDelete = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}1" });
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync(new() { Force = true });
-            
+
             var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
             await modalConfirm1.ClickAsync(new() { Force = true });
-            
+
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
@@ -154,10 +154,10 @@ namespace TicketHub.Tests.E2E
 
             // 5. Click bulk delete for the remaining 2
             await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
-            
+
             var bulkDeleteModalText = Page.Locator("text=نوع تیکت انتخاب شده مطمئن هستید").First;
             await bulkDeleteModalText.WaitForAsync(new() { Timeout = 10000 });
-            
+
             var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm2.ClickAsync(new() { Force = true });
 
@@ -167,7 +167,7 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForTimeoutAsync(600);
 
             // 6. Create 2 more and test activate/deactivate
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", $"{prefix}{i}");
                 await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
@@ -180,7 +180,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();

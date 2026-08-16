@@ -53,7 +53,8 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<CategoriesSettings>();
 
             // Assert page header
-            cut.Find("h1:contains('مدیریت انواع تیکت‌های سیستم')").Should().NotBeNull();        }
+            cut.Find("h1:contains('مدیریت انواع تیکت‌های سیستم')").Should().NotBeNull();
+        }
 
         [Fact]
         public void CategoryForm_RendersInputs_Correctly()
@@ -61,7 +62,8 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<CategoriesSettings>();
 
             // Find form elements in CategoryForm
-            cut.Find("input[placeholder='مثال: پشتیبانی فنی']").Should().NotBeNull();            cut.Find("input[id='categoryIsActive']").Should().NotBeNull();        }
+            cut.Find("input[placeholder='مثال: پشتیبانی فنی']").Should().NotBeNull(); cut.Find("input[id='categoryIsActive']").Should().NotBeNull();
+        }
 
         [Fact]
         public void EmptyInputs_Trigger_ValidationErrors()
@@ -102,7 +104,7 @@ namespace TicketHub.Tests.bUnit
         {
             // Update state with one category
             var category = new CategoryDto { Id = 1, Name = "Test Category", IsActive = true };
-            
+
             _mockCatState.Setup(s => s.Value).Returns(new TicketHub.Web.Store.CategoryState(
                 false,
                 new List<CategoryDto> { category },

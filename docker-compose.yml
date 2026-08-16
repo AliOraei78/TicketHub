@@ -82,7 +82,7 @@ services:
         condition: service_started
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=TicketHubDb;User Id=sa;Password=${DB_PASSWORD:-Password123!};TrustServerCertificate=True;MultipleActiveResultSets=true;
       - ConnectionStrings__Redis=redis:6379,abortConnect=false
       - RabbitMQ__Host=rabbitmq

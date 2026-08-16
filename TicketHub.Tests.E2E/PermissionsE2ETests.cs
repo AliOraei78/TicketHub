@@ -48,7 +48,7 @@ namespace TicketHub.Tests.E2E
 
             var newPermName = "دسترسی ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             var resourceKey = "edit.resource." + Guid.NewGuid().ToString().Substring(0, 5);
-            
+
             await Page.FillAsync("input[placeholder='مثال: مدیریت کاربران']", newPermName);
             await Page.FillAsync("input[placeholder='مثال: Users.Manage']", resourceKey);
 
@@ -148,14 +148,14 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
 
             var prefix = "BulkPerm_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: مدیریت کاربران']", $"{prefix}{i}");
                 await Page.FillAsync("input[placeholder='مثال: Users.Manage']", $"test.res.{Guid.NewGuid().ToString().Substring(0, 5)}");
                 await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع دسترسی')");
                 await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('منو')");
                 await Page.ClickAsync("button:has-text('ثبت دسترسی')");
-                
+
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
                 await Page.Mouse.ClickAsync(10, 10);
@@ -167,7 +167,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
@@ -179,11 +179,11 @@ namespace TicketHub.Tests.E2E
             var rowToDelete = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}1" });
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync(new() { Force = true });
-            
+
             var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
             await modalConfirm1.ClickAsync(new() { Force = true });
-            
+
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
@@ -192,11 +192,11 @@ namespace TicketHub.Tests.E2E
             var selectedCountIndicator = Page.Locator("div.fixed.bottom-6", new() { HasTextString = "2" }).First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
-            
+
             await Page.Locator("div.fixed.bottom-6 button:has-text('حذف گروهی')").First.ClickAsync(new() { Force = true });
             var bulkDeleteModal = Page.Locator("text=دسترسی انتخاب شده مطمئن هستید").First;
             await bulkDeleteModal.WaitForAsync(new() { Timeout = 10000 });
-            
+
             var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm2.ClickAsync(new() { Force = true });
 
@@ -206,14 +206,14 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForTimeoutAsync(600);
 
             // Test Activate/Deactivate
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: مدیریت کاربران']", $"{prefix}{i}");
                 await Page.FillAsync("input[placeholder='مثال: Users.Manage']", $"test.res.{Guid.NewGuid().ToString().Substring(0, 5)}");
                 await Page.ClickAsync(".field-spark-wrap div.cursor-pointer:has-text('انتخاب نوع دسترسی')");
                 await Page.ClickAsync(".dropdown-menu-container div.cursor-pointer:has-text('منو')");
                 await Page.ClickAsync("button:has-text('ثبت دسترسی')");
-                
+
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
                 await Page.Mouse.ClickAsync(10, 10);
@@ -223,7 +223,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();

@@ -381,7 +381,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<LogEnrichmentMiddleware>();
-app.UseExceptionHandler(); 
+app.UseExceptionHandler();
 if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
 {
     app.UseHttpsRedirection();

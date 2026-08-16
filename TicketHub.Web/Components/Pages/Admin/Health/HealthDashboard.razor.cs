@@ -48,8 +48,8 @@ public partial class HealthDashboard : ComponentBase
             _gcAllocatedMb = GC.GetTotalMemory(false) / (1024 * 1024);
 
             var uptime = DateTime.Now - currentProcess.StartTime;
-            _appUptime = uptime.TotalHours >= 1 
-                ? $"{(int)uptime.TotalHours} ساعت و {uptime.Minutes} دقیقه" 
+            _appUptime = uptime.TotalHours >= 1
+                ? $"{(int)uptime.TotalHours} ساعت و {uptime.Minutes} دقیقه"
                 : $"{uptime.Minutes} دقیقه و {uptime.Seconds} ثانیه";
 
             _entries = report.Entries.Select(e => new HealthCheckDisplayItem

@@ -80,9 +80,9 @@ public partial class MainLayout : LayoutComponentBase
             return;
         }
 
-        var adminRole = UserRoles.FirstOrDefault(r => 
-            r.Contains("مدیر") || 
-            r.Contains("ادمین") || 
+        var adminRole = UserRoles.FirstOrDefault(r =>
+            r.Contains("مدیر") ||
+            r.Contains("ادمین") ||
             r.Contains("Admin", StringComparison.OrdinalIgnoreCase) ||
             r.Contains("Administrator", StringComparison.OrdinalIgnoreCase));
         if (adminRole != null)
@@ -92,9 +92,9 @@ public partial class MainLayout : LayoutComponentBase
             return;
         }
 
-        var expertRole = UserRoles.FirstOrDefault(r => 
-            r.Contains("کارشناس") || 
-            r.Contains("فنی") || 
+        var expertRole = UserRoles.FirstOrDefault(r =>
+            r.Contains("کارشناس") ||
+            r.Contains("فنی") ||
             r.Contains("Expert", StringComparison.OrdinalIgnoreCase));
         if (expertRole != null)
         {
@@ -103,8 +103,8 @@ public partial class MainLayout : LayoutComponentBase
             return;
         }
 
-        var supportRole = UserRoles.FirstOrDefault(r => 
-            r.Contains("پشتیبان") || 
+        var supportRole = UserRoles.FirstOrDefault(r =>
+            r.Contains("پشتیبان") ||
             r.Contains("Support", StringComparison.OrdinalIgnoreCase));
         if (supportRole != null)
         {

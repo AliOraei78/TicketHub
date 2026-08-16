@@ -86,7 +86,8 @@ public class NotificationServiceTests
         var countUser3 = await _notificationService.GetUnreadCountAsync(3);
 
         // Assert
-        countUser1.Should().Be(2);        countUser2.Should().Be(1);        countUser3.Should().Be(0);    }
+        countUser1.Should().Be(2); countUser2.Should().Be(1); countUser3.Should().Be(0);
+    }
 
     [Fact]
     public async Task MarkAsReadAsync_ShouldMarkNotificationAsRead_ForCorrectUser()

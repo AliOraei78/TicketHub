@@ -83,13 +83,13 @@ namespace TicketHub.Tests.E2E
                     {
                         existingField = new TicketField
                         {
-                            Name        = name,
+                            Name = name,
                             Placeholder = placeholder,
-                            SortOrder   = order++,
+                            SortOrder = order++,
                             FieldTypeId = fieldTypes[typeName],
-                            Options     = options,
-                            IsRequired  = required,
-                            IsActive    = true
+                            Options = options,
+                            IsRequired = required,
+                            IsActive = true
                         };
                         await ctx.TicketFields.AddAsync(existingField);
                         await ctx.SaveChangesAsync();
@@ -100,7 +100,7 @@ namespace TicketHub.Tests.E2E
                         await ctx.FieldCategories.AddAsync(new FieldCategory
                         {
                             TicketFieldId = existingField.Id,
-                            CategoryId    = c.Id
+                            CategoryId = c.Id
                         });
                         await ctx.SaveChangesAsync();
                     }
@@ -149,7 +149,7 @@ namespace TicketHub.Tests.E2E
             await categoryContainer.Locator(".dropdown-menu-container.opacity-100").WaitForAsync(new() { Timeout = 5000 });
             var categoryItem = categoryContainer.Locator(".dropdown-menu-container div.cursor-pointer:has-text('عمومی')").First;
             await categoryItem.ClickAsync();
-            
+
             // Wait for Blazor to fetch fields
             await WaitForBlazorAsync(Page, 1500);
             await Page.Locator("text=اطلاعات و مقادیر پایه").First.WaitForAsync(new() { Timeout = 15_000 });
@@ -169,7 +169,7 @@ namespace TicketHub.Tests.E2E
             if (await numInput.IsVisibleAsync()) await numInput.FillAsync("987");
 
             // 4. Checkbox
-            var checkboxInput = Page.Locator("label:has-text('فیلد چک باکس')").Locator("..").Locator("label.cyber-checkbox-container").First; 
+            var checkboxInput = Page.Locator("label:has-text('فیلد چک باکس')").Locator("..").Locator("label.cyber-checkbox-container").First;
             if (await checkboxInput.IsVisibleAsync())
             {
                 await checkboxInput.ClickAsync(new() { Force = true });
@@ -224,9 +224,9 @@ namespace TicketHub.Tests.E2E
             {
                 await fileInput.SetInputFilesAsync(new FilePayload
                 {
-                    Name    = "test.txt",
+                    Name = "test.txt",
                     MimeType = "text/plain",
-                    Buffer  = System.Text.Encoding.UTF8.GetBytes("Hello World")
+                    Buffer = System.Text.Encoding.UTF8.GetBytes("Hello World")
                 });
                 await WaitForBlazorAsync(Page, 500);
             }

@@ -90,14 +90,14 @@ public class WorkflowService : IWorkflowService
         _logger.LogInformation("شروع ایجاد جریان کاری جدید.");
 
         var entity = dto.Adapt<Workflow>();
-        
+
         // Ensure navigation properties for transitions are correctly mapped using NodeIds
         foreach (var transition in entity.Transitions)
         {
             transition.FromStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.FromNodeId);
             transition.ToStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.ToNodeId);
         }
-        
+
         await _workflowRepository.AddAsync(entity);
 
         _logger.LogInformation("جریان کاری با شناسه {Id} با موفقیت ایجاد شد.", entity.Id);

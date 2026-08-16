@@ -38,7 +38,7 @@ namespace TicketHub.Tests.E2E
 
             // Click create button
             await Page.ClickAsync("button:has-text('ایجاد پروژه جدید')");
-            
+
             var headerLocator = Page.Locator("h2:has-text('ایجاد پروژه جدید')").First;
             await headerLocator.WaitForAsync();
 

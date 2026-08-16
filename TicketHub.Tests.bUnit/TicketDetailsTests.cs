@@ -131,7 +131,8 @@ namespace TicketHub.Tests.bUnit
             var nav = Services.GetRequiredService<NavigationManager>();
             Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 999));
 
-            nav.Uri.Should().EndWith("/tickets");        }
+            nav.Uri.Should().EndWith("/tickets");
+        }
 
         [Fact]
         public void TicketDetails_ForbiddenException_ShowsToastAndNavigatesToTicketsList()
@@ -142,7 +143,8 @@ namespace TicketHub.Tests.bUnit
             Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 888));
 
             _mockToastService.Verify(t => t.ShowWarning(It.Is<string>(s => s.Contains("عدم دسترسی")), "عدم دسترسی"), Times.Once);
-            nav.Uri.Should().EndWith("/tickets");        }
+            nav.Uri.Should().EndWith("/tickets");
+        }
 
         [Fact]
         public void TicketDetails_Renders3CardLayout_AndHeaderMetadataCorrectly()
@@ -150,13 +152,14 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 42));
 
             // Header metadata
-            cut.Markup.Should().Contain("#42");            cut.Markup.Should().Contain("پروژه: پروژه عمومی");            cut.Markup.Should().Contain("دسته: باگ و خطا");            cut.Markup.Should().Contain("خطای بارگذاری در مرحله دوم");            cut.Markup.Should().Contain("توضیحات کامل خطای بارگذاری بازی در مرحله دوم");
+            cut.Markup.Should().Contain("#42"); cut.Markup.Should().Contain("پروژه: پروژه عمومی"); cut.Markup.Should().Contain("دسته: باگ و خطا"); cut.Markup.Should().Contain("خطای بارگذاری در مرحله دوم"); cut.Markup.Should().Contain("توضیحات کامل خطای بارگذاری بازی در مرحله دوم");
             // Card 1 (Attachments & Overview)
             cut.Markup.Should().Contain("crash_log.txt");
             // Card 2 (Comments Stream)
-            cut.Markup.Should().Contain("نظرات و گفتگو");            cut.Markup.Should().Contain("نظر اول تستی");
+            cut.Markup.Should().Contain("نظرات و گفتگو"); cut.Markup.Should().Contain("نظر اول تستی");
             // Card 3 (Status & Transitions Timeline)
-            cut.Markup.Should().Contain("وضعیت و انتقالات");            cut.Markup.Should().Contain("شروع بررسی");            cut.Markup.Should().Contain("شروع کار روی لاگ‌ها");        }
+            cut.Markup.Should().Contain("وضعیت و انتقالات"); cut.Markup.Should().Contain("شروع بررسی"); cut.Markup.Should().Contain("شروع کار روی لاگ‌ها");
+        }
 
         [Fact]
         public void InlineEdit_Title_EnablesInput_AndSavesTitle()
@@ -269,6 +272,7 @@ namespace TicketHub.Tests.bUnit
             var backBtn = cut.Find("button:contains('بازگشت به لیست تیکت‌ها')");
             backBtn.Click();
 
-            nav.Uri.Should().EndWith("/tickets");        }
+            nav.Uri.Should().EndWith("/tickets");
+        }
     }
 }

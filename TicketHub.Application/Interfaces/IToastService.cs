@@ -1,6 +1,7 @@
 ﻿using TicketHub.Application.Models;
 
 namespace TicketHub.Application.Interfaces;
+
 public interface IToastService
 {
     event Action? OnChanged;

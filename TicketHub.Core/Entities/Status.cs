@@ -17,7 +17,7 @@ namespace TicketHub.Core.Entities
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 
         // روابط جدید اضافه شده برای ترنزیشن‌ها (حذف شده)
-        
+
         // این خطوط اضافه شوند
         public ICollection<TicketHistory> FromHistories { get; set; } = new List<TicketHistory>();
         public ICollection<TicketHistory> ToHistories { get; set; } = new List<TicketHistory>();

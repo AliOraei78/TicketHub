@@ -928,7 +928,8 @@ namespace TicketHub.Tests.bUnit
             var result = validator.Validate(workflow);
 
             // Assert
-            result.IsValid.Should().BeTrue();        }
+            result.IsValid.Should().BeTrue();
+        }
 
         #endregion
     }

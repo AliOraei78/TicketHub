@@ -63,7 +63,7 @@ public static class DateTimeExtensions
     {
         var pc = new PersianCalendar();
         var tehranDt = dateTime.ToTehranTime();
-        
+
         int year = pc.GetYear(tehranDt);
         int month = pc.GetMonth(tehranDt);
         int day = pc.GetDayOfMonth(tehranDt);
@@ -83,7 +83,7 @@ public static class DateTimeExtensions
     {
         var pc = new PersianCalendar();
         var tehranDt = dateTime.ToTehranTime();
-        
+
         int year = pc.GetYear(tehranDt);
         int month = pc.GetMonth(tehranDt);
         int day = pc.GetDayOfMonth(tehranDt);

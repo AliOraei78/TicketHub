@@ -32,7 +32,8 @@ namespace TicketHub.Tests.bUnit
 
             var result = await service.GetLogsAsync();
 
-            result.Should().NotBeNull();            result.Should().BeEmpty();        }
+            result.Should().NotBeNull(); result.Should().BeEmpty();
+        }
 
         [Fact]
         public async Task GetLogsAsync_RendersTemplatePlaceholders_WithPropertyValues()
@@ -44,8 +45,9 @@ namespace TicketHub.Tests.bUnit
             var service = new SystemLogService(_tempLogsDir);
             var logs = await service.GetLogsAsync();
 
-            logs.Should().ContainSingle();            var entry = logs[0];
-            entry.Level.Should().Be("Information");            entry.Message.Should().Be("HTTP GET /api/tickets responded 200 in 15.42 ms");            entry.TraceId.Should().Be("trace-123");            entry.SpanId.Should().Be("span-456");            entry.CorrelationId.Should().Be("corr-789");            entry.SourceContext.Should().Be("TicketController");            entry.Properties["RequestMethod"].Should().Be("GET");            entry.Properties["StatusCode"].Should().Be("200");        }
+            logs.Should().ContainSingle(); var entry = logs[0];
+            entry.Level.Should().Be("Information"); entry.Message.Should().Be("HTTP GET /api/tickets responded 200 in 15.42 ms"); entry.TraceId.Should().Be("trace-123"); entry.SpanId.Should().Be("span-456"); entry.CorrelationId.Should().Be("corr-789"); entry.SourceContext.Should().Be("TicketController"); entry.Properties["RequestMethod"].Should().Be("GET"); entry.Properties["StatusCode"].Should().Be("200");
+        }
 
         [Fact]
         public async Task GetLogsAsync_FiltersByLogLevel()
@@ -59,7 +61,8 @@ namespace TicketHub.Tests.bUnit
             var service = new SystemLogService(_tempLogsDir);
             var errorLogs = await service.GetLogsAsync(level: "Error");
 
-            errorLogs.Should().ContainSingle();            errorLogs[0].Level.Should().Be("Error");            errorLogs[0].Message.Should().Be("Error message");            errorLogs[0].Exception.Should().Be("System.Exception: failed");        }
+            errorLogs.Should().ContainSingle(); errorLogs[0].Level.Should().Be("Error"); errorLogs[0].Message.Should().Be("Error message"); errorLogs[0].Exception.Should().Be("System.Exception: failed");
+        }
 
         [Fact]
         public async Task GetLogsAsync_SearchesAcrossMessageExceptionAndProperties()
@@ -73,10 +76,11 @@ namespace TicketHub.Tests.bUnit
 
             // Search in properties
             var propertySearchResult = await service.GetLogsAsync(search: "User_100");
-            propertySearchResult.Should().ContainSingle();            propertySearchResult[0].Message.Should().Be("User logged in");
+            propertySearchResult.Should().ContainSingle(); propertySearchResult[0].Message.Should().Be("User logged in");
             // Search in exception
             var exceptionSearchResult = await service.GetLogsAsync(search: "SqlException");
-            exceptionSearchResult.Should().ContainSingle();            exceptionSearchResult[0].Message.Should().Be("DB Operation failed");        }
+            exceptionSearchResult.Should().ContainSingle(); exceptionSearchResult[0].Message.Should().Be("DB Operation failed");
+        }
 
         [Fact]
         public async Task GetLogsAsync_FiltersByDateRange_PruningFilesOutsideRange()
@@ -96,7 +100,8 @@ namespace TicketHub.Tests.bUnit
 
             var result = await service.GetLogsAsync(fromDate: fromDate, toDate: toDate);
 
-            result.Should().ContainSingle();            result[0].Message.Should().Be("Day 10 log");        }
+            result.Should().ContainSingle(); result[0].Message.Should().Be("Day 10 log");
+        }
 
         [Fact]
         public void LogExportFormatter_ToFormattedText_FormatsLogCorrectly()
@@ -120,7 +125,8 @@ namespace TicketHub.Tests.bUnit
 
             var formatted = TicketHub.Application.Common.LogExportFormatter.ToFormattedText(log);
 
-            formatted.Should().Contain("[ERROR]");            formatted.Should().Contain("TicketService");            formatted.Should().Contain("Database operation timed out");            formatted.Should().Contain("TraceId=trace-abc");            formatted.Should().Contain("SpanId=span-def");            formatted.Should().Contain("CorrelationId=corr-ghi");            formatted.Should().Contain("UserId: 42");            formatted.Should().Contain("SqlException: Timeout");        }
+            formatted.Should().Contain("[ERROR]"); formatted.Should().Contain("TicketService"); formatted.Should().Contain("Database operation timed out"); formatted.Should().Contain("TraceId=trace-abc"); formatted.Should().Contain("SpanId=span-def"); formatted.Should().Contain("CorrelationId=corr-ghi"); formatted.Should().Contain("UserId: 42"); formatted.Should().Contain("SqlException: Timeout");
+        }
 
         [Fact]
         public void LogExportFormatter_ToBatchFormattedText_And_ToJson_WorkCorrectly()
@@ -132,9 +138,10 @@ namespace TicketHub.Tests.bUnit
             };
 
             var batchText = TicketHub.Application.Common.LogExportFormatter.ToBatchFormattedText(logs);
-            batchText.Should().Contain("تعداد لاگ‌ها: 2");            batchText.Should().Contain("Log 1");            batchText.Should().Contain("Log 2");
+            batchText.Should().Contain("تعداد لاگ‌ها: 2"); batchText.Should().Contain("Log 1"); batchText.Should().Contain("Log 2");
             var json = TicketHub.Application.Common.LogExportFormatter.ToJson(logs);
-            json.Should().Contain("Log 1");            json.Should().Contain("Log 2");            json.Should().Contain("Information");        }
+            json.Should().Contain("Log 1"); json.Should().Contain("Log 2"); json.Should().Contain("Information");
+        }
     }
 }
 

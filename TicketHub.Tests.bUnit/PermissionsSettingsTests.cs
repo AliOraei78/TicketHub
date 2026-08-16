@@ -70,7 +70,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<PermissionsSettings>();
 
             // Assert
-            cut.Markup.Should().Contain("Admin Permission");            cut.Markup.Should().Contain("admin.access");            
+            cut.Markup.Should().Contain("Admin Permission"); cut.Markup.Should().Contain("admin.access");
             // Check if LoadPermissionsAction was dispatched
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadPermissionsAction>()), Times.Once);
         }

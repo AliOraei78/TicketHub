@@ -13,7 +13,7 @@ public class DynamicFieldModel
     public bool IsRequired { get; set; }
     public string? Options { get; set; }
     public int FieldTypeId { get; set; }
-    
+
     // Bound value for UI
     public string Value { get; set; } = string.Empty;
     public List<FileUploadDto> PendingUploads { get; set; } = new();

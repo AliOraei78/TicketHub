@@ -60,7 +60,7 @@ namespace TicketHub.Tests.E2E
             var updatedName = newStatusName + " ویرایش شده";
             await Page.FillAsync("input[placeholder='مثال: In Progress']", updatedName);
             await Page.Keyboard.PressAsync("Tab");
-            await Page.ClickAsync("button:has-text('ذخیره تغییرات')"); 
+            await Page.ClickAsync("button:has-text('ذخیره تغییرات')");
 
             var editToastLocator = Page.Locator("text=ویرایش شد").First;
             await editToastLocator.WaitForAsync(new() { Timeout = 10000 });
@@ -126,12 +126,12 @@ namespace TicketHub.Tests.E2E
 
             // 1. Create 3 items
             var prefix = "BulkStatus_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: In Progress']", $"{prefix}{i}");
                 await Page.FillAsync("input[type='color']", "#ff0000");
                 await Page.ClickAsync("button:has-text('ثبت وضعیت')");
-                
+
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
                 await Page.WaitForTimeoutAsync(500);
@@ -142,7 +142,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();
@@ -155,11 +155,11 @@ namespace TicketHub.Tests.E2E
             var rowToDelete = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}1" });
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync(new() { Force = true });
-            
+
             var modalConfirm1 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm1.WaitForAsync(new() { State = WaitForSelectorState.Visible });
             await modalConfirm1.ClickAsync(new() { Force = true });
-            
+
             var deleteToastLocator = Page.Locator("text=حذف شد").First;
             await deleteToastLocator.WaitForAsync(new() { Timeout = 10000 });
             await Page.Mouse.ClickAsync(10, 10);
@@ -169,13 +169,13 @@ namespace TicketHub.Tests.E2E
             var selectedCountIndicator = Page.Locator("div.fixed.bottom-6", new() { HasTextString = "2" }).First;
             await selectedCountIndicator.WaitForAsync(new() { Timeout = 10000 });
             (await selectedCountIndicator.IsVisibleAsync()).Should().BeTrue();
-            
+
             // 5. Click bulk delete
             await Page.ClickAsync("div.fixed.bottom-6 button:has-text('حذف گروهی')");
-            
+
             var bulkDeleteModalText = Page.Locator("text=وضعیت انتخاب شده مطمئن هستید").First;
             await bulkDeleteModalText.WaitForAsync(new() { Timeout = 10000 });
-            
+
             var modalConfirm2 = Page.Locator("button:has-text('بله، حذف کن')").First;
             await modalConfirm2.ClickAsync(new() { Force = true });
 
@@ -185,12 +185,12 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForTimeoutAsync(600);
 
             // 6. Create 2 more and test activate/deactivate
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 await Page.FillAsync("input[placeholder='مثال: In Progress']", $"{prefix}{i}");
                 await Page.FillAsync("input[type='color']", "#ff0000");
                 await Page.ClickAsync("button:has-text('ثبت وضعیت')");
-                
+
                 var toastLocator = Page.Locator("text=ایجاد شد").First;
                 await toastLocator.WaitForAsync(new() { Timeout = 10000 });
                 await Page.Mouse.ClickAsync(10, 10);
@@ -200,7 +200,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync(prefix);
             await Page.WaitForTimeoutAsync(600);
 
-            for(int i = 4; i <= 5; i++)
+            for (int i = 4; i <= 5; i++)
             {
                 var row = Page.Locator("tr", new PageLocatorOptions { HasTextString = $"{prefix}{i}" });
                 await row.ScrollIntoViewIfNeededAsync();

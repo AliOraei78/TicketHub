@@ -54,7 +54,7 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<RolesSettings>();
 
             // Assert
-            cut.Markup.Should().Contain("Admin Role");            
+            cut.Markup.Should().Contain("Admin Role");
             // Check if LoadRolesAction was dispatched
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadRolesAction>()), Times.Once);
         }
@@ -71,7 +71,8 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             var validationMessages = cut.FindAll(".validation-message, .text-red-500");
-            validationMessages.Should().NotBeEmpty();            cut.Markup.Should().Contain("نام نقش الزامی است");        }
+            validationMessages.Should().NotBeEmpty(); cut.Markup.Should().Contain("نام نقش الزامی است");
+        }
 
         [Fact]
         public void HandleSearch_DispatchesAction()

@@ -68,7 +68,7 @@ namespace TicketHub.Tests.bUnit
             // Fill form
             cut.Find("input[placeholder='مثال: In Progress']").Change("In Progress");
             cut.Find("input[id='needApproval']").Change(true);
-            
+
             // Submit form
             var form = cut.Find("form");
             form.Submit();
@@ -90,7 +90,8 @@ namespace TicketHub.Tests.bUnit
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<SaveStatusAction>()), Times.Never);
             var validationMessages = cut.FindAll(".text-red-500");
-            validationMessages.Should().NotBeEmpty();        }
+            validationMessages.Should().NotBeEmpty();
+        }
 
         [Fact]
         public void EditStatus_PopulatesForm_And_DispatchesSaveActionWithIsEditingTrue()
@@ -112,10 +113,10 @@ namespace TicketHub.Tests.bUnit
 
             // Verify form populated (IsEditing = true should change button text)
             var saveButton = cut.Find("button[type='submit']");
-            saveButton.TextContent.Should().Contain("ذخیره تغییرات");            cut.Find("input[placeholder='مثال: In Progress']").Attributes["value"]?.Value.Should().Be("Open");
+            saveButton.TextContent.Should().Contain("ذخیره تغییرات"); cut.Find("input[placeholder='مثال: In Progress']").Attributes["value"]?.Value.Should().Be("Open");
             // Change name
             cut.Find("input[placeholder='مثال: In Progress']").Change("Closed");
-            
+
             // Submit form
             var form = cut.Find("form");
             form.Submit();
@@ -143,7 +144,7 @@ namespace TicketHub.Tests.bUnit
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
-            confirmModal.Should().NotBeNull();            
+            confirmModal.Should().NotBeNull();
             // Act
             confirmModal.Find("button.bg-rose-600").Click(); // Click confirm on the modal
 

@@ -14,10 +14,10 @@ public class HangfireDashboardAuthFilter : IDashboardAuthorizationFilter
         {
             var user = httpContext.User;
             // Allow admin users (support Persian 'ادمین', 'مدیر' and English 'Admin', 'Administrator')
-            var isAdmin = user.IsInRole("Admin") || 
+            var isAdmin = user.IsInRole("Admin") ||
                           user.IsInRole("ادمین") ||
                           user.IsInRole("مدیر") ||
-                          user.Claims.Any(c => 
+                          user.Claims.Any(c =>
                               (c.Type == ClaimTypes.Role || c.Type == "role" || c.Type.EndsWith("/role")) &&
                               (c.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
                                c.Value.Equals("Administrator", StringComparison.OrdinalIgnoreCase) ||

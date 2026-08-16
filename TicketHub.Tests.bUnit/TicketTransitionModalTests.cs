@@ -109,7 +109,8 @@ namespace TicketHub.Tests.bUnit
                 currentWorkflowStatusId: 10
             ));
 
-            cut.Instance.IsVisible.Should().BeTrue();            ModalMarkup.Should().Contain("ثبت عملیات: تیکت تستی برای تغییر وضعیت");            ModalMarkup.Should().Contain("شروع بررسی تیکت");            ModalMarkup.Should().Contain("بستن سریع");            ModalMarkup.Should().Contain("در حال بررسی");        }
+            cut.Instance.IsVisible.Should().BeTrue(); ModalMarkup.Should().Contain("ثبت عملیات: تیکت تستی برای تغییر وضعیت"); ModalMarkup.Should().Contain("شروع بررسی تیکت"); ModalMarkup.Should().Contain("بستن سریع"); ModalMarkup.Should().Contain("در حال بررسی");
+        }
 
         [Fact]
         public async Task SelectTransition_DisplaysTransitionFields_AndCommentBox()
@@ -126,10 +127,11 @@ namespace TicketHub.Tests.bUnit
 
             // Click the first transition (TransitionId = 101)
             var transitionCard = cut.FindAll("div").First(d => d.ClassList.Contains("cursor-pointer") && d.TextContent.Contains("شروع بررسی تیکت"));
-            transitionCard.Should().NotBeNull();            transitionCard.Click();
+            transitionCard.Should().NotBeNull(); transitionCard.Click();
 
             // Verify comment box & dynamic field render
-            ModalMarkup.Should().Contain("توضیحات و یادداشت عملیات (اختیاری)");            ModalMarkup.Should().Contain("علت بررسی");        }
+            ModalMarkup.Should().Contain("توضیحات و یادداشت عملیات (اختیاری)"); ModalMarkup.Should().Contain("علت بررسی");
+        }
 
         [Fact]
         public async Task SubmitTransition_WhenValidationFails_DisplaysErrorMessages()
@@ -158,7 +160,7 @@ namespace TicketHub.Tests.bUnit
             var form = cut.Find("form");
             form.Submit();
 
-            ModalMarkup.Should().Contain("ثبت توضیحات برای این انتقال الزامی است.");            _mockTicketService.Verify(t => t.ExecuteTransitionAsync(It.IsAny<ExecuteTransitionDto>(), It.IsAny<int>()), Times.Never);
+            ModalMarkup.Should().Contain("ثبت توضیحات برای این انتقال الزامی است."); _mockTicketService.Verify(t => t.ExecuteTransitionAsync(It.IsAny<ExecuteTransitionDto>(), It.IsAny<int>()), Times.Never);
         }
 
         [Fact]
@@ -225,6 +227,7 @@ namespace TicketHub.Tests.bUnit
             var cancelBtn = cut.Find("button:contains('انصراف')");
             cancelBtn.Click();
 
-            cut.Instance.IsVisible.Should().BeFalse();        }
+            cut.Instance.IsVisible.Should().BeFalse();
+        }
     }
 }

@@ -30,7 +30,8 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, new List<TicketFieldDto>())
             );
 
-            ModalMarkup.Should().Contain("ایجاد تیکت پشتیبانی جدید");            ModalMarkup.Should().Contain("عنوان تیکت");            ModalMarkup.Should().Contain("توضیحات تیکت");        }
+            ModalMarkup.Should().Contain("ایجاد تیکت پشتیبانی جدید"); ModalMarkup.Should().Contain("عنوان تیکت"); ModalMarkup.Should().Contain("توضیحات تیکت");
+        }
 
         [Fact]
         public void Submit_EmptyForm_ShowsValidationErrors()
@@ -46,7 +47,8 @@ namespace TicketHub.Tests.bUnit
 
             cut.Find("form").Submit();
 
-            ModalMarkup.Should().Contain("عنوان تیکت الزامی است.");            ModalMarkup.Should().Contain("توضیحات تیکت الزامی است.");        }
+            ModalMarkup.Should().Contain("عنوان تیکت الزامی است."); ModalMarkup.Should().Contain("توضیحات تیکت الزامی است.");
+        }
 
         [Fact]
         public void Render_DynamicFields_Successfully()
@@ -66,14 +68,15 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.DynamicFields, dynamicFields)
             );
 
-            ModalMarkup.Should().Contain("تست فیلد متنی");            ModalMarkup.Should().Contain("تست فیلد کشویی");        }
+            ModalMarkup.Should().Contain("تست فیلد متنی"); ModalMarkup.Should().Contain("تست فیلد کشویی");
+        }
 
         [Fact]
         public void ValidSubmit_TriggersEventCallback()
         {
             bool submitted = false;
-            var model = new TicketDto 
-            { 
+            var model = new TicketDto
+            {
                 Title = "تیکت تستی",
                 Description = "شرح تیکت برای ارسال",
                 ProjectId = 1,
@@ -95,14 +98,15 @@ namespace TicketHub.Tests.bUnit
 
             cut.Find("form").Submit();
 
-            submitted.Should().BeTrue();        }
+            submitted.Should().BeTrue();
+        }
 
         [Fact]
         public void DynamicField_RequiredValidation_PreventsSubmitWhenEmpty()
         {
             bool submitted = false;
-            var model = new TicketDto 
-            { 
+            var model = new TicketDto
+            {
                 Title = "تیکت با فیلد اجباری",
                 Description = "شرح تیکت",
                 ProjectId = 1,
@@ -130,7 +134,8 @@ namespace TicketHub.Tests.bUnit
             cut.Find("form").Submit();
 
             // Submit should NOT be called because dynamic field is required and empty
-            submitted.Should().BeFalse();            ModalMarkup.Should().Contain("تکمیل فیلد «کد رهگیری الزامی» الزامی است.");        }
+            submitted.Should().BeFalse(); ModalMarkup.Should().Contain("تکمیل فیلد «کد رهگیری الزامی» الزامی است.");
+        }
 
         [Fact]
         public void CategoryChanged_RendersProjectCategories()
@@ -150,7 +155,8 @@ namespace TicketHub.Tests.bUnit
             );
 
             // Assert categories are rendered in modal
-            ModalMarkup.Should().Contain("پشتیبانی فنی");        }
+            ModalMarkup.Should().Contain("پشتیبانی فنی");
+        }
 
         [Fact]
         public void Cancel_Button_TriggersOnCancelCallback()
@@ -169,6 +175,7 @@ namespace TicketHub.Tests.bUnit
             var cancelButton = cut.Find("button.btn-cyber-ghost");
             cancelButton.Click();
 
-            cancelled.Should().BeTrue();        }
+            cancelled.Should().BeTrue();
+        }
     }
 }

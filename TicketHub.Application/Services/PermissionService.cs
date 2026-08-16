@@ -243,8 +243,8 @@ public class PermissionService : IPermissionService
     }
 
     public async Task<bool> HasAccessAsync(
-        System.Security.Claims.ClaimsPrincipal user, 
-        string resourceKey, 
+        System.Security.Claims.ClaimsPrincipal user,
+        string resourceKey,
         TicketHub.Application.Enums.PermissionType minimumType = TicketHub.Application.Enums.PermissionType.Menu)
     {
         if (string.IsNullOrWhiteSpace(resourceKey)) return true;

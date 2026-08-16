@@ -70,34 +70,34 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected string CachedModalTrendLinePath { get; private set; } = string.Empty;
     protected string CachedModalTrendAreaPath { get; private set; } = string.Empty;
 
-    protected int DisplayTotalTickets => 
-        TicketState.Value.Telemetry.TotalTickets > 0 
-            ? TicketState.Value.Telemetry.TotalTickets 
+    protected int DisplayTotalTickets =>
+        TicketState.Value.Telemetry.TotalTickets > 0
+            ? TicketState.Value.Telemetry.TotalTickets
             : (TotalTickets > 0 ? TotalTickets : (TicketState.Value.TotalTickets > 0 ? TicketState.Value.TotalTickets : 0));
 
-    protected int DisplayNewTicketsCount => 
-        TicketState.Value.Telemetry.TotalTickets > 0 
-            ? TicketState.Value.Telemetry.NewTicketsCount 
+    protected int DisplayNewTicketsCount =>
+        TicketState.Value.Telemetry.TotalTickets > 0
+            ? TicketState.Value.Telemetry.NewTicketsCount
             : NewTicketsCount;
 
-    protected int DisplayInProgressCount => 
-        TicketState.Value.Telemetry.TotalTickets > 0 
-            ? TicketState.Value.Telemetry.InProgressCount 
+    protected int DisplayInProgressCount =>
+        TicketState.Value.Telemetry.TotalTickets > 0
+            ? TicketState.Value.Telemetry.InProgressCount
             : InProgressCount;
 
-    protected int DisplayCriticalCount => 
-        TicketState.Value.Telemetry.TotalTickets > 0 
-            ? TicketState.Value.Telemetry.CriticalCount 
+    protected int DisplayCriticalCount =>
+        TicketState.Value.Telemetry.TotalTickets > 0
+            ? TicketState.Value.Telemetry.CriticalCount
             : CriticalCount;
 
-    protected int DisplayOverdueCount => 
-        TicketState.Value.Telemetry.TotalTickets > 0 
-            ? TicketState.Value.Telemetry.OverdueCount 
+    protected int DisplayOverdueCount =>
+        TicketState.Value.Telemetry.TotalTickets > 0
+            ? TicketState.Value.Telemetry.OverdueCount
             : OverdueCount;
 
-    protected int DisplayResolvedCount => 
-        TicketState.Value.Telemetry.TotalTickets > 0 
-            ? TicketState.Value.Telemetry.ResolvedCount 
+    protected int DisplayResolvedCount =>
+        TicketState.Value.Telemetry.TotalTickets > 0
+            ? TicketState.Value.Telemetry.ResolvedCount
             : ResolvedCount;
 
     protected override async Task OnInitializedAsync()
@@ -487,11 +487,11 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
     protected string GetRarityTagClass(TicketDto ticket)
     {
         if (ticket.IsOverdue) return "bg-rose-950/90 text-rose-300 border-rose-500/70 shadow-[0_0_14px_rgba(244,63,94,0.5)] animate-pulse";
-        if (ticket.Priority != null && (ticket.Priority.Level >= 4 || ticket.Priority.Name == "بحرانی")) 
+        if (ticket.Priority != null && (ticket.Priority.Level >= 4 || ticket.Priority.Name == "بحرانی"))
             return "bg-purple-950/80 text-purple-300 border-purple-500/60 shadow-[0_0_10px_rgba(168,85,247,0.3)]";
-        if (ticket.Priority != null && (ticket.Priority.Level == 3 || ticket.Priority.Name == "زیاد" || ticket.Priority.Name == "بالا" || ticket.Priority.Name == "خیلی زیاد")) 
+        if (ticket.Priority != null && (ticket.Priority.Level == 3 || ticket.Priority.Name == "زیاد" || ticket.Priority.Name == "بالا" || ticket.Priority.Name == "خیلی زیاد"))
             return "bg-rose-950/80 text-rose-300 border-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.3)]";
-        if (ticket.Priority != null && (ticket.Priority.Level == 2 || ticket.Priority.Name == "متوسط")) 
+        if (ticket.Priority != null && (ticket.Priority.Level == 2 || ticket.Priority.Name == "متوسط"))
             return "bg-amber-950/80 text-amber-300 border-amber-500/60 shadow-[0_0_10px_rgba(245,158,11,0.3)]";
         return "bg-emerald-950/80 text-emerald-300 border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.3)]";
     }
