@@ -31,8 +31,14 @@ public partial class Login : ComponentBase
 
     protected override void OnInitialized()
     {
-        var user = HttpContext?.User ?? HttpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated == true)
+        if (HttpContext == null)
+        {
+            Logger.LogInformation("Login component rendered in interactive circuit. Forcing full browser reload to static SSR.");
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        if (HttpContext.User?.Identity?.IsAuthenticated == true)
         {
             Navigation.NavigateTo("/", replace: true);
         }
@@ -45,7 +51,7 @@ public partial class Login : ComponentBase
 
         try
         {
-            var httpContext = HttpContext ?? HttpContextAccessor.HttpContext;
+            var httpContext = HttpContext;
             if (httpContext == null)
             {
                 Logger.LogWarning("HttpContext is null in HandleLogin. Forcing browser reload to static SSR.");

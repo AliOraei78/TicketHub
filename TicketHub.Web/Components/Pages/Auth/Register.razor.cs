@@ -29,8 +29,14 @@ public partial class Register : ComponentBase
 
     protected override void OnInitialized()
     {
-        var user = HttpContext?.User ?? HttpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated == true)
+        if (HttpContext == null)
+        {
+            Logger.LogInformation("Register component rendered in interactive circuit. Forcing full browser reload to static SSR.");
+            Navigation.NavigateTo("/register", forceLoad: true);
+            return;
+        }
+
+        if (HttpContext.User?.Identity?.IsAuthenticated == true)
         {
             Navigation.NavigateTo("/", replace: true);
             return;
@@ -40,7 +46,7 @@ public partial class Register : ComponentBase
 
     protected async Task HandleRegister()
     {
-        var httpContext = HttpContext ?? HttpContextAccessor.HttpContext;
+        var httpContext = HttpContext;
         if (httpContext == null)
         {
             Logger.LogWarning("HttpContext is null in HandleRegister. Forcing browser reload to static SSR.");
