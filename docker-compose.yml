@@ -78,6 +78,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      seq:
+        condition: service_started
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
@@ -86,9 +88,27 @@ services:
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_PASS:-guest}
+      - Serilog__WriteTo__2__Name=Seq
+      - Serilog__WriteTo__2__Args__serverUrl=http://seq:80
     volumes:
       - app_logs:/app/logs
       - app_uploads:/app/wwwroot/uploads
+      - app_keys:/app/dataprotection-keys
+
+  # =========================================================================
+  # 5. Seq Centralized Structured Logging Dashboard
+  # =========================================================================
+  seq:
+    image: datalust/seq:latest
+    container_name: tickethub-seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "${SEQ_PORT:-5341}:80"
+    volumes:
+      - seq_data:/data
 
 volumes:
   mssql_data:
@@ -96,3 +116,5 @@ volumes:
   rabbitmq_data:
   app_logs:
   app_uploads:
+  app_keys:
+  seq_data:

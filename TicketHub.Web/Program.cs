@@ -7,6 +7,7 @@ using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Serilog;
@@ -132,6 +133,17 @@ builder.Services.AddSingleton(typeAdapterConfig); // ثبت مقادیر ارس�
 builder.Services.AddScoped<IMapper, ServiceMapper>(); // نمایش جزئیات دقیق‌تر خطاهای EF
 // ------------------------------
 
+// --------- ماندگاری کلیدهای امنیتی DataProtection ---------
+var keysPath = Path.Combine(builder.Environment.ContentRootPath, "dataprotection-keys");
+if (!Directory.Exists(keysPath))
+{
+    Directory.CreateDirectory(keysPath);
+}
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .SetApplicationName("TicketHub");
+// --------------------------------------------------------
+
 // --------- بخش جدید احراز هویت با کوکی ---------
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -142,8 +154,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
         // --- تنظیمات امنیتی استاندارد ---
         options.Cookie.HttpOnly = true; // جلوگیری از سرقت کوکی توسط کدهای جاوااسکریپت مخرب (XSS)
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // اطمینان از اینکه کوکی فقط روی بستر امن HTTPS ارسال شود
-        options.Cookie.SameSite = SameSiteMode.Strict; // جلوگیری از ارسال درخواست‌های جعلی از سایت‌های دیگر (حملات CSRF)
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // سازگار با هر دو پروتکل HTTP (در داکر/لوکال) و HTTPS
+        options.Cookie.SameSite = SameSiteMode.Lax; // تضمین ارسال کوکی در ریدایرکت‌ها و درخواست‌های مجاز
 
         // --- تنظیمات انقضا ---
         options.ExpireTimeSpan = TimeSpan.FromHours(1); // تغییر از ۷ روز به ۱ ساعت

@@ -41,8 +41,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Create directory for logs and upload attachments with write permissions
-RUN mkdir -p /app/logs /app/wwwroot/uploads
+# Create directory for logs, upload attachments, and dataprotection keys
+RUN mkdir -p /app/logs /app/wwwroot/uploads /app/dataprotection-keys
 
 # Copy published application
 COPY --from=build /app/publish .
