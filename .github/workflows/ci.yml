@@ -3,9 +3,16 @@ name: TicketHub CI/CD & Automated Testing
 on:
   push:
     branches: [ main, master, develop ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master, develop ]
   workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run Playwright E2E Tests'
+        required: false
+        type: boolean
+        default: false
 
 env:
   DOTNET_VERSION: '10.0.x'
@@ -14,7 +21,7 @@ env:
 
 jobs:
   # =========================================================================
-  # 1. Build & Unit/bUnit Automated Testing
+  # 1. Build & Unit/bUnit Automated Testing (Runs on every Commit & Push)
   # =========================================================================
   build-and-unit-tests:
     name: Build & bUnit Tests
@@ -61,12 +68,16 @@ jobs:
           retention-days: 7
 
   # =========================================================================
-  # 2. Playwright End-to-End (E2E) Automated Testing with SQL Server
+  # 2. Playwright End-to-End (E2E) Testing (Runs on Pre-Release Tags, PRs & Manual)
   # =========================================================================
   e2e-playwright-tests:
     name: Playwright E2E Tests
     runs-on: ubuntu-latest
     needs: build-and-unit-tests
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_e2e == true)
 
     services:
       mssql:
@@ -122,7 +133,11 @@ jobs:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: [build-and-unit-tests, e2e-playwright-tests]
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.build-and-unit-tests.result == 'success' &&
+      (needs.e2e-playwright-tests.result == 'success' || needs.e2e-playwright-tests.result == 'skipped')
     permissions:
       contents: read
       packages: write
@@ -147,6 +162,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
+            type=ref,event=tag
             type=ref,event=branch
             type=sha,format=short
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
