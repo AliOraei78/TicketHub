@@ -151,22 +151,15 @@ namespace TicketHub.Tests.E2E
 
             await Page.GotoAsync($"{serverUrl}/dev/login");
             await Page.GotoAsync($"{serverUrl}/tickets");
-            await Page.WaitForSelectorAsync("h1:has-text('مدیریت تیکت‌ها')", new() { Timeout = 15_000 });
+            await Page.WaitForSelectorAsync(".cyber-quest-capsule", new() { Timeout = 15_000 });
             await WaitForBlazorAsync(Page, 1000);
 
-            // Search for bulk tickets prefix
-            var searchInput = Page.Locator("input[placeholder*='جستجو در عنوان تیکت‌ها']").First;
-            await searchInput.FillAsync("BLK");
-            await WaitForBlazorAsync(Page, 1200);
-
-            // Select first two checkboxes with fresh locator evaluation
-            var checkboxes = Page.Locator("input[type='checkbox']");
-            await checkboxes.First.WaitForAsync(new() { Timeout = 10_000 });
-
-            await Page.Locator("input[type='checkbox']").Nth(0).ClickAsync(new() { Force = true });
+            // Select checkboxes on the first two quest capsules
+            var capsules = Page.Locator(".cyber-quest-capsule");
+            await capsules.Nth(0).Locator("input[type='checkbox']").ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 600);
 
-            await Page.Locator("input[type='checkbox']").Nth(1).ClickAsync(new() { Force = true });
+            await capsules.Nth(1).Locator("input[type='checkbox']").ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 800);
 
             // BulkActionToolbar should appear in RootModal outlet

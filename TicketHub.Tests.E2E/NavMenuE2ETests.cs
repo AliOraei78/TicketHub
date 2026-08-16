@@ -72,41 +72,39 @@ namespace TicketHub.Tests.E2E
             var desktopAside = Page.Locator("aside").First;
             await desktopAside.WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
-            // Navigate to Roles
-            var rolesLink = desktopAside.Locator("a[href='settings/roles']").First;
-            if (!await rolesLink.IsVisibleAsync())
-            {
-                var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
-                await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 600);
-            }
-            await rolesLink.ClickAsync(new() { Force = true });
-            await Page.WaitForURLAsync("**/settings/roles", new() { WaitUntil = WaitUntilState.Commit });
-            Page.Url.Should().Contain("/settings/roles");
+            // 1. Expand settings accordion
+            var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
+            await settingsBtn.ClickAsync();
+            await WaitForBlazorAsync(Page, 800);
 
-            // Navigate to Statuses
+            // 2. Navigate to Roles
+            var rolesLink = desktopAside.Locator("a[href='settings/roles']").First;
+            await rolesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+            await rolesLink.ClickAsync(new() { Force = true });
+            await WaitForBlazorAsync(Page, 1000);
+            Page.Url.Should().Contain("settings/roles");
+
+            // 3. Navigate to Statuses
             var statusesLink = desktopAside.Locator("a[href='settings/statuses']").First;
             if (!await statusesLink.IsVisibleAsync())
             {
-                var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 600);
+                await WaitForBlazorAsync(Page, 800);
             }
             await statusesLink.ClickAsync(new() { Force = true });
-            await Page.WaitForURLAsync("**/settings/statuses", new() { WaitUntil = WaitUntilState.Commit });
-            Page.Url.Should().Contain("/settings/statuses");
+            await WaitForBlazorAsync(Page, 1000);
+            Page.Url.Should().Contain("settings/statuses");
 
-            // Navigate to Categories
+            // 4. Navigate to Categories
             var categoriesLink = desktopAside.Locator("a[href='settings/categories']").First;
             if (!await categoriesLink.IsVisibleAsync())
             {
-                var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 600);
+                await WaitForBlazorAsync(Page, 800);
             }
             await categoriesLink.ClickAsync(new() { Force = true });
-            await Page.WaitForURLAsync("**/settings/categories", new() { WaitUntil = WaitUntilState.Commit });
-            Page.Url.Should().Contain("/settings/categories");
+            await WaitForBlazorAsync(Page, 1000);
+            Page.Url.Should().Contain("settings/categories");
         }
     }
 }
