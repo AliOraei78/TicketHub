@@ -184,12 +184,11 @@ namespace TicketHub.Tests.E2E
             await confirmBtn.ClickAsync();
             await WaitForBlazorAsync(Page, 1500);
 
-                // Verify at least one or both deleted in DB
-                await using var ctx = CreateDbContext();
-                var remaining1 = await ctx.Tickets.FindAsync(id1);
-                var remaining2 = await ctx.Tickets.FindAsync(id2);
-                (remaining1 == null || remaining2 == null).Should().BeTrue();
-            }
+            // Verify at least one or both deleted in DB
+            await using var ctx = CreateDbContext();
+            var remaining1 = await ctx.Tickets.FindAsync(id1);
+            var remaining2 = await ctx.Tickets.FindAsync(id2);
+            (remaining1 == null || remaining2 == null).Should().BeTrue();
         }
 
         [Fact]
