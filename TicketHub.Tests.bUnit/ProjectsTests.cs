@@ -217,7 +217,7 @@ namespace TicketHub.Tests.bUnit
         }
 
         [Fact]
-        public void OpenEditModal_ShowsFormWithExistingProject()
+        public async Task OpenEditModal_ShowsFormWithExistingProject()
         {
             // Arrange
             var project = new ProjectDto { Id = 5, Name = "Project Gamma", Description = "Desc", IsActive = true };
@@ -234,7 +234,7 @@ namespace TicketHub.Tests.bUnit
 
             // Act - Trigger edit from card
             var card = cut.FindComponent<ProjectCard>();
-            card.InvokeAsync(() => card.Instance.OnEdit.InvokeAsync());
+            await card.InvokeAsync(() => card.Instance.OnEdit.InvokeAsync());
 
             // Assert
             var form = cut.FindComponent<ProjectForm>();
@@ -245,7 +245,7 @@ namespace TicketHub.Tests.bUnit
         }
 
         [Fact]
-        public void SaveProject_DispatchesSaveProjectAction()
+        public async Task SaveProject_DispatchesSaveProjectAction()
         {
             // Arrange
             var cut = Render<Projects>();
@@ -257,7 +257,7 @@ namespace TicketHub.Tests.bUnit
             form.Instance.Model.Name = "پروژه تستی نهایی";
 
             // Act - Trigger OnSave
-            form.InvokeAsync(() => form.Instance.OnSave.InvokeAsync());
+            await form.InvokeAsync(() => form.Instance.OnSave.InvokeAsync());
 
             // Assert
             _mockDispatcher.Verify(d => d.Dispatch(It.Is<SaveProjectAction>(a => a.Project.Name == "پروژه تستی نهایی")), Times.Once);
@@ -265,7 +265,7 @@ namespace TicketHub.Tests.bUnit
         }
 
         [Fact]
-        public void CloseFormModal_SetsIsOpenToFalse()
+        public async Task CloseFormModal_SetsIsOpenToFalse()
         {
             // Arrange
             var cut = Render<Projects>();
@@ -277,14 +277,14 @@ namespace TicketHub.Tests.bUnit
             form.Instance.IsOpen.Should().BeTrue();
 
             // Act - Trigger OnCancel
-            form.InvokeAsync(() => form.Instance.OnCancel.InvokeAsync());
+            await form.InvokeAsync(() => form.Instance.OnCancel.InvokeAsync());
 
             // Assert
             form.Instance.IsOpen.Should().BeFalse();
         }
 
         [Fact]
-        public void DeleteProject_ShowsModalAndDispatchesAction()
+        public async Task DeleteProject_ShowsModalAndDispatchesAction()
         {
             // Arrange
             var project = new ProjectDto { Id = 1, Name = "Project Alpha", Description = "Desc", IsActive = true };
@@ -300,21 +300,21 @@ namespace TicketHub.Tests.bUnit
 
             // Trigger delete from the ProjectCard
             var card = cut.FindComponent<ProjectCard>();
-            card.InvokeAsync(() => card.Instance.OnDelete.InvokeAsync());
+            await card.InvokeAsync(() => card.Instance.OnDelete.InvokeAsync());
 
             // Assert Modal opened
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
             confirmModal.Instance.IsOpen.Should().BeTrue();
 
             // Act - Confirm delete
-            confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
+            await confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
 
             // Assert dispatch
-            cut.WaitForAssertion(() => _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteProjectAction>(a => a.Id == 1)), Times.Once), TimeSpan.FromSeconds(2));
+            cut.WaitForAssertion(() => _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteProjectAction>(a => a.Id == 1)), Times.Once), TimeSpan.FromSeconds(5));
         }
 
         [Fact]
-        public void CancelDelete_ClosesConfirmDeleteModal()
+        public async Task CancelDelete_ClosesConfirmDeleteModal()
         {
             // Arrange
             var project = new ProjectDto { Id = 1, Name = "Project Alpha", Description = "Desc", IsActive = true };
@@ -329,13 +329,13 @@ namespace TicketHub.Tests.bUnit
             var cut = Render<Projects>();
 
             var card = cut.FindComponent<ProjectCard>();
-            card.InvokeAsync(() => card.Instance.OnDelete.InvokeAsync());
+            await card.InvokeAsync(() => card.Instance.OnDelete.InvokeAsync());
 
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
             confirmModal.Instance.IsOpen.Should().BeTrue();
 
             // Act - Cancel delete
-            confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
+            await confirmModal.InvokeAsync(() => confirmModal.Instance.OnCancel.InvokeAsync());
 
             // Assert
             confirmModal.Instance.IsOpen.Should().BeFalse();

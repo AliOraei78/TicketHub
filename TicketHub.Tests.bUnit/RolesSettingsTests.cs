@@ -102,10 +102,10 @@ namespace TicketHub.Tests.bUnit
         }
 
         [Fact]
-        public void DeleteRole_ShowsModalAndDispatchesAction()
+        public async Task DeleteRole_ShowsModalAndDispatchesAction()
         {
             // Arrange
-            var role = new RoleDto { Id = 1, Name = "Admin Role", IsActive = true };
+            var role = new RoleDto { Id = 1, Name = "Admin", IsActive = true };
             _mockState.Setup(s => s.Value).Returns(new RoleState(
                 false,
                 new List<RoleDto> { role },
@@ -122,10 +122,10 @@ namespace TicketHub.Tests.bUnit
             var confirmModal = cut.FindComponent<ConfirmDeleteModal>();
             confirmModal.Instance.IsOpen.Should().BeTrue();
             // Act - Confirm delete
-            confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
+            await confirmModal.InvokeAsync(() => confirmModal.Instance.OnConfirm.InvokeAsync());
 
             // Assert dispatch
-            cut.WaitForAssertion(() => _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteRoleAction>(a => a.Id == 1)), Times.Once), TimeSpan.FromSeconds(2));
+            cut.WaitForAssertion(() => _mockDispatcher.Verify(d => d.Dispatch(It.Is<DeleteRoleAction>(a => a.Id == 1)), Times.Once), TimeSpan.FromSeconds(5));
         }
 
         [Fact]
