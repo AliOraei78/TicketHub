@@ -7,6 +7,12 @@ User-agent: *
 Allow: /login
 Allow: /register
 Allow: /confirm-email
+Allow: /kb
+Allow: /kb/
+Allow: /faq
+Allow: /faq/
+Allow: /help
+Allow: /help/
 Allow: /favicon.png
 Allow: /images/
 Allow: /css/

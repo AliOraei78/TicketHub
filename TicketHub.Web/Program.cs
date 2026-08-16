@@ -209,6 +209,7 @@ builder.Services.AddScoped<ISystemLogService, SystemLogService>();
 builder.Services.AddScoped<IWorkflowAutomationService, WorkflowAutomationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 
 // --------- تنظیمات MassTransit + Transactional Outbox ---------
 builder.Services.AddMassTransit(x =>

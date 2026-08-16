@@ -381,6 +381,13 @@
             }
         };
 
+        window.scrollToElement = function (elementId) {
+            var el = document.getElementById(elementId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
         (function () {
             var reconnectTimer = null;
             var secondsElapsed = 0;

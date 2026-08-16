@@ -1,0 +1,373 @@
+@page "/kb"
+@page "/faq"
+@page "/help"
+@layout TicketHub.Web.Components.Layout.PublicLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@inject IKnowledgeBaseService KbService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>پایگاه دانش و سوالات متداول | سامانه تیکت‌هاب</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="مرکز جامع مقالات آموزشی، راهنمای رفع خطاهای نرم‌افزاری و سوالات متداول سامانه مدیریت تیکت و گردش‌کار TicketHub." />
+    <meta name="keywords" content="پایگاه دانش, راهنمای تیکت هاب, رفع خطاها, عیب یابی نرم افزاری, سوالات متداول تیکتینگ, SLA, SignalR" />
+    <link rel="canonical" href="/kb" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="پایگاه دانش و سوالات متداول | TicketHub" />
+    <meta property="og:description" content="راهنمای جامع گام‌به‌گام رفع خطاهای نرم‌افزاری، آموزش فیلدهای پویا و تنظیمات سامانه تیکتینگ." />
+    <meta property="og:type" content="website" />
+
+    <!-- Schema.org FAQPage JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "FAQPage",
+        "mainEntity": [
+            @if (Faqs != null && Faqs.Any())
+            {
+                var faqList = Faqs.Take(5).ToList();
+                for (int i = 0; i < faqList.Count; i++)
+                {
+                    var item = faqList[i];
+                    <text>
+                    {
+                        "@@type": "Question",
+                        "name": "@item.Question",
+                        "acceptedAnswer": {
+                            "@@type": "Answer",
+                            "text": "@item.Answer"
+                        }
+                    }@(i < faqList.Count - 1 ? "," : "")
+                    </text>
+                }
+            }
+        ]
+    }
+    </script>
+</HeadContent>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-12 select-none">
+    
+    <!-- Hero Search Section -->
+    <div class="text-center space-y-4 max-w-3xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold">
+            <span class="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>KNOWLEDGE_HUB // FAQ_PORTAL</span>
+        </div>
+        
+        <h1 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+            مرکز پشتیبانی و پایگاه دانش <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">تیکت‌هاب</span>
+        </h1>
+        
+        <p class="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
+            راهنماهای آموزشی، پاسخ به سوالات متداول و عیب‌یابی خطاهای نرم‌افزاری را در بانک دانش جستجو کنید.
+        </p>
+
+        <!-- Search Input Bar -->
+        <div class="relative max-w-2xl mx-auto mt-6">
+            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            
+            <input type="text"
+                   value="@searchTerm"
+                   @oninput="OnSearchChanged"
+                   placeholder="جستجوی موضوع، خطا یا کلیدواژه (مثال: SignalR، محدودیت نرخ، SLA...)"
+                   class="w-full pr-11 pl-12 py-3.5 bg-[#070b16]/95 border border-cyan-500/30 rounded-2xl text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all" />
+
+            @if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                <button type="button"
+                        @onclick="ClearSearch"
+                        class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 hover:text-white cursor-pointer">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Category Filter Chips -->
+    <div class="flex items-center justify-center gap-2 flex-wrap">
+        <button type="button"
+                @onclick="() => SelectCategory(null)"
+                class="px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer @(string.IsNullOrEmpty(selectedCategory) ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-[#090e1d] text-slate-400 border border-white/10 hover:border-cyan-500/40 hover:text-slate-200")">
+            همه موضوعات (@AllArticlesCount)
+        </button>
+
+        @if (Categories != null)
+        {
+            @foreach (var cat in Categories)
+            {
+                <button type="button"
+                        @onclick="() => SelectCategory(cat.Slug)"
+                        class="px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer @(selectedCategory == cat.Slug ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-[#090e1d] text-slate-400 border border-white/10 hover:border-cyan-500/40 hover:text-slate-200")">
+                    @cat.Title
+                </button>
+            }
+        }
+    </div>
+
+    <!-- Category Cards (Shown when no active search) -->
+    @if (string.IsNullOrWhiteSpace(searchTerm) && string.IsNullOrWhiteSpace(selectedCategory) && Categories != null)
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            @foreach (var cat in Categories)
+            {
+                <div @onclick="() => SelectCategory(cat.Slug)"
+                     class="p-5 rounded-2xl bg-[#070b16]/90 border border-white/[0.08] hover:border-cyan-500/40 transition-all cursor-pointer group hover:scale-[1.02] shadow-lg flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 rounded-xl @cat.ColorClass border flex items-center justify-center">
+                            @if (cat.Icon == "bug")
+                            {
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0a8 8 0 11-16 0 8 8 0 0116 0z" /></svg>
+                            }
+                            else if (cat.Icon == "shield-check")
+                            {
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                            }
+                            else if (cat.Icon == "ticket")
+                            {
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                            }
+                            else
+                            {
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
+                            }
+                        </div>
+                        <h2 class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">@cat.Title</h2>
+                        <p class="text-xs text-slate-400 line-clamp-2">@cat.Description</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-cyan-400">
+                        <span>@cat.ArticleCount مقاله</span>
+                        <svg class="w-4 h-4 transform -rotate-90 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Articles Grid Section -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-black text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>@(string.IsNullOrWhiteSpace(searchTerm) ? (string.IsNullOrWhiteSpace(selectedCategory) ? "پربازدیدترین مقالات و راهنماها" : "مقالات دسته‌بندی انتخاب‌شده") : "نتایج جستجو")</span>
+            </h2>
+            <span class="text-xs font-mono text-slate-400">@Articles?.Count نتیجه</span>
+        </div>
+
+        @if (Articles != null && Articles.Any())
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach (var article in Articles)
+                {
+                    <a href="/kb/@article.Slug"
+                       class="p-5 rounded-2xl bg-[#070b16]/90 border border-white/[0.08] hover:border-cyan-500/40 transition-all group block shadow-md hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
+                        <div class="space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border @article.CategoryColorClass">
+                                    @article.CategoryTitle
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-mono">@article.ReadTimeMinutes دقیقه مطالعه</span>
+                            </div>
+
+                            <h3 class="text-sm sm:text-base font-bold text-white group-hover:text-cyan-300 transition-colors">
+                                @article.Title
+                            </h3>
+
+                            <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                                @article.Summary
+                            </p>
+
+                            <div class="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center gap-1 text-emerald-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+                                        <span>@article.HelpfulCount</span>
+                                    </span>
+                                    <span class="text-slate-400 font-mono">@article.ViewCount بازدید</span>
+                                </div>
+
+                                <span class="text-cyan-400 group-hover:underline flex items-center gap-1 font-bold">
+                                    <span>مطالعه راهنما</span>
+                                    <svg class="w-3.5 h-3.5 transform -rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="p-8 rounded-2xl bg-[#070b16]/60 border border-dashed border-white/10 text-center space-y-2">
+                <p class="text-sm font-bold text-slate-300">مقاله‌ای با این مشخصات یافت نشد.</p>
+                <p class="text-xs text-slate-500">لطفاً عبارت دیگری را جستجو کنید یا فیلتر دسته‌بندی را پاک فرمایید.</p>
+            </div>
+        }
+    </div>
+
+    <!-- FAQ Accordion Section -->
+    <div class="space-y-6 pt-4 border-t border-white/[0.08] scroll-mt-20" id="faq-section">
+        <div class="text-center space-y-2">
+            <h2 class="text-xl sm:text-2xl font-black text-white">سوالات متداول (FAQ)</h2>
+            <p class="text-xs sm:text-sm text-slate-400">پاسخ کوتاه به پرتکرارترین پرسش‌های کاربران و مشتریان سامانه</p>
+        </div>
+
+        <div class="space-y-3 max-w-3xl mx-auto">
+            @if (Faqs != null)
+            {
+                @foreach (var faq in Faqs)
+                {
+                    var isExpanded = expandedFaqIds.Contains(faq.Id);
+                    <div class="rounded-2xl bg-[#070b16]/90 border border-white/[0.08] hover:border-cyan-500/30 transition-all overflow-hidden shadow-md">
+                        <button type="button"
+                                @onclick="() => ToggleFaq(faq.Id)"
+                                class="w-full p-4.5 text-right flex items-center justify-between gap-4 cursor-pointer">
+                            <span class="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-2.5">
+                                <span class="w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center text-xs font-mono font-bold flex-shrink-0">Q</span>
+                                <span>@faq.Question</span>
+                            </span>
+
+                            <svg class="w-4 h-4 text-cyan-400 transform transition-transform duration-200 flex-shrink-0 @(isExpanded ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        @if (isExpanded)
+                        {
+                            <div class="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-300 border-t border-white/[0.04] leading-relaxed bg-[#050811]/60">
+                                @faq.Answer
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Need More Help / CTA Section -->
+    <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/60 to-indigo-950/60 border border-cyan-500/30 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-right">
+        <div class="space-y-1.5">
+            <h3 class="text-base sm:text-lg font-black text-white">پاسخ سوال خود را پیدا نکردید؟</h3>
+            <p class="text-xs sm:text-sm text-slate-300">کارشناسان فنی و پشتیبانی TicketHub به صورت ۲۴/۷ آماده پاسخ‌گویی به تیکت‌های شما هستند.</p>
+        </div>
+
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <a href="/login" class="btn-cyber-primary text-xs px-4 py-2.5 font-bold">
+                <span>ثبت تیکت پشتیبانی</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string searchTerm = string.Empty;
+    private string? selectedCategory;
+    private HashSet<string> expandedFaqIds = new() { "faq-1" };
+
+    private List<KbCategoryDto>? Categories;
+    private List<KbArticleDto>? Articles;
+    private List<KbFaqItemDto>? Faqs;
+    private int AllArticlesCount = 0;
+    private bool hasScrolledToFaq = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await KbService.GetCategoriesAsync();
+        var allArticles = await KbService.GetArticlesAsync();
+        AllArticlesCount = allArticles.Count;
+        Faqs = await KbService.GetFaqsAsync();
+        await FilterArticlesAsync();
+
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasScrolledToFaq)
+        {
+            var uri = Navigation.Uri.ToLowerInvariant();
+            if (uri.Contains("#faq-section") || uri.EndsWith("/faq"))
+            {
+                hasScrolledToFaq = true;
+                await Task.Delay(150);
+                try
+                {
+                    await JS.InvokeVoidAsync("window.scrollToElement", "faq-section");
+                }
+                catch
+                {
+                    // Ignore JS interop errors in non-browser context
+                }
+            }
+        }
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        var uri = e.Location.ToLowerInvariant();
+        if (uri.Contains("#faq-section") || uri.EndsWith("/faq"))
+        {
+            await Task.Delay(50);
+            try
+            {
+                await JS.InvokeVoidAsync("window.scrollToElement", "faq-section");
+            }
+            catch
+            {
+                // Ignore JS interop errors in non-browser context
+            }
+        }
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        await FilterArticlesAsync();
+    }
+
+    private async Task ClearSearch()
+    {
+        searchTerm = string.Empty;
+        await FilterArticlesAsync();
+    }
+
+    private async Task SelectCategory(string? categorySlug)
+    {
+        selectedCategory = categorySlug;
+        await FilterArticlesAsync();
+    }
+
+    private async Task FilterArticlesAsync()
+    {
+        Articles = await KbService.GetArticlesAsync(selectedCategory, null, searchTerm);
+    }
+
+    private void ToggleFaq(string faqId)
+    {
+        if (expandedFaqIds.Contains(faqId))
+        {
+            expandedFaqIds.Remove(faqId);
+        }
+        else
+        {
+            expandedFaqIds.Add(faqId);
+        }
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}
