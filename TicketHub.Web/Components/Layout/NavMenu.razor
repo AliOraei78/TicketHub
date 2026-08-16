@@ -18,28 +18,19 @@
     </button>
 
     <!-- Brand / Logo Section -->
-    <div class="@($"h-16 flex items-center {(IsCollapsed ? "justify-center" : "justify-between px-5")} bg-[#050811]/90 border-b border-white/[0.08] transition-all duration-300")">
+    <div class="@($"h-16 flex items-center {(IsCollapsed ? "justify-center" : "justify-between px-4")} bg-[#050811]/90 border-b border-white/[0.08] transition-all duration-300 relative overflow-hidden")">
         <div class="flex items-center gap-3">
-            <button type="button" @onclick="HandleToggleSidebar" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-pink-500 flex-shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(56,189,248,0.4)] transition-all hover:scale-105 group relative cursor-pointer focus-ring">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white block group-hover:hidden" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
-                </svg>
-                @if (IsCollapsed)
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden group-hover:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                }
-                else
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden group-hover:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                }
-            </button>
-
-            @if (!IsCollapsed)
+            @if (IsCollapsed)
             {
+                <button type="button" @onclick="HandleToggleSidebar" title="TICKETHUB // باز کردن منو" class="cursor-pointer focus-ring relative group p-0.5 rounded-xl hover:bg-slate-800/40 transition-all">
+                    <BrandLogo Size="sm" ShowText="false" IsLink="false" />
+                </button>
+            }
+            else
+            {
+                <button type="button" @onclick="HandleToggleSidebar" title="TICKETHUB // تغییر وضعیت منو" class="cursor-pointer focus-ring relative group p-0.5 rounded-xl hover:bg-slate-800/40 transition-all">
+                    <BrandLogo Size="sm" ShowText="false" IsLink="false" />
+                </button>
                 <div class="flex flex-col">
                     <a href="" class="tracking-tight text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-indigo-300 font-mono whitespace-nowrap hover:opacity-80 transition-opacity">TICKETHUB</a>
                     <span class="text-[9px] font-mono text-cyan-400/80 tracking-widest uppercase">COMMAND MATRIX</span>
@@ -49,7 +40,7 @@
 
         @if (!IsCollapsed)
         {
-            <button @onclick="CloseMobileMenu" class="md:hidden p-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+            <button @onclick="CloseMobileMenu" class="md:hidden p-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors" title="بستن منو">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
