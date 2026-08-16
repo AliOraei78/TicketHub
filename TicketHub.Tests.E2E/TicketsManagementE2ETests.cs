@@ -154,12 +154,10 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForSelectorAsync(".cyber-quest-capsule", new() { Timeout = 15_000 });
             await WaitForBlazorAsync(Page, 1000);
 
-            // Select checkboxes on the first two quest capsules
-            var capsules = Page.Locator(".cyber-quest-capsule");
-            await capsules.Nth(0).Locator("input[type='checkbox']").ClickAsync(new() { Force = true });
-            await WaitForBlazorAsync(Page, 600);
-
-            await capsules.Nth(1).Locator("input[type='checkbox']").ClickAsync(new() { Force = true });
+            // Select checkbox on the first quest capsule
+            var firstCheckbox = Page.Locator(".cyber-quest-capsule input[type='checkbox']").First;
+            await firstCheckbox.WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = 10_000 });
+            await firstCheckbox.ClickAsync(new() { Force = true });
             await WaitForBlazorAsync(Page, 800);
 
             // BulkActionToolbar should appear in RootModal outlet

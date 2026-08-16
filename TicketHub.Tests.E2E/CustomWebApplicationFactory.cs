@@ -25,7 +25,6 @@ namespace TicketHub.Tests.E2E
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         private readonly string _dbConnectionString;
-        private IHost? _kestrelHost;
 
         public CustomWebApplicationFactory()
         {
@@ -76,10 +75,6 @@ namespace TicketHub.Tests.E2E
         {
             EnsureDatabaseExists();
 
-            // 1. Build test server for WebApplicationFactory internal management
-            var testHost = builder.Build();
-
-            // 2. Build and start the real Kestrel host on an ephemeral port for Playwright browser automation
             builder.ConfigureWebHost(webHostBuilder =>
             {
                 webHostBuilder.UseKestrel();
@@ -89,15 +84,14 @@ namespace TicketHub.Tests.E2E
                 webHostBuilder.UseSetting("RabbitMQ:Host", "");
             });
 
-            _kestrelHost = builder.Build();
-            _kestrelHost.Start();
-            
-            var server = _kestrelHost.Services.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>();
+            var host = builder.Build();
+            host.Start();
+
+            var server = host.Services.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>();
             var addresses = server.Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
             ServerAddress = addresses?.Addresses.FirstOrDefault() ?? "http://127.0.0.1:5000";
-            
-            testHost.Start();
-            return testHost;
+
+            return host;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -166,7 +160,7 @@ namespace TicketHub.Tests.E2E
             CreateDefaultClient();
 
             // 3. Ensure DB is migrated
-            using var scope = (_kestrelHost?.Services ?? Services).CreateScope();
+            using var scope = Services.CreateScope();
             var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             using var context = factory.CreateDbContext();
             await context.Database.MigrateAsync();
@@ -174,13 +168,8 @@ namespace TicketHub.Tests.E2E
 
         new public async Task DisposeAsync()
         {
-            if (_kestrelHost != null)
-            {
-                await _kestrelHost.StopAsync();
-                _kestrelHost.Dispose();
-                _kestrelHost = null;
-            }
             base.Dispose();
+            await Task.CompletedTask;
         }
     }
 
