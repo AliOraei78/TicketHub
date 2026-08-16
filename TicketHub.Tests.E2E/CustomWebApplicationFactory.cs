@@ -91,7 +91,51 @@ namespace TicketHub.Tests.E2E
             var addresses = server.Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
             ServerAddress = addresses?.Addresses.FirstOrDefault() ?? "http://127.0.0.1:5000";
 
-            return host;
+            return new KestrelHostWrapper(host);
+        }
+
+        private class KestrelHostWrapper : IHost
+        {
+            private readonly IHost _host;
+            private readonly TestServer _dummyServer;
+
+            public KestrelHostWrapper(IHost host)
+            {
+                _host = host;
+                _dummyServer = new TestServer(new WebHostBuilder().Configure(app => { }));
+                Services = new CustomServiceProvider(host.Services, _dummyServer);
+            }
+
+            public IServiceProvider Services { get; }
+
+            public Task StartAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+            public Task StopAsync(CancellationToken cancellationToken = default) => _host.StopAsync(cancellationToken);
+            public void Dispose()
+            {
+                _dummyServer.Dispose();
+                _host.Dispose();
+            }
+        }
+
+        private class CustomServiceProvider : IServiceProvider
+        {
+            private readonly IServiceProvider _inner;
+            private readonly TestServer _dummyServer;
+
+            public CustomServiceProvider(IServiceProvider inner, TestServer dummyServer)
+            {
+                _inner = inner;
+                _dummyServer = dummyServer;
+            }
+
+            public object? GetService(Type serviceType)
+            {
+                if (serviceType == typeof(Microsoft.AspNetCore.Hosting.Server.IServer))
+                {
+                    return _dummyServer;
+                }
+                return _inner.GetService(serviceType);
+            }
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
