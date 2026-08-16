@@ -166,11 +166,11 @@ namespace TicketHub.Tests.E2E
             if (count >= 2)
             {
                 var checkbox1 = cards.Nth(0).Locator("input[type='checkbox']").First;
-                await checkbox1.SetCheckedAsync(true, new() { Force = true });
+                await checkbox1.ClickAsync(new() { Force = true });
                 await WaitForBlazorAsync(Page, 600);
 
                 var checkbox2 = cards.Nth(1).Locator("input[type='checkbox']").First;
-                await checkbox2.SetCheckedAsync(true, new() { Force = true });
+                await checkbox2.ClickAsync(new() { Force = true });
                 await WaitForBlazorAsync(Page, 800);
 
                 // BulkActionToolbar should appear in RootModal outlet

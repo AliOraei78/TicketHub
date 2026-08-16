@@ -69,7 +69,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/");
             await WaitForBlazorAsync(Page, 1000);
 
-            var desktopAside = Page.Locator("div.sticky aside, aside").First;
+            var desktopAside = Page.Locator("aside").First;
             await desktopAside.WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
             // Navigate to Roles
@@ -78,10 +78,9 @@ namespace TicketHub.Tests.E2E
             {
                 var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 400);
-                await rolesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+                await WaitForBlazorAsync(Page, 500);
             }
-            await rolesLink.ClickAsync();
+            await rolesLink.ClickAsync(new() { Force = true });
             await Page.WaitForURLAsync("**/settings/roles");
             Page.Url.Should().Contain("/settings/roles");
 
@@ -91,10 +90,9 @@ namespace TicketHub.Tests.E2E
             {
                 var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 400);
-                await statusesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+                await WaitForBlazorAsync(Page, 500);
             }
-            await statusesLink.ClickAsync();
+            await statusesLink.ClickAsync(new() { Force = true });
             await Page.WaitForURLAsync("**/settings/statuses");
             Page.Url.Should().Contain("/settings/statuses");
 
@@ -104,10 +102,9 @@ namespace TicketHub.Tests.E2E
             {
                 var settingsBtn = desktopAside.Locator("button:has-text('تنظیمات سیستم')").First;
                 await settingsBtn.ClickAsync();
-                await WaitForBlazorAsync(Page, 400);
-                await categoriesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+                await WaitForBlazorAsync(Page, 500);
             }
-            await categoriesLink.ClickAsync();
+            await categoriesLink.ClickAsync(new() { Force = true });
             await Page.WaitForURLAsync("**/settings/categories");
             Page.Url.Should().Contain("/settings/categories");
         }

@@ -96,6 +96,7 @@ namespace TicketHub.Tests.E2E
             var addresses = server.Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
             ServerAddress = addresses?.Addresses.FirstOrDefault() ?? "http://127.0.0.1:5000";
             
+            testHost.Start();
             return testHost;
         }
 
