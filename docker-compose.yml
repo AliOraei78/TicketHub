@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD:-Password123!}"
       POSTGRES_DB: TicketHubDb
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_BIND_IP:-127.0.0.1}:${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -29,7 +29,7 @@ services:
     container_name: tickethub-redis
     restart: unless-stopped
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_BIND_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:

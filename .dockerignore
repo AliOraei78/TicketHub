@@ -5,8 +5,6 @@
 **/.agents
 .env*
 **/bin
-!bin/Publish/
-!bin/Publish/**
 **/obj
 **/TestResults
 **/logs

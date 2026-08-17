@@ -443,6 +443,12 @@ appsettings.Local.json
 /TicketHub.Web/wwwroot/uploads/attachments/*
 !/TicketHub.Web/wwwroot/uploads/attachments/.gitkeep
 
+# Data Protection Keys & Sensitive Runtime Artifacts
+**/dataprotection-keys/*
+!**/dataprotection-keys/.gitkeep
+**/logs/*
+!**/logs/.gitkeep
+
 # Documentation scratch
 Journey.md
 

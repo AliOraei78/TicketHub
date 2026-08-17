@@ -1,7 +1,26 @@
 # =========================================================================
-# Dockerfile for TicketHub.Web (.NET 10)
+# Dockerfile for TicketHub.Web (.NET 10) - Multi-stage Build
 # =========================================================================
 
+# Stage 1: Build & Publish
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy project files for optimal layer caching during restore
+COPY ["TicketHub.Core/TicketHub.Core.csproj", "TicketHub.Core/"]
+COPY ["TicketHub.Application/TicketHub.Application.csproj", "TicketHub.Application/"]
+COPY ["TicketHub.Infrastructure/TicketHub.Infrastructure.csproj", "TicketHub.Infrastructure/"]
+COPY ["TicketHub.Web/TicketHub.Web.csproj", "TicketHub.Web/"]
+
+# Restore dependencies
+RUN dotnet restore "TicketHub.Web/TicketHub.Web.csproj"
+
+# Copy full source and publish
+COPY . .
+WORKDIR "/src/TicketHub.Web"
+RUN dotnet publish "TicketHub.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
@@ -19,8 +38,8 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 # Create directory for logs, upload attachments, and dataprotection keys
 RUN mkdir -p /app/logs /app/wwwroot/uploads /app/dataprotection-keys
 
-# Copy published application
-COPY bin/Publish/ .
+# Copy published application from build stage
+COPY --from=build /app/publish .
 
 # Expose standard ASP.NET Core port
 EXPOSE 8080
