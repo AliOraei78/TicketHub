@@ -65,7 +65,8 @@ public partial class TransitionSidebar : ComponentBase
                     minute = int.Parse(timeParts[1]);
                 }
                 var pc = new PersianCalendar();
-                Connection.ActivateAt = pc.ToDateTime(year, month, day, hour, minute, 0, 0);
+                var dt = pc.ToDateTime(year, month, day, hour, minute, 0, 0);
+                Connection.ActivateAt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
             }
             catch
             {

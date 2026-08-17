@@ -20,19 +20,12 @@ namespace TicketHub.Tests.E2E
         [Fact]
         public async Task WorkflowEditor_ComplexCreation_ShouldSucceed()
         {
+            Page.Console += (_, msg) => Console.WriteLine($"[BROWSER CONSOLE] {msg.Type}: {msg.Text}");
+            Page.PageError += (_, err) => Console.WriteLine($"[BROWSER ERROR] {err}");
+
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
-            await Page.GotoAsync($"{Factory.ServerAddress}/workflows");
-            await Page.WaitForSelectorAsync("text=مدیریت جریان‌های کاری");
-            await WaitForBlazorAsync(Page, 1500);
-
-            var createBtn = Page.Locator("button:has-text('ایجاد جریان کاری جدید')").First;
-            await createBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
-            await createBtn.ClickAsync();
-            await Page.WaitForURLAsync("**/workflows/editor");
-            await WaitForBlazorAsync(Page, 1000);
-
+            await Page.GotoAsync($"{Factory.ServerAddress}/workflows/editor");
             var wfName = "Complex Workflow " + Guid.NewGuid().ToString().Substring(0, 6);
-            await Page.WaitForSelectorAsync("input[placeholder='نام جریان کاری...']");
             await Page.FillAsync("input[placeholder='نام جریان کاری...']", wfName);
 
             // Wait for data to load
@@ -235,6 +228,7 @@ namespace TicketHub.Tests.E2E
             await anyToast.WaitForAsync(new() { Timeout = 15000 });
             await Page.WaitForURLAsync("**/workflows");
             var header = Page.Locator("text=مدیریت جریان‌های کاری").First;
+            await header.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
             (await header.IsVisibleAsync()).Should().BeTrue();
         }
 

@@ -96,6 +96,20 @@ public class WorkflowService : IWorkflowService
         {
             transition.FromStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.FromNodeId);
             transition.ToStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.ToNodeId);
+
+            if (transition.CreatedAt == default)
+            {
+                transition.CreatedAt = DateTime.UtcNow;
+            }
+            else if (transition.CreatedAt.Kind == DateTimeKind.Unspecified)
+            {
+                transition.CreatedAt = DateTime.SpecifyKind(transition.CreatedAt, DateTimeKind.Utc);
+            }
+
+            if (transition.ActivateAt.HasValue && transition.ActivateAt.Value.Kind == DateTimeKind.Unspecified)
+            {
+                transition.ActivateAt = DateTime.SpecifyKind(transition.ActivateAt.Value, DateTimeKind.Utc);
+            }
         }
 
         await _workflowRepository.AddAsync(entity);
@@ -112,6 +126,29 @@ public class WorkflowService : IWorkflowService
         _logger.LogInformation("شروع ویرایش جریان کاری با شناسه {Id}.", dto.Id);
 
         var entity = dto.Adapt<Workflow>();
+
+        foreach (var transition in entity.Transitions)
+        {
+            if (transition.FromNodeId != Guid.Empty && entity.WorkflowStatuses.Any(ws => ws.NodeId == transition.FromNodeId))
+                transition.FromStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.FromNodeId);
+            if (transition.ToNodeId != Guid.Empty && entity.WorkflowStatuses.Any(ws => ws.NodeId == transition.ToNodeId))
+                transition.ToStatus = entity.WorkflowStatuses.First(ws => ws.NodeId == transition.ToNodeId);
+
+            if (transition.CreatedAt == default)
+            {
+                transition.CreatedAt = DateTime.UtcNow;
+            }
+            else if (transition.CreatedAt.Kind == DateTimeKind.Unspecified)
+            {
+                transition.CreatedAt = DateTime.SpecifyKind(transition.CreatedAt, DateTimeKind.Utc);
+            }
+
+            if (transition.ActivateAt.HasValue && transition.ActivateAt.Value.Kind == DateTimeKind.Unspecified)
+            {
+                transition.ActivateAt = DateTime.SpecifyKind(transition.ActivateAt.Value, DateTimeKind.Utc);
+            }
+        }
+
         await _workflowRepository.UpdateAsync(entity);
 
         _logger.LogInformation("جریان کاری با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);

@@ -88,6 +88,9 @@ namespace TicketHub.Tests.E2E
                 webHostBuilder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
                 webHostBuilder.UseSetting("ConnectionStrings:Redis", "");
                 webHostBuilder.UseSetting("RabbitMQ:Host", "");
+                webHostBuilder.UseSetting("InitialAdmin:Email", "admin@tickethub.io");
+                webHostBuilder.UseSetting("InitialAdmin:Password", "Admin@123456");
+                webHostBuilder.UseSetting("InitialAdmin:Name", "مدیر کل سیستم");
             });
 
             var host = builder.Build();
@@ -151,6 +154,9 @@ namespace TicketHub.Tests.E2E
             builder.UseSetting("ConnectionStrings:DefaultConnection", _dbConnectionString);
             builder.UseSetting("ConnectionStrings:Redis", "");
             builder.UseSetting("RabbitMQ:Host", "");
+            builder.UseSetting("InitialAdmin:Email", "admin@tickethub.io");
+            builder.UseSetting("InitialAdmin:Password", "Admin@123456");
+            builder.UseSetting("InitialAdmin:Name", "مدیر کل سیستم");
 
             builder.ConfigureTestServices(services =>
             {
@@ -173,13 +179,6 @@ namespace TicketHub.Tests.E2E
                 var cacheDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDistributedCache));
                 if (cacheDescriptor != null) services.Remove(cacheDescriptor);
                 services.AddDistributedMemoryCache();
-
-                // Mock Authentication
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = "Test";
-                    options.DefaultChallengeScheme = "Test";
-                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
             });
         }
 
@@ -190,58 +189,19 @@ namespace TicketHub.Tests.E2E
             // 2. Ensure server is started (which triggers Program.cs migration & Hangfire)
             CreateDefaultClient();
 
-            // 3. Ensure DB is migrated
+            // 3. Ensure DB is migrated and seeded
             using var scope = Services.CreateScope();
             var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             using var context = factory.CreateDbContext();
             await context.Database.MigrateAsync();
+            var configuration = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            await DbInitializer.InitializeAsync(context, configuration);
         }
 
         new public async Task DisposeAsync()
         {
             base.Dispose();
             await Task.CompletedTask;
-        }
-    }
-
-    public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-    {
-        private readonly IServiceProvider _serviceProvider;
-
-        public TestAuthHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
-            ILoggerFactory logger,
-            UrlEncoder encoder,
-            IServiceProvider serviceProvider)
-            : base(options, logger, encoder)
-        {
-            _serviceProvider = serviceProvider;
-        }
-
-        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
-        {
-            // Fetch the admin user from the database to get the correct UserId
-            using var scope = _serviceProvider.CreateScope();
-            var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
-            using var context = await factory.CreateDbContextAsync();
-            var adminEmail = "admin@tickethub.io";
-            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail)
-                         ?? await context.Users.FirstOrDefaultAsync();
-            var userId = adminUser?.Id.ToString() ?? "1";
-            var userEmail = adminUser?.Email ?? adminEmail;
-
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, adminUser?.Name ?? "AdminUser"),
-                new Claim(ClaimTypes.Email, userEmail),
-                new Claim(ClaimTypes.Role, "ادمین")
-            };
-            var identity = new ClaimsIdentity(claims, "Test");
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, "Test");
-
-            return AuthenticateResult.Success(ticket);
         }
     }
 }

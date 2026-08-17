@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 
 <div class="h-screen w-full overflow-hidden bg-[#030712] text-slate-100 font-['Vazirmatn'] page-transition-enter" dir="rtl">
+    <Fluxor.Blazor.Web.StoreInitializer />
     <ToastContainer />
     <CustomErrorBoundary @ref="errorBoundary">
         @Body

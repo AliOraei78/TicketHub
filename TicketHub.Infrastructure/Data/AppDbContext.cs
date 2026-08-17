@@ -40,6 +40,17 @@ namespace TicketHub.Infrastructure.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+
+            configurationBuilder.Properties<DateTime>()
+                .HaveConversion<UtcDateTimeConverter>();
+
+            configurationBuilder.Properties<DateTime?>()
+                .HaveConversion<NullableUtcDateTimeConverter>();
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
