@@ -1,4 +1,4 @@
-using DNTCaptcha.Core;
+﻿using DNTCaptcha.Core;
 using Mapster;
 using Microsoft.AspNetCore.Components;
 using TicketHub.Application.DTOs;

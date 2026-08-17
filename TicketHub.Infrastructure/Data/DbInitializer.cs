@@ -33,55 +33,88 @@ namespace TicketHub.Infrastructure.Data
                 }
                 await context.SaveChangesAsync();
 
-                // 2. Seed Admin User independently from Configuration or secure default
-                var adminEmail = configuration?["InitialAdmin:Email"] ?? "admin@tickethub.io";
-                var adminPassword = configuration?["InitialAdmin:Password"] ?? "Admin@123456";
+                // 2. Seed Admin User independently from Configuration / Environment Variables
+                var adminEmail = configuration?["InitialAdmin:Email"];
+                var adminPassword = configuration?["InitialAdmin:Password"];
                 var adminName = configuration?["InitialAdmin:Name"] ?? "مدیر کل سیستم";
-                var adminPhone = configuration?["InitialAdmin:PhoneNumber"] ?? "09120000000";
+                var adminPhone = configuration?["InitialAdmin:PhoneNumber"] ?? "";
 
-                var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
-
-                if (adminUser == null)
+                if (!string.IsNullOrWhiteSpace(adminEmail))
                 {
-                    adminUser = new User
+                    var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+
+                    if (adminUser == null)
                     {
-                        Name = adminName,
-                        Email = adminEmail,
-                        Password = BCrypt.Net.BCrypt.HashPassword(adminPassword),
-                        CreatedAt = DateTime.UtcNow,
-                        PhoneNumber = adminPhone,
-                        IsConfirmed = true
-                    };
-
-                    await context.Users.AddAsync(adminUser);
-                    await context.SaveChangesAsync();
-                }
-
-                // 3. Assign Admin Role to Admin User independently
-                var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "ادمین");
-                if (adminRole != null && adminUser != null)
-                {
-                    // Check if the user already has this specific role
-                    var userHasRole = await context.UserRoles
-                        .AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
-
-                    if (!userHasRole)
-                    {
-                        await context.UserRoles.AddAsync(new UserRole
+                        if (!string.IsNullOrWhiteSpace(adminPassword))
                         {
-                            UserId = adminUser.Id,
-                            RoleId = adminRole.Id
-                        });
-                        await context.SaveChangesAsync();
+                            adminUser = new User
+                            {
+                                Name = adminName,
+                                Email = adminEmail,
+                                Password = BCrypt.Net.BCrypt.HashPassword(adminPassword, workFactor: 11),
+                                CreatedAt = DateTime.UtcNow,
+                                PhoneNumber = adminPhone,
+                                IsActive = true,
+                                IsConfirmed = true
+                            };
+
+                            await context.Users.AddAsync(adminUser);
+                            await context.SaveChangesAsync();
+                        }
+                    }
+                    else
+                    {
+                        bool isUpdated = false;
+                        if (!string.IsNullOrWhiteSpace(adminName) && adminUser.Name != adminName)
+                        {
+                            adminUser.Name = adminName;
+                            isUpdated = true;
+                        }
+                        if (!string.IsNullOrWhiteSpace(adminPhone) && adminUser.PhoneNumber != adminPhone)
+                        {
+                            adminUser.PhoneNumber = adminPhone;
+                            isUpdated = true;
+                        }
+                        if (!string.IsNullOrWhiteSpace(adminPassword) && !BCrypt.Net.BCrypt.Verify(adminPassword, adminUser.Password))
+                        {
+                            adminUser.Password = BCrypt.Net.BCrypt.HashPassword(adminPassword, workFactor: 11);
+                            isUpdated = true;
+                        }
+                        if (isUpdated)
+                        {
+                            await context.SaveChangesAsync();
+                        }
+                    }
+
+                    // 3. Assign Admin Role to Admin User independently
+                    var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "ادمین");
+                    if (adminRole != null && adminUser != null)
+                    {
+                        var userHasRole = await context.UserRoles
+                            .AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
+
+                        if (!userHasRole)
+                        {
+                            await context.UserRoles.AddAsync(new UserRole
+                            {
+                                UserId = adminUser.Id,
+                                RoleId = adminRole.Id
+                            });
+                            await context.SaveChangesAsync();
+                        }
                     }
                 }
 
                 // 3.1. Seed 3 Additional Users for Remaining Roles (پشتیبان, مسئول فنی, کاربر)
+                var supportPass = configuration?["InitialSeedUsers:SupportPassword"] ?? "Support@123456";
+                var techPass = configuration?["InitialSeedUsers:TechPassword"] ?? "Tech@123456";
+                var userPass = configuration?["InitialSeedUsers:UserPassword"] ?? "User@123456";
+
                 var defaultUserSeedData = new[]
                 {
-                    new { Name = "کاربر پشتیبان", Email = "support@tickethub.io", RoleName = "پشتیبان", Phone = "09120000001", Pass = "Support@123456" },
-                    new { Name = "مسئول فنی سیستم", Email = "tech@tickethub.io", RoleName = "مسئول فنی", Phone = "09120000002", Pass = "Tech@123456" },
-                    new { Name = "کاربر عادی", Email = "user@tickethub.io", RoleName = "کاربر", Phone = "09120000003", Pass = "User@123456" }
+                    new { Name = "کاربر پشتیبان", Email = "support@tickethub.io", RoleName = "پشتیبان", Phone = "09120000001", Pass = supportPass },
+                    new { Name = "مسئول فنی سیستم", Email = "tech@tickethub.io", RoleName = "مسئول فنی", Phone = "09120000002", Pass = techPass },
+                    new { Name = "کاربر عادی", Email = "user@tickethub.io", RoleName = "کاربر", Phone = "09120000003", Pass = userPass }
                 };
 
                 foreach (var seed in defaultUserSeedData)
@@ -93,7 +126,7 @@ namespace TicketHub.Infrastructure.Data
                         {
                             Name = seed.Name,
                             Email = seed.Email,
-                            Password = BCrypt.Net.BCrypt.HashPassword(seed.Pass),
+                            Password = BCrypt.Net.BCrypt.HashPassword(seed.Pass, workFactor: 11),
                             CreatedAt = DateTime.UtcNow,
                             PhoneNumber = seed.Phone,
                             IsActive = true,

@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TicketHub.Infrastructure.Data;
 
 #nullable disable
@@ -12,8 +12,8 @@ using TicketHub.Infrastructure.Data;
 namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260805212707_Added-InitialStatus-to-workflow")]
-    partial class AddedInitialStatustoworkflow
+    [Migration("20260816205133_InitialPostgreSql")]
+    partial class InitialPostgreSql
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,46 +21,225 @@ namespace TicketHub.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.InboxState", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("Consumed")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ConsumerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("Delivered")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpirationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("LastSequenceNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("LockId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ReceiveCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Received")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Delivered");
+
+                    b.ToTable("InboxState");
+                });
+
+            modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
+                {
+                    b.Property<long>("SequenceNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("SequenceNumber"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CorrelationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DestinationAddress")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime?>("EnqueueTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpirationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FaultAddress")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Headers")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("InboxConsumerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("InboxMessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("InitiatorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("OutboxId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ResponseAddress")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SourceAddress")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("SequenceNumber");
+
+                    b.HasIndex("EnqueueTime");
+
+                    b.HasIndex("ExpirationTime");
+
+                    b.HasIndex("OutboxId", "SequenceNumber")
+                        .IsUnique();
+
+                    b.HasIndex("InboxMessageId", "InboxConsumerId", "SequenceNumber")
+                        .IsUnique();
+
+                    b.ToTable("OutboxMessage");
+                });
+
+            modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxState", b =>
+                {
+                    b.Property<Guid>("OutboxId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("Delivered")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("LastSequenceNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("LockId")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("OutboxId");
+
+                    b.HasIndex("Created");
+
+                    b.ToTable("OutboxState");
+                });
 
             modelBuilder.Entity("TicketHub.Core.Entities.Attachment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<int?>("TicketFieldValueId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("TicketHistoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("TicketId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("TransitionFieldId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TransitionFieldValueId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("TicketFieldValueId");
 
@@ -70,6 +249,8 @@ namespace TicketHub.Infrastructure.Migrations
 
                     b.HasIndex("TransitionFieldId");
 
+                    b.HasIndex("TransitionFieldValueId");
+
                     b.ToTable("Attachments");
                 });
 
@@ -77,31 +258,31 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ChangedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EntityName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("NewValues")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("OldValues")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PrimaryKey")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -112,21 +293,29 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Categories");
                 });
@@ -135,15 +324,15 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProjectId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -155,52 +344,36 @@ namespace TicketHub.Infrastructure.Migrations
                     b.ToTable("CategoryProjects");
                 });
 
-            modelBuilder.Entity("TicketHub.Core.Entities.CategoryRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("CategoryId", "RoleId")
-                        .IsUnique();
-
-                    b.ToTable("CategoryRoles");
-                });
-
             modelBuilder.Entity("TicketHub.Core.Entities.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<int?>("TicketId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("TicketId");
 
@@ -213,15 +386,15 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("TicketFieldId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -237,44 +410,107 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("FieldTypes");
                 });
 
+            modelBuilder.Entity("TicketHub.Core.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReferenceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("UserId", "IsRead", "CreatedAt");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("TicketHub.Core.Entities.Permission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ResourceKey")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("Type")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Permissions");
                 });
@@ -283,28 +519,36 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ColorCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Level")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Priorities");
                 });
@@ -313,28 +557,36 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("WorkflowId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("WorkflowId");
 
@@ -345,21 +597,29 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Roles");
                 });
@@ -368,15 +628,15 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("PermissionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -392,18 +652,18 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ProjectId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -419,28 +679,36 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ColorCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("NeedApproval")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Statuses");
                 });
@@ -449,42 +717,53 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<int?>("PriorityId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProjectId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("StatusId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("WorkflowStatusId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("PriorityId");
 
@@ -503,42 +782,50 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DefaultValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("FieldTypeId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRequired")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Placeholder")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("FieldTypeId");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("TicketFields");
                 });
@@ -547,19 +834,19 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("TicketFieldId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("TicketId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -575,65 +862,68 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("FromStatusId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("FromStatusName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("MetaData")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("ParentHistoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("TicketId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("TicketTitle")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("ToStatusId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ToStatusName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("TransitionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("TransitionTitle")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("WorkFlowId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("WorkFlowName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -660,48 +950,51 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("ActivateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DeadlineMinutes")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("FromNodeId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("FromState")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("IsAutomated")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SourcePort")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("TargetPort")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid>("ToNodeId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("ToState")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("WorkflowId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -718,37 +1011,37 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DefaultValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FieldName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("FieldTypeId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRequired")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Placeholder")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("TransitionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -759,22 +1052,50 @@ namespace TicketHub.Infrastructure.Migrations
                     b.ToTable("TransitionFields");
                 });
 
+            modelBuilder.Entity("TicketHub.Core.Entities.TransitionFieldValue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("TicketHistoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TransitionFieldId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransitionFieldId");
+
+                    b.HasIndex("TicketHistoryId", "TransitionFieldId")
+                        .IsUnique();
+
+                    b.ToTable("TransitionFieldValues");
+                });
+
             modelBuilder.Entity("TicketHub.Core.Entities.TransitionRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("TransitionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -789,42 +1110,50 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConfirmationToken")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("TokenExpiration")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Users");
                 });
@@ -833,18 +1162,18 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -860,24 +1189,32 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
 
                     b.ToTable("Workflows");
                 });
@@ -886,27 +1223,30 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsFinal")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsInitial")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("NodeId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<double>("PositionX")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<double>("PositionY")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<int>("StatusId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("WorkflowId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -918,6 +1258,18 @@ namespace TicketHub.Infrastructure.Migrations
                     b.HasIndex("WorkflowId");
 
                     b.ToTable("WorkflowStatuses");
+                });
+
+            modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
+                {
+                    b.HasOne("MassTransit.EntityFrameworkCoreIntegration.OutboxState", null)
+                        .WithMany()
+                        .HasForeignKey("OutboxId");
+
+                    b.HasOne("MassTransit.EntityFrameworkCoreIntegration.InboxState", null)
+                        .WithMany()
+                        .HasForeignKey("InboxMessageId", "InboxConsumerId")
+                        .HasPrincipalKey("MessageId", "ConsumerId");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.Attachment", b =>
@@ -942,6 +1294,11 @@ namespace TicketHub.Infrastructure.Migrations
                         .HasForeignKey("TransitionFieldId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("TicketHub.Core.Entities.TransitionFieldValue", "TransitionFieldValue")
+                        .WithMany("Attachments")
+                        .HasForeignKey("TransitionFieldValueId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Ticket");
 
                     b.Navigation("TicketFieldValue");
@@ -949,6 +1306,8 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("TicketHistory");
 
                     b.Navigation("TransitionField");
+
+                    b.Navigation("TransitionFieldValue");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.CategoryProject", b =>
@@ -968,25 +1327,6 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("TicketHub.Core.Entities.CategoryRole", b =>
-                {
-                    b.HasOne("TicketHub.Core.Entities.Category", "Category")
-                        .WithMany("CategoryRoles")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TicketHub.Core.Entities.Role", "Role")
-                        .WithMany("CategoryRoles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.Comment", b =>
@@ -1024,6 +1364,17 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("TicketField");
+                });
+
+            modelBuilder.Entity("TicketHub.Core.Entities.Notification", b =>
+                {
+                    b.HasOne("TicketHub.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.Project", b =>
@@ -1161,7 +1512,7 @@ namespace TicketHub.Infrastructure.Migrations
                         .HasForeignKey("ParentHistoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TicketHub.Core.Entities.User", "User")
+                    b.HasOne("TicketHub.Core.Entities.Role", "Role")
                         .WithMany("Histories")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1181,7 +1532,7 @@ namespace TicketHub.Infrastructure.Migrations
                         .HasForeignKey("TransitionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TicketHub.Core.Entities.Role", "Role")
+                    b.HasOne("TicketHub.Core.Entities.User", "User")
                         .WithMany("Histories")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1210,13 +1561,13 @@ namespace TicketHub.Infrastructure.Migrations
 
             modelBuilder.Entity("TicketHub.Core.Entities.Transition", b =>
                 {
-                    b.HasOne("TicketHub.Core.Entities.Status", "FromStatus")
+                    b.HasOne("TicketHub.Core.Entities.WorkflowStatus", "FromStatus")
                         .WithMany("FromTransitions")
                         .HasForeignKey("FromState")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("TicketHub.Core.Entities.Status", "ToStatus")
+                    b.HasOne("TicketHub.Core.Entities.WorkflowStatus", "ToStatus")
                         .WithMany("ToTransitions")
                         .HasForeignKey("ToState")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1252,6 +1603,25 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("FieldType");
 
                     b.Navigation("Transition");
+                });
+
+            modelBuilder.Entity("TicketHub.Core.Entities.TransitionFieldValue", b =>
+                {
+                    b.HasOne("TicketHub.Core.Entities.TicketHistory", "TicketHistory")
+                        .WithMany("TransitionFieldValues")
+                        .HasForeignKey("TicketHistoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TicketHub.Core.Entities.TransitionField", "TransitionField")
+                        .WithMany("TransitionFieldValues")
+                        .HasForeignKey("TransitionFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("TicketHistory");
+
+                    b.Navigation("TransitionField");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.TransitionRole", b =>
@@ -1315,8 +1685,6 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Navigation("CategoryProjects");
 
-                    b.Navigation("CategoryRoles");
-
                     b.Navigation("FieldCategories");
 
                     b.Navigation("Tickets");
@@ -1350,8 +1718,6 @@ namespace TicketHub.Infrastructure.Migrations
 
             modelBuilder.Entity("TicketHub.Core.Entities.Role", b =>
                 {
-                    b.Navigation("CategoryRoles");
-
                     b.Navigation("Histories");
 
                     b.Navigation("RolePermissions");
@@ -1367,13 +1733,9 @@ namespace TicketHub.Infrastructure.Migrations
                 {
                     b.Navigation("FromHistories");
 
-                    b.Navigation("FromTransitions");
-
                     b.Navigation("Tickets");
 
                     b.Navigation("ToHistories");
-
-                    b.Navigation("ToTransitions");
 
                     b.Navigation("WorkflowStatuses");
                 });
@@ -1406,6 +1768,8 @@ namespace TicketHub.Infrastructure.Migrations
                     b.Navigation("Attachments");
 
                     b.Navigation("ChildHistories");
+
+                    b.Navigation("TransitionFieldValues");
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.Transition", b =>
@@ -1418,6 +1782,13 @@ namespace TicketHub.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("TicketHub.Core.Entities.TransitionField", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("TransitionFieldValues");
+                });
+
+            modelBuilder.Entity("TicketHub.Core.Entities.TransitionFieldValue", b =>
                 {
                     b.Navigation("Attachments");
                 });
@@ -1446,7 +1817,11 @@ namespace TicketHub.Infrastructure.Migrations
 
             modelBuilder.Entity("TicketHub.Core.Entities.WorkflowStatus", b =>
                 {
+                    b.Navigation("FromTransitions");
+
                     b.Navigation("Tickets");
+
+                    b.Navigation("ToTransitions");
                 });
 #pragma warning restore 612, 618
         }

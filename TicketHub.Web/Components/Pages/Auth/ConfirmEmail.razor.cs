@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using TicketHub.Application.Interfaces;
 using TicketHub.Application.Models;
 using TicketHub.Core.Interfaces;
@@ -12,6 +12,7 @@ public partial class ConfirmEmail : ComponentBase
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
     [Inject] protected IEmailService EmailService { get; set; } = default!;
     [Inject] protected ILogger<ConfirmEmail> Logger { get; set; } = default!;
+    [Inject] protected IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
@@ -35,7 +36,8 @@ public partial class ConfirmEmail : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         verifyModel ??= new();
-        Email = HttpContext?.Request.Cookies["TempEmail"];
+        var httpContext = HttpContext ?? HttpContextAccessor.HttpContext;
+        Email = httpContext?.Request?.Cookies["TempEmail"];
 
         if (string.IsNullOrEmpty(Email))
         {

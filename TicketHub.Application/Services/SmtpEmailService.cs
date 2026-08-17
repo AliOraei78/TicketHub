@@ -10,31 +10,44 @@ namespace TicketHub.Infrastructure.Services;
 public class SmtpEmailService : IEmailService
 {
     private readonly ILogger<SmtpEmailService> _logger;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
-    public SmtpEmailService(ILogger<SmtpEmailService> logger)
+    public SmtpEmailService(ILogger<SmtpEmailService> logger, Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task SendEmailAsync(string toEmail, string subject, string body)
     {
         _logger.LogInformation("شروع ارسال ایمیل به {ToEmail} با موضوع: {Subject}", toEmail, subject);
 
+        var host = _configuration["EmailSettings:Host"] ?? "smtp.gmail.com";
+        var port = int.TryParse(_configuration["EmailSettings:Port"], out var p) ? p : 587;
+        var userName = _configuration["EmailSettings:UserName"] ?? _configuration["EmailSettings:FromEmail"];
+        var password = _configuration["EmailSettings:Password"];
+        var fromEmail = _configuration["EmailSettings:FromEmail"] ?? userName ?? "noreply@tickethub.io";
+        var fromName = _configuration["EmailSettings:FromName"] ?? "TicketHub System";
+
+        if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password))
+        {
+            _logger.LogWarning("[SMTP MOCK/DISABLED] تنظیمات احراز هویت ایمیل (EmailSettings:UserName/Password) پیکربندی نشده است. ایمیل ارسالی به {ToEmail}: {Subject}", toEmail, subject);
+            return;
+        }
+
         try
         {
-            // Configure SMTP client settings (e.g., for Gmail)
-            using var smtpClient = new SmtpClient("smtp.gmail.com")
+            using var smtpClient = new SmtpClient(host)
             {
-                Port = 587,
-                Credentials = new NetworkCredential("jenabicoder@gmail.com", "mdipkbeemzzylldh"),
+                Port = port,
+                Credentials = new NetworkCredential(userName, password),
                 EnableSsl = true,
                 Timeout = 5000 // 5 seconds timeout to prevent hanging
             };
 
-            // Prepare the email message
             using var mailMessage = new MailMessage
             {
-                From = new MailAddress("jenabicoder@gmail.com", "TicketHub System"),
+                From = new MailAddress(fromEmail, fromName),
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = true,
@@ -42,7 +55,6 @@ public class SmtpEmailService : IEmailService
 
             mailMessage.To.Add(toEmail);
 
-            // Send the email asynchronously
             await smtpClient.SendMailAsync(mailMessage);
 
             _logger.LogInformation("ایمیل با موفقیت به {ToEmail} ارسال شد.", toEmail);

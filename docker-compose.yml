@@ -1,25 +1,25 @@
 services:
   # =========================================================================
-  # 1. SQL Server 2022 Database
+  # 1. PostgreSQL 17 Database
   # =========================================================================
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: tickethub-sqlserver
+  postgres:
+    image: postgres:17-alpine
+    container_name: tickethub-postgres
     restart: unless-stopped
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${DB_PASSWORD:-Password123!}"
-      MSSQL_PID: "Developer"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-Password123!}"
+      POSTGRES_DB: TicketHubDb
     ports:
-      - "${DB_PORT:-14333}:1433"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - mssql_data:/var/opt/mssql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Password123!}' -Q 'SELECT 1' -C || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-Password123!}' -Q 'SELECT 1'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d TicketHubDb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   # =========================================================================
   # 2. Redis Distributed Cache & SignalR Backplane
@@ -39,29 +39,7 @@ services:
       retries: 5
 
   # =========================================================================
-  # 3. RabbitMQ Message Broker (MassTransit Outbox / Email Queue)
-  # =========================================================================
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: tickethub-rabbitmq
-    restart: unless-stopped
-    ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-guest}"
-      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASS:-guest}"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-  # =========================================================================
-  # 4. TicketHub Web Application (.NET 10 Blazor Server)
+  # 3. TicketHub Web Application (.NET 10 Blazor Server)
   # =========================================================================
   tickethub-web:
     build:
@@ -72,49 +50,33 @@ services:
     ports:
       - "${APP_PORT:-5000}:8080"
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      seq:
-        condition: service_started
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTP_PORTS=8080
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=TicketHubDb;User Id=sa;Password=${DB_PASSWORD:-Password123!};TrustServerCertificate=True;MultipleActiveResultSets=true;
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=TicketHubDb;Username=postgres;Password=${DB_PASSWORD:-Password123!};
       - ConnectionStrings__Redis=redis:6379,abortConnect=false
-      - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__Username=${RABBITMQ_USER:-guest}
-      - RabbitMQ__Password=${RABBITMQ_PASS:-guest}
-      - Serilog__WriteTo__2__Name=Seq
-      - Serilog__WriteTo__2__Args__serverUrl=http://seq:80
+      - InitialAdmin__Email=${INITIAL_ADMIN_EMAIL:-}
+      - InitialAdmin__Password=${INITIAL_ADMIN_PASSWORD:-}
+      - InitialAdmin__Name=${INITIAL_ADMIN_NAME:-مدیر کل سیستم}
+      - InitialAdmin__PhoneNumber=${INITIAL_ADMIN_PHONE:-}
+      - EmailSettings__Host=${SMTP_HOST:-smtp.gmail.com}
+      - EmailSettings__Port=${SMTP_PORT:-587}
+      - EmailSettings__UserName=${SMTP_USERNAME:-}
+      - EmailSettings__Password=${SMTP_PASSWORD:-}
+      - EmailSettings__FromEmail=${SMTP_FROM_EMAIL:-}
+      - EmailSettings__FromName=${SMTP_FROM_NAME:-TicketHub System}
     volumes:
       - app_logs:/app/logs
       - app_uploads:/app/wwwroot/uploads
       - app_keys:/app/dataprotection-keys
 
-  # =========================================================================
-  # 5. Seq Centralized Structured Logging Dashboard
-  # =========================================================================
-  seq:
-    image: datalust/seq:latest
-    container_name: tickethub-seq
-    restart: unless-stopped
-    environment:
-      ACCEPT_EULA: "Y"
-      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
-    ports:
-      - "${SEQ_PORT:-5341}:80"
-    volumes:
-      - seq_data:/data
-
 volumes:
-  mssql_data:
+  postgres_data:
   redis_data:
-  rabbitmq_data:
   app_logs:
   app_uploads:
   app_keys:
-  seq_data:

@@ -80,18 +80,19 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.run_e2e == true)
 
     services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
+      postgres:
+        image: postgres:17-alpine
         ports:
-          - 1433:1433
+          - 5432:5432
         env:
-          ACCEPT_EULA: 'Y'
-          MSSQL_SA_PASSWORD: 'Password123!'
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 'Password123!'
+          POSTGRES_DB: TicketHubDb_E2E
         options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password123!' -Q 'SELECT 1' -C || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'Password123!' -Q 'SELECT 1'"
-          --health-interval 15s
-          --health-timeout 10s
-          --health-retries 15
+          --health-cmd "pg_isready -U postgres -d TicketHubDb_E2E"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
 
     steps:
       - name: Checkout Code
@@ -110,7 +111,7 @@ jobs:
 
       - name: Run Playwright E2E Tests
         env:
-          E2E_CONNECTION_STRING: "Server=127.0.0.1,1433;Database=TicketHubDb_E2E;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true;"
+          E2E_CONNECTION_STRING: "Host=127.0.0.1;Port=5432;Database=TicketHubDb_E2E;Username=postgres;Password=Password123!;"
         run: >
           dotnet test TicketHub.Tests.E2E/TicketHub.Tests.E2E.csproj
           --no-build

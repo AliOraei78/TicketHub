@@ -128,7 +128,7 @@ public class HealthCheckTests
 
         json.Should().Contain("status");
         json.Should().Contain("entries");
-        json.Should().Contain("Database (SQL Server)");
+        json.Should().Contain("Database (PostgreSQL)");
     }
 
     [Fact]

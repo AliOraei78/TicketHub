@@ -13,7 +13,7 @@ public static class HealthCheckRegistrationExtensions
     {
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>(
-                name: "Database (SQL Server)",
+                name: "Database (PostgreSQL)",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: new[] { "db", "sql", "ready" })
             .AddCheck<RedisHealthCheck>(

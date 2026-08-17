@@ -27,7 +27,7 @@ using TicketHub.Web.Components;
 using TicketHub.Web.Middlewares;
 using TicketHub.Web.Security;
 using Hangfire;
-using Hangfire.SqlServer;
+using Hangfire.PostgreSql;
 using MassTransit;
 using TicketHub.Application.Behaviors;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -81,7 +81,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
                                     .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
 
@@ -218,7 +218,7 @@ builder.Services.AddMassTransit(x =>
 
     x.AddEntityFrameworkOutbox<AppDbContext>(o =>
     {
-        o.UseSqlServer();
+        o.UsePostgres();
         o.UseBusOutbox();
     });
 
@@ -250,13 +250,9 @@ builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new SqlServerStorageOptions
+    .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")), new PostgreSqlStorageOptions
     {
-        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-        QueuePollInterval = TimeSpan.Zero,
-        UseRecommendedIsolationLevel = true,
-        DisableGlobalLocks = true,
+        QueuePollInterval = TimeSpan.FromSeconds(15),
         PrepareSchemaIfNecessary = true
     }));
 
@@ -449,7 +445,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapGet("/dev/login", async (HttpContext context, IUserService userService, string? role) =>
     {
-        var defaultAdminEmail = app.Configuration["InitialAdmin:Email"] ?? "admin@tickethub.io";
+        var defaultAdminEmail = app.Configuration["InitialAdmin:Email"] ?? "a.jenabi78@gmail.com";
         var targetEmail = role switch
         {
             "support" => "support@tickethub.io",

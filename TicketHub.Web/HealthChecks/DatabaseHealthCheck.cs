@@ -30,7 +30,7 @@ public class DatabaseHealthCheck : IHealthCheck
 
             if (!canConnect)
             {
-                return HealthCheckResult.Unhealthy("عدم امکان برقراری ارتباط با پایگاه داده SQL Server.",
+                return HealthCheckResult.Unhealthy("عدم امکان برقراری ارتباط با پایگاه داده PostgreSQL.",
                     data: new Dictionary<string, object>
                     {
                         ["responseTimeMs"] = stopwatch.ElapsedMilliseconds,
@@ -38,11 +38,11 @@ public class DatabaseHealthCheck : IHealthCheck
                     });
             }
 
-            return HealthCheckResult.Healthy("اتصال به پایگاه داده SQL Server پایدار و فعال است.",
+            return HealthCheckResult.Healthy("اتصال به پایگاه داده PostgreSQL پایدار و فعال است.",
                 data: new Dictionary<string, object>
                 {
                     ["responseTimeMs"] = stopwatch.ElapsedMilliseconds,
-                    ["provider"] = dbContext.Database.ProviderName ?? "SqlServer"
+                    ["provider"] = dbContext.Database.ProviderName ?? "Npgsql.EntityFrameworkCore.PostgreSQL"
                 });
         }
         catch (Exception ex)

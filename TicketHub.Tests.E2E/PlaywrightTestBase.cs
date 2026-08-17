@@ -12,12 +12,14 @@ namespace TicketHub.Tests.E2E
         protected IBrowserContext Context { get; private set; } = default!;
         protected IPage Page { get; private set; } = default!;
 
+        protected virtual bool AutoAuthenticate => true;
+
         protected PlaywrightTestBase(CustomWebApplicationFactory factory)
         {
             Factory = factory;
         }
 
-        public async Task InitializeAsync()
+        public virtual async Task InitializeAsync()
         {
             PlaywrightInstance = await Playwright.CreateAsync();
             Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
@@ -26,11 +28,14 @@ namespace TicketHub.Tests.E2E
                 ViewportSize = new ViewportSize { Width = 1440, Height = 900 }
             });
             Page = await Context.NewPageAsync();
-            Page.SetDefaultTimeout(60000);
-            Page.SetDefaultNavigationTimeout(60000);
+            Page.SetDefaultTimeout(15000);
+            Page.SetDefaultNavigationTimeout(15000);
 
-            // Establish active authentication session for all E2E tests
-            await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
+            if (AutoAuthenticate)
+            {
+                // Establish active authentication session for authorized E2E tests
+                await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
+            }
         }
 
         protected static Task WaitForBlazorAsync(int ms = 800) => Task.Delay(ms);

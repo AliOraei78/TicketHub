@@ -8,6 +8,8 @@ namespace TicketHub.Tests.E2E
     [Collection("E2E Tests")]
     public class RegisterE2ETests : PlaywrightTestBase, IClassFixture<CustomWebApplicationFactory>
     {
+        protected override bool AutoAuthenticate => false;
+
         public RegisterE2ETests(CustomWebApplicationFactory factory) : base(factory)
         {
         }

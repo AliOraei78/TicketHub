@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8" />
@@ -54,7 +54,9 @@
     <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body>
-    <Routes @rendermode="PageRenderMode" />
+    <CascadingValue Value="HttpContext">
+        <Routes @rendermode="PageRenderMode" />
+    </CascadingValue>
 
     <!-- =========================================================================
          CYBER COCKPIT BLAZOR RECONNECTION MODAL (#components-reconnect-modal)

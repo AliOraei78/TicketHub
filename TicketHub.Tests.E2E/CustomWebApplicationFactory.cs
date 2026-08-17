@@ -29,7 +29,7 @@ namespace TicketHub.Tests.E2E
         public CustomWebApplicationFactory()
         {
             _dbConnectionString = Environment.GetEnvironmentVariable("E2E_CONNECTION_STRING")
-                ?? "Server=127.0.0.1,14333;Database=TicketHubDb_Test;User Id=sa;Password=Ali433433_StrongPass!;TrustServerCertificate=True;MultipleActiveResultSets=true;";
+                ?? "Host=127.0.0.1;Port=5432;Database=TicketHubDb_Test;Username=postgres;Password=Password123!;";
 
             // Set environment variable so Program.cs reads test connection string and in-memory services
             Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _dbConnectionString);
@@ -43,20 +43,26 @@ namespace TicketHub.Tests.E2E
         {
             try
             {
-                var connBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_dbConnectionString);
-                var targetDbName = connBuilder.InitialCatalog;
-                connBuilder.InitialCatalog = "master";
+                var connBuilder = new Npgsql.NpgsqlConnectionStringBuilder(_dbConnectionString);
+                var targetDbName = connBuilder.Database;
+                connBuilder.Database = "postgres";
                 var masterConnStr = connBuilder.ConnectionString;
 
                 for (int retry = 0; retry < 15; retry++)
                 {
                     try
                     {
-                        using var masterConn = new Microsoft.Data.SqlClient.SqlConnection(masterConnStr);
+                        using var masterConn = new Npgsql.NpgsqlConnection(masterConnStr);
                         masterConn.Open();
                         using var cmd = masterConn.CreateCommand();
-                        cmd.CommandText = $"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '{targetDbName}') CREATE DATABASE [{targetDbName}];";
-                        cmd.ExecuteNonQuery();
+                        cmd.CommandText = $"SELECT 1 FROM pg_database WHERE datname = '{targetDbName}'";
+                        var exists = cmd.ExecuteScalar() != null;
+                        if (!exists)
+                        {
+                            using var createCmd = masterConn.CreateCommand();
+                            createCmd.CommandText = $"CREATE DATABASE \"{targetDbName}\"";
+                            createCmd.ExecuteNonQuery();
+                        }
                         break;
                     }
                     catch when (retry < 14)
@@ -158,7 +164,7 @@ namespace TicketHub.Tests.E2E
                 // Add DB Context pointing to Test DB
                 services.AddDbContextFactory<AppDbContext>(options =>
                 {
-                    options.UseSqlServer(_dbConnectionString)
+                    options.UseNpgsql(_dbConnectionString)
                            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
                                                     .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });
@@ -179,28 +185,7 @@ namespace TicketHub.Tests.E2E
 
         public async Task InitializeAsync()
         {
-            // 1. Ensure SQL Server is reachable and create target database from master
-            var connBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_dbConnectionString);
-            var targetDbName = connBuilder.InitialCatalog;
-            connBuilder.InitialCatalog = "master";
-            var masterConnStr = connBuilder.ConnectionString;
-
-            for (int retry = 0; retry < 15; retry++)
-            {
-                try
-                {
-                    using var masterConn = new Microsoft.Data.SqlClient.SqlConnection(masterConnStr);
-                    await masterConn.OpenAsync();
-                    using var cmd = masterConn.CreateCommand();
-                    cmd.CommandText = $"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '{targetDbName}') CREATE DATABASE [{targetDbName}];";
-                    await cmd.ExecuteNonQueryAsync();
-                    break;
-                }
-                catch when (retry < 14)
-                {
-                    await Task.Delay(1000);
-                }
-            }
+            EnsureDatabaseExists();
 
             // 2. Ensure server is started (which triggers Program.cs migration & Hangfire)
             CreateDefaultClient();
