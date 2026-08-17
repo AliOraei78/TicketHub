@@ -9,13 +9,13 @@
 else
 {
     <div class="@(IsCyberpunk ? $"bg-[#080d1a]/80 backdrop-blur-2xl rounded-2xl shadow-[0_0_20px_rgba(8,13,26,0.8)] border border-cyan-500/30 overflow-hidden {Class}" : $"bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden {Class}")">
-        <div class="w-full overflow-x-auto custom-scrollbar">
-            <table class="w-full min-w-[650px] text-right flex flex-col">
-                <thead class="@(IsCyberpunk ? "bg-[#050811]/90 border-b border-cyan-500/30 table w-full table-fixed shadow-2xs select-none" : "bg-slate-50 border-b border-slate-200 table w-full table-fixed shadow-2xs select-none")">
-                    <tr class="table w-full table-fixed">
+        <div class="w-full overflow-auto max-h-[450px] custom-scrollbar">
+            <table class="w-full @(string.IsNullOrWhiteSpace(TableMinWidth) ? "min-w-[560px] sm:min-w-full" : TableMinWidth) text-right border-collapse">
+                <thead class="sticky top-0 z-10 @(IsCyberpunk ? "bg-[#050811] shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-b border-cyan-500/30 select-none" : "bg-slate-50 border-b border-slate-200 select-none")">
+                    <tr>
                         @if (ShowSelection)
                         {
-                            <th class="pr-3.5 pl-0 py-3 w-[3%] text-center">
+                            <th class="px-2 py-3 w-[52px] min-w-[52px] max-w-[52px] text-center shrink-0">
                                 @if (IsCyberpunk)
                                 {
                                     <label class="cyber-checkbox-container inline-flex justify-center items-center cursor-pointer m-0">
@@ -37,17 +37,17 @@ else
                         }
                         @if (ShowRowIndex)
                         {
-                            <th class="pr-0 pl-1 py-3 text-xs font-bold @(IsCyberpunk ? "text-cyan-400/80 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]" : "text-slate-600") uppercase tracking-wider w-[3%] text-center">ردیف</th>
+                            <th class="px-1 py-3 text-xs font-bold @(IsCyberpunk ? "text-cyan-400/80 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]" : "text-slate-600") uppercase tracking-wider w-[52px] min-w-[52px] max-w-[52px] text-center shrink-0">ردیف</th>
                         }
                         @HeaderTemplate
                     </tr>
                 </thead>
 
-                <tbody class="@(IsCyberpunk ? "divide-y divide-cyan-900/30 block overflow-y-auto h-[450px] w-full custom-scrollbar" : "divide-y divide-slate-100 block overflow-y-auto h-[450px] w-full custom-scrollbar")">
+                <tbody class="@(IsCyberpunk ? "divide-y divide-cyan-900/30" : "divide-y divide-slate-100")">
                     @if (!Items.Any())
                     {
-                        <tr class="flex items-center justify-center h-full w-full py-12">
-                            <td class="@(IsCyberpunk ? "text-center text-sm font-medium text-cyan-500/70" : "text-center text-sm font-medium text-slate-400")">
+                        <tr>
+                            <td colspan="15" class="py-12 @(IsCyberpunk ? "text-center text-sm font-medium text-cyan-500/70" : "text-center text-sm font-medium text-slate-400")">
                                 @EmptyStateValue در سیستم یافت نشد.
                             </td>
                         </tr>
@@ -58,10 +58,10 @@ else
                         foreach (var item in Items)
                         {
                             var key = KeySelector(item);
-                            <tr @key="key" class="@(IsCyberpunk ? $"table w-full table-fixed hover:bg-cyan-900/10 hover:shadow-[inset_0_0_15px_rgba(56,189,248,0.15)] transition-all group/row {RowClassSelector?.Invoke(item)}" : $"table w-full table-fixed hover:bg-slate-50/80 transition-colors group/row {RowClassSelector?.Invoke(item)}")">
+                            <tr @key="key" class="@(IsCyberpunk ? $"hover:bg-cyan-900/10 hover:shadow-[inset_0_0_15px_rgba(56,189,248,0.15)] transition-all group/row {RowClassSelector?.Invoke(item)}" : $"hover:bg-slate-50/80 transition-colors group/row {RowClassSelector?.Invoke(item)}")">
                                 @if (ShowSelection)
                                 {
-                                    <td class="pr-3.5 pl-0 py-3 w-[3%] text-center">
+                                    <td class="px-2 py-3 w-[52px] min-w-[52px] max-w-[52px] text-center shrink-0">
                                         @if (IsCyberpunk)
                                         {
                                             bool isSelected = SelectedKeys.Contains(key);
@@ -86,7 +86,7 @@ else
                                 }
                                 @if (ShowRowIndex)
                                 {
-                                    <td class="pr-0 pl-1 py-3 w-[3%] text-center text-xs sm:text-[13px] font-bold @(IsCyberpunk ? "text-cyan-300/80" : "text-slate-500")">
+                                    <td class="px-1 py-3 w-[52px] min-w-[52px] max-w-[52px] text-center text-xs sm:text-[13px] font-bold @(IsCyberpunk ? "text-cyan-300/80" : "text-slate-500") shrink-0">
                                         @(rowIndex++)
                                     </td>
                                 }

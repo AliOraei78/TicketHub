@@ -13,26 +13,28 @@
           SelectedKeysChanged="OnSelectionChanged"
           EmptyStateValue="کاربری"
           ShowSelection="CanManage"
+          ShowRowIndex="false"
+          TableMinWidth="min-w-[760px] lg:min-w-full"
           IsCyberpunk="true">
 
     <HeaderTemplate>
-        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[22%]">نام کاربر</th>
-        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[22%]">ایمیل</th>
-        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[16%]">نقش‌ها</th>
-        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[16%]">پروژه‌ها</th>
-        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] w-[11%]">وضعیت</th>
-        <th class="px-2 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[7%]">عملیات</th>
+        <th class="pr-5 pl-3 sm:pr-6 sm:pl-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[20%]">نام کاربر</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[20%]">ایمیل</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[17%]">نقش‌ها</th>
+        <th class="px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[17%]">پروژه‌ها</th>
+        <th class="px-3 sm:px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[13%]">وضعیت</th>
+        <th class="px-2 sm:px-3 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[13%]">عملیات</th>
     </HeaderTemplate>
 
     <RowTemplate Context="user">
-        <td class="px-4 py-3 w-[22%]">
-            <div class="flex items-center gap-2.5">
+        <td class="pr-5 pl-3 sm:pr-6 sm:pl-4 py-3 w-[20%]">
+            <div class="flex items-center gap-3 min-w-0">
                 <TextAvatar Text="@user.Name" />
-                <span class="font-bold text-[13px] text-slate-200 truncate block max-w-[150px] group-hover/row:text-cyan-300 transition-colors" title="@user.Name">@user.Name</span>
+                <span class="font-bold text-[13px] text-slate-200 truncate block group-hover/row:text-cyan-300 transition-colors" title="@user.Name">@user.Name</span>
             </div>
         </td>
-        <td class="px-4 py-3 text-xs text-slate-400 font-medium w-[22%] truncate max-w-[150px] group-hover/row:text-cyan-400/80 transition-colors" dir="ltr" title="@user.Email">@user.Email</td>
-        <td class="px-4 py-3 w-[16%]">
+        <td class="px-4 py-3 text-xs text-slate-400 font-medium w-[20%] truncate group-hover/row:text-cyan-400/80 transition-colors" dir="ltr" title="@user.Email">@user.Email</td>
+        <td class="px-4 py-3 w-[17%]">
             <div class="flex flex-wrap gap-1.5">
                 @foreach (var userRole in user.UserRoles)
                 {
@@ -44,7 +46,7 @@
                 }
             </div>
         </td>
-        <td class="px-4 py-3 w-[16%]">
+        <td class="px-4 py-3 w-[17%]">
             <div class="flex flex-wrap gap-1.5">
                 @{
                     var userProjects = user.UserRoles
@@ -67,22 +69,25 @@
                 }
             </div>
         </td>
-        <td class="px-4 py-3 w-[11%]">
-            @if (user.IsActive)
-            {
-                <span class="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-bold drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"></span>
-                    فعال
-                </span>
-            }
-            else
-            {
-                <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700 text-slate-500 text-xs font-mono">
-                    غیرفعال
-                </span>
-            }
+        <td class="px-3 sm:px-4 py-3 text-center w-[13%]">
+            <div class="flex items-center justify-center">
+                @if (user.IsActive)
+                {
+                    <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-bold shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                        <span class="truncate">فعال</span>
+                    </span>
+                }
+                else
+                {
+                    <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[11px] sm:text-xs font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                        <span class="truncate">غیرفعال</span>
+                    </span>
+                }
+            </div>
         </td>
-        <td class="px-2 py-3 text-center w-[7%] opacity-70 group-hover/row:opacity-100 transition-opacity">
+        <td class="px-2 sm:px-3 py-3 text-center w-[13%]">
             <ActionButtons OnEdit="() => OnEdit.InvokeAsync(user)" OnDelete="() => OnDelete.InvokeAsync(user)" ResourceKey="@ResourceKey" />
         </td>
     </RowTemplate>

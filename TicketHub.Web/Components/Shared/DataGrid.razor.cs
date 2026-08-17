@@ -19,6 +19,7 @@ public partial class DataGrid<TItem, TKey> : ComponentBase
     [Parameter] public int CurrentPage { get; set; } = 1;
     [Parameter] public int PageSize { get; set; } = 10;
     [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public string TableMinWidth { get; set; } = string.Empty;
 
     [Parameter] public HashSet<TKey> SelectedKeys { get; set; } = new();
     [Parameter] public EventCallback<HashSet<TKey>> SelectedKeysChanged { get; set; }

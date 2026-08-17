@@ -89,8 +89,8 @@
 
     <!-- Main Two-Column Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <!-- Right Column: Add/Edit Ticket Field Form (4 Cols) -->
-        <div class="lg:col-span-4">
+        <!-- Right Column: Add/Edit Ticket Field Form (5 Cols on lg, 4 on xl) -->
+        <div class="lg:col-span-5 xl:col-span-4">
             <TicketFieldForm Model="fieldModel"
                              IsEditing="isEditing"
                              AvailableCategories="CatState.Value.Categories"
@@ -99,8 +99,8 @@
                              OnCancel="CancelEdit" />
         </div>
 
-        <!-- Left Column: Fields DataGrid & Filter Bar (8 Cols) -->
-        <div class="lg:col-span-8 space-y-3">
+        <!-- Left Column: Fields DataGrid & Filter Bar (7 Cols on lg, 8 on xl) -->
+        <div class="lg:col-span-7 xl:col-span-8 space-y-3">
             <!-- Search & Filter Command Bar -->
             <div class="bg-[#080d1a]/95 backdrop-blur-2xl p-3 px-4 rounded-2xl shadow-[0_0_25px_rgba(8,13,26,0.85)] border border-cyan-500/35 flex flex-wrap gap-3 items-center justify-between select-none">
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto flex-1">
@@ -168,57 +168,57 @@
                               IsCyberpunk="true">
 
                         <HeaderTemplate>
-                            <th class="px-6 py-3.5 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[25%]">عنوان فیلد</th>
-                            <th class="px-6 py-3.5 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[10%]">ترتیب</th>
-                            <th class="px-6 py-3.5 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[16%]">نوع فیلد</th>
-                            <th class="px-6 py-3.5 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[22%]">انواع تیکت</th>
-                            <th class="px-6 py-3.5 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[12%]">وضعیت</th>
-                            <th class="px-6 py-3.5 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[15%]">عملیات</th>
+                            <th class="pr-5 pl-3 sm:pr-6 sm:pl-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[26%]">عنوان فیلد</th>
+                            <th class="px-2 sm:px-3 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[9%]">ترتیب</th>
+                            <th class="px-3 sm:px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[16%]">نوع فیلد</th>
+                            <th class="px-3 sm:px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[22%]">انواع تیکت</th>
+                            <th class="px-3 sm:px-4 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-right w-[12%]">وضعیت</th>
+                            <th class="px-2 sm:px-3 py-3 text-xs font-bold text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(56,189,248,0.5)] text-center w-[15%]">عملیات</th>
                         </HeaderTemplate>
 
                         <RowTemplate Context="field">
                             @{
                                 var enumType = (FieldTypeEnum)field.FieldTypeId;
                             }
-                            <td class="px-6 py-3.5 w-[25%]">
-                                <div class="flex items-center gap-3">
+                            <td class="pr-5 pl-3 sm:pr-6 sm:pl-4 py-3 w-[26%]">
+                                <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
                                     <!-- Dynamic Field Type Icon Box -->
-                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm @GetFieldTypeAvatarClass(enumType)">
+                                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm @GetFieldTypeAvatarClass(enumType)">
                                         @GetFieldTypeIcon(enumType)
                                     </div>
-                                    <div class="space-y-0.5 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-sm text-slate-200 block truncate group-hover/row:text-cyan-300 transition-colors" title="@field.Name">@field.Name</span>
+                                    <div class="space-y-0.5 min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                            <span class="font-bold text-xs sm:text-sm text-slate-200 block truncate group-hover/row:text-cyan-300 transition-colors" title="@field.Name">@field.Name</span>
                                             @if (field.IsRequired)
                                             {
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">اجباری</span>
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30 shrink-0">اجباری</span>
                                             }
                                         </div>
-                                        <span class="text-[11px] font-mono text-slate-500 block truncate" title="@field.Placeholder">
+                                        <span class="text-[10px] sm:text-[11px] font-mono text-slate-500 block truncate" title="@field.Placeholder">
                                             @(string.IsNullOrWhiteSpace(field.Placeholder) ? $"شناسه: #{field.Id}" : field.Placeholder)
                                         </span>
                                     </div>
                                 </div>
                             </td>
 
-                            <td class="px-6 py-3.5 text-center w-[10%]">
-                                <span class="inline-flex items-center justify-center w-7 h-7 bg-cyan-500/10 text-cyan-300 border border-cyan-400/25 rounded-lg text-xs font-mono font-bold">
+                            <td class="px-2 sm:px-3 py-3 text-center w-[9%]">
+                                <span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 bg-cyan-500/10 text-cyan-300 border border-cyan-400/25 rounded-lg text-[11px] sm:text-xs font-mono font-bold">
                                     @field.SortOrder
                                 </span>
                             </td>
 
-                            <td class="px-6 py-3.5 w-[16%]">
+                            <td class="px-3 sm:px-4 py-3 w-[16%]">
                                 @{
                                     var fType = TypeState.Value.FieldTypes?.FirstOrDefault(t => t.Id == field.FieldTypeId);
                                     var typeName = fType?.Type ?? enumType.ToString();
                                 }
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium truncate max-w-[130px] border shadow-xs @GetFieldTypeBadgeClass(enumType)" title="@typeName">
-                                    <span class="shrink-0 scale-90">@GetFieldTypeIcon(enumType)</span>
+                                <span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-medium truncate max-w-[120px] border shadow-xs @GetFieldTypeBadgeClass(enumType)" title="@typeName">
+                                    <span class="shrink-0 scale-75 sm:scale-90">@GetFieldTypeIcon(enumType)</span>
                                     <span class="truncate">@typeName</span>
                                 </span>
                             </td>
 
-                            <td class="px-6 py-3.5 w-[22%]">
+                            <td class="px-3 sm:px-4 py-3 w-[22%]">
                                 <div class="flex flex-wrap gap-1">
                                     @if (field.CategoryIds != null && field.CategoryIds.Any() && CatState.Value.Categories != null)
                                     {
@@ -227,7 +227,7 @@
                                             var category = CatState.Value.Categories.FirstOrDefault(c => c.Id == catId);
                                             if (category != null)
                                             {
-                                                <span class="inline-block px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-400/30 text-indigo-300 text-xs font-medium truncate max-w-[100px]" title="@category.Name">
+                                                <span class="inline-block px-1.5 sm:px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-400/30 text-indigo-300 text-[11px] sm:text-xs font-medium truncate max-w-[90px]" title="@category.Name">
                                                     @category.Name
                                                 </span>
                                             }
@@ -235,43 +235,43 @@
                                     }
                                     else
                                     {
-                                        <span class="text-cyan-400/70 text-xs font-mono">عمومی (همه)</span>
+                                        <span class="text-cyan-400/70 text-[11px] sm:text-xs font-mono">عمومی (همه)</span>
                                     }
                                 </div>
                             </td>
 
-                            <td class="px-6 py-3.5 w-[12%]">
+                            <td class="px-3 sm:px-4 py-3 w-[12%]">
                                 @if (field.IsActive)
                                 {
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                        فعال
+                                    <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-bold shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                                        <span class="truncate">فعال</span>
                                     </span>
                                 }
                                 else
                                 {
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                        غیرفعال
+                                    <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[11px] sm:text-xs font-medium">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                                        <span class="truncate">غیرفعال</span>
                                     </span>
                                 }
                             </td>
 
-                            <td class="px-6 py-3.5 text-center w-[15%]">
-                                <div class="flex items-center justify-center gap-2">
+                            <td class="px-2 sm:px-3 py-3 text-center w-[15%]">
+                                <div class="flex items-center justify-center gap-1 sm:gap-2">
                                     <button type="button"
                                             @onclick="() => EditField(field)"
-                                            class="p-1.5 text-cyan-400 hover:text-cyan-200 hover:bg-cyan-500/20 rounded-lg transition-all cursor-pointer"
+                                            class="p-1 sm:p-1.5 text-cyan-400 hover:text-cyan-200 hover:bg-cyan-500/20 rounded-lg transition-all cursor-pointer"
                                             title="ویرایش">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
                                     <button type="button"
                                             @onclick="() => OpenDeleteModal(field)"
-                                            class="p-1.5 text-rose-400 hover:text-rose-200 hover:bg-rose-500/20 rounded-lg transition-all cursor-pointer"
+                                            class="p-1 sm:p-1.5 text-rose-400 hover:text-rose-200 hover:bg-rose-500/20 rounded-lg transition-all cursor-pointer"
                                             title="حذف">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>

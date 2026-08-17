@@ -48,67 +48,67 @@
             <div class="cyber-laser-sweep"></div>
 
             <!-- Left / Center: Telemetry HUD & Status -->
-            <div class="flex items-center gap-3">
-                <button @onclick="ToggleMobileMenu" class="md:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-cyan-300 transition-all border border-slate-700 focus-ring cursor-pointer">
+            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 overflow-hidden">
+                <button @onclick="ToggleMobileMenu" class="md:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-cyan-300 transition-all border border-slate-700 focus-ring cursor-pointer shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
 
                 <!-- Live Server Online Status -->
-                <div class="inline-flex items-center gap-2 bg-[#050811]/90 px-3 py-1.5 rounded-xl border border-emerald-500/30 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)] text-xs font-bold select-none hover:border-emerald-400/60 transition-all backdrop-blur-md">
-                    <span class="relative flex h-2 w-2">
+                <div class="inline-flex items-center gap-2 bg-[#050811]/90 px-2.5 sm:px-3 py-1.5 rounded-xl border border-emerald-500/30 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)] text-xs font-bold select-none hover:border-emerald-400/60 transition-all backdrop-blur-md shrink-0 whitespace-nowrap">
+                    <span class="relative flex h-2 w-2 shrink-0">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span>سرور آنلاین // پچ ۱.۰</span>
+                    <span class="whitespace-nowrap">سرور آنلاین // پچ ۱.۰</span>
                 </div>
 
-                <!-- Live Cyber Persian Calendar Badge -->
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#050811]/90 border border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.15)] font-mono text-xs select-none hover:border-cyan-400/60 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-cyan-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Live Cyber Persian Calendar Badge (Shown on standard laptops lg: 1024px+) -->
+                <div class="hidden lg:inline-flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#050811]/90 border border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.15)] font-mono text-xs select-none hover:border-cyan-400/60 transition-all shrink-0 whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-cyan-400 animate-pulse shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span class="font-bold">@CurrentPersianDate</span>
+                    <span class="font-bold whitespace-nowrap">@CurrentPersianDate</span>
                 </div>
 
-                <!-- Server Latency & FPS Telemetry -->
-                <div dir="ltr" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.08] font-mono text-[11px] text-slate-400 select-none">
-                    <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <!-- Server Latency & FPS Telemetry (Shown on wide screens xl: 1280px+) -->
+                <div dir="ltr" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.08] font-mono text-[11px] text-slate-400 select-none shrink-0 whitespace-nowrap">
+                    <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     <span>PING:</span>
                     <span id="hud-ping-val" class="text-cyan-300 font-bold">18ms</span>
                     <span class="text-slate-600">//</span>
                     <span class="text-indigo-300 font-semibold">60 FPS</span>
                 </div>
 
-                <!-- Core Engine Chip -->
-                <div dir="ltr" class="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.08] font-mono text-[10px] text-slate-400 select-none">
-                    <span>ENGINE:</span>
-                    <span class="text-slate-200 font-bold">.NET 10</span>
-                </div>
-
-                <!-- Stealth / Eco Performance Toggle -->
+                <!-- Stealth / Eco Performance Toggle (Shown on wide screens xl: 1280px+) -->
                 <button id="hud-eco-mode-btn" type="button" onclick="window.toggleStealthMode()"
-                        class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#050811]/90 border border-amber-500/30 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)] text-xs font-bold select-none hover:border-amber-400/60 hover:text-amber-200 transition-all cursor-pointer focus-ring"
+                        class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#050811]/90 border border-amber-500/30 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)] text-xs font-bold select-none hover:border-amber-400/60 hover:text-amber-200 transition-all cursor-pointer focus-ring shrink-0 whitespace-nowrap"
                         title="تغییر حالت گرافیکی و عملکردی (کلید میانبر: E)">
-                    <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     <span class="hidden md:inline">حالت کم‌مصرف</span>
                 </button>
 
-                <!-- Keyboard Shortcuts Cheat Sheet Button -->
+                <!-- Keyboard Shortcuts Cheat Sheet Button (Shown on wide screens xl: 1280px+) -->
                 <button type="button" onclick="window.toggleShortcutsModal()"
-                        class="hidden sm:inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.1] text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 text-xs font-mono select-none transition-all cursor-pointer focus-ring"
+                        class="hidden xl:inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.1] text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 text-xs font-mono select-none transition-all cursor-pointer focus-ring shrink-0 whitespace-nowrap"
                         title="راهنمای کلیدهای میانبر (کلید میانبر: ?)">
                     <span class="font-bold">⌨️</span>
                     <kbd class="px-1 py-0.2 bg-slate-900 border border-slate-700/60 rounded text-[10px] text-cyan-300 font-mono">?</kbd>
                 </button>
+
+                <!-- Core Engine Chip (Shown on 2xl: 1536px+) -->
+                <div dir="ltr" class="hidden 2xl:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#050811]/80 border border-white/[0.08] font-mono text-[10px] text-slate-400 select-none shrink-0 whitespace-nowrap">
+                    <span>ENGINE:</span>
+                    <span class="text-slate-200 font-bold">.NET 10</span>
+                </div>
             </div>
 
             <!-- Right Profile / Actions Quick Menu -->
-            <div class="flex items-center gap-2.5 relative select-none">
+            <div class="flex items-center gap-2 sm:gap-2.5 relative select-none shrink-0">
                 <!-- Knowledge Base Quick Header Button -->
                 <a href="/kb"
-                   class="w-8.5 h-8.5 rounded-full bg-[#050811]/90 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 border border-white/[0.1] flex items-center justify-center transition-all cursor-pointer shadow-sm focus-ring"
+                   class="w-8.5 h-8.5 rounded-full bg-[#050811]/90 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 border border-white/[0.1] flex items-center justify-center transition-all cursor-pointer shadow-sm focus-ring shrink-0"
                    title="پایگاه دانش و راهنما">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -118,14 +118,14 @@
                 <NotificationBell />
 
                 <!-- User Profile & Avatar -->
-                <div class="flex items-center gap-3 cursor-pointer group" @onclick="ToggleProfileMenu">
+                <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0" @onclick="ToggleProfileMenu">
                     <div class="hidden sm:flex flex-col items-start text-right" style="text-align: right; align-items: flex-start;">
                         <span class="text-xs font-bold text-slate-100 group-hover:text-cyan-300 transition-colors max-w-[130px] truncate text-right">@CurrentUserName</span>
                         <span class="text-[10px] font-bold @PrimaryRoleColorClass tracking-wider text-right">@PrimaryRoleName</span>
                     </div>
 
                     <!-- Glowing Conic Energy Ring Avatar -->
-                    <div class="cyber-avatar-ring">
+                    <div class="cyber-avatar-ring shrink-0">
                         <button type="button" class="w-8.5 h-8.5 rounded-full bg-slate-900 text-cyan-400 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer border border-slate-700 shadow-inner">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
