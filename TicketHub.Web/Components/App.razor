@@ -504,7 +504,8 @@
             HttpContext != null && (
                 HttpContext.Request.Path.StartsWithSegments("/login") ||
                 HttpContext.Request.Path.StartsWithSegments("/register") ||
-                HttpContext.Request.Path.StartsWithSegments("/confirm-email"))
+                HttpContext.Request.Path.StartsWithSegments("/confirm-email") ||
+                HttpContext.User?.Identity?.IsAuthenticated != true)
                 ? null
                 : new InteractiveServerRenderMode(prerender: false);
 }

@@ -8,7 +8,9 @@
             <PermissionRouteGuard RouteData="routeData">
                 <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
                     <NotAuthorized>
-                        <RedirectToLogin />
+                        <LayoutView Layout="typeof(Layout.EmptyLayout)">
+                            <RedirectToLogin />
+                        </LayoutView>
                     </NotAuthorized>
                 </AuthorizeRouteView>
             </PermissionRouteGuard>

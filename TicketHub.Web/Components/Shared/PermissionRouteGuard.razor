@@ -27,6 +27,14 @@ else
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
 
+        if (authState.User?.Identity?.IsAuthenticated != true)
+        {
+            // اجازه دهید AuthorizeRouteView کاربر لاگین‌نشده را به صفحه ورود هدایت کند
+            _hasAccess = true;
+            _isChecking = false;
+            return;
+        }
+
         var relativePath = "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0];
 
         if (relativePath == "/") relativePath = "";

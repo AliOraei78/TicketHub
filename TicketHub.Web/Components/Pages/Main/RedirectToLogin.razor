@@ -1,9 +1,16 @@
-﻿@inject NavigationManager Navigation
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
 @code {
     protected override void OnInitialized()
     {
-        // Force a full page reload to trigger the server-side Cookie auth middleware
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext != null && !httpContext.Response.HasStarted)
+        {
+            httpContext.Response.Redirect("/login");
+            return;
+        }
+
         Navigation.NavigateTo("/login", forceLoad: true);
     }
 }
