@@ -18,6 +18,7 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/system-logs");
+            await WaitForBlazorAsync(Page, 1000);
 
             var bannerTitle = Page.Locator("text=ترمینال").First;
             await bannerTitle.WaitForAsync(new() { Timeout = 10000 });
@@ -32,6 +33,7 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/system-logs");
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.WaitForSelectorAsync("button:has-text('همه لاگ‌ها')");
 
@@ -57,6 +59,7 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/system-logs");
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.WaitForSelectorAsync("input[placeholder*='جستجوی پیام']");
 
@@ -74,6 +77,7 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/system-logs");
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.WaitForSelectorAsync("button:has-text('فعالسازی لایو')");
 

@@ -20,7 +20,7 @@ namespace TicketHub.Tests.E2E
 
             var personaHeader = Page.Locator("h1").First;
             await personaHeader.WaitForAsync();
-            (await personaHeader.IsVisibleAsync()).Should().BeTrue();
+            await WaitForBlazorAsync(Page, 1000);
 
             var totalTicketsCard = Page.Locator("text=کل تیکت‌های من").First;
             (await totalTicketsCard.IsVisibleAsync()).Should().BeTrue();
@@ -35,6 +35,7 @@ namespace TicketHub.Tests.E2E
             // Default: Identity Tab
             var identityHeader = Page.Locator("h3:has-text('اطلاعات فردی و شناسنامه کاربری')").First;
             await identityHeader.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
             (await identityHeader.IsVisibleAsync()).Should().BeTrue();
 
             // Switch to Security Tab
@@ -63,6 +64,7 @@ namespace TicketHub.Tests.E2E
 
             var nameInput = Page.Locator("input[placeholder='مثال: علی اورعی']").First;
             await nameInput.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
             await nameInput.FillAsync("مدیر کل سامانه تیکت‌هاب");
 
             await Page.ClickAsync("button:has-text('ذخیره تغییرات شناسنامه')");
@@ -78,8 +80,14 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/profile");
 
+            var identityHeader = Page.Locator("h3:has-text('اطلاعات فردی و شناسنامه کاربری')").First;
+            await identityHeader.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             // Go to Security Tab
             await Page.ClickAsync("button:has-text('امنیت و کلید عبور')");
+            var securityHeader = Page.Locator("h3:has-text('مدیریت کلمات عبور و سطح امنیت حساب')").First;
+            await securityHeader.WaitForAsync();
 
             // Click Auto Generate
             await Page.ClickAsync("button:has-text('تولید رمز عبور')");
@@ -95,11 +103,19 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/profile");
 
+            var identityHeader = Page.Locator("h3:has-text('اطلاعات فردی و شناسنامه کاربری')").First;
+            await identityHeader.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             // Go to Cockpit HUD tab
             await Page.ClickAsync("button:has-text('شخصی‌سازی کاک‌پیت و هود')");
+            var hudHeader = Page.Locator("h3:has-text('مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت')").First;
+            await hudHeader.WaitForAsync();
 
             // Click Flame aura
-            await Page.ClickAsync("button:has-text('NEON_FLAME')");
+            var flameBtn = Page.Locator("button:has-text('NEON_FLAME')").First;
+            await flameBtn.WaitForAsync();
+            await flameBtn.ClickAsync();
 
             var statusMsg = Page.Locator("text=پالت رنگی کاک‌پیت به FIRE تغییر یافت").First;
             await statusMsg.WaitForAsync(new() { Timeout = 10000 });
