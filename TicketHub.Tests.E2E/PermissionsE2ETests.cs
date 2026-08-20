@@ -19,6 +19,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت دسترسی')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newPermName = "دسترسی تستی " + Guid.NewGuid().ToString().Substring(0, 5);
             var resourceKey = "test.resource." + Guid.NewGuid().ToString().Substring(0, 5);
 
@@ -45,6 +49,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت دسترسی')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var newPermName = "دسترسی ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             var resourceKey = "edit.resource." + Guid.NewGuid().ToString().Substring(0, 5);
@@ -88,6 +96,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت دسترسی')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newPermName = "دسترسی حذفی " + Guid.NewGuid().ToString().Substring(0, 5);
             var resourceKey = "delete.resource." + Guid.NewGuid().ToString().Substring(0, 5);
 
@@ -130,6 +142,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت دسترسی')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('ثبت دسترسی')");
 
@@ -146,6 +159,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت دسترسی')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var prefix = "BulkPerm_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
             for (int i = 1; i <= 3; i++)
@@ -255,6 +272,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت دسترسی')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var permName = "دسترسی لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             var resKey = "test.cancel." + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: مدیریت کاربران']", permName);
@@ -288,6 +309,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/permissions");
 
             await Page.WaitForSelectorAsync("h1:has-text('مدیریت دسترسی')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

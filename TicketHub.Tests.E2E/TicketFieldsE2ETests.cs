@@ -21,6 +21,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var newFieldName = "فیلد تست E2E " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", newFieldName);
@@ -51,6 +52,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var newFieldName = "فیلد ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", newFieldName);
@@ -96,6 +98,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var newFieldName = "فیلد حذفی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", newFieldName);
@@ -136,6 +139,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click submit without filling anything
             await Page.ClickAsync("button:has-text('ثبت فیلد')");
@@ -154,6 +158,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var prefix = "BulkField_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
             for (int i = 1; i <= 3; i++)
@@ -266,6 +271,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت فیلد')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var fieldName = "فیلد لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: شماره موبایل']", fieldName);
             await Page.FillAsync("input[type='number']", "1");
@@ -298,6 +307,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/ticket-fields");
 
             await Page.WaitForSelectorAsync("h1:has-text('مدیریت فیلد')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

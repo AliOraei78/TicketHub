@@ -22,7 +22,7 @@ namespace TicketHub.Tests.E2E
             // 1. Verify Page Loaded
             var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
             await headerLocator.WaitForAsync();
-            (await headerLocator.IsVisibleAsync()).Should().BeTrue();
+            await WaitForBlazorAsync(Page, 1000);
 
             // 2. Create Category
             var newCategoryName = "تیکت تست E2E " + Guid.NewGuid().ToString().Substring(0, 5);
@@ -91,6 +91,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
 
@@ -106,6 +107,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
             var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             // 1. Create 3 categories for test
             var prefix = "BulkCat_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
@@ -214,6 +216,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync(Factory.ServerAddress + "/dev/login");
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت انواع تیکت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var categoryName = "نوع تیکت لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: پشتیبانی فنی']", categoryName);
             await Page.ClickAsync("button:has-text('ثبت نوع تیکت')");
@@ -223,6 +229,7 @@ namespace TicketHub.Tests.E2E
 
             // Click edit
             var rowLocator = Page.Locator("tr", new PageLocatorOptions { HasTextString = categoryName });
+            await rowLocator.WaitForAsync();
             await rowLocator.Locator("button[title='ویرایش']").ClickAsync();
 
             var editHeader = Page.Locator("h3:has-text('ویرایش نوع تیکت')").First;
@@ -243,6 +250,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync(Factory.ServerAddress + "/settings/categories");
 
             await Page.WaitForSelectorAsync("h1:has-text('مدیریت انواع تیکت')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

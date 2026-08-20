@@ -19,6 +19,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/priorities");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت اولویت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newPriorityName = "اولویت تست " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: بحرانی / فوری']", newPriorityName);
             await Page.FillAsync("input[type='number']", "15");
@@ -40,6 +44,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/priorities");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت اولویت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var newPriorityName = "اولویت ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: بحرانی / فوری']", newPriorityName);
@@ -78,6 +86,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/priorities");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت اولویت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newPriorityName = "اولویت حذفی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: بحرانی / فوری']", newPriorityName);
             await Page.FillAsync("input[type='number']", "25");
@@ -113,6 +125,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت اولویت')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('ثبت اولویت')");
 
@@ -126,6 +139,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/priorities");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت اولویت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var prefix = "BulkPriority_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
             for (int i = 1; i <= 3; i++)
@@ -230,6 +247,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/priorities");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت اولویت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var priorityName = "اولویت لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: بحرانی / فوری']", priorityName);
             await Page.FillAsync("input[type='number']", "33");
@@ -260,6 +281,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/priorities");
 
             await Page.WaitForSelectorAsync("h1:has-text('مدیریت اولویت')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

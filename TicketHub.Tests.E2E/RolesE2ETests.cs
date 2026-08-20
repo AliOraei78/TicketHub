@@ -19,6 +19,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newRoleName = "نقش جدید " + Guid.NewGuid().ToString().Substring(0, 5);
 
             // Fill the form on the left pane
@@ -39,6 +43,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             // Create one first to edit
             var newRoleName = "نقش جدید " + Guid.NewGuid().ToString().Substring(0, 5);
@@ -77,6 +85,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             // Create one first to delete
             var newRoleName = "نقش جدید " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: کارشناس پشتیبانی فنی']", newRoleName);
@@ -113,6 +125,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('ثبت نقش')");
 
@@ -126,6 +139,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var prefix = "BulkRole_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
             for (int i = 1; i <= 3; i++)
@@ -229,6 +246,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت نقش‌های سیستم')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var roleName = "نقش لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: کارشناس پشتیبانی فنی']", roleName);
             await Page.ClickAsync("button:has-text('ثبت نقش')");
@@ -258,6 +279,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/roles");
 
             await Page.WaitForSelectorAsync("h1:has-text('مدیریت نقش‌های سیستم')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

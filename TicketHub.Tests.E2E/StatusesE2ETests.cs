@@ -19,6 +19,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/statuses");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت وضعیت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newStatusName = "وضعیت تست " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: In Progress']", newStatusName);
             await Page.FillAsync("input[type='color']", "#ff0000");
@@ -39,6 +43,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/statuses");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت وضعیت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             var newStatusName = "وضعیت ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: In Progress']", newStatusName);
@@ -76,6 +84,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/statuses");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت وضعیت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var newStatusName = "وضعیت حذفی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: In Progress']", newStatusName);
             await Page.ClickAsync("button:has-text('ثبت وضعیت')");
@@ -110,6 +122,7 @@ namespace TicketHub.Tests.E2E
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت وضعیت')").First;
             await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('ثبت وضعیت')");
 
@@ -123,6 +136,10 @@ namespace TicketHub.Tests.E2E
         {
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/statuses");
+
+            var headerLocator = Page.Locator("h1:has-text('مدیریت وضعیت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
 
             // 1. Create 3 items
             var prefix = "BulkStatus_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
@@ -232,6 +249,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/statuses");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت وضعیت')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             var statusName = "وضعیت لغوی " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='مثال: In Progress']", statusName);
             await Page.ClickAsync("button:has-text('ثبت وضعیت')");
@@ -261,6 +282,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/settings/statuses");
 
             await Page.WaitForSelectorAsync("h1:has-text('مدیریت وضعیت')");
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");

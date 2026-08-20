@@ -216,6 +216,10 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/projects");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت پروژه‌ها')").First;
+            await headerLocator.WaitForAsync();
+            await WaitForBlazorAsync(Page, 1000);
+
             // Type non-existent query
             var searchInput = Page.Locator("input[placeholder*='جست‌وجوی پروژه']").First;
             await searchInput.FillAsync("XYZ_NON_EXISTENT_PROJECT_999");
