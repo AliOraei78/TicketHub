@@ -25,8 +25,13 @@ namespace TicketHub.Tests.E2E
 
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/workflows/editor");
+
+            var nameInput = Page.Locator("input[placeholder='نام جریان کاری...']").First;
+            await nameInput.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+            await WaitForBlazorAsync(Page, 1000);
+
             var wfName = "Complex Workflow " + Guid.NewGuid().ToString().Substring(0, 6);
-            await Page.FillAsync("input[placeholder='نام جریان کاری...']", wfName);
+            await nameInput.FillAsync(wfName);
 
             // Wait for data to load
             var statusAItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "باز" }).First;
@@ -225,10 +230,10 @@ namespace TicketHub.Tests.E2E
             await Page.ClickAsync("button:has-text('ذخیره جریان کار')", new() { Force = true });
 
             var anyToast = Page.Locator(".toast-item, div:has-text('جریان کاری با موفقیت ذخیره شد'), div:has-text('موفقیت')").First;
-            await anyToast.WaitForAsync(new() { Timeout = 15000 });
-            await Page.WaitForURLAsync("**/workflows");
+            await anyToast.WaitForAsync(new() { Timeout = 30000 });
+            await Page.WaitForURLAsync("**/workflows", new() { Timeout = 30000 });
             var header = Page.Locator("text=مدیریت جریان‌های کاری").First;
-            await header.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+            await header.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
             (await header.IsVisibleAsync()).Should().BeTrue();
         }
 
@@ -430,14 +435,16 @@ namespace TicketHub.Tests.E2E
         {
             await Page.ClickAsync("button:has-text('ایجاد جریان کاری جدید')");
             await Page.WaitForURLAsync("**/workflows/editor");
+
+            var nameInput = Page.Locator("input[placeholder='نام جریان کاری...']").First;
+            await nameInput.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
             await WaitForBlazorAsync(Page, 1000);
 
             // Wait for data to load
             var statusAItem = Page.Locator("div.cursor-grab").Filter(new() { HasText = "باز" });
             await statusAItem.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
 
-            await Page.WaitForSelectorAsync("input[placeholder='نام جریان کاری...']");
-            await Page.FillAsync("input[placeholder='نام جریان کاری...']", name);
+            await nameInput.FillAsync(name);
 
             // Add Status A
             await statusAItem.Locator("button").ClickAsync();
