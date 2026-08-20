@@ -1,8 +1,9 @@
-﻿<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" translate="no" class="notranslate">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google" content="notranslate" />
     <base href="/" />
 
     <title>TicketHub | سامانه هوشمند مدیریت تیکت و گردش‌کار سازمانی</title>
@@ -245,7 +246,10 @@
     </div>
 
     <script src="_framework/blazor.web.js"></script>
-    <script defer src="js/alpine.min.js"></script>
+    @if (PageRenderMode == null)
+    {
+        <script defer src="js/alpine.min.js"></script>
+    }
 
     <script>
         window.loadDntCaptcha = function (retries = 3) {

@@ -5,7 +5,7 @@
     @if (IsLoading)
     {
         <!-- 0ms Instant Cyber Skeleton (Zero WebGL CPU/GPU Overhead) -->
-        <div class="relative z-10 w-full flex items-center justify-between">
+        <div @key="@("skeleton")" class="relative z-10 w-full flex items-center justify-between">
             <div class="space-y-2.5 flex-1">
                 <div class="h-3.5 bg-slate-700/50 rounded-md w-20 cyber-skeleton-box"></div>
                 <div class="h-8 bg-cyan-500/20 rounded-lg w-16 cyber-skeleton-box"></div>
@@ -18,10 +18,10 @@
         @* Live Procedural Canvas VFX Layer (Fire flames, Lightning arcs, Toxic bubbles/drips, Fluid waves, Volumetric Smoke) *@
         @if (!ElementType.Equals("none", StringComparison.OrdinalIgnoreCase))
         {
-            <canvas class="element-vfx-canvas absolute inset-0 w-full h-full pointer-events-none z-0" data-element="@ElementType.ToLowerInvariant()"></canvas>
+            <canvas @key="@($"canvas-{ElementType}")" class="element-vfx-canvas absolute inset-0 w-full h-full pointer-events-none z-0" data-element="@ElementType.ToLowerInvariant()"></canvas>
         }
 
-        <div class="relative z-10 min-w-0 flex-1">
+        <div @key="@("content")" class="relative z-10 min-w-0 flex-1">
             <div class="flex items-center gap-1.5 flex-wrap">
                 <p class="text-[11px] sm:text-xs font-bold @(ElementType == "none" ? "text-slate-500 group-hover:text-slate-800" : "text-slate-300 group-hover:text-white") transition-colors truncate">@Title</p>
                 @if (!string.IsNullOrEmpty(BadgeText))
@@ -40,7 +40,7 @@
             </h3>
         </div>
         
-        <div class="relative z-10 p-2.5 rounded-xl border shadow-sm transition-all duration-300 group-hover:scale-110 @IconThemeClass @(ElementType == "lightning" ? "lightning-spark-icon" : "") flex-shrink-0 mr-2">
+        <div @key="@("icon")" class="relative z-10 p-2.5 rounded-xl border shadow-sm transition-all duration-300 group-hover:scale-110 @IconThemeClass @(ElementType == "lightning" ? "lightning-spark-icon" : "") flex-shrink-0 mr-2">
             @Icon
         </div>
     }

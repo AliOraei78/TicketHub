@@ -667,12 +667,16 @@
         updateDomStatus(state) {
             const badge = document.querySelector('.hero-ekg-status');
             if (!badge) return;
+            const txt = state === 'normal' ? '78 BPM // STABLE' : '0 BPM // FLATLINE';
+            if (badge.firstChild && badge.firstChild.nodeType === 3) {
+                badge.firstChild.nodeValue = txt;
+            } else {
+                badge.textContent = txt;
+            }
             if (state === 'normal') {
                 badge.className = 'hero-ekg-status text-[9px] font-mono text-emerald-400 font-bold';
-                badge.textContent = '78 BPM // STABLE';
             } else {
                 badge.className = 'hero-ekg-status text-[9px] font-mono text-rose-400 font-bold animate-pulse';
-                badge.textContent = '0 BPM // FLATLINE';
             }
         }
 
@@ -996,7 +1000,7 @@
     function initCounters() {
         const counters = document.querySelectorAll('.gamer-counter');
         counters.forEach(counter => {
-            const targetText = counter.getAttribute('data-target') || counter.textContent.trim();
+            const targetText = counter.getAttribute('data-target') || (counter.textContent || '').trim();
             const targetNumber = parseInt(targetText.replace(/[^\d]/g, ''), 10);
 
             if (isNaN(targetNumber)) return;
@@ -1011,8 +1015,19 @@
             const prevVal = parseInt((counter.textContent || '0').replace(/[^\d]/g, ''), 10);
             const startVal = isNaN(prevVal) ? 0 : prevVal;
 
+            function setCounterText(val) {
+                const faStr = val.toLocaleString('fa-IR');
+                if (counter.firstChild && counter.firstChild.nodeType === 3) {
+                    counter.firstChild.nodeValue = faStr;
+                } else if (counter.childNodes.length === 0) {
+                    counter.appendChild(document.createTextNode(faStr));
+                } else {
+                    counter.textContent = faStr;
+                }
+            }
+
             if (startVal === targetNumber) {
-                counter.textContent = targetNumber.toLocaleString('fa-IR');
+                setCounterText(targetNumber);
                 return;
             }
 
@@ -1025,12 +1040,12 @@
                 const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
                 const currentVal = Math.floor(startVal + easeOut * (targetNumber - startVal));
 
-                counter.textContent = currentVal.toLocaleString('fa-IR');
+                setCounterText(currentVal);
 
                 if (progress < 1) {
                     requestAnimationFrame(updateCounter);
                 } else {
-                    counter.textContent = targetNumber.toLocaleString('fa-IR');
+                    setCounterText(targetNumber);
                 }
             }
             requestAnimationFrame(updateCounter);
@@ -1455,7 +1470,12 @@
             if (currentPing) {
                 const basePing = 18;
                 const jitter = Math.floor(Math.random() * 7) - 3;
-                currentPing.textContent = `${basePing + jitter}ms`;
+                const txt = `${basePing + jitter}ms`;
+                if (currentPing.firstChild && currentPing.firstChild.nodeType === 3) {
+                    currentPing.firstChild.nodeValue = txt;
+                } else {
+                    currentPing.textContent = txt;
+                }
             }
         }, 3500);
     }
