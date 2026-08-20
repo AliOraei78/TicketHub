@@ -20,12 +20,17 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت کاربران')").First;
+            await headerLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
+
             var newUserName = "کاربر تستی " + Guid.NewGuid().ToString().Substring(0, 5);
             var newUserEmail = $"test_{Guid.NewGuid().ToString().Substring(0, 5)}@example.com";
 
             await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
             var modalLocator = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
-            await modalLocator.WaitForAsync();
+            await modalLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             await Page.FillAsync("input[placeholder='نام کامل']", newUserName);
             await Page.FillAsync("input[placeholder='user@example.com']", newUserEmail);
@@ -56,12 +61,18 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت کاربران')").First;
+            await headerLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
+
             // Create one first to edit
             var newUserName = "کاربر ویرایشی " + Guid.NewGuid().ToString().Substring(0, 5);
             var newUserEmail = $"edit_{Guid.NewGuid().ToString().Substring(0, 5)}@example.com";
 
             await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
-            await Page.Locator("h2:has-text('ایجاد کاربر جدید')").First.WaitForAsync();
+            var modalLocator = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
+            await modalLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             await Page.FillAsync("input[placeholder='نام کامل']", newUserName);
             await Page.FillAsync("input[placeholder='user@example.com']", newUserEmail);
@@ -87,7 +98,8 @@ namespace TicketHub.Tests.E2E
             // Wait for form to enter edit mode
             var editHeaderLocator = Page.Locator("h2:has-text('ویرایش اطلاعات کاربر')").First;
             var updatedName = newUserName + " ویرایش شده";
-            await editHeaderLocator.WaitForAsync();
+            await editHeaderLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             await Page.FillAsync("input[placeholder='نام کامل']", updatedName);
             await Page.Keyboard.PressAsync("Tab");
@@ -112,12 +124,18 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
+            var headerLocator = Page.Locator("h1:has-text('مدیریت کاربران')").First;
+            await headerLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
+
             // Create one first to delete
             var newUserName = "کاربر حذفی " + Guid.NewGuid().ToString().Substring(0, 5);
             var newUserEmail = $"delete_{Guid.NewGuid().ToString().Substring(0, 5)}@example.com";
 
             await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
-            await Page.Locator("h2:has-text('ایجاد کاربر جدید')").First.WaitForAsync();
+            var modalLocator = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
+            await modalLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             await Page.FillAsync("input[placeholder='نام کامل']", newUserName);
             await Page.FillAsync("input[placeholder='user@example.com']", newUserEmail);
@@ -161,10 +179,13 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
             var headerLocator = Page.Locator("h1:has-text('مدیریت کاربران')").First;
-            await headerLocator.WaitForAsync();
+            await headerLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
-            await Page.Locator("h2:has-text('ایجاد کاربر جدید')").First.WaitForAsync();
+            var modalLocator = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
+            await modalLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             await Page.Locator("button[type='submit']:has-text('ثبت کاربر')").ClickAsync(new() { Force = true });
 
@@ -185,14 +206,17 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
             var headerLocator = Page.Locator("h1:has-text('مدیریت کاربران')").First;
-            await headerLocator.WaitForAsync();
+            await headerLocator.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
 
             // 1. Create 3 users for test
             var prefix = "BulkUser_" + Guid.NewGuid().ToString().Substring(0, 5) + "_";
             for (int i = 1; i <= 3; i++)
             {
                 await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
-                await Page.Locator("h2:has-text('ایجاد کاربر جدید')").First.WaitForAsync();
+                var modalLocator = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
+                await modalLocator.WaitForAsync(new() { Timeout = 15000 });
+                await WaitForBlazorAsync(Page, 500);
 
                 await Page.FillAsync("input[placeholder='نام کامل']", $"{prefix}{i}");
                 await Page.FillAsync("input[placeholder='user@example.com']", $"test{i}_{prefix}@example.com");
@@ -224,8 +248,8 @@ namespace TicketHub.Tests.E2E
             var deleteBtn = rowToDelete.Locator("button[title='حذف']");
             await deleteBtn.ClickAsync(new() { Force = true });
 
-            var modalLocator = Page.Locator("text=مطمئن هستید").First;
-            await modalLocator.WaitForAsync();
+            var modalConfirmLocator = Page.Locator("text=مطمئن هستید").First;
+            await modalConfirmLocator.WaitForAsync();
             await Page.ClickAsync("button:has-text('بله، حذف کن')");
 
             var deleteToastLocator = Page.Locator("text=با موفقیت حذف شد.").First;
@@ -254,7 +278,9 @@ namespace TicketHub.Tests.E2E
             for (int i = 4; i <= 5; i++)
             {
                 await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
-                await Page.Locator("h2:has-text('ایجاد کاربر جدید')").First.WaitForAsync();
+                var modalLocator = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
+                await modalLocator.WaitForAsync(new() { Timeout = 15000 });
+                await WaitForBlazorAsync(Page, 500);
 
                 await Page.FillAsync("input[placeholder='نام کامل']", $"{prefix}{i}");
                 await Page.FillAsync("input[placeholder='user@example.com']", $"test{i}_{prefix}@example.com");
@@ -322,11 +348,13 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
             var header = Page.Locator("h1:has-text('مدیریت کاربران')").First;
-            await header.WaitForAsync();
+            await header.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
 
             await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
             var modalHeader = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
-            await modalHeader.WaitForAsync();
+            await modalHeader.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             var cancelledName = "کاربر لغو شده " + Guid.NewGuid().ToString().Substring(0, 5);
             await Page.FillAsync("input[placeholder='نام کامل']", cancelledName);
@@ -351,7 +379,8 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
             var header = Page.Locator("h1:has-text('مدیریت کاربران')").First;
-            await header.WaitForAsync();
+            await header.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
 
             // Click Active filter
             await Page.ClickAsync("button:has-text('فعال (')");
@@ -376,11 +405,17 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/dev/login");
             await Page.GotoAsync($"{Factory.ServerAddress}/users");
 
+            var header = Page.Locator("h1:has-text('مدیریت کاربران')").First;
+            await header.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 1000);
+
             var newUserName = "کاربر همراه نقش " + Guid.NewGuid().ToString().Substring(0, 5);
             var newUserEmail = $"role_{Guid.NewGuid().ToString().Substring(0, 5)}@example.com";
 
             await Page.ClickAsync("button:has-text('افزودن کاربر جدید')");
-            await Page.Locator("h2:has-text('ایجاد کاربر جدید')").First.WaitForAsync();
+            var modalHeader = Page.Locator("h2:has-text('ایجاد کاربر جدید')").First;
+            await modalHeader.WaitForAsync(new() { Timeout = 15000 });
+            await WaitForBlazorAsync(Page, 500);
 
             await Page.FillAsync("input[placeholder='نام کامل']", newUserName);
             await Page.FillAsync("input[placeholder='user@example.com']", newUserEmail);
