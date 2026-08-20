@@ -52,12 +52,16 @@
     <link href="_content/Bit.BlazorUI/styles/bit.blazorui.css" rel="stylesheet" />
     <link href="css/jalalidatepicker.min.css" rel="stylesheet" />
 
-    <HeadOutlet @rendermode="PageRenderMode" />
+    <style>
+        .gamer-counter:empty::before {
+            content: attr(data-target-fa);
+        }
+    </style>
+
+    <HeadOutlet />
 </head>
 <body>
-    <CascadingValue Value="HttpContext">
-        <Routes @rendermode="PageRenderMode" />
-    </CascadingValue>
+    <Routes @rendermode="PageRenderMode" />
 
     <!-- =========================================================================
          CYBER COCKPIT BLAZOR RECONNECTION MODAL (#components-reconnect-modal)
@@ -299,8 +303,8 @@
     </script>
     <script src="_content/Bit.BlazorUI/scripts/bit.blazorui.js"></script>
     <script src="js/jalalidatepicker.min.js"></script>
-    <script src="js/gamer-hud.js"></script>
-    <script src="js/matrix-rain.js"></script>
+    <script src="js/gamer-hud.js?v=2.0"></script>
+    <script src="js/matrix-rain.js?v=2.0"></script>
     <script>
         window.initJalaliDatePicker = (id, showTime, dotnetHelper) => {
             if (window.jalaliDatepicker) {
@@ -507,5 +511,5 @@
                 HttpContext.Request.Path.StartsWithSegments("/confirm-email") ||
                 HttpContext.User?.Identity?.IsAuthenticated != true)
                 ? null
-                : new InteractiveServerRenderMode(prerender: false);
+                : InteractiveServer;
 }

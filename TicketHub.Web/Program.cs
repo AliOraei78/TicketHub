@@ -65,7 +65,7 @@ builder.Services.AddTicketHubHealthChecks();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(options =>
     {
-        options.DetailedErrors = builder.Environment.IsDevelopment();
+        options.DetailedErrors = true;
         options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(2);
         options.MaxBufferedUnacknowledgedRenderBatches = 10;
     });
@@ -377,8 +377,13 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<LogEnrichmentMiddleware>();
-app.UseExceptionHandler();
-if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
+
+var httpsPort = app.Configuration["HTTPS_PORT"] ?? app.Configuration["ASPNETCORE_HTTPS_PORTS"];
+if (!string.IsNullOrEmpty(httpsPort) && !app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
 {
     app.UseHttpsRedirection();
 }

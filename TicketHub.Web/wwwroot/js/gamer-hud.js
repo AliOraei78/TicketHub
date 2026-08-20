@@ -952,12 +952,13 @@
     ensureVfxLoopRunning();
 
     // =========================================================================
+    // =========================================================================
     // 4. PASSIVE RAF-THROTTLED 3D TILT & INTERACTION
     // =========================================================================
     function init3DTilt() {
         const cards = document.querySelectorAll('.gamer-card-3d:not([data-tilt-initialized])');
         cards.forEach(card => {
-            card.setAttribute('data-tilt-initialized', 'true');
+            card.dataset.tiltInitialized = 'true';
 
             let ticking = false;
             let lastEvent = null;
@@ -966,7 +967,7 @@
                 lastEvent = e;
                 if (!ticking) {
                     requestAnimationFrame(() => {
-                        if (!lastEvent) return;
+                        if (!lastEvent || !card.isConnected) return;
                         const rect = card.getBoundingClientRect();
                         const x = lastEvent.clientX - rect.left;
                         const y = lastEvent.clientY - rect.top;
@@ -990,7 +991,9 @@
             }, { passive: true });
 
             card.addEventListener('mouseleave', () => {
-                card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+                if (card.isConnected) {
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+                }
                 lastEvent = null;
             }, { passive: true });
         });
@@ -1000,6 +1003,7 @@
     function initCounters() {
         const counters = document.querySelectorAll('.gamer-counter');
         counters.forEach(counter => {
+            if (!counter.isConnected) return;
             const targetText = counter.getAttribute('data-target') || (counter.textContent || '').trim();
             const targetNumber = parseInt(targetText.replace(/[^\d]/g, ''), 10);
 
@@ -1016,14 +1020,9 @@
             const startVal = isNaN(prevVal) ? 0 : prevVal;
 
             function setCounterText(val) {
+                if (!counter.isConnected) return;
                 const faStr = val.toLocaleString('fa-IR');
-                if (counter.firstChild && counter.firstChild.nodeType === 3) {
-                    counter.firstChild.nodeValue = faStr;
-                } else if (counter.childNodes.length === 0) {
-                    counter.appendChild(document.createTextNode(faStr));
-                } else {
-                    counter.textContent = faStr;
-                }
+                counter.textContent = faStr;
             }
 
             if (startVal === targetNumber) {
@@ -1035,6 +1034,7 @@
             const startTime = performance.now();
 
             function updateCounter(currentTime) {
+                if (!counter.isConnected) return;
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
@@ -1464,20 +1464,18 @@
         const pingEl = document.getElementById('hud-ping-val');
         if (!pingEl || telemetryInterval) return;
 
-        telemetryInterval = setInterval(() => {
+        function updatePing() {
             if (document.hidden) return;
             const currentPing = document.getElementById('hud-ping-val');
             if (currentPing) {
                 const basePing = 18;
                 const jitter = Math.floor(Math.random() * 7) - 3;
-                const txt = `${basePing + jitter}ms`;
-                if (currentPing.firstChild && currentPing.firstChild.nodeType === 3) {
-                    currentPing.firstChild.nodeValue = txt;
-                } else {
-                    currentPing.textContent = txt;
-                }
+                currentPing.textContent = `${basePing + jitter}ms`;
             }
-        }, 3500);
+        }
+
+        updatePing();
+        telemetryInterval = setInterval(updatePing, 3500);
     }
 
     // --- 8. Ambient Nebula Parallax Inertia with Idle Sleep ---
@@ -1768,19 +1766,9 @@
             init3DTilt();
             initCounters();
             applyStealthModeUI();
-        }, 30);
+        }, 100);
     }
 
-    const observer = new MutationObserver(() => {
-        debouncedInitAll();
-    });
-
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true, 
-        attributeFilter: ['data-target'] 
-    });
-
     window.initGamerHud = initAll;
+    window.refreshGamerHud = debouncedInitAll;
 })();
