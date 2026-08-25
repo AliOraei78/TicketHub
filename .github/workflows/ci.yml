@@ -137,8 +137,7 @@ jobs:
     if: |
       needs.build-and-unit-tests.result == 'success' &&
       (
-        (startsWith(github.ref, 'refs/tags/v') && needs.e2e-playwright-tests.result == 'success') ||
-        (github.ref == 'refs/heads/main' && (needs.e2e-playwright-tests.result == 'success' || needs.e2e-playwright-tests.result == 'skipped')) ||
+        (startsWith(github.ref, 'refs/tags/v') && (needs.e2e-playwright-tests.result == 'success' || needs.e2e-playwright-tests.result == 'skipped')) ||
         (github.event_name == 'workflow_dispatch' && (needs.e2e-playwright-tests.result == 'success' || needs.e2e-playwright-tests.result == 'skipped'))
       )
     permissions:
@@ -179,9 +178,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=ref,event=tag
-            type=ref,event=branch
-            type=sha,format=short
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
@@ -195,7 +192,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   # =========================================================================
-  # 4. Continuous Deployment to Ubuntu VPS via SSH
+  # 4. Continuous Deployment to Ubuntu VPS via SSH (Runs ONLY on Release Tags)
   # =========================================================================
   deploy-to-vps:
     name: Deploy to Production VPS
@@ -203,7 +200,7 @@ jobs:
     needs: build-and-push-docker-image
     if: |
       needs.build-and-push-docker-image.result == 'success' &&
-      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+      (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
     steps:
       - name: Trigger Remote Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -218,4 +215,5 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
+
 
