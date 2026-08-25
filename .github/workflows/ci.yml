@@ -193,3 +193,29 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # =========================================================================
+  # 4. Continuous Deployment to Ubuntu VPS via SSH
+  # =========================================================================
+  deploy-to-vps:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker-image
+    if: |
+      needs.build-and-push-docker-image.result == 'success' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Trigger Remote Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd /opt/xnario/tickethub
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+
