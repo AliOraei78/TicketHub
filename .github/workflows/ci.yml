@@ -172,7 +172,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ secrets.DOCKERHUB_USERNAME && format('{0}/tickethub-web', secrets.DOCKERHUB_USERNAME) || '' }}
+            ${{ secrets.DOCKERHUB_USERNAME && format('{0}/tickethub', secrets.DOCKERHUB_USERNAME) || '' }}
             ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
