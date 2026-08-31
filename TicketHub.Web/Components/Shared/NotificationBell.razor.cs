@@ -16,6 +16,7 @@ public partial class NotificationBell : ComponentBase, IDisposable
     [Inject] public AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public IToastService ToastService { get; set; } = default!;
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
     [Parameter] public string Class { get; set; } = string.Empty;
 
@@ -47,6 +48,16 @@ public partial class NotificationBell : ComponentBase, IDisposable
         }
 
         EventBroker.OnNotificationReceived += HandleNotificationReceivedAsync;
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (IsDropdownOpen)
+        {
+            IsDropdownOpen = false;
+            InvokeAsync(StateHasChanged);
+        }
     }
 
     protected async Task LoadInitialUnreadCountAsync()
@@ -237,5 +248,6 @@ public partial class NotificationBell : ComponentBase, IDisposable
     public void Dispose()
     {
         EventBroker.OnNotificationReceived -= HandleNotificationReceivedAsync;
+        NavigationManager.LocationChanged -= HandleLocationChanged;
     }
 }

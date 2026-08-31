@@ -16,6 +16,8 @@ public partial class TicketFormModal : ComponentBase
     [Parameter] public IEnumerable<TicketFieldDto> DynamicFields { get; set; } = Array.Empty<TicketFieldDto>();
     [Parameter] public EventCallback<int?> OnCategoryChanged { get; set; }
 
+    protected IEnumerable<PriorityDto> SortedPriorities => Priorities?.OrderBy(p => p.Level) ?? Enumerable.Empty<PriorityDto>();
+
     protected List<DynamicFieldModel> DynamicFieldModels { get; set; } = new();
     protected Dictionary<string, string> DynamicValidationErrors { get; set; } = new();
 

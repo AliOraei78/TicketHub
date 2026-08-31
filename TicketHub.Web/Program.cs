@@ -450,7 +450,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapGet("/dev/login", async (HttpContext context, IUserService userService, string? role) =>
     {
-        var defaultAdminEmail = app.Configuration["InitialAdmin:Email"] ?? "a.jenabi78@gmail.com";
+        var configuredAdminEmail = app.Configuration["InitialAdmin:Email"];
+        var defaultAdminEmail = !string.IsNullOrWhiteSpace(configuredAdminEmail) ? configuredAdminEmail : "a.jenabi78@gmail.com";
         var targetEmail = role switch
         {
             "support" => "support@tickethub.io",

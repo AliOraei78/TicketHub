@@ -7,7 +7,7 @@ using TicketHub.Web.Components.Layout.Shared;
 
 namespace TicketHub.Web.Components.Layout;
 
-public partial class MainLayout : LayoutComponentBase
+public partial class MainLayout : LayoutComponentBase, IDisposable
 {
     [Inject] public NavigationManager Navigation { get; set; } = default!;
     [Inject] public AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
@@ -34,6 +34,7 @@ public partial class MainLayout : LayoutComponentBase
     protected override async Task OnInitializedAsync()
     {
         CurrentPersianDate = DateTime.UtcNow.ToPersianDateString();
+        Navigation.LocationChanged += HandleLocationChanged;
 
         try
         {
@@ -120,6 +121,21 @@ public partial class MainLayout : LayoutComponentBase
     protected override void OnParametersSet()
     {
         ErrorBoundary?.Recover();
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (IsProfileMenuOpen || IsMobileMenuOpen)
+        {
+            IsProfileMenuOpen = false;
+            IsMobileMenuOpen = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
     }
 }
 

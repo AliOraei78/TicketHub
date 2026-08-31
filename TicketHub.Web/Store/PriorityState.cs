@@ -1,4 +1,4 @@
-﻿using Fluxor;
+using Fluxor;
 using Microsoft.Extensions.Logging;
 using TicketHub.Application.DTOs;
 using TicketHub.Application.Interfaces;
@@ -71,7 +71,7 @@ public class PriorityEffects
         try
         {
             _logger.LogInformation("شروع فراخوانی لیست اولویت‌های سیستم.");
-            var priorities = await _service.GetAllAsync();
+            var priorities = (await _service.GetAllAsync()).OrderBy(p => p.Level);
             dispatcher.Dispatch(new PrioritiesLoadedAction(priorities));
         }
         catch (Exception ex)

@@ -124,7 +124,7 @@ public class TicketEffects
 
             var projects = await _projectService.GetProjectsByUserRolesAsync(action.UserRoles);
             var statuses = (await _statusService.GetAllAsync()).Where(s => s.IsActive).ToList();
-            var priorities = (await _priorityService.GetAllAsync()).Where(p => p.IsActive).ToList();
+            var priorities = (await _priorityService.GetAllAsync()).Where(p => p.IsActive).OrderBy(p => p.Level).ToList();
             var categories = await _categoryService.GetCategoriesByUserRolesAsync(action.UserRoles);
 
 

@@ -21,13 +21,13 @@
         <div class="flex items-center gap-3">
             @if (IsCollapsed)
             {
-                <button type="button" @onclick="HandleToggleSidebar" title="TICKETHUB // باز کردن منو" class="cursor-pointer focus-ring relative group p-0.5 rounded-xl hover:bg-slate-800/40 transition-all">
+                <button type="button" @onclick="HandleToggleSidebar" title="باز کردن منوی کناری" class="cursor-pointer focus-ring relative group p-0.5 rounded-xl hover:bg-slate-800/40 transition-all">
                     <BrandLogo Size="sm" ShowText="false" IsLink="false" />
                 </button>
             }
             else
             {
-                <button type="button" @onclick="HandleToggleSidebar" title="TICKETHUB // تغییر وضعیت منو" class="cursor-pointer focus-ring relative group p-0.5 rounded-xl hover:bg-slate-800/40 transition-all">
+                <button type="button" @onclick="HandleToggleSidebar" title="تغییر وضعیت منوی کناری" class="cursor-pointer focus-ring relative group p-0.5 rounded-xl hover:bg-slate-800/40 transition-all">
                     <BrandLogo Size="sm" ShowText="false" IsLink="false" />
                 </button>
                 <div class="flex flex-col">
@@ -52,8 +52,8 @@
 
         @if (!IsCollapsed)
         {
-            <div class="px-3 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">
-                ناوبری اصلی سیستم
+            <div class="px-3 pt-1 pb-1 text-[10px] font-sans font-bold tracking-wider text-slate-500 select-none">
+                ناوبری اصلی
             </div>
         }
 
@@ -201,17 +201,17 @@
     <div class="flex flex-col border-t border-white/[0.08] bg-[#050811]/90">
         @if (!IsCollapsed)
         {
-            <!-- Color Theme Selector -->
+            <!-- Elemental Aura Matrix Selector -->
             <div class="px-4 py-2 border-b border-white/[0.05] bg-[#04060c]/80 flex items-center justify-between">
                 <div class="flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                    <span class="text-[10px] font-bold text-slate-400">تم رنگی سیستم</span>
+                    <span class="text-[10px] font-bold text-slate-400">تم رنگی سامانه</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="window.setCockpitAura('water')" data-aura-target="water" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 cursor-pointer shadow-sm hover:opacity-100" title="تم فیروزه‌ای (پیش‌فرض)"></button>
-                    <button type="button" onclick="window.setCockpitAura('fire')" data-aura-target="fire" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-red-600 to-amber-400 cursor-pointer shadow-sm hover:opacity-100" title="تم نارنجی تابناک"></button>
-                    <button type="button" onclick="window.setCockpitAura('lightning')" data-aura-target="lightning" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-400 cursor-pointer shadow-sm hover:opacity-100" title="تم بنفش مدرن"></button>
-                    <button type="button" onclick="window.setCockpitAura('toxic')" data-aura-target="toxic" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 cursor-pointer shadow-sm hover:opacity-100" title="تم زمردین نئونی"></button>
+                    <button type="button" onclick="window.setCockpitAura('water')" data-aura-target="water" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 cursor-pointer shadow-sm hover:opacity-100" title="تم آب و اقیانوس"></button>
+                    <button type="button" onclick="window.setCockpitAura('fire')" data-aura-target="fire" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-red-600 to-amber-400 cursor-pointer shadow-sm hover:opacity-100" title="تم آتش و حرارت"></button>
+                    <button type="button" onclick="window.setCockpitAura('lightning')" data-aura-target="lightning" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 cursor-pointer shadow-sm hover:opacity-100" title="تم صاعقه و برق"></button>
+                    <button type="button" onclick="window.setCockpitAura('toxic')" data-aura-target="toxic" class="aura-btn w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-emerald-600 to-lime-400 cursor-pointer shadow-sm hover:opacity-100" title="تم اسید و سم"></button>
                 </div>
             </div>
         }

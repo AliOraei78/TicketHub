@@ -932,9 +932,9 @@ nav a.active span,
     font-weight: 900;
     font-size: 0.875rem;
     color: #ffffff;
-    background: linear-gradient(135deg, #4f46e5 0%, #2563eb 50%, #06b6d4 100%);
+    background: linear-gradient(135deg, #06b6d4 0%, #2563eb 50%, #4f46e5 100%);
     clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.45), 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
     border: none;
     overflow: hidden;
     cursor: pointer;
@@ -1676,10 +1676,10 @@ jdp-container .jdp-btn {
     font-size: 0.875rem;
     font-weight: 700;
     color: #ffffff;
-    background: linear-gradient(135deg, #06b6d4 0%, #4f46e5 50%, #9333ea 100%);
-    border: 1px solid rgba(56, 189, 248, 0.5);
+    background: linear-gradient(135deg, #06b6d4 0%, #2563eb 50%, #4f46e5 100%);
+    border: 1px solid rgba(56, 189, 248, 0.6);
     border-radius: 0.875rem;
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 22px rgba(6, 182, 212, 0.45), 0 4px 14px rgba(0, 0, 0, 0.4);
     cursor: pointer;
     overflow: hidden;
     isolation: isolate;
@@ -1690,7 +1690,7 @@ jdp-container .jdp-btn {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
     transform: translateX(-100%);
     transition: transform 0.6s ease;
     pointer-events: none;
@@ -1699,8 +1699,9 @@ jdp-container .jdp-btn {
 
 .btn-cyber-primary:hover {
     transform: translateY(-2px) scale(1.03);
-    border-color: rgba(56, 189, 248, 0.8);
-    box-shadow: 0 0 30px rgba(79, 70, 229, 0.55), 0 0 15px rgba(6, 182, 212, 0.4), 0 6px 16px rgba(0, 0, 0, 0.5);
+    border-color: rgba(56, 189, 248, 0.9);
+    box-shadow: 0 0 35px rgba(56, 189, 248, 0.65), 0 0 20px rgba(79, 70, 229, 0.5), 0 6px 18px rgba(0, 0, 0, 0.5);
+    filter: brightness(1.12);
 }
 
 .btn-cyber-primary:hover::before {
@@ -3050,6 +3051,7 @@ input:autofill {
         backdrop-filter: blur(0px);
         -webkit-backdrop-filter: blur(0px);
     }
+
     100% {
         opacity: 1;
         backdrop-filter: blur(20px);
@@ -3126,6 +3128,7 @@ input:autofill {
         opacity: 0;
         transform: scale(0.92) translateY(16px);
     }
+
     100% {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -3144,10 +3147,33 @@ input:autofill {
     pointer-events: none;
 }
 
-.reconnect-corner-tl { top: 0.5rem; right: 0.5rem; border-top: 2px solid; border-right: 2px solid; }
-.reconnect-corner-tr { top: 0.5rem; left: 0.5rem; border-top: 2px solid; border-left: 2px solid; }
-.reconnect-corner-bl { bottom: 0.5rem; right: 0.5rem; border-bottom: 2px solid; border-right: 2px solid; }
-.reconnect-corner-br { bottom: 0.5rem; left: 0.5rem; border-bottom: 2px solid; border-left: 2px solid; }
+.reconnect-corner-tl {
+    top: 0.5rem;
+    right: 0.5rem;
+    border-top: 2px solid;
+    border-right: 2px solid;
+}
+
+.reconnect-corner-tr {
+    top: 0.5rem;
+    left: 0.5rem;
+    border-top: 2px solid;
+    border-left: 2px solid;
+}
+
+.reconnect-corner-bl {
+    bottom: 0.5rem;
+    right: 0.5rem;
+    border-bottom: 2px solid;
+    border-right: 2px solid;
+}
+
+.reconnect-corner-br {
+    bottom: 0.5rem;
+    left: 0.5rem;
+    border-bottom: 2px solid;
+    border-left: 2px solid;
+}
 
 /* Radar & Holograms */
 .reconnect-hologram-wrap {
@@ -3230,14 +3256,30 @@ input:autofill {
 }
 
 @keyframes cyberRadarSweep {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes cyberSonarPulse {
-    0% { transform: scale(0.65); opacity: 0.9; }
-    50% { transform: scale(1.25); opacity: 0.35; }
-    100% { transform: scale(1.7); opacity: 0; }
+    0% {
+        transform: scale(0.65);
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: scale(1.25);
+        opacity: 0.35;
+    }
+
+    100% {
+        transform: scale(1.7);
+        opacity: 0;
+    }
 }
 
 /* Badges */
@@ -3354,8 +3396,13 @@ input:autofill {
 }
 
 @keyframes cyberLaserScan {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
 }
 
 /* Actions */
