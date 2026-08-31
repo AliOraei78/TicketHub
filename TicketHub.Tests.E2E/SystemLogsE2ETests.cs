@@ -85,7 +85,7 @@ namespace TicketHub.Tests.E2E
             await Page.ClickAsync("button:has-text('فعالسازی لایو')");
             await Task.Delay(500);
 
-            var liveBadge = Page.Locator("text=LIVE STREAM ACTIVE").First;
+            var liveBadge = Page.Locator("text=جریان زنده فعال").First;
             (await liveBadge.IsVisibleAsync()).Should().BeTrue();
 
             // Toggle off

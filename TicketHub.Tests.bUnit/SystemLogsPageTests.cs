@@ -131,7 +131,7 @@ namespace TicketHub.Tests.bUnit
             var liveBtn = cut.Find("button:contains('فعالسازی لایو')");
             liveBtn.Click();
 
-            cut.Markup.Should().Contain("LIVE STREAM ACTIVE");
+            cut.Markup.Should().Contain("جریان زنده فعال");
         }
     }
 }

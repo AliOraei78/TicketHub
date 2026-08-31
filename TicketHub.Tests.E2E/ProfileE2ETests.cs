@@ -113,7 +113,7 @@ namespace TicketHub.Tests.E2E
             await hudHeader.WaitForAsync();
 
             // Click Flame aura
-            var flameBtn = Page.Locator("button:has-text('NEON_FLAME')").First;
+            var flameBtn = Page.Locator("button:has-text('آتش نئونی (Flame)')").First;
             await flameBtn.WaitForAsync();
             await flameBtn.ClickAsync();
 

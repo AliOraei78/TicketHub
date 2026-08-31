@@ -23,7 +23,6 @@ namespace TicketHub.Tests.bUnit
             var outletRef = cut.Services.GetRequiredService<SectionOutletRef>();
             outletRef.Wrapper.Should().NotBeNull();
             outletRef.Wrapper!.Markup.Should().Contain("ایجاد کاربر جدید");
-            outletRef.Wrapper.Markup.Should().Contain("[SYS // NEW_USER]");
         }
 
         [Fact]
@@ -89,7 +88,6 @@ namespace TicketHub.Tests.bUnit
 
             var outletRef = cut.Services.GetRequiredService<SectionOutletRef>();
             outletRef.Wrapper!.Markup.Should().Contain("ویرایش اطلاعات کاربر");
-            outletRef.Wrapper.Markup.Should().Contain("[SYS // EDIT_USER]");
             outletRef.Wrapper.Markup.Should().Contain("رمز عبور جدید (اختیاری)");
         }
     }

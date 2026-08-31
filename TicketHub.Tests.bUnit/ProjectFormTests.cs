@@ -24,7 +24,6 @@ namespace TicketHub.Tests.bUnit
             var outletRef = cut.Services.GetRequiredService<SectionOutletRef>();
             outletRef.Wrapper.Should().NotBeNull();
             outletRef.Wrapper!.Markup.Should().Contain("ایجاد پروژه جدید");
-            outletRef.Wrapper.Markup.Should().Contain("[SYS // NEW_PROJECT]");
         }
 
         [Fact]
@@ -114,7 +113,6 @@ namespace TicketHub.Tests.bUnit
 
             var outletRef = cut.Services.GetRequiredService<SectionOutletRef>();
             outletRef.Wrapper!.Markup.Should().Contain("ویرایش پروژه");
-            outletRef.Wrapper.Markup.Should().Contain("[SYS // EDIT_PROJECT]");
             outletRef.Wrapper.Markup.Should().Contain("ذخیره تغییرات");
         }
 

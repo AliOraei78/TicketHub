@@ -28,14 +28,9 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-black font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
-                                    @(FormModel.User.Id == 0 ? "[SYS // NEW_USER]" : "[SYS // EDIT_USER]")
-                                </span>
-                                <h2 class="text-lg sm:text-xl font-bold text-slate-100">@(FormModel.User.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")</h2>
-                            </div>
+                            <h2 class="text-lg sm:text-xl font-bold text-slate-100">@(FormModel.User.Id == 0 ? "ایجاد کاربر جدید" : "ویرایش اطلاعات کاربر")</h2>
                             <p class="text-xs text-slate-400 mt-0.5 font-normal">
-                                @(FormModel.User.Id == 0 ? "ثبت کاربر جدید در سیستم تله‌متری" : "بروزرسانی مشخصات و سطح دسترسی کاربر")
+                                @(FormModel.User.Id == 0 ? "ثبت کاربر جدید در سیستم" : "بروزرسانی مشخصات و سطح دسترسی کاربر")
                             </p>
                         </div>
                     </div>

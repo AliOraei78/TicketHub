@@ -91,7 +91,6 @@ namespace TicketHub.Tests.bUnit
             );
 
             cut.Markup.Should().Contain("تایید آدرس ایمیل");
-            cut.Markup.Should().Contain("SECURITY // 2FA_VERIFY");
             cut.Markup.Should().Contain("pending@tickethub.io");
             cut.Markup.Should().Contain("تایید و ورود به سامانه");
         }

@@ -22,7 +22,7 @@ namespace TicketHub.Tests.bUnit
             );
 
             cut.Markup.Should().Contain("TICKETHUB");
-            cut.Markup.Should().Contain("COMMAND MATRIX");
+            cut.Markup.Should().Contain("سامانه هوشمند");
             cut.Markup.Should().Contain("داشبورد اصلی");
             cut.Markup.Should().Contain("مدیریت تیکت‌ها");
             cut.Markup.Should().Contain("پروژه‌ها");
@@ -43,7 +43,7 @@ namespace TicketHub.Tests.bUnit
             );
 
             // Brand title text should not be visible when collapsed
-            cut.Markup.Should().NotContain("COMMAND MATRIX");
+            cut.Markup.Should().NotContain("سامانه هوشمند");
             cut.Find("aside button[title='باز کردن منو']").Should().NotBeNull();
         }
 

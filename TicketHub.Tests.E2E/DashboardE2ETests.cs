@@ -22,24 +22,24 @@ namespace TicketHub.Tests.E2E
             var bannerHeader = Page.Locator("h1:has-text('خوش آمدید')");
             await bannerHeader.WaitForAsync(new() { Timeout = 15_000 });
             (await bannerHeader.IsVisibleAsync()).Should().BeTrue();
-            var bannerSubtitle = Page.Locator("text=مرکز پایش و حل مشکلات بازیکنان");
+            var bannerSubtitle = Page.Locator("text=مرکز پایش و حل مشکلات کاربران");
             await bannerSubtitle.WaitForAsync(new() { Timeout = 5_000 });
             (await bannerSubtitle.IsVisibleAsync()).Should().BeTrue();
-            var createTicketBtn = Page.Locator("button:has-text('ثبت کوئست / تیکت جدید')");
+            var createTicketBtn = Page.Locator("button:has-text('ثبت تیکت جدید')");
             (await createTicketBtn.IsVisibleAsync()).Should().BeTrue();
             // 2. Verify 6 QuickStats Cards
-            var allCard = Page.Locator("div:has-text('کل تیکت‌ها'):has-text('🌊 ALL')").First;
+            var allCard = Page.Locator("div:has-text('کل تیکت‌ها')").First;
             await allCard.WaitForAsync(new() { Timeout = 5_000 });
             (await allCard.IsVisibleAsync()).Should().BeTrue();
-            var newCard = Page.Locator("div:has-text('اقدام نشده'):has-text('⚡ NEW')").First;
+            var newCard = Page.Locator("div:has-text('اقدام نشده')").First;
             (await newCard.IsVisibleAsync()).Should().BeTrue();
-            var activeCard = Page.Locator("div:has-text('در حال بررسی'):has-text('🧪 ACTIVE')").First;
+            var activeCard = Page.Locator("div:has-text('در حال بررسی')").First;
             (await activeCard.IsVisibleAsync()).Should().BeTrue();
-            var criticalCard = Page.Locator("div:has-text('بحرانی'):has-text('🔥 CRITICAL')").First;
+            var criticalCard = Page.Locator("div:has-text('بحرانی')").First;
             (await criticalCard.IsVisibleAsync()).Should().BeTrue();
-            var overdueCard = Page.Locator("div:has-text('منقضی شده'):has-text('🌀 OVERDUE')").First;
+            var overdueCard = Page.Locator("div:has-text('منقضی شده')").First;
             (await overdueCard.IsVisibleAsync()).Should().BeTrue();
-            var resolvedCard = Page.Locator("div:has-text('خاتمه یافته'):has-text('💨 RESOLVED')").First;
+            var resolvedCard = Page.Locator("div:has-text('خاتمه یافته')").First;
             (await resolvedCard.IsVisibleAsync()).Should().BeTrue();
             // 3. Verify 4 Analytics Chart Cards
             var trendChartCard = Page.Locator("h3:has-text('روند ورودی تیکت‌ها (۷ روز گذشته)')");
@@ -48,7 +48,7 @@ namespace TicketHub.Tests.E2E
             (await priorityChartCard.IsVisibleAsync()).Should().BeTrue();
             var projectChartCard = Page.Locator("h3:has-text('سهم بخش‌ها و قلمروها از کل تیکت‌ها')");
             (await projectChartCard.IsVisibleAsync()).Should().BeTrue();
-            var slaChartCard = Page.Locator("h3:has-text('نوار سلامت و پاسخگویی به موقع (SLA HP)')");
+            var slaChartCard = Page.Locator("h3:has-text('پایش و پایبندی به توافق‌نامه سطح خدمت (SLA)')");
             (await slaChartCard.IsVisibleAsync()).Should().BeTrue();
         }
 
@@ -67,8 +67,6 @@ namespace TicketHub.Tests.E2E
             var modalTitle = Page.Locator("h3:has-text('تحلیل جامع روند ورودی تیکت‌ها')");
             await modalTitle.WaitForAsync(new() { Timeout = 10_000 });
             (await modalTitle.IsVisibleAsync()).Should().BeTrue();
-            var telemetryBadge = Page.Locator("text=[SYS-TELEMETRY // LIVE_FEED]");
-            (await telemetryBadge.IsVisibleAsync()).Should().BeTrue();
             // Close via "بستن پنجره" button
             var closeButton = Page.Locator("button:has-text('بستن پنجره')");
             await closeButton.ClickAsync();
@@ -154,8 +152,8 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/");
             await Page.WaitForSelectorAsync("h1:has-text('خوش آمدید')", new() { Timeout = 15_000 });
 
-            // Click "ثبت کوئست / تیکت جدید" button
-            var createBtn = Page.Locator("button:has-text('ثبت کوئست / تیکت جدید')");
+            // Click "ثبت تیکت جدید" button
+            var createBtn = Page.Locator("button:has-text('ثبت تیکت جدید')");
             await createBtn.ClickAsync();
 
             // Verify TicketFormModal opens in SectionOutlet RootModal
@@ -179,7 +177,7 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForSelectorAsync("h1:has-text('خوش آمدید')", new() { Timeout = 15_000 });
 
             // Open Create Ticket Modal
-            await Page.ClickAsync("button:has-text('ثبت کوئست / تیکت جدید')");
+            await Page.ClickAsync("button:has-text('ثبت تیکت جدید')");
             var formHeader = Page.Locator("h2:has-text('ایجاد تیکت پشتیبانی جدید')");
             await formHeader.WaitForAsync(new() { Timeout = 10_000 });
             await WaitForBlazorAsync(800);

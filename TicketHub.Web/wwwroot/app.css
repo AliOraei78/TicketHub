@@ -3464,3 +3464,15 @@ input:autofill {
     border-color: rgba(148, 163, 184, 0.5);
     color: #ffffff;
 }
+
+/* 3D Tilt Card Stacking & Anti-Clipping Isolation */
+.gamer-card-3d {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+}
+
+.gamer-card-3d:hover {
+    z-index: 30 !important;
+}

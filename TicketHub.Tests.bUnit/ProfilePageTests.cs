@@ -112,8 +112,8 @@ namespace TicketHub.Tests.bUnit
             hudTabBtn.Click();
 
             cut.Markup.Should().Contain("مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت");
-            cut.Markup.Should().Contain("CYBER_WATER");
-            cut.Markup.Should().Contain("NEON_FLAME");
+            cut.Markup.Should().Contain("واتر سایبر (Cyan)");
+            cut.Markup.Should().Contain("آتش نئونی (Flame)");
         }
 
         [Fact]
@@ -198,7 +198,7 @@ namespace TicketHub.Tests.bUnit
             var hudTabBtn = cut.Find("button:contains('شخصی‌سازی کاک‌پیت و هود')");
             hudTabBtn.Click();
 
-            var flameAuraBtn = cut.Find("button:contains('NEON_FLAME')");
+            var flameAuraBtn = cut.Find("button:contains('آتش نئونی (Flame)')");
             flameAuraBtn.Click();
 
             cut.Markup.Should().Contain("پالت رنگی کاک‌پیت به FIRE تغییر یافت");

@@ -50,7 +50,6 @@ namespace TicketHub.Tests.bUnit
             );
 
             cut.Markup.Should().Contain("ورود به سامانه");
-            cut.Markup.Should().Contain("AUTH_GATE // SECURE_LOGIN");
             cut.Markup.Should().Contain("آدرس ایمیل سازمانی");
             cut.Markup.Should().Contain("رمز عبور");
             cut.Markup.Should().Contain("مرا به خاطر بسپار");

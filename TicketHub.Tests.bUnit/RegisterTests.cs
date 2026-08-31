@@ -47,7 +47,6 @@ namespace TicketHub.Tests.bUnit
             );
 
             cut.Markup.Should().Contain("ایجاد حساب کاربری");
-            cut.Markup.Should().Contain("ENROLLMENT // NEW_USER");
             cut.Markup.Should().Contain("نام و نام خانوادگی");
             cut.Markup.Should().Contain("شماره همراه");
             cut.Markup.Should().Contain("آدرس ایمیل سازمانی");

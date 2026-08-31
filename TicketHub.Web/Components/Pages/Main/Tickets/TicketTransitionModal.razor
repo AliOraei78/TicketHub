@@ -20,7 +20,7 @@
                                 <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
                             </div>
                         </div>
-                        <span class="text-slate-400 text-xs font-mono font-bold tracking-widest animate-pulse">[LOADING // WORKFLOW_PIPELINE...]</span>
+                        <span class="text-slate-400 text-xs font-bold tracking-widest animate-pulse">در حال بارگذاری مراحل گردش‌کار...</span>
                     </div>
                 }
                 else
@@ -33,12 +33,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-black font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
-                                        [SYS // WORKFLOW_TRANSITION]
-                                    </span>
-                                    <h2 class="text-xl font-bold text-slate-100 truncate max-w-[260px] sm:max-w-md" title="@TicketTitle">ثبت عملیات: @TicketTitle</h2>
-                                </div>
+                                <h2 class="text-xl font-bold text-slate-100 truncate max-w-[260px] sm:max-w-md" title="@TicketTitle">ثبت عملیات: @TicketTitle</h2>
                                 <p class="text-xs text-slate-400 mt-0.5 font-normal">تغییر وضعیت و انتقال تیکت در چرخه جریان کاری</p>
                             </div>
                         </div>
@@ -84,8 +79,8 @@
                                         <span class="text-cyan-400 text-[9px]">◆</span>
                                         <span>انتخاب عملیات انتقال</span>
                                     </label>
-                                    <span class="text-[10px] font-mono text-slate-500">
-                                        [AVAILABLE: @AvailableTransitions.Count]
+                                    <span class="text-[10px] text-slate-500 font-medium">
+                                        (@AvailableTransitions.Count مورد)
                                     </span>
                                 </div>
                                 
@@ -138,8 +133,8 @@
                                             <span class="text-cyan-400 text-[9px]">◆</span>
                                             <span>توضیحات و یادداشت عملیات (اختیاری)</span>
                                         </label>
-                                        <span class="text-[10px] font-mono text-slate-500">
-                                            [CHARS: @(Model.Comment?.Length ?? 0)]
+                                        <span class="text-[10px] text-slate-500 font-medium">
+                                            @(Model.Comment?.Length ?? 0) کاراکتر
                                         </span>
                                     </div>
                                     <div class="field-spark-wrap w-full">

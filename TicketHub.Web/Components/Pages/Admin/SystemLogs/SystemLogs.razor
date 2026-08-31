@@ -17,16 +17,15 @@
 
         <!-- Top Section: Centered Title, Centered Subtitle & Centered Action CTA -->
         <div class="relative z-10 flex flex-col items-center justify-center text-center gap-2.5">
-            <div class="flex items-center gap-2">
-                <span class="text-[10px] font-bold text-emerald-400 tracking-widest bg-emerald-950/90 px-2.5 py-0.5 rounded border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.3)]">[SYS // LIVE_LOG_TERMINAL]</span>
-                @if (isLive)
-                {
+            @if (isLive)
+            {
+                <div class="flex items-center gap-2">
                     <span class="inline-flex items-center gap-1.5 text-emerald-300 bg-emerald-950/90 px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 matrix-radar-pulse"></span>
-                        <span>LIVE STREAM ACTIVE</span>
+                        <span>جریان زنده فعال</span>
                     </span>
-                }
-            </div>
+                </div>
+            }
 
             <div class="space-y-1.5 flex flex-col items-center">
                 <h1 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-[0_2px_15px_rgba(0,0,0,0.5)] leading-tight flex items-center justify-center gap-2 flex-wrap text-center font-sans">
@@ -216,7 +215,7 @@
         {
             <div class="p-16 text-center text-emerald-400 text-sm flex flex-col items-center justify-center gap-3 font-medium">
                 <div class="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.8)]"></div>
-                <span class="font-mono text-emerald-300 tracking-wider">[SYS // STREAMING_AND_PARSING_LOGS...]</span>
+                <span class="text-emerald-300 font-bold tracking-wider">در حال دریافت و پردازش لاگ‌ها...</span>
             </div>
         }
         else if (!PagedLogs.Any())
@@ -225,8 +224,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-emerald-500/40 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <div class="font-mono text-emerald-400 tracking-wide">[SYS // 0_RECORDS_FOUND]</div>
-                <div class="text-xs text-slate-400">هیچ لاگی با فیلترهای مشخص‌شده یافت نشد.</div>
+                <div class="text-xs text-slate-400 font-bold">هیچ لاگی با فیلترهای مشخص‌شده یافت نشد.</div>
             </div>
         }
         else
@@ -334,7 +332,7 @@
                                         <div class="space-y-4 text-xs font-sans">
                                             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-emerald-950">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-black font-mono text-emerald-400 tracking-wider">[INSPECTOR // EVENT_DATA]</span>
+                                                    <span class="text-xs font-bold text-emerald-400">جزئیات رخداد</span>
                                                     <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-mono font-bold border @GetLevelBadgeClass(log.Level)">@log.Level</span>
                                                 </div>
                                                 <div class="flex items-center gap-3">

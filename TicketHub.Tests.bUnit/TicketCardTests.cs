@@ -61,7 +61,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.CanSelect, true)
             );
 
-            cut.Markup.Should().Contain("#15"); cut.Markup.Should().Contain("باگ لاگین در نسخه وب"); cut.Markup.Should().Contain("پورتال مرکزی"); cut.Markup.Should().Contain("علی رضایی"); cut.Markup.Should().Contain("در حال بررسی"); cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("EPIC"); cut.Markup.Should().Contain("مانده");
+            cut.Markup.Should().Contain("#15"); cut.Markup.Should().Contain("باگ لاگین در نسخه وب"); cut.Markup.Should().Contain("پورتال مرکزی"); cut.Markup.Should().Contain("علی رضایی"); cut.Markup.Should().Contain("در حال بررسی"); cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("مانده");
         }
 
         [Fact]
@@ -80,7 +80,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.Ticket, ticket)
             );
 
-            cut.Markup.Should().Contain("OVERDUE"); cut.Markup.Should().Contain("گذشته");
+            cut.Markup.Should().Contain("سررسید گذشته"); cut.Markup.Should().Contain("گذشته");
         }
 
         [Fact]

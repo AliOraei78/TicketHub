@@ -36,15 +36,10 @@
 
             <!-- Content Container -->
             <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[9px] font-black font-mono px-1.5 py-0.5 rounded-md toast-badge">
-                        @GetBadgeText(toast.Type)
-                    </span>
-                    @if (!string.IsNullOrEmpty(toast.Title))
-                    {
-                        <h4 class="text-xs font-bold text-slate-100 truncate">@toast.Title</h4>
-                    }
-                </div>
+                @if (!string.IsNullOrEmpty(toast.Title))
+                {
+                    <h4 class="text-xs font-bold text-slate-100 truncate mb-1">@toast.Title</h4>
+                }
                 <p class="text-xs font-medium leading-relaxed text-slate-300 whitespace-pre-line">@toast.Message</p>
             </div>
 

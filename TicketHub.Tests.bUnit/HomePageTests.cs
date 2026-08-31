@@ -171,7 +171,7 @@ public class HomePageTests : BUnitComponentTestBase
     {
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("خوش آمدید، مدیر کل سیستم"); cut.Markup.Should().Contain("مرکز پایش و حل مشکلات بازیکنان"); cut.Markup.Should().Contain("ثبت کوئست / تیکت جدید");
+        cut.Markup.Should().Contain("خوش آمدید، مدیر کل سیستم"); cut.Markup.Should().Contain("مرکز پایش و حل مشکلات کاربران"); cut.Markup.Should().Contain("ثبت تیکت جدید");
     }
 
     [Fact]
@@ -189,17 +189,17 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // 1. Water (All tickets)
-        cut.Markup.Should().Contain("کل تیکت‌ها"); cut.Markup.Should().Contain("🌊 ALL"); cut.Markup.Should().Contain("10");
+        cut.Markup.Should().Contain("کل تیکت‌ها"); cut.Markup.Should().Contain("10");
         // 2. Lightning (New tickets)
-        cut.Markup.Should().Contain("اقدام نشده"); cut.Markup.Should().Contain("⚡ NEW"); cut.Markup.Should().Contain("5");
+        cut.Markup.Should().Contain("اقدام نشده"); cut.Markup.Should().Contain("5");
         // 3. Toxic (In progress)
-        cut.Markup.Should().Contain("در حال بررسی"); cut.Markup.Should().Contain("🧪 ACTIVE"); cut.Markup.Should().Contain("3");
+        cut.Markup.Should().Contain("در حال بررسی"); cut.Markup.Should().Contain("3");
         // 4. Fire (Critical)
-        cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("🔥 CRITICAL"); cut.Markup.Should().Contain("2");
+        cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("2");
         // 5. Void (Overdue)
-        cut.Markup.Should().Contain("منقضی شده"); cut.Markup.Should().Contain("🌀 OVERDUE"); cut.Markup.Should().Contain("1");
+        cut.Markup.Should().Contain("منقضی شده"); cut.Markup.Should().Contain("1");
         // 6. Smoke (Resolved)
-        cut.Markup.Should().Contain("خاتمه یافته"); cut.Markup.Should().Contain("💨 RESOLVED"); cut.Markup.Should().Contain("2");
+        cut.Markup.Should().Contain("خاتمه یافته"); cut.Markup.Should().Contain("2");
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public class HomePageTests : BUnitComponentTestBase
         // Trend chart
         cut.Markup.Should().Contain("روند ورودی تیکت‌ها (۷ روز گذشته)"); cut.Markup.Should().Contain("نمودار لیزری نوسانات ترافیک و لاگ هفتگی");
         // Priority Distribution
-        cut.Markup.Should().Contain("توزیع تیکت‌ها بر اساس اولویت و رنک"); cut.Markup.Should().Contain("بحرانی"); cut.Markup.Should().Contain("[LVL 4]");
+        cut.Markup.Should().Contain("توزیع تیکت‌ها بر اساس اولویت و رنک"); cut.Markup.Should().Contain("بحرانی");
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public class HomePageTests : BUnitComponentTestBase
         // Project Workload
         cut.Markup.Should().Contain("سهم بخش‌ها و قلمروها از کل تیکت‌ها"); cut.Markup.Should().Contain("پروژه عمومی");
         // SLA Health Bar
-        cut.Markup.Should().Contain("نوار سلامت و پاسخگویی به موقع (SLA HP)"); cut.Markup.Should().Contain("🛡️ OPTIMAL (ایمن)"); cut.Markup.Should().Contain("90% HP");
+        cut.Markup.Should().Contain("پایش و پایبندی به توافق‌نامه سطح خدمت (SLA)"); cut.Markup.Should().Contain("🛡️ وضعیت ایمن"); cut.Markup.Should().Contain("90%");
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("⚠️ WARNING (هشدار)"); cut.Markup.Should().Contain("70% HP");
+        cut.Markup.Should().Contain("⚠️ وضعیت هشدار"); cut.Markup.Should().Contain("70%");
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("🚨 CRITICAL (بحرانی)"); cut.Markup.Should().Contain("40% HP");
+        cut.Markup.Should().Contain("🚨 وضعیت بحرانی"); cut.Markup.Should().Contain("40%");
     }
 
     [Fact]
@@ -275,7 +275,7 @@ public class HomePageTests : BUnitComponentTestBase
     {
         var cut = Render<Home>();
 
-        var createButton = cut.Find("button:contains('ثبت کوئست / تیکت جدید')");
+        var createButton = cut.Find("button:contains('ثبت تیکت جدید')");
         createButton.Click();
 
         _mockDispatcher.Verify(d => d.Dispatch(It.IsAny<LoadTicketInitialDataAction>()), Times.AtLeast(2));
@@ -293,7 +293,7 @@ public class HomePageTests : BUnitComponentTestBase
         trendCard.Click();
 
         // Verify Chart Zoom Modal renders in SectionOutlet
-        cut.Find("h3:contains('تحلیل جامع روند ورودی تیکت‌ها')").Should().NotBeNull(); cut.Find("span:contains('SYS-TELEMETRY')").Should().NotBeNull();
+        cut.Find("h3:contains('تحلیل جامع روند ورودی تیکت‌ها')").Should().NotBeNull();
         // Click close button
         var closeButton = cut.Find("button:contains('بستن پنجره')");
         closeButton.Click();
@@ -329,7 +329,7 @@ public class HomePageTests : BUnitComponentTestBase
     {
         var cut = Render<Home>();
 
-        var slaCard = cut.FindAll("div.element-card.gamer-card-3d").First(el => el.TextContent.Contains("نوار سلامت"));
+        var slaCard = cut.FindAll("div.element-card.gamer-card-3d").First(el => el.TextContent.Contains("پایش و پایبندی"));
         slaCard.Click();
 
         cut.Find("h3:contains('پایش دقیق شاخص زمان‌بندی (SLA)')").Should().NotBeNull(); cut.Find("span:contains('میزان پایبندی به زمان‌بندی (SLA)')").Should().NotBeNull();
@@ -341,7 +341,7 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // Open modal first
-        cut.Find("button:contains('ثبت کوئست / تیکت جدید')").Click();
+        cut.Find("button:contains('ثبت تیکت جدید')").Click();
 
         // Trigger action callback
         _saveTicketCallback.Should().NotBeNull(); cut.InvokeAsync(() => _saveTicketCallback!(new SaveTicketSuccessAction()));

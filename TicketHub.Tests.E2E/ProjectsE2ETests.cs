@@ -225,7 +225,7 @@ namespace TicketHub.Tests.E2E
             await searchInput.FillAsync("XYZ_NON_EXISTENT_PROJECT_999");
 
             // Verify empty state is displayed
-            var emptyBanner = Page.Locator("text=[SYS // NO_PROJECTS_MATCHED]").First;
+            var emptyBanner = Page.Locator("text=هیچ پروژه‌ای مطابق فیلترهای انتخابی یافت نشد").First;
             await emptyBanner.WaitForAsync();
             (await emptyBanner.IsVisibleAsync()).Should().BeTrue();
 

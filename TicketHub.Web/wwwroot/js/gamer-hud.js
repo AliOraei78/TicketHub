@@ -963,6 +963,10 @@
             let ticking = false;
             let lastEvent = null;
 
+            card.addEventListener('mouseenter', () => {
+                card.style.zIndex = '30';
+            }, { passive: true });
+
             card.addEventListener('mousemove', (e) => {
                 lastEvent = e;
                 if (!ticking) {
@@ -975,10 +979,11 @@
                         const centerX = rect.width / 2;
                         const centerY = rect.height / 2;
 
-                        const rotateX = ((y - centerY) / centerY) * -8;
-                        const rotateY = ((x - centerX) / centerX) * 8;
+                        const rotateX = ((y - centerY) / centerY) * -4.5;
+                        const rotateY = ((x - centerX) / centerX) * 4.5;
 
-                        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px) scale(1.02)`;
+                        card.style.zIndex = '30';
+                        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-2px) scale(1.012)`;
 
                         const glareX = (x / rect.width) * 100;
                         const glareY = (y / rect.height) * 100;
@@ -993,6 +998,7 @@
             card.addEventListener('mouseleave', () => {
                 if (card.isConnected) {
                     card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+                    card.style.zIndex = '';
                 }
                 lastEvent = null;
             }, { passive: true });

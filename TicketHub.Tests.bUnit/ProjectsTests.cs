@@ -104,7 +104,6 @@ namespace TicketHub.Tests.bUnit
 
             // Assert
             cut.Markup.Should().Contain("هیچ پروژه‌ای مطابق فیلترهای انتخابی یافت نشد.");
-            cut.Markup.Should().Contain("[SYS // NO_PROJECTS_MATCHED]");
         }
 
         [Fact]

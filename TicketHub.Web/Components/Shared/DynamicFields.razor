@@ -7,9 +7,6 @@
     @if (!string.IsNullOrWhiteSpace(Title))
     {
         <div class="flex items-center gap-2 mb-6">
-            <span class="text-[10px] font-mono font-black px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
-                [SYS // CUSTOM_METRICS]
-            </span>
             <h3 class="text-sm font-bold text-slate-100">@Title</h3>
         </div>
     }
@@ -20,9 +17,6 @@
         {
             <div class="space-y-3">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-[9px] font-mono font-black px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
-                        [SYS // DATA_FIELDS]
-                    </span>
                     <span class="text-xs font-bold text-slate-300">اطلاعات و مقادیر پایه</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
@@ -65,7 +59,7 @@
                                     break;
 
                                 default:
-                                    <div class="text-xs text-slate-500 font-mono">[UNKNOWN_FIELD_TYPE]</div>
+                                    <div class="text-xs text-slate-500">نوع فیلد ناشناخته</div>
                                     break;
                             }
 
@@ -84,9 +78,6 @@
         {
             <div class="space-y-3 @(DataFields.Any() ? "pt-5 border-t border-white/[0.08]" : "")">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-[9px] font-mono font-black px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-400 border border-emerald-500/30">
-                        [SYS // RICH_TEXT]
-                    </span>
                     <span class="text-xs font-bold text-slate-300">متون تفصیلی و توضیحات</span>
                 </div>
                 <div class="space-y-4">
@@ -109,9 +100,6 @@
         {
             <div class="space-y-3 @(DataFields.Any() || RichTextFields.Any() ? "pt-5 border-t border-white/[0.08]" : "")">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-[9px] font-mono font-black px-2 py-0.5 rounded-md bg-indigo-950/80 text-indigo-400 border border-indigo-500/30">
-                        [SYS // CHECKBOXES]
-                    </span>
                     <span class="text-xs font-bold text-slate-300">گزینه‌ها و وضعیت‌ها</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -136,9 +124,6 @@
         {
             <div class="space-y-3 @(DataFields.Any() || RichTextFields.Any() || CheckboxFields.Any() ? "pt-5 border-t border-white/[0.08]" : "")">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-[9px] font-mono font-black px-2 py-0.5 rounded-md bg-purple-950/80 text-purple-400 border border-purple-500/30">
-                        [SYS // COLOR_THEME]
-                    </span>
                     <span class="text-xs font-bold text-slate-300">تنظیمات و پالت رنگ</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
@@ -167,9 +152,6 @@
         {
             <div class="space-y-3 @(DataFields.Any() || RichTextFields.Any() || CheckboxFields.Any() || ColorPickerFields.Any() ? "pt-5 border-t border-white/[0.08]" : "")">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-[9px] font-mono font-black px-2 py-0.5 rounded-md bg-amber-950/80 text-amber-400 border border-amber-500/30">
-                        [SYS // ATTACHMENTS]
-                    </span>
                     <span class="text-xs font-bold text-slate-300">فایل‌ها و مستندات پیوست</span>
                 </div>
                 <div class="space-y-4">

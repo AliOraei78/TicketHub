@@ -93,7 +93,6 @@
                     </div>
                     <div class="flex flex-col min-w-0">
                         <span class="text-xs sm:text-sm text-cyan-300 font-bold truncate">کل تیکت‌های من</span>
-                        <span class="text-[10px] font-mono text-cyan-400/60 uppercase">TOTAL_TICKETS</span>
                     </div>
                 </div>
                 <span class="text-lg sm:text-xl font-black text-white drop-shadow-[0_0_8px_rgba(56,189,248,0.7)] px-1">
@@ -111,7 +110,6 @@
                     </div>
                     <div class="flex flex-col min-w-0">
                         <span class="text-xs sm:text-sm text-amber-300 font-bold truncate">در حال رسیدگی</span>
-                        <span class="text-[10px] font-mono text-amber-400/60 uppercase">IN_PROGRESS</span>
                     </div>
                 </div>
                 <span class="text-lg sm:text-xl font-black text-white drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] px-1">
@@ -129,7 +127,6 @@
                     </div>
                     <div class="flex flex-col min-w-0">
                         <span class="text-xs sm:text-sm text-emerald-300 font-bold truncate">حل‌شده و بسته‌شده</span>
-                        <span class="text-[10px] font-mono text-emerald-400/60 uppercase">RESOLVED</span>
                     </div>
                 </div>
                 <span class="text-lg sm:text-xl font-black text-white drop-shadow-[0_0_8px_rgba(16,185,129,0.7)] px-1">
@@ -148,7 +145,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span>شناسنامه و مشخصات فردی</span>
-            <span class="text-[9px] font-mono text-cyan-400/60 hidden md:inline">[IDENTITY]</span>
         </button>
 
         <button type="button" 
@@ -158,7 +154,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             <span>امنیت و کلید عبور</span>
-            <span class="text-[9px] font-mono text-indigo-400/60 hidden md:inline">[SECURITY]</span>
         </button>
 
         <button type="button" 
@@ -168,7 +163,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
             <span>شخصی‌سازی کاک‌پیت و هود</span>
-            <span class="text-[9px] font-mono text-purple-400/60 hidden md:inline">[HUD_AURA]</span>
         </button>
     </div>
 
@@ -176,7 +170,7 @@
     {
         <div class="bg-[#080d1a]/95 backdrop-blur-2xl border border-cyan-500/35 rounded-2xl p-12 flex flex-col items-center justify-center gap-3 text-center">
             <div class="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs font-mono text-cyan-300">[SYS_INIT // RETRIEVING_USER_VAULT...]</span>
+            <span class="text-xs font-bold text-cyan-300">در حال بارگذاری اطلاعات حساب کاربری...</span>
         </div>
     }
     else
@@ -275,7 +269,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span>ذخیره تغییرات شناسنامه</span>
-                            <span class="btn-micro-badge">EXE</span>
                         </button>
                     </div>
                 </div>
@@ -301,7 +294,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                             </svg>
-                            <span>تولید رمز عبور فوق‌العاده امن [AUTO_GEN]</span>
+                            <span>تولید رمز عبور فوق‌العاده امن</span>
                         </button>
                     </div>
 
@@ -422,7 +415,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                             <span>بروزرسانی رمز عبور</span>
-                            <span class="btn-micro-badge">AUTH</span>
                         </button>
                     </div>
                 </div>
@@ -444,7 +436,6 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-3 flex items-center justify-between">
                             <span>پالت رنگی هود کاک‌پیت (Elemental Aura)</span>
-                            <span class="text-[10px] font-mono text-purple-400">REALTIME_SWITCH</span>
                         </label>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                             <!-- 1. Water Cyan -->
@@ -453,7 +444,6 @@
                                     class="p-3.5 rounded-xl border transition-all text-right flex flex-col gap-2 group cursor-pointer @(CurrentAura == "water" ? "bg-cyan-950/60 border-cyan-400 shadow-[0_0_20px_rgba(56,189,248,0.35)]" : "bg-[#050811]/90 border-slate-700/60 hover:border-cyan-500/50")">
                                 <div class="flex items-center justify-between">
                                     <span class="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]"></span>
-                                    <span class="text-[10px] font-mono text-cyan-300 font-bold">CYBER_WATER</span>
                                 </div>
                                 <span class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">واتر سایبر (Cyan)</span>
                                 <span class="text-[11px] text-slate-400">آرامش اقیانوسی و هماهنگی فیروزه‌ای</span>
@@ -465,7 +455,6 @@
                                     class="p-3.5 rounded-xl border transition-all text-right flex flex-col gap-2 group cursor-pointer @(CurrentAura == "fire" ? "bg-orange-950/60 border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.35)]" : "bg-[#050811]/90 border-slate-700/60 hover:border-orange-500/50")">
                                 <div class="flex items-center justify-between">
                                     <span class="w-4 h-4 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span>
-                                    <span class="text-[10px] font-mono text-orange-300 font-bold">NEON_FLAME</span>
                                 </div>
                                 <span class="text-sm font-bold text-white group-hover:text-orange-300 transition-colors">آتش نئونی (Flame)</span>
                                 <span class="text-[11px] text-slate-400">حرارت پرانرژی و درخشش آتشین</span>
@@ -477,7 +466,6 @@
                                     class="p-3.5 rounded-xl border transition-all text-right flex flex-col gap-2 group cursor-pointer @(CurrentAura == "lightning" ? "bg-purple-950/60 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]" : "bg-[#050811]/90 border-slate-700/60 hover:border-purple-500/50")">
                                 <div class="flex items-center justify-between">
                                     <span class="w-4 h-4 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
-                                    <span class="text-[10px] font-mono text-purple-300 font-bold">PLASMA_ARC</span>
                                 </div>
                                 <span class="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">صاعقه بنفش (Lightning)</span>
                                 <span class="text-[11px] text-slate-400">ولتاژ بالا و امواج الکترومغناطیس</span>
@@ -486,10 +474,9 @@
                             <!-- 4. Toxic Bio-Emerald -->
                             <button type="button" 
                                     @onclick='() => SetCockpitAura("toxic")'
-                                    class="p-3.5 rounded-xl border transition-all text-right flex flex-col gap-2 group cursor-pointer @(CurrentAura == "toxic" ? "bg-emerald-950/60 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.35)]" : "bg-[#050811]/90 border-slate-700/60 hover:border-emerald-500/50")">
+                                    class="p-3.5 rounded-xl border transition-all text-right flex flex-col gap-2 group cursor-pointer @(CurrentAura == "toxic" ? "bg-emerald-950/60 border-emerald-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]" : "bg-[#050811]/90 border-slate-700/60 hover:border-emerald-500/50")">
                                 <div class="flex items-center justify-between">
                                     <span class="w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                    <span class="text-[10px] font-mono text-emerald-300 font-bold">BIO_ACID</span>
                                 </div>
                                 <span class="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">سم بیولوژیک (Toxic)</span>
                                 <span class="text-[11px] text-slate-400">سبز اسیدی رادیواکتیو نئونی</span>

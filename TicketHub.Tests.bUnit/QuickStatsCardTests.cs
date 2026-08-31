@@ -16,12 +16,11 @@ public class QuickStatsCardTests : BUnitComponentTestBase
             .Add(p => p.Title, "منقضی شده")
             .Add(p => p.Value, "0")
             .Add(p => p.ElementType, "void")
-            .Add(p => p.BadgeText, "🌀 OVERDUE")
             .Add(p => p.IsLoading, true));
 
         // Assert
         cut.FindAll(".cyber-skeleton-box").Should().NotBeEmpty();
-        cut.Markup.Should().NotContain("🌀 OVERDUE");
+        cut.Markup.Should().NotContain("data-target=\"0\"");
     }
 
     [Fact]
@@ -32,7 +31,6 @@ public class QuickStatsCardTests : BUnitComponentTestBase
             .Add(p => p.Title, "منقضی شده")
             .Add(p => p.Value, "0")
             .Add(p => p.ElementType, "void")
-            .Add(p => p.BadgeText, "🌀 OVERDUE")
             .Add(p => p.IsLoading, true));
 
         cut.FindAll(".cyber-skeleton-box").Should().NotBeEmpty();
@@ -44,7 +42,7 @@ public class QuickStatsCardTests : BUnitComponentTestBase
         // Assert: Skeleton is removed and content is rendered properly
         cut.FindAll(".cyber-skeleton-box").Should().BeEmpty();
         cut.Markup.Should().Contain("منقضی شده");
-        cut.Markup.Should().Contain("🌀 OVERDUE");
+        cut.Markup.Should().Contain("data-target=\"0\"");
         cut.Markup.Should().Contain("element-void");
     }
 

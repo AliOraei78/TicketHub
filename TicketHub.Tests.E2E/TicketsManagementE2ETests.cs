@@ -243,7 +243,7 @@ namespace TicketHub.Tests.E2E
             await WaitForBlazorAsync(Page, 800);
 
             // Transition modal opens
-            var modalLocator = Page.Locator("text=[SYS // WORKFLOW_TRANSITION]").First;
+            var modalLocator = Page.Locator("text=تغییر وضعیت و انتقال تیکت").First;
             await modalLocator.WaitForAsync(new() { Timeout = 8_000 });
             (await modalLocator.IsVisibleAsync()).Should().BeTrue();
 

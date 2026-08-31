@@ -231,11 +231,11 @@
 
     private string GetRarityTag()
     {
-        if (Ticket.IsOverdue) return "🔥 RAID [OVERDUE]";
-        if (Ticket.Priority != null && (Ticket.Priority.Level >= 4 || Ticket.Priority.Name == "بحرانی")) return "⚡ EPIC";
-        if (Ticket.Priority != null && (Ticket.Priority.Level == 3 || Ticket.Priority.Name == "زیاد" || Ticket.Priority.Name == "بالا" || Ticket.Priority.Name == "خیلی زیاد")) return "🛡️ RARE";
-        if (Ticket.Priority != null && (Ticket.Priority.Level == 2 || Ticket.Priority.Name == "متوسط")) return "✨ UNCOMMON";
-        return "⚔️ COMMON";
+        if (Ticket.IsOverdue) return "🔥 سررسید گذشته";
+        if (Ticket.Priority != null && (Ticket.Priority.Level >= 4 || Ticket.Priority.Name == "بحرانی")) return "⚡ بحرانی";
+        if (Ticket.Priority != null && (Ticket.Priority.Level == 3 || Ticket.Priority.Name == "زیاد" || Ticket.Priority.Name == "بالا" || Ticket.Priority.Name == "خیلی زیاد")) return "🛡️ بالا";
+        if (Ticket.Priority != null && (Ticket.Priority.Level == 2 || Ticket.Priority.Name == "متوسط")) return "✨ متوسط";
+        return "⚔️ عادی";
     }
 
     private string GetRarityTagClass()

@@ -28,14 +28,6 @@ public partial class ToastContainer : ComponentBase, IDisposable
         _ => "toast-cyber-info"
     };
 
-    protected string GetBadgeText(ToastType type) => type switch
-    {
-        ToastType.Success => "[SYS // SUCCESS]",
-        ToastType.Error => "[SYS // ALARM_ERROR]",
-        ToastType.Warning => "[SYS // WARNING]",
-        _ => "[SYS // SYSTEM_INFO]"
-    };
-
     public void Dispose()
     {
         ToastService.OnChanged -= StateHasChangedWrapper;
