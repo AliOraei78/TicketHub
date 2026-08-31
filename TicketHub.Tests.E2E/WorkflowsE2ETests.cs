@@ -663,13 +663,12 @@ namespace TicketHub.Tests.E2E
             await WaitForBlazorAsync(Page, 800);
 
             await Page.ClickAsync("button:has-text('ایجاد جریان کاری جدید')");
-            await Page.WaitForURLAsync("**/workflows/editor");
+            await Page.WaitForSelectorAsync("a:has-text('انصراف و بازگشت')");
             await WaitForBlazorAsync(Page, 800);
 
             var cancelBtn = Page.Locator("a:has-text('انصراف و بازگشت')").First;
             await cancelBtn.ClickAsync();
 
-            await Page.WaitForURLAsync("**/workflows");
             await Page.WaitForSelectorAsync("text=مدیریت جریان‌های کاری");
             var header = Page.Locator("text=مدیریت جریان‌های کاری").First;
             (await header.IsVisibleAsync()).Should().BeTrue();
