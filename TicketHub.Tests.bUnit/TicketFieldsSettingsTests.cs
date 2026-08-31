@@ -74,7 +74,7 @@ namespace TicketHub.Tests.bUnit
 
             var cut = Render<TicketFieldsSettings>();
 
-            cut.Markup.Should().Contain("مدیریت فیلدهای داینامیک تیکت");
+            cut.Markup.Should().Contain("مدیریت فیلدهای پویای تیکت");
             cut.Markup.Should().Contain("کل فیلدهای تیکت");
             cut.Markup.Should().Contain("فیلدهای فعال");
             cut.Markup.Should().Contain("فیلدهای غیرفعال");

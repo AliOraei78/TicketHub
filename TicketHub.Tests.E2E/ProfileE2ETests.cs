@@ -44,9 +44,9 @@ namespace TicketHub.Tests.E2E
             await securityHeader.WaitForAsync();
             (await securityHeader.IsVisibleAsync()).Should().BeTrue();
 
-            // Switch to Cockpit HUD Tab
-            await Page.ClickAsync("button:has-text('شخصی‌سازی کاک‌پیت و هود')");
-            var hudHeader = Page.Locator("h3:has-text('مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت')").First;
+            // Switch to Themes Tab
+            await Page.ClickAsync("button:has-text('شخصی‌سازی پوسته و تم')");
+            var hudHeader = Page.Locator("h3:has-text('شخصی‌سازی پوسته و ظاهر سامانه')").First;
             await hudHeader.WaitForAsync();
             (await hudHeader.IsVisibleAsync()).Should().BeTrue();
 
@@ -107,17 +107,17 @@ namespace TicketHub.Tests.E2E
             await identityHeader.WaitForAsync();
             await WaitForBlazorAsync(Page, 1000);
 
-            // Go to Cockpit HUD tab
-            await Page.ClickAsync("button:has-text('شخصی‌سازی کاک‌پیت و هود')");
-            var hudHeader = Page.Locator("h3:has-text('مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت')").First;
+            // Go to Themes tab
+            await Page.ClickAsync("button:has-text('شخصی‌سازی پوسته و تم')");
+            var hudHeader = Page.Locator("h3:has-text('شخصی‌سازی پوسته و ظاهر سامانه')").First;
             await hudHeader.WaitForAsync();
 
             // Click Flame aura
-            var flameBtn = Page.Locator("button:has-text('آتش نئونی (Flame)')").First;
+            var flameBtn = Page.Locator("button:has-text('نارنجی تابناک (Flame)')").First;
             await flameBtn.WaitForAsync();
             await flameBtn.ClickAsync();
 
-            var statusMsg = Page.Locator("text=پالت رنگی کاک‌پیت به FIRE تغییر یافت").First;
+            var statusMsg = Page.Locator("text=پالت رنگی سامانه به FIRE تغییر یافت").First;
             await statusMsg.WaitForAsync(new() { Timeout = 10000 });
             (await statusMsg.IsVisibleAsync()).Should().BeTrue();
         }

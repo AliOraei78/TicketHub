@@ -144,7 +144,7 @@
                             روند ورودی تیکت‌ها (۷ روز گذشته)
                         </h3>
                     </div>
-                    <p class="text-xs text-slate-400 mt-0.5 font-normal">نمودار لیزری نوسانات ترافیک و لاگ هفتگی</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">نمودار نوسانات ترافیک و درخواست‌های هفتگی</p>
                 </div>
                 <div class="p-2.5 bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 rounded-2xl group-hover:bg-cyan-500 group-hover:text-black transition-all shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,15 +186,15 @@
             </div>
         </div>
 
-        <!-- Chart Card 2: Priority Distribution (Gamer Rank Tiers) -->
+        <!-- Chart Card 2: Priority Distribution -->
         <div @onclick='() => OpenChartModal("priority")'
              class="element-card gamer-card-3d bg-[#080c18]/95 rounded-3xl p-6 shadow-2xl border border-white/[0.08] hover:border-amber-500/50 cursor-pointer transition-all relative group">
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h3 class="font-bold text-slate-100 text-lg group-hover:text-amber-400 transition-colors">
-                        توزیع تیکت‌ها بر اساس اولویت و رنک
+                        توزیع تیکت‌ها بر اساس اولویت
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5 font-normal">تفکیک درجه اهمیت و دسته‌بندی مأموریت‌ها</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">تفکیک درجه اهمیت و دسته‌بندی تیکت‌ها</p>
                 </div>
                 <div class="p-2.5 bg-amber-950/60 border border-amber-500/30 text-amber-400 rounded-2xl group-hover:bg-amber-500 group-hover:text-black transition-all shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,15 +237,15 @@
             </div>
         </div>
 
-        <!-- Chart Card 3: Project Workload (Game Realms) -->
+        <!-- Chart Card 3: Project Workload -->
         <div @onclick='() => OpenChartModal("project")'
              class="element-card gamer-card-3d bg-[#080c18]/95 rounded-3xl p-6 shadow-2xl border border-white/[0.08] hover:border-purple-500/50 cursor-pointer transition-all relative group">
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h3 class="font-bold text-slate-100 text-lg group-hover:text-purple-400 transition-colors">
-                        سهم بخش‌ها و قلمروها از کل تیکت‌ها
+                        سهم بخش‌ها و پروژه‌ها از کل تیکت‌ها
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5 font-normal">بخش‌های پرمصرف و تمرکز لود کاربران</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">پروژه‌های دارای بیشترین حجم درخواست و بار کاری</p>
                 </div>
                 <div class="p-2.5 bg-purple-950/60 border border-purple-500/30 text-purple-400 rounded-2xl group-hover:bg-purple-500 group-hover:text-white transition-all shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -288,7 +288,7 @@
             </div>
         </div>
 
-        <!-- Chart Card 4: SLA Boss / Player Health Bar & Shield -->
+        <!-- Chart Card 4: SLA Compliance -->
         <div @onclick='() => OpenChartModal("sla")'
              class="element-card gamer-card-3d bg-[#080c18]/95 rounded-3xl p-6 shadow-2xl border border-white/[0.08] hover:border-emerald-500/50 cursor-pointer transition-all relative group">
             <div class="flex justify-between items-center mb-3">
@@ -296,7 +296,7 @@
                     <h3 class="font-bold text-slate-100 text-lg group-hover:text-emerald-400 transition-colors flex items-center gap-2">
                         <span>پایش و پایبندی به توافق‌نامه سطح خدمت (SLA)</span>
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5 font-normal">پایش مهلت پاسخ و حفاظت از شیلد SLA</p>
+                    <p class="text-xs text-slate-400 mt-0.5 font-normal">پایش شاخص‌های پاسخگویی و تعهدات زمانی</p>
                 </div>
                 <div class="p-2.5 bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 rounded-2xl group-hover:bg-emerald-500 group-hover:text-black transition-all shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -319,14 +319,14 @@
                 }
                 else
                 {
-                    <!-- Boss / SLA Animated Health Bar -->
+                    <!-- SLA Compliance Progress Bar -->
                     <div>
                         <div class="flex justify-between text-xs font-black mb-1.5">
                             <span class="text-slate-300 flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full @(SlaOnTimePercentage >= 85 ? "bg-emerald-400 shadow-[0_0_8px_#34d399]" : SlaOnTimePercentage >= 60 ? "bg-amber-400" : "bg-rose-500 animate-ping")"></span>
-                                وضعیت شیلد SLA: 
+                                شاخص پایبندی به SLA: 
                                 <span class="@(SlaOnTimePercentage >= 85 ? "text-emerald-400" : SlaOnTimePercentage >= 60 ? "text-amber-400" : "text-rose-400") font-bold">
-                                    @(SlaOnTimePercentage >= 85 ? "🛡️ وضعیت ایمن" : SlaOnTimePercentage >= 60 ? "⚠️ وضعیت هشدار" : "🚨 وضعیت بحرانی")
+                                    @(SlaOnTimePercentage >= 85 ? "🛡️ مطلوب و در موعد" : SlaOnTimePercentage >= 60 ? "⚠️ در آستانه تاخیر" : "🚨 تاخیر زمانی (سررسید گذشته)")
                                 </span>
                             </span>
                             <span class="text-base font-black @(SlaOnTimePercentage >= 85 ? "text-emerald-400" : SlaOnTimePercentage >= 60 ? "text-amber-400" : "text-rose-400") font-mono">

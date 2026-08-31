@@ -45,8 +45,8 @@ namespace TicketHub.Tests.bUnit
 
             var cut = Render<SystemLogs>();
 
-            cut.Markup.Should().Contain("ترمینال");
-            cut.Markup.Should().Contain("مانیتورینگ");
+            cut.Markup.Should().Contain("مرکز");
+            cut.Markup.Should().Contain("پایش و گزارش");
             cut.Markup.Should().Contain("همه لاگ‌ها");
             cut.Markup.Should().Contain("فقط خطاها (Error)");
             cut.Markup.Should().Contain("هشدارها (Warning)");
@@ -128,7 +128,7 @@ namespace TicketHub.Tests.bUnit
         {
             var cut = Render<SystemLogs>();
 
-            var liveBtn = cut.Find("button:contains('فعالسازی لایو')");
+            var liveBtn = cut.Find("button:contains('فعال‌سازی به‌روزرسانی زنده')");
             liveBtn.Click();
 
             cut.Markup.Should().Contain("جریان زنده فعال");

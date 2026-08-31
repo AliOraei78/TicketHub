@@ -39,7 +39,7 @@ namespace TicketHub.Tests.bUnit
                 .Add(p => p.AvailableCategories, new List<CategoryDto>())
             );
 
-            cut.Markup.Should().Contain("ویرایش فیلد داینامیک");
+            cut.Markup.Should().Contain("ویرایش فیلد پویا");
             cut.Markup.Should().Contain("ذخیره تغییرات");
             cut.Markup.Should().Contain("انصراف");
         }

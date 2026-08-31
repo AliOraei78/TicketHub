@@ -33,7 +33,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                <span>بازگشت به مرکز فرماندهی</span>
+                <span>بازگشت به داشبورد اصلی</span>
             </a>
 
             <button onclick="history.back()" type="button" class="btn-cyber-ghost w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl cursor-pointer">
@@ -47,5 +47,5 @@
 </div>
 
 @code {
-    [Parameter] public string Message { get; set; } = "مسیر درخواستی در شبکه عصبی سامانه موجود نیست یا دسترسی لازم برای مشاهده آن صادر نشده است.";
+    [Parameter] public string Message { get; set; } = "صفحه مورد نظر در سامانه موجود نیست یا ممکن است حذف شده باشد.";
 }

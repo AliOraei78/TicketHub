@@ -1337,7 +1337,7 @@
                         text.includes('جریان کاری جدید') ||
                         text.includes('تعریف') ||
                         text.includes('ایجاد') ||
-                        text.includes('ثبت کوئست')
+                        text.includes('ثبت تیکت')
                     )
                 ) {
                     window.playCyberSound('create');
@@ -1715,7 +1715,7 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
                 </span>
-                <span>⚠️ ارتباط شبکه قطع شد // در حال تلاش برای اتصال مجدد...</span>
+                <span>⚠️ ارتباط شبکه قطع شد. در حال تلاش برای برقراری اتصال مجدد...</span>
             `;
             window.playCyberSound('error');
         } else {
@@ -1725,7 +1725,7 @@
                 <span class="relative flex h-2.5 w-2.5">
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
                 </span>
-                <span>⚡ ارتباط سایبری برقرار شد // سیستم آنلاین است</span>
+                <span>⚡ ارتباط شبکه برقرار شد. سامانه آنلاین است.</span>
             `;
             window.playCyberSound('success');
             setTimeout(() => {

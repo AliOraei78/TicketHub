@@ -417,7 +417,7 @@ public partial class Home : Fluxor.Blazor.Web.Components.FluxorComponent, IDispo
         {
             "trend" => "تحلیل جامع روند ورودی تیکت‌ها",
             "priority" => "توزیع تفکیکی اولویت‌های سیستم",
-            "project" => "سهم پروژه‌ها از لود کاری سیستم",
+            "project" => "سهم پروژه‌ها از کل درخواست‌ها و بار کاری",
             "sla" => "پایش دقیق شاخص زمان‌بندی (SLA)",
             _ => "آمار تفکیکی"
         };

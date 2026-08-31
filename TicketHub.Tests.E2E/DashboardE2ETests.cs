@@ -44,9 +44,9 @@ namespace TicketHub.Tests.E2E
             // 3. Verify 4 Analytics Chart Cards
             var trendChartCard = Page.Locator("h3:has-text('روند ورودی تیکت‌ها (۷ روز گذشته)')");
             (await trendChartCard.IsVisibleAsync()).Should().BeTrue();
-            var priorityChartCard = Page.Locator("h3:has-text('توزیع تیکت‌ها بر اساس اولویت و رنک')");
+            var priorityChartCard = Page.Locator("h3:has-text('توزیع تیکت‌ها بر اساس اولویت')");
             (await priorityChartCard.IsVisibleAsync()).Should().BeTrue();
-            var projectChartCard = Page.Locator("h3:has-text('سهم بخش‌ها و قلمروها از کل تیکت‌ها')");
+            var projectChartCard = Page.Locator("h3:has-text('سهم بخش‌ها و پروژه‌ها از کل تیکت‌ها')");
             (await projectChartCard.IsVisibleAsync()).Should().BeTrue();
             var slaChartCard = Page.Locator("h3:has-text('پایش و پایبندی به توافق‌نامه سطح خدمت (SLA)')");
             (await slaChartCard.IsVisibleAsync()).Should().BeTrue();
@@ -105,12 +105,12 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForSelectorAsync("h1:has-text('خوش آمدید')", new() { Timeout = 15_000 });
 
             // Click on Project Workload Card
-            var projectCard = Page.Locator("div.element-card:has(h3:has-text('سهم بخش‌ها و قلمروها'))").First;
+            var projectCard = Page.Locator("div.element-card:has(h3:has-text('سهم بخش‌ها و پروژه‌ها'))").First;
             await projectCard.WaitForAsync(new() { Timeout = 5_000 });
             await projectCard.ClickAsync();
 
             // Verify Project Zoom Modal opens
-            var modalTitle = Page.Locator("h3:has-text('سهم پروژه‌ها از لود کاری سیستم')");
+            var modalTitle = Page.Locator("h3:has-text('سهم پروژه‌ها از کل درخواست‌ها و بار کاری')");
             await modalTitle.WaitForAsync(new() { Timeout = 10_000 });
             (await modalTitle.IsVisibleAsync()).Should().BeTrue();
             // Close via "بستن پنجره"
@@ -128,7 +128,7 @@ namespace TicketHub.Tests.E2E
             await Page.WaitForSelectorAsync("h1:has-text('خوش آمدید')", new() { Timeout = 15_000 });
 
             // Click on SLA Health Card
-            var slaCard = Page.Locator("div.element-card:has(h3:has-text('نوار سلامت و پاسخگویی به موقع'))").First;
+            var slaCard = Page.Locator("div.element-card:has(h3:has-text('پایش و پایبندی به توافق‌نامه سطح خدمت'))").First;
             await slaCard.WaitForAsync(new() { Timeout = 5_000 });
             await slaCard.ClickAsync();
 

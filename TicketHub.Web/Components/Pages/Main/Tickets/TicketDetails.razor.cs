@@ -380,12 +380,12 @@ public partial class TicketDetails : ComponentBase, IDisposable
 
             Ticket = await TicketService.GetByIdAsync(TicketId);
             LoadAttachments();
-            ToastService.ShowSuccess("فایل(های) جدید با موفقیت آپلود شد.");
+            ToastService.ShowSuccess("فایل(های) جدید با موفقیت بارگذاری شد.");
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            ToastService.ShowError("خطا در آپلود فایل: " + ex.Message);
+            ToastService.ShowError("خطا در بارگذاری فایل: " + ex.Message);
         }
     }
 

@@ -237,11 +237,11 @@ public partial class SystemLogs : ComponentBase, IDisposable
         try
         {
             await JSRuntime.InvokeVoidAsync("downloadFileFromText", fileName, formatted, "text/plain;charset=utf-8");
-            ToastService.ShowSuccess($"فایل لاگ‌های انتخابی ({fileName}) دانلود شد.");
+            ToastService.ShowSuccess($"فایل لاگ‌های انتخابی ({fileName}) دریافت شد.");
         }
         catch
         {
-            ToastService.ShowWarning("خطا در ایجاد و دانلود فایل لاگ.");
+            ToastService.ShowWarning("خطا در ایجاد و دریافت فایل لاگ.");
         }
     }
 

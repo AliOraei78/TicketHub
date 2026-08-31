@@ -20,7 +20,7 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/system-logs");
             await WaitForBlazorAsync(Page, 1000);
 
-            var bannerTitle = Page.Locator("text=ترمینال").First;
+            var bannerTitle = Page.Locator("text=پایش و گزارش").First;
             await bannerTitle.WaitForAsync(new() { Timeout = 10000 });
             (await bannerTitle.IsVisibleAsync()).Should().BeTrue();
 
@@ -79,17 +79,17 @@ namespace TicketHub.Tests.E2E
             await Page.GotoAsync($"{Factory.ServerAddress}/system-logs");
             await WaitForBlazorAsync(Page, 1000);
 
-            await Page.WaitForSelectorAsync("button:has-text('فعالسازی لایو')");
+            await Page.WaitForSelectorAsync("button:has-text('فعال‌سازی به‌روزرسانی زنده')");
 
             // Click live stream button
-            await Page.ClickAsync("button:has-text('فعالسازی لایو')");
+            await Page.ClickAsync("button:has-text('فعال‌سازی به‌روزرسانی زنده')");
             await Task.Delay(500);
 
             var liveBadge = Page.Locator("text=جریان زنده فعال").First;
             (await liveBadge.IsVisibleAsync()).Should().BeTrue();
 
             // Toggle off
-            await Page.ClickAsync("button:has-text('استریم زنده فعال')");
+            await Page.ClickAsync("button:has-text('به‌روزرسانی زنده فعال')");
             await Task.Delay(500);
         }
     }

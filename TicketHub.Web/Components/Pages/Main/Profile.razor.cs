@@ -154,7 +154,7 @@ public partial class Profile : ComponentBase
         try
         {
             await JSRuntime.InvokeVoidAsync("setCockpitAura", auraName);
-            StatusMessage = $"پالت رنگی کاک‌پیت به {auraName.ToUpper()} تغییر یافت.";
+            StatusMessage = $"پالت رنگی سامانه به {auraName.ToUpper()} تغییر یافت.";
             IsSuccess = true;
         }
         catch { }

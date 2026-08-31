@@ -158,7 +158,7 @@ namespace TicketHub.Tests.bUnit
             // Card 2 (Comments Stream)
             cut.Markup.Should().Contain("نظرات و گفتگو"); cut.Markup.Should().Contain("نظر اول تستی");
             // Card 3 (Status & Transitions Timeline)
-            cut.Markup.Should().Contain("وضعیت و انتقالات"); cut.Markup.Should().Contain("شروع بررسی"); cut.Markup.Should().Contain("شروع کار روی لاگ‌ها");
+            cut.Markup.Should().Contain("وضعیت و تاریخچه تغییرات"); cut.Markup.Should().Contain("شروع بررسی"); cut.Markup.Should().Contain("شروع کار روی لاگ‌ها");
         }
 
         [Fact]

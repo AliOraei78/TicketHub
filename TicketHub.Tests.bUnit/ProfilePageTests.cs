@@ -107,13 +107,13 @@ namespace TicketHub.Tests.bUnit
 
             cut.Markup.Should().Contain("مدیریت کلمات عبور و سطح امنیت حساب");
 
-            // Switch to Tab 3: Cockpit HUD Customizer
-            var hudTabBtn = cut.Find("button:contains('شخصی‌سازی کاک‌پیت و هود')");
+            // Switch to Tab 3: Themes and Appearance Customizer
+            var hudTabBtn = cut.Find("button:contains('شخصی‌سازی پوسته و تم')");
             hudTabBtn.Click();
 
-            cut.Markup.Should().Contain("مرکز سفارشی‌سازی هود و اتمسفر کاک‌پیت");
-            cut.Markup.Should().Contain("واتر سایبر (Cyan)");
-            cut.Markup.Should().Contain("آتش نئونی (Flame)");
+            cut.Markup.Should().Contain("شخصی‌سازی پوسته و ظاهر سامانه");
+            cut.Markup.Should().Contain("فیروزه‌ای (پیش‌فرض)");
+            cut.Markup.Should().Contain("نارنجی تابناک (Flame)");
         }
 
         [Fact]
@@ -194,14 +194,14 @@ namespace TicketHub.Tests.bUnit
         {
             var cut = Render<Profile>();
 
-            // Switch to Cockpit HUD tab
-            var hudTabBtn = cut.Find("button:contains('شخصی‌سازی کاک‌پیت و هود')");
+            // Switch to Themes tab
+            var hudTabBtn = cut.Find("button:contains('شخصی‌سازی پوسته و تم')");
             hudTabBtn.Click();
 
-            var flameAuraBtn = cut.Find("button:contains('آتش نئونی (Flame)')");
+            var flameAuraBtn = cut.Find("button:contains('نارنجی تابناک (Flame)')");
             flameAuraBtn.Click();
 
-            cut.Markup.Should().Contain("پالت رنگی کاک‌پیت به FIRE تغییر یافت");
+            cut.Markup.Should().Contain("پالت رنگی سامانه به FIRE تغییر یافت");
         }
     }
 }

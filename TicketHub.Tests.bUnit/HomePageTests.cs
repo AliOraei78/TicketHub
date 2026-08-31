@@ -208,9 +208,9 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // Trend chart
-        cut.Markup.Should().Contain("روند ورودی تیکت‌ها (۷ روز گذشته)"); cut.Markup.Should().Contain("نمودار لیزری نوسانات ترافیک و لاگ هفتگی");
+        cut.Markup.Should().Contain("روند ورودی تیکت‌ها (۷ روز گذشته)"); cut.Markup.Should().Contain("نمودار نوسانات ترافیک و درخواست‌های هفتگی");
         // Priority Distribution
-        cut.Markup.Should().Contain("توزیع تیکت‌ها بر اساس اولویت و رنک"); cut.Markup.Should().Contain("بحرانی");
+        cut.Markup.Should().Contain("توزیع تیکت‌ها بر اساس اولویت"); cut.Markup.Should().Contain("بحرانی");
     }
 
     [Fact]
@@ -219,9 +219,9 @@ public class HomePageTests : BUnitComponentTestBase
         var cut = Render<Home>();
 
         // Project Workload
-        cut.Markup.Should().Contain("سهم بخش‌ها و قلمروها از کل تیکت‌ها"); cut.Markup.Should().Contain("پروژه عمومی");
+        cut.Markup.Should().Contain("سهم بخش‌ها و پروژه‌ها از کل تیکت‌ها"); cut.Markup.Should().Contain("پروژه عمومی");
         // SLA Health Bar
-        cut.Markup.Should().Contain("پایش و پایبندی به توافق‌نامه سطح خدمت (SLA)"); cut.Markup.Should().Contain("🛡️ وضعیت ایمن"); cut.Markup.Should().Contain("90%");
+        cut.Markup.Should().Contain("پایش و پایبندی به توافق‌نامه سطح خدمت (SLA)"); cut.Markup.Should().Contain("🛡️ مطلوب و در موعد"); cut.Markup.Should().Contain("90%");
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("⚠️ وضعیت هشدار"); cut.Markup.Should().Contain("70%");
+        cut.Markup.Should().Contain("⚠️ در آستانه تاخیر"); cut.Markup.Should().Contain("70%");
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class HomePageTests : BUnitComponentTestBase
 
         var cut = Render<Home>();
 
-        cut.Markup.Should().Contain("🚨 وضعیت بحرانی"); cut.Markup.Should().Contain("40%");
+        cut.Markup.Should().Contain("🚨 تاخیر زمانی (سررسید گذشته)"); cut.Markup.Should().Contain("40%");
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public class HomePageTests : BUnitComponentTestBase
         var projectCard = cut.FindAll("div.element-card.gamer-card-3d").First(el => el.TextContent.Contains("سهم بخش‌ها"));
         projectCard.Click();
 
-        cut.Find("h3:contains('سهم پروژه‌ها از لود کاری سیستم')").Should().NotBeNull(); cut.Find("span:contains('پروژه عمومی')").Should().NotBeNull();
+        cut.Find("h3:contains('سهم پروژه‌ها از کل درخواست‌ها و بار کاری')").Should().NotBeNull(); cut.Find("span:contains('پروژه عمومی')").Should().NotBeNull();
     }
 
     [Fact]
