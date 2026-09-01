@@ -18,5 +18,6 @@ namespace TicketHub.Application.Interfaces
         Task<bool> ConfirmUserAsync(int userId, string token);
         Task<(bool Success, string? Message, int RemainingSeconds)> ResendConfirmationCodeAsync(string email);
         Task<AuthServiceResponse> LoginAsync(LoginViewModel model);
+        Task<AuthServiceResponse> ProcessExternalLoginAsync(string provider, string subjectId, string email, string name);
     }
 }

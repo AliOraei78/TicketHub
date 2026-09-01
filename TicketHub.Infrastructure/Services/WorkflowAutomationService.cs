@@ -153,40 +153,52 @@ public class WorkflowAutomationService : IWorkflowAutomationService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticket.Id, targetStatusId, targetWorkflowStatusId, history);
-
-        // Update ticket in database with new status and DueDate based on destination transition's DeadlineMinutes or outgoing automated transition
-        using (var updateContext = await _factory.CreateDbContextAsync())
+        try
         {
-            var dbTicket = await updateContext.Set<Ticket>().FindAsync(ticket.Id);
-            if (dbTicket != null)
+            await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticket.Id, targetStatusId, targetWorkflowStatusId, history, ticket.RowVersion);
+
+            // Update ticket in database with new status and DueDate based on destination transition's DeadlineMinutes or outgoing automated transition
+            using (var updateContext = await _factory.CreateDbContextAsync())
             {
-                dbTicket.StatusId = targetStatusId;
-                dbTicket.WorkflowStatusId = targetWorkflowStatusId;
-
-                var outgoingAutoTransition = ticket.Project?.Workflow?.Transitions
-                    .FirstOrDefault(tr => tr.IsActive && tr.IsAutomated == 1 && tr.FromState == targetWorkflowStatusId);
-
-                int? effectiveDeadline = outgoingAutoTransition?.DeadlineMinutes ?? transition.DeadlineMinutes;
-
-                if (effectiveDeadline.HasValue && effectiveDeadline.Value > 0)
+                var dbTicket = await updateContext.Set<Ticket>().FindAsync(ticket.Id);
+                if (dbTicket != null)
                 {
-                    dbTicket.DueDate = DateTime.UtcNow.AddMinutes(effectiveDeadline.Value);
+                    dbTicket.StatusId = targetStatusId;
+                    dbTicket.WorkflowStatusId = targetWorkflowStatusId;
+
+                    var outgoingAutoTransition = ticket.Project?.Workflow?.Transitions
+                        .FirstOrDefault(tr => tr.IsActive && tr.IsAutomated == 1 && tr.FromState == targetWorkflowStatusId);
+
+                    int? effectiveDeadline = outgoingAutoTransition?.DeadlineMinutes ?? transition.DeadlineMinutes;
+
+                    if (effectiveDeadline.HasValue && effectiveDeadline.Value > 0)
+                    {
+                        dbTicket.DueDate = DateTime.UtcNow.AddMinutes(effectiveDeadline.Value);
+                    }
+                    else
+                    {
+                        dbTicket.DueDate = null;
+                    }
+                    await updateContext.SaveChangesAsync();
                 }
-                else
-                {
-                    dbTicket.DueDate = null;
-                }
-                await updateContext.SaveChangesAsync();
             }
+
+            _logger.LogInformation("انتقال خودکار '{TransitionName}' روی تیکت {TicketId} با موفقیت اعمال گردید (علت: {Reason}).",
+                transition.Name, ticket.Id, isDeadlineTriggered ? "انقضای ددلاین" : "قانون اتوماسیون");
+
+            await _eventBroker.PublishTransitionOccurredAsync(ticket.Id);
+            await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
         }
-
-
-        _logger.LogInformation("انتقال خودکار '{TransitionName}' روی تیکت {TicketId} با موفقیت اعمال گردید (علت: {Reason}).",
-            transition.Name, ticket.Id, isDeadlineTriggered ? "انقضای ددلاین" : "قانون اتوماسیون");
-
-        await _eventBroker.PublishTransitionOccurredAsync(ticket.Id);
-        await _eventBroker.PublishTicketUpdatedAsync(ticket.Id);
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "انتقال خودکار تیکت {TicketId} به دلیل تغییر همزمان نادیده گرفته شد.", ticket.Id);
+            return;
+        }
+        catch (TicketHub.Core.Common.Exceptions.ConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "انتقال خودکار تیکت {TicketId} به دلیل تغییر همزمان وضعیت متوقف شد.", ticket.Id);
+            return;
+        }
 
         if (_notificationService != null && ticket.UserId > 0)
         {

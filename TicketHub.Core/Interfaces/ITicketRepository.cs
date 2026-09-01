@@ -19,5 +19,5 @@ public interface ITicketRepository : IRepository<Ticket>
             string? searchTerm, List<int>? projectIds, List<int>? statusIds, List<int>? priorityIds, int? userId,
             int currentUserId, List<int>? userRoleIds, bool isAdmin, bool isStaffOrAdmin);
     Task<Ticket?> GetTicketWithProjectAndStatusAsync(int id);
-    Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history);
+    Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history, Guid? expectedRowVersion = null);
 }

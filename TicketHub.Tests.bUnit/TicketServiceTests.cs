@@ -303,7 +303,7 @@ namespace TicketHub.Tests.bUnit
 
             await _ticketService.ExecuteTransitionAsync(executeDto, 1);
 
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(30, 2, 20, It.IsAny<TicketHistory>()), Times.Once);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(30, 2, 20, It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Once);
             _mockEventBroker.Verify(e => e.PublishTransitionOccurredAsync(30), Times.Once);
         }
 

@@ -39,7 +39,29 @@ services:
       retries: 5
 
   # =========================================================================
-  # 3. TicketHub Web Application (.NET 10 Blazor Server)
+  # 3. MinIO Object Storage (S3-Compatible)
+  # =========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: tickethub-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-minioadmin}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-minioadmin}"
+    ports:
+      - "${MINIO_BIND_IP:-127.0.0.1}:${MINIO_PORT:-9000}:9000"
+      - "${MINIO_BIND_IP:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =========================================================================
+  # 4. TicketHub Web Application (.NET 10 Blazor Server)
   # =========================================================================
   tickethub-web:
     build:
@@ -69,6 +91,23 @@ services:
       - EmailSettings__Password=${SMTP_PASSWORD:-}
       - EmailSettings__FromEmail=${SMTP_FROM_EMAIL:-}
       - EmailSettings__FromName=${SMTP_FROM_NAME:-TicketHub System}
+      - Storage__Provider=${STORAGE_PROVIDER:-Local}
+      - Storage__LocalPath=${STORAGE_LOCAL_PATH:-uploads}
+      - Storage__Endpoint=${STORAGE_ENDPOINT:-http://minio:9000}
+      - Storage__BucketName=${STORAGE_BUCKET:-tickethub-attachments}
+      - Storage__AccessKey=${STORAGE_ACCESS_KEY:-minioadmin}
+      - Storage__SecretKey=${STORAGE_SECRET_KEY:-minioadmin}
+      - Storage__Region=${STORAGE_REGION:-us-east-1}
+      - Storage__ForcePathStyle=${STORAGE_FORCE_PATH_STYLE:-true}
+      - Storage__UseSsl=${STORAGE_USE_SSL:-false}
+      - SSO__Enabled=${SSO_ENABLED:-false}
+      - SSO__ProviderName=${SSO_PROVIDER_NAME:-OIDC}
+      - SSO__DisplayName=${SSO_DISPLAY_NAME:-ورود یکپارچه سازمانی (SSO)}
+      - SSO__Authority=${SSO_AUTHORITY:-}
+      - SSO__ClientId=${SSO_CLIENT_ID:-}
+      - SSO__ClientSecret=${SSO_CLIENT_SECRET:-}
+      - SSO__RequireHttpsMetadata=${SSO_REQUIRE_HTTPS:-false}
+      - SSO__AutoProvisionUsers=${SSO_AUTO_PROVISION:-true}
     volumes:
       - app_logs:/app/logs
       - app_uploads:/app/wwwroot/uploads
@@ -77,6 +116,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
   app_logs:
   app_uploads:
   app_keys:

@@ -425,4 +425,98 @@ public class UserService : IUserService
             Roles = user.UserRoles.Where(ur => ur.Role != null).Select(ur => ur.Role.Name).ToList()
         };
     }
+
+    public async Task<AuthServiceResponse> ProcessExternalLoginAsync(string provider, string subjectId, string email, string name)
+    {
+        _logger.LogInformation("پردازش ورود یکپارچه (SSO) برای ارائه‌دهنده '{Provider}', شناسه '{SubjectId}' و ایمیل '{Email}'.", provider, subjectId, email);
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return new AuthServiceResponse
+            {
+                Success = false,
+                ErrorMessage = "ایمیل کاربر از سوی ارائه‌دهنده هویت ارسال نشده است."
+            };
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        // 1. جستجو بر اساس Provider و SubjectId
+        var user = await _userRepository.GetByExternalProviderAsync(provider, subjectId);
+
+        // 2. اگر بر اساس SubjectId یافت نشد، جستجو بر اساس ایمیل
+        if (user == null)
+        {
+            user = await _userRepository.GetByEmailAsync(normalizedEmail);
+            if (user != null)
+            {
+                // پیوند دادن ارائه‌دهنده خارجی به حساب کاربر موجود
+                user.ExternalProvider = provider;
+                user.ExternalSubjectId = subjectId;
+                user.IsConfirmed = true;
+                await _userRepository.UpdateAsync(user);
+                _logger.LogInformation("حساب کاربری موجود با ایمیل '{Email}' با موفقیت به ارائه‌دهنده '{Provider}' متصل شد.", normalizedEmail, provider);
+            }
+        }
+
+        // 3. در صورت عدم وجود، ثبت خودکار کاربر (Auto-Provisioning)
+        if (user == null)
+        {
+            _logger.LogInformation("کاربر با ایمیل '{Email}' یافت نشد. در حال ایجاد خودکار حساب کاربری سازمانی...", normalizedEmail);
+
+            var defaultRoles = await _roleRepository.GetAllAsync();
+            var userRole = defaultRoles.FirstOrDefault(r => r.Name == "کاربر") ?? defaultRoles.FirstOrDefault();
+
+            var randomPassword = Guid.NewGuid().ToString("N") + "Aa1@!";
+            var newUser = new User
+            {
+                Email = normalizedEmail,
+                Name = string.IsNullOrWhiteSpace(name) ? normalizedEmail.Split('@')[0] : name.Trim(),
+                Password = BCrypt.Net.BCrypt.HashPassword(randomPassword),
+                ExternalProvider = provider,
+                ExternalSubjectId = subjectId,
+                IsActive = true,
+                IsConfirmed = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _userRepository.AddAsync(newUser);
+
+            if (userRole != null)
+            {
+                await _userRepository.UpdateUserRolesAsync(newUser.Id, new List<int> { userRole.Id });
+            }
+
+            user = await _userRepository.GetByEmailAsync(normalizedEmail);
+            _logger.LogInformation("حساب کاربری جدید برای '{Email}' با شناسه {UserId} با موفقیت فعال شد.", normalizedEmail, user?.Id);
+        }
+
+        if (user == null)
+        {
+            return new AuthServiceResponse
+            {
+                Success = false,
+                ErrorMessage = "خطا در ایجاد یا بازیابی حساب کاربری."
+            };
+        }
+
+        if (!user.IsActive)
+        {
+            _logger.LogWarning("ورود متوقف شد: حساب کاربری {Email} غیرفعال می‌باشد.", normalizedEmail);
+            return new AuthServiceResponse
+            {
+                Success = false,
+                ErrorMessage = "حساب کاربری شما غیرفعال می‌باشد."
+            };
+        }
+
+        return new AuthServiceResponse
+        {
+            Success = true,
+            UserId = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Roles = user.UserRoles?.Where(ur => ur.Role != null).Select(ur => ur.Role.Name).ToList() ?? new List<string>()
+        };
+    }
 }

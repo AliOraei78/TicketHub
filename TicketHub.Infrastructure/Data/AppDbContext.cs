@@ -70,6 +70,9 @@ namespace TicketHub.Infrastructure.Data
                 .HasIndex(ur => new { ur.UserId, ur.RoleId })
                 .IsUnique();
 
+            modelBuilder.Entity<User>()
+                .HasIndex(u => new { u.ExternalProvider, u.ExternalSubjectId });
+
             // استفاده از فیلد Id به عنوان کلید اصلی برای این دو جدول به جای کلید ترکیبی
             modelBuilder.Entity<TransitionRole>().HasKey(tr => tr.Id);
             modelBuilder.Entity<WorkflowStatus>()
@@ -79,7 +82,33 @@ namespace TicketHub.Infrastructure.Data
                 .HasIndex(ws => ws.NodeId)
                 .IsUnique(); // شناسه روی بوم باید یکتا باشد
 
-            // 2. تنظیم روابط Ticket (جلوگیری از Multiple Cascade Paths)
+            // 2. تنظیم روابط و ایندکس‌های Ticket (کنترل همزمانی، ایندکس تمام‌متن GIN و ایندکس‌های کامپوزیت)
+            modelBuilder.Entity<Ticket>()
+                .Property(t => t.RowVersion)
+                .IsConcurrencyToken();
+
+            if (Database.IsNpgsql())
+            {
+                modelBuilder.Entity<Ticket>()
+                    .HasGeneratedTsVectorColumn(
+                        t => t.SearchVector!,
+                        "simple",
+                        t => new { t.Title, t.Description })
+                    .HasIndex(t => t.SearchVector)
+                    .HasMethod("GIN");
+            }
+            else
+            {
+                modelBuilder.Entity<Ticket>()
+                    .Ignore(t => t.SearchVector);
+            }
+
+            modelBuilder.Entity<Ticket>()
+                .HasIndex(t => new { t.ProjectId, t.StatusId });
+
+            modelBuilder.Entity<Ticket>()
+                .HasIndex(t => new { t.UserId, t.CreatedAt });
+
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.User).WithMany(u => u.Tickets).HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Ticket>()
@@ -311,29 +340,29 @@ namespace TicketHub.Infrastructure.Data
 
         public override int SaveChanges()
         {
-            ApplySoftDelete();
+            ApplySoftDeleteAndConcurrency();
             return base.SaveChanges();
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
-            ApplySoftDelete();
+            ApplySoftDeleteAndConcurrency();
             return base.SaveChanges(acceptAllChangesOnSuccess);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            ApplySoftDelete();
+            ApplySoftDeleteAndConcurrency();
             return base.SaveChangesAsync(cancellationToken);
         }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
-            ApplySoftDelete();
+            ApplySoftDeleteAndConcurrency();
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
 
-        private void ApplySoftDelete()
+        private void ApplySoftDeleteAndConcurrency()
         {
             foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
             {
@@ -342,6 +371,14 @@ namespace TicketHub.Infrastructure.Data
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAtUtc = DateTime.UtcNow;
+                }
+            }
+
+            foreach (var entry in ChangeTracker.Entries<Ticket>())
+            {
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.RowVersion = Guid.NewGuid();
                 }
             }
         }

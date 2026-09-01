@@ -3,17 +3,27 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using TicketHub.Application.Common.Models;
 using TicketHub.Application.Interfaces;
 
 namespace TicketHub.Infrastructure.Services;
 
-public class FileStorageService : IFileStorageService
+public class LocalFileStorageService : IFileStorageService
 {
     private readonly IWebHostEnvironment _env;
+    private readonly ILogger<LocalFileStorageService> _logger;
+    private readonly StorageSettings _settings;
 
-    public FileStorageService(IWebHostEnvironment env)
+    public LocalFileStorageService(
+        IWebHostEnvironment env,
+        ILogger<LocalFileStorageService> logger,
+        IOptions<StorageSettings>? options = null)
     {
         _env = env;
+        _logger = logger;
+        _settings = options?.Value ?? new StorageSettings();
     }
 
     public async Task<string> SaveFileAsync(
@@ -23,9 +33,13 @@ public class FileStorageService : IFileStorageService
         CancellationToken cancellationToken = default)
     {
         var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        var uploadsFolder = Path.Combine(webRoot, folderName);
+        var targetFolder = string.IsNullOrWhiteSpace(folderName) ? _settings.LocalPath : folderName;
+        var uploadsFolder = Path.Combine(webRoot, targetFolder);
+
         if (!Directory.Exists(uploadsFolder))
+        {
             Directory.CreateDirectory(uploadsFolder);
+        }
 
         var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
@@ -35,7 +49,9 @@ public class FileStorageService : IFileStorageService
             await content.CopyToAsync(fileStream, cancellationToken);
         }
 
-        return Path.Combine(folderName, uniqueFileName).Replace("\\", "/");
+        var relativePath = Path.Combine(targetFolder, uniqueFileName).Replace("\\", "/");
+        _logger.LogInformation("فایل با موفقیت در فضای دیسک محلی ذخیره شد: {FilePath}", relativePath);
+        return relativePath;
     }
 
     public Task<Stream?> GetFileStreamAsync(string filePath, CancellationToken cancellationToken = default)
@@ -47,7 +63,10 @@ public class FileStorageService : IFileStorageService
         var absolutePath = Path.Combine(webRoot, filePath.TrimStart('/'));
 
         if (!File.Exists(absolutePath))
+        {
+            _logger.LogWarning("فایل در مسیر مشخص شده بر روی دیسک یافت نشد: {AbsolutePath}", absolutePath);
             return Task.FromResult<Stream?>(null);
+        }
 
         Stream stream = new FileStream(absolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         return Task.FromResult<Stream?>(stream);
@@ -64,7 +83,8 @@ public class FileStorageService : IFileStorageService
             return Task.FromResult(filePath);
         }
 
-        return Task.FromResult("/" + filePath.TrimStart('/'));
+        var normalizedPath = "/" + filePath.TrimStart('/');
+        return Task.FromResult(normalizedPath);
     }
 
     public Task DeleteFileAsync(string filePath, CancellationToken cancellationToken = default)
@@ -84,10 +104,11 @@ public class FileStorageService : IFileStorageService
             try
             {
                 File.Delete(absolutePath);
+                _logger.LogInformation("فایل از فضای محلی حذف شد: {AbsolutePath}", absolutePath);
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignored for graceful cleanup
+                _logger.LogError(ex, "خطا در حذف فایل محلی: {AbsolutePath}", absolutePath);
             }
         }
     }

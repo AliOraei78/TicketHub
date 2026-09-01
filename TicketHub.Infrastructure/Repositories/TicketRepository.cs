@@ -73,9 +73,15 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             }
         }
 
-        // 2. User-Selected Filters
+        // 2. User-Selected Filters (GIN-accelerated full-text search with fallback)
         if (!string.IsNullOrWhiteSpace(searchTerm))
-            query = query.Where(t => t.Title.Contains(searchTerm) || t.Description.Contains(searchTerm));
+        {
+            var trimmed = searchTerm.Trim();
+            query = query.Where(t =>
+                (t.SearchVector != null && t.SearchVector.Matches(EF.Functions.PlainToTsQuery("simple", trimmed)))
+                || EF.Functions.ILike(t.Title, $"%{trimmed}%")
+                || EF.Functions.ILike(t.Description, $"%{trimmed}%"));
+        }
 
         if (projectIds != null && projectIds.Any())
             query = query.Where(t => projectIds.Contains(t.ProjectId));
@@ -137,9 +143,15 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
             }
         }
 
-        // 2. User-Selected Filters
+        // 2. User-Selected Filters (GIN-accelerated full-text search with fallback)
         if (!string.IsNullOrWhiteSpace(searchTerm))
-            query = query.Where(t => t.Title.Contains(searchTerm) || t.Description.Contains(searchTerm));
+        {
+            var trimmed = searchTerm.Trim();
+            query = query.Where(t =>
+                (t.SearchVector != null && t.SearchVector.Matches(EF.Functions.PlainToTsQuery("simple", trimmed)))
+                || EF.Functions.ILike(t.Title, $"%{trimmed}%")
+                || EF.Functions.ILike(t.Description, $"%{trimmed}%"));
+        }
 
         if (projectIds != null && projectIds.Any())
             query = query.Where(t => projectIds.Contains(t.ProjectId));
@@ -196,13 +208,18 @@ public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
     }
 
 
-    public async Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history)
+    public async Task ApplyTransitionAndSaveHistoryAsync(int ticketId, int toStatusId, int? workflowStatusId, TicketHistory history, Guid? expectedRowVersion = null)
     {
         using var context = await _factory.CreateDbContextAsync();
 
         var ticket = await context.Set<Ticket>().FirstOrDefaultAsync(t => t.Id == ticketId);
         if (ticket != null)
         {
+            if (expectedRowVersion.HasValue && expectedRowVersion.Value != Guid.Empty && ticket.RowVersion != Guid.Empty && ticket.RowVersion != expectedRowVersion.Value)
+            {
+                throw new TicketHub.Core.Common.Exceptions.ConcurrencyException("وضعیت این تیکت همزمان توسط کاربر یا فرآیند دیگری تغییر کرده است. لطفاً صفحه را تازه‌سازی کنید.");
+            }
+
             ticket.StatusId = toStatusId;
             if (workflowStatusId.HasValue)
             {

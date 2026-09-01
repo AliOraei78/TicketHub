@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using System.Security.Claims;
@@ -17,11 +17,18 @@ public partial class Login : ComponentBase
     [Inject] protected ILogger<Login> Logger { get; set; } = default!;
     [Inject] protected IDNTCaptchaValidatorService CaptchaValidator { get; set; } = default!;
     [Inject] protected IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
+    [Inject] protected Microsoft.Extensions.Options.IOptions<TicketHub.Application.Common.Models.SsoSettings> SsoOptions { get; set; } = default!;
 
 #pragma warning disable BL0008
     [SupplyParameterFromForm]
     public LoginViewModel loginModel { get; set; } = new();
 #pragma warning restore BL0008
+
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Message { get; set; }
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
@@ -41,6 +48,20 @@ public partial class Login : ComponentBase
         if (HttpContext.User?.Identity?.IsAuthenticated == true)
         {
             Navigation.NavigateTo("/", replace: true);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Error))
+        {
+            errorMessage = Error switch
+            {
+                "sso_disabled" => "ورود یکپارچه سازمانی (SSO) در سامانه فعال نیست.",
+                "sso_not_authenticated" => "احراز هویت در سامانه سازمانی انجام نشد.",
+                "sso_missing_email" => "آدرس ایمیل از سمت ارائه‌دهنده هویت سازمانی دریافت نشد.",
+                "sso_failed" => !string.IsNullOrWhiteSpace(Message) ? Uri.UnescapeDataString(Message) : "ورود یکپارچه سازمانی با خطا مواجه شد.",
+                "sso_exception" => "خطایی در پردازش ارتباط با سرور هویت سازمانی رخ داد.",
+                _ => "خطا در احراز هویت."
+            };
         }
     }
 

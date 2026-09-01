@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using TicketHub.Core.Common.Exceptions;
 
@@ -40,6 +40,14 @@ public class GlobalExceptionHandler : IExceptionHandler
             {
                 problemDetails.Extensions["errors"] = validationException.Errors;
             }
+        }
+        else if (exception is Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+            problemDetails.Title = "ConcurrencyConflict";
+            problemDetails.Status = StatusCodes.Status409Conflict;
+            problemDetails.Detail = "اطلاعات این رکورد همزمان توسط کاربر یا فرآیند دیگری تغییر یافته است.";
+            problemDetails.Extensions["errorCode"] = "CONCURRENCY_CONFLICT";
         }
         else
         {

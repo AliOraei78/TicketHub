@@ -33,7 +33,7 @@ public partial class TicketTransitionModal : ComponentBase
     protected List<string> ValidationErrors { get; set; } = new();
     protected Dictionary<string, string> FieldValidationErrors { get; set; } = new();
 
-    public async Task OpenAsync(int ticketId, string title, int currentStatusId, int workflowId, int? currentWorkflowStatusId = null)
+    public async Task OpenAsync(int ticketId, string title, int currentStatusId, int workflowId, int? currentWorkflowStatusId = null, Guid? rowVersion = null)
     {
         IsVisible = true;
         IsLoading = true;
@@ -46,7 +46,8 @@ public partial class TicketTransitionModal : ComponentBase
 
         Model = new ExecuteTransitionDto
         {
-            TicketId = ticketId
+            TicketId = ticketId,
+            RowVersion = rowVersion
         };
         DynamicFields = new List<DynamicFieldModel>();
         AvailableTransitions = new List<TransitionDto>();

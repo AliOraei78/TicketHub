@@ -317,6 +317,11 @@ public class TicketService : ITicketService
             }
         }
 
+        if (dto.RowVersion != Guid.Empty && ticketInDb.RowVersion != Guid.Empty && dto.RowVersion != ticketInDb.RowVersion)
+        {
+            throw new ConcurrencyException("اطلاعات این تیکت همزمان توسط کاربر یا فرآیند دیگری تغییر کرده است. لطفاً صفحه را تازه‌سازی کنید.");
+        }
+
         dto.Adapt(ticketInDb);
 
         // 🌟 فیکس مشکل عدم بروزرسانی priority / status / category / workflowStatus:
@@ -328,7 +333,14 @@ public class TicketService : ITicketService
         ticketInDb.Project = null!;
         ticketInDb.User = null!;
 
-        await _ticketRepository.UpdateAsync(ticketInDb);
+        try
+        {
+            await _ticketRepository.UpdateAsync(ticketInDb);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyException("اطلاعات این تیکت همزمان توسط کاربر یا فرآیند دیگری تغییر کرده است. لطفاً صفحه را تازه‌سازی کنید.");
+        }
 
         _logger.LogInformation("تیکت با شناسه {Id} با موفقیت ویرایش شد.", dto.Id);
 
@@ -514,8 +526,14 @@ public class TicketService : ITicketService
 
         var nextStatusId = transition.ToStatus?.StatusId ?? 0;
         var nextWorkflowStatusId = transition.ToState;
-
-        await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, nextStatusId, nextWorkflowStatusId, ticketHistory);
+        try
+        {
+            await _ticketRepository.ApplyTransitionAndSaveHistoryAsync(ticketInDb.Id, nextStatusId, nextWorkflowStatusId, ticketHistory, dto.RowVersion);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyException("وضعیت این تیکت همزمان توسط کاربر یا فرآیند دیگری تغییر کرده است. لطفاً صفحه را تازه‌سازی کنید.");
+        }
         _logger.LogInformation("عملیات با موفقیت انجام شد.");
 
         // Update DueDate based on destination status's automated transition DeadlineMinutes or the transition's DeadlineMinutes

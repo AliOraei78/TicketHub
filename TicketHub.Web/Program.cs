@@ -33,6 +33,7 @@ using TicketHub.Application.Behaviors;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using TicketHub.Web.HealthChecks;
+using TicketHub.Web.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
@@ -144,26 +145,9 @@ builder.Services.AddDataProtection()
     .SetApplicationName("TicketHub");
 // --------------------------------------------------------
 
-// --------- بخش جدید احراز هویت با کوکی ---------
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Cookie.Name = "TicketHub_Session";
-        options.LoginPath = "/login";
-        options.AccessDeniedPath = "/access-denied";
-
-        // --- تنظیمات امنیتی استاندارد ---
-        options.Cookie.HttpOnly = true; // جلوگیری از سرقت کوکی توسط کدهای جاوااسکریپت مخرب (XSS)
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // سازگار با هر دو پروتکل HTTP (در داکر/لوکال) و HTTPS
-        options.Cookie.SameSite = SameSiteMode.Lax; // تضمین ارسال کوکی در ریدایرکت‌ها و درخواست‌های مجاز
-
-        // --- تنظیمات انقضا ---
-        options.ExpireTimeSpan = TimeSpan.FromHours(1); // تغییر از ۷ روز به ۱ ساعت
-        options.SlidingExpiration = false; // اگر کاربر در روز ششم به سایت سر زد، انقضای کوکی خودکار ۷ روز دیگر تمدید می‌شود
-    });
-builder.Services.AddAuthorization();
-builder.Services.AddCascadingAuthenticationState();
-// ----------------------------------------------
+// --------- بخش احراز هویت با کوکی و SSO / OIDC سازمانی ---------
+builder.Services.AddTicketHubAuthentication(builder.Configuration);
+// ----------------------------------------------------------------
 
 builder.Services.AddValidatorsFromAssembly(typeof(AttachmentDtoValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(CategoryDtoValidator).Assembly);
@@ -203,7 +187,7 @@ builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<ITicketFieldService, TicketFieldService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
-builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddStorageServices(builder.Configuration);
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ISystemLogService, SystemLogService>();
 builder.Services.AddScoped<IWorkflowAutomationService, WorkflowAutomationService>();
@@ -444,6 +428,9 @@ app.MapGet("/api/captcha", (IDNTCaptchaApiProvider apiProvider) =>
     return Results.Ok(result);
 }).RequireRateLimiting(RateLimitingExtensions.CaptchaPolicy);
 // --------------------------------------
+
+app.MapAttachmentEndpoints();
+app.MapAuthEndpoints();
 
 // --------- Dev Quick-Login Endpoint (Development Only) ---------
 if (app.Environment.IsDevelopment())

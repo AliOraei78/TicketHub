@@ -12,6 +12,7 @@ public class TicketDto
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public Guid RowVersion { get; set; }
 
     // شناسه‌های ارتباطات (Foreign Keys)
     public int UserId { get; set; }

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using NpgsqlTypes;
 using TicketHub.Core.Interfaces;
 
 namespace TicketHub.Core.Entities
@@ -10,6 +12,12 @@ namespace TicketHub.Core.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAtUtc { get; set; }
+
+        [ConcurrencyCheck]
+        public Guid RowVersion { get; set; } = Guid.NewGuid();
+
+        // بردار جستجوی تمام‌متن با ایندکس معکوس GIN در PostgreSQL
+        public NpgsqlTsVector? SearchVector { get; set; }
 
         public int UserId { get; set; }
         public User User { get; set; } = null!;

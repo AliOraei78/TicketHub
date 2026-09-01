@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using NpgsqlTypes;
 using TicketHub.Infrastructure.Data;
 
 #nullable disable
@@ -12,9 +12,11 @@ using TicketHub.Infrastructure.Data;
 namespace TicketHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901073542_AddTicketRowVersionConcurrencyToken")]
+    partial class AddTicketRowVersionConcurrencyToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -748,12 +750,6 @@ namespace TicketHub.Infrastructure.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("uuid");
 
-                    b.Property<NpgsqlTsVector>("SearchVector")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("tsvector")
-                        .HasAnnotation("Npgsql:TsVectorConfig", "simple")
-                        .HasAnnotation("Npgsql:TsVectorProperties", new[] { "Title", "Description" });
-
                     b.Property<int>("StatusId")
                         .HasColumnType("integer");
 
@@ -775,17 +771,13 @@ namespace TicketHub.Infrastructure.Migrations
 
                     b.HasIndex("PriorityId");
 
-                    b.HasIndex("SearchVector");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("StatusId");
 
+                    b.HasIndex("UserId");
+
                     b.HasIndex("WorkflowStatusId");
-
-                    b.HasIndex("ProjectId", "StatusId");
-
-                    b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("Tickets");
                 });
@@ -1139,12 +1131,6 @@ namespace TicketHub.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ExternalProvider")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ExternalSubjectId")
-                        .HasColumnType("text");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1172,8 +1158,6 @@ namespace TicketHub.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IsDeleted");
-
-                    b.HasIndex("ExternalProvider", "ExternalSubjectId");
 
                     b.ToTable("Users");
                 });

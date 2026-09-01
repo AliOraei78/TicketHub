@@ -285,7 +285,7 @@ public partial class Tickets : Fluxor.Blazor.Web.Components.FluxorComponent
     {
         if (ticket.Project != null && ticket.Project.WorkflowId.HasValue)
         {
-            await TransitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value, ticket.WorkflowStatusId);
+            await TransitionModal.OpenAsync(ticket.Id, ticket.Title, ticket.StatusId, ticket.Project.WorkflowId.Value, ticket.WorkflowStatusId, ticket.RowVersion);
         }
     }
 

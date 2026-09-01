@@ -28,7 +28,7 @@ namespace TicketHub.Tests.bUnit
 
             _mockEventBroker.Setup(b => b.PublishTransitionOccurredAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
             _mockEventBroker.Setup(b => b.PublishTicketUpdatedAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
-            _mockTicketRepo.Setup(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<TicketHistory>())).Returns(Task.CompletedTask);
+            _mockTicketRepo.Setup(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>())).Returns(Task.CompletedTask);
         }
 
         private IDbContextFactory<AppDbContext> CreateInMemoryDbContextFactory(string dbName)
@@ -113,7 +113,7 @@ namespace TicketHub.Tests.bUnit
             await service.ProcessAutomaticTransitionsAsync();
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(42, 200, 20, It.Is<TicketHistory>(h => h.Comment != null && h.Comment.Contains("انتقال خودکار"))), Times.Once);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(42, 200, 20, It.Is<TicketHistory>(h => h.Comment != null && h.Comment.Contains("انتقال خودکار")), It.IsAny<Guid?>()), Times.Once);
             _mockEventBroker.Verify(b => b.PublishTransitionOccurredAsync(42), Times.Once);
             _mockEventBroker.Verify(b => b.PublishTicketUpdatedAsync(42), Times.Once);
         }
@@ -178,7 +178,7 @@ namespace TicketHub.Tests.bUnit
             await service.ProcessAutomaticTransitionsAsync();
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<TicketHistory>()), Times.Never);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Never);
         }
 
         [Fact]
@@ -241,7 +241,7 @@ namespace TicketHub.Tests.bUnit
             await service.TriggerImmediateAutomaticTransitionsAsync(44);
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(44, 202, 22, It.IsAny<TicketHistory>()), Times.Once);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(44, 202, 22, It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Once);
             _mockEventBroker.Verify(b => b.PublishTransitionOccurredAsync(44), Times.Once);
         }
 
@@ -316,7 +316,7 @@ namespace TicketHub.Tests.bUnit
                 await context.SaveChangesAsync();
             }
 
-            _mockTicketRepo.Setup(r => r.ApplyTransitionAndSaveHistoryAsync(45, It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>()))
+            _mockTicketRepo.Setup(r => r.ApplyTransitionAndSaveHistoryAsync(45, It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>()))
                 .Returns(Task.CompletedTask);
 
             var service = new WorkflowAutomationService(factory, _mockTicketRepo.Object, _mockEventBroker.Object, _mockLogger.Object);
@@ -325,8 +325,8 @@ namespace TicketHub.Tests.bUnit
             await service.TriggerImmediateAutomaticTransitionsAsync(45);
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(45, 203, 23, It.IsAny<TicketHistory>()), Times.Once);
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(45, 303, 33, It.IsAny<TicketHistory>()), Times.Once);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(45, 203, 23, It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Once);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(45, 303, 33, It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Once);
         }
 
         [Fact]
@@ -372,7 +372,7 @@ namespace TicketHub.Tests.bUnit
                 await context.SaveChangesAsync();
             }
 
-            _mockTicketRepo.Setup(r => r.ApplyTransitionAndSaveHistoryAsync(46, It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>()))
+            _mockTicketRepo.Setup(r => r.ApplyTransitionAndSaveHistoryAsync(46, It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>()))
                 .Returns(Task.CompletedTask);
 
 
@@ -382,7 +382,7 @@ namespace TicketHub.Tests.bUnit
             await service.TriggerImmediateAutomaticTransitionsAsync(46, maxDepth: 5);
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(46, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<TicketHistory>()), Times.Exactly(5));
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(46, It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Exactly(5));
         }
 
         [Fact]
@@ -519,7 +519,8 @@ namespace TicketHub.Tests.bUnit
                 88,
                 600,
                 60,
-                It.Is<TicketHistory>(h => h.Comment != null && (h.Comment.Contains("Deadline Exceeded") || h.Comment.Contains("اتمام مهلت زمانی")))),
+                It.Is<TicketHistory>(h => h.Comment != null && (h.Comment.Contains("Deadline Exceeded") || h.Comment.Contains("اتمام مهلت زمانی"))),
+                It.IsAny<Guid?>()),
                 Times.Once);
 
             _mockEventBroker.Verify(b => b.PublishTransitionOccurredAsync(88), Times.Once);
@@ -586,7 +587,7 @@ namespace TicketHub.Tests.bUnit
             await service.ProcessDeadlinesAsync();
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<TicketHistory>()), Times.Never);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Never);
             _mockEventBroker.Verify(b => b.PublishTicketUpdatedAsync(89), Times.Never);
         }
 
@@ -701,7 +702,7 @@ namespace TicketHub.Tests.bUnit
             await service.ProcessDeadlinesAsync();
 
             // Assert
-            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<TicketHistory>()), Times.Never);
+            _mockTicketRepo.Verify(r => r.ApplyTransitionAndSaveHistoryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<TicketHistory>(), It.IsAny<Guid?>()), Times.Never);
             _mockEventBroker.Verify(b => b.PublishTicketUpdatedAsync(91), Times.Once); // Real-time notification sent
         }
 

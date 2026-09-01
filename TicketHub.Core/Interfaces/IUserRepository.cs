@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,4 +14,5 @@ public interface IUserRepository : IRepository<User>
     Task BulkUpdateStatusAsync(HashSet<int> userIds, bool isActive);
     Task BulkDeleteAsync(HashSet<int> userIds);
     Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetByExternalProviderAsync(string provider, string subjectId);
 }

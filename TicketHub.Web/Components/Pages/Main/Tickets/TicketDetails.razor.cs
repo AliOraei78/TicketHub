@@ -276,6 +276,13 @@ public partial class TicketDetails : ComponentBase, IDisposable
             ToastService.ShowSuccess("عنوان تیکت با موفقیت ویرایش شد.");
             StateHasChanged();
         }
+        catch (ConcurrencyException ex)
+        {
+            ToastService.ShowWarning(ex.Message, "تداخل همزمانی");
+            Ticket = await TicketService.GetByIdAsync(TicketId);
+            IsEditingTitle = false;
+            StateHasChanged();
+        }
         catch (Exception ex)
         {
             ToastService.ShowError("خطا در ویرایش عنوان: " + ex.Message);
@@ -302,6 +309,13 @@ public partial class TicketDetails : ComponentBase, IDisposable
             ToastService.ShowSuccess("توضیحات تیکت با موفقیت ویرایش شد.");
             StateHasChanged();
         }
+        catch (ConcurrencyException ex)
+        {
+            ToastService.ShowWarning(ex.Message, "تداخل همزمانی");
+            Ticket = await TicketService.GetByIdAsync(TicketId);
+            IsEditingDescription = false;
+            StateHasChanged();
+        }
         catch (Exception ex)
         {
             ToastService.ShowError("خطا در ویرایش توضیحات: " + ex.Message);
@@ -323,6 +337,12 @@ public partial class TicketDetails : ComponentBase, IDisposable
                 StateHasChanged();
             }
         }
+        catch (ConcurrencyException ex)
+        {
+            ToastService.ShowWarning(ex.Message, "تداخل همزمانی");
+            Ticket = await TicketService.GetByIdAsync(TicketId);
+            StateHasChanged();
+        }
         catch (Exception ex)
         {
             ToastService.ShowError("خطا در بروزرسانی اولویت: " + ex.Message);
@@ -343,6 +363,12 @@ public partial class TicketDetails : ComponentBase, IDisposable
                 ToastService.ShowSuccess("وضعیت تیکت بروزرسانی شد.");
                 StateHasChanged();
             }
+        }
+        catch (ConcurrencyException ex)
+        {
+            ToastService.ShowWarning(ex.Message, "تداخل همزمانی");
+            Ticket = await TicketService.GetByIdAsync(TicketId);
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -436,7 +462,7 @@ public partial class TicketDetails : ComponentBase, IDisposable
     {
         if (Ticket != null && Ticket.Project != null && Ticket.Project.WorkflowId.HasValue)
         {
-            await TransitionModal.OpenAsync(Ticket.Id, Ticket.Title, Ticket.StatusId, Ticket.Project.WorkflowId.Value, Ticket.WorkflowStatusId);
+            await TransitionModal.OpenAsync(Ticket.Id, Ticket.Title, Ticket.StatusId, Ticket.Project.WorkflowId.Value, Ticket.WorkflowStatusId, Ticket.RowVersion);
         }
     }
 

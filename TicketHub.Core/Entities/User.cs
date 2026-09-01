@@ -19,6 +19,11 @@ namespace TicketHub.Core.Entities
         public string? ConfirmationToken { get; set; }
         // زمان انقضای کد (مثلاً ۱۵ دقیقه)
         public DateTime? TokenExpiration { get; set; }
+
+        // مشخصات احراز هویت یکپارچه و ورود سازمانی (SSO / OIDC)
+        public string? ExternalProvider { get; set; }
+        public string? ExternalSubjectId { get; set; }
+
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();

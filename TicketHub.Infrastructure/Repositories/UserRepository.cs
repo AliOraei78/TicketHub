@@ -1,4 +1,4 @@
-﻿// TicketHub.Infrastructure/Repositories/UserRepository.cs
+// TicketHub.Infrastructure/Repositories/UserRepository.cs
 using Microsoft.EntityFrameworkCore;
 using TicketHub.Core.Entities;
 using TicketHub.Core.Interfaces;
@@ -74,6 +74,18 @@ namespace TicketHub.Infrastructure.Repositories
                         .Include(u => u.UserRoles)
                         .ThenInclude(ur => ur.Role)
                         .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<User?> GetByExternalProviderAsync(string provider, string subjectId)
+        {
+            if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subjectId))
+                return null;
+
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Users
+                        .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                        .FirstOrDefaultAsync(u => u.ExternalProvider == provider && u.ExternalSubjectId == subjectId);
         }
     }
 }
