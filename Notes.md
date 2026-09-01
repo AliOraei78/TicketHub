@@ -2,7 +2,7 @@
 
 ## Context & Architecture
 **Architecture Style:** Clean Architecture (Onion Architecture)
-**Tech Stack:** .NET 10, C#, Entity Framework Core 10 (SQL Server), Blazor (Fluxor, Bit.BlazorUI, Tailwind CSS)
+**Tech Stack:** .NET 10, C#, Entity Framework Core 10 (PostgreSQL / Npgsql), Blazor (Fluxor, Bit.BlazorUI, Tailwind CSS)
 
 ### Layers Breakdown
 1. **TicketHub.Core (Domain Layer)**
@@ -20,7 +20,7 @@
 
 3. **TicketHub.Infrastructure (Data Access Layer)**
    - Database context and migrations.
-   - **EF Core:** Uses `AppDbContext` for SQL Server.
+   - **EF Core:** Uses `AppDbContext` with PostgreSQL (`Npgsql.EntityFrameworkCore.PostgreSQL`).
    - **Data Seeding:** `DbInitializer` heavily seeds the database with default statuses (Open, In Progress, Closed, etc.), default roles (Admin, Support, User), priorities, and constructs a comprehensive default "General" (عمومی) workflow complete with nodes, transitions, required fields, and role permissions for each transition.
 
 4. **TicketHub.Web (Presentation Layer)**
