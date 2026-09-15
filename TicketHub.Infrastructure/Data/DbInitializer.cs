@@ -105,16 +105,18 @@ namespace TicketHub.Infrastructure.Data
                     }
                 }
 
-                // 3.1. Seed 3 Additional Users for Remaining Roles (پشتیبان, مسئول فنی, کاربر)
+                // 3.1. Seed Additional Users for Remaining Roles (پشتیبان, مسئول فنی, کاربر, مهمان)
                 var supportPass = configuration?["InitialSeedUsers:SupportPassword"] ?? "Support@123456";
                 var techPass = configuration?["InitialSeedUsers:TechPassword"] ?? "Tech@123456";
                 var userPass = configuration?["InitialSeedUsers:UserPassword"] ?? "User@123456";
+                var guestPass = configuration?["InitialSeedUsers:GuestPassword"] ?? "guest";
 
                 var defaultUserSeedData = new[]
                 {
                     new { Name = "کاربر پشتیبان", Email = "support@tickethub.io", RoleName = "پشتیبان", Phone = "09120000001", Pass = supportPass },
                     new { Name = "مسئول فنی سیستم", Email = "tech@tickethub.io", RoleName = "مسئول فنی", Phone = "09120000002", Pass = techPass },
-                    new { Name = "کاربر عادی", Email = "user@tickethub.io", RoleName = "کاربر", Phone = "09120000003", Pass = userPass }
+                    new { Name = "کاربر عادی", Email = "user@tickethub.io", RoleName = "کاربر", Phone = "09120000003", Pass = userPass },
+                    new { Name = "کاربر مهمان", Email = "guest@tickethub.io", RoleName = "کاربر", Phone = "09120000004", Pass = guestPass }
                 };
 
                 foreach (var seed in defaultUserSeedData)

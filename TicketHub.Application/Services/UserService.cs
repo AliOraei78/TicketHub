@@ -372,7 +372,13 @@ public class UserService : IUserService
     {
         _logger.LogInformation("درخواست ورود برای ایمیل {Email}.", model.Email);
 
-        var user = await _userRepository.GetByEmailAsync(model.Email);
+        var searchEmail = model.Email.Trim().ToLowerInvariant();
+        if (searchEmail == "guest")
+        {
+            searchEmail = "guest@tickethub.io";
+        }
+
+        var user = await _userRepository.GetByEmailAsync(searchEmail);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
         {

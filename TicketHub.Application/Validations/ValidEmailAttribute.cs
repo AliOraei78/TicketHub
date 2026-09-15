@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace TicketHub.Application.Validations;
@@ -16,6 +16,8 @@ public class ValidEmailAttribute : ValidationAttribute
     public override bool IsValid(object? value)
     {
         if (string.IsNullOrWhiteSpace(value?.ToString())) return true;
-        return Regex.IsMatch(value.ToString()!, Pattern);
+        var str = value.ToString()!;
+        if (str.Equals("guest", StringComparison.OrdinalIgnoreCase)) return true;
+        return Regex.IsMatch(str, Pattern);
     }
 }

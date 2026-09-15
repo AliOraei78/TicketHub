@@ -32,4 +32,4 @@ Disallow: /hub/
 Disallow: /_blazor/
 
 # Sitemap Location
-Sitemap: https://tickethub.local/sitemap.xml
+Sitemap: https://ticket.xnario.ir/sitemap.xml

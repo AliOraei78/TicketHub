@@ -167,6 +167,8 @@ namespace TicketHub.Tests.bUnit
         [InlineData("invalid-email", "ValidPass123!", false, "فرمت ایمیل وارد شده معتبر نیست")]
         [InlineData("valid@email.com", "", false, "وارد کردن رمز عبور الزامی است")]
         [InlineData("valid@email.com", "ValidPass123!", true, null)]
+        [InlineData("guest", "guest", true, null)]
+        [InlineData("guest@tickethub.io", "guest", true, null)]
         public void LoginViewModel_Validation_Tests(string email, string password, bool expectedValid, string? expectedError)
         {
             var model = new LoginViewModel

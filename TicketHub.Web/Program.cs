@@ -444,6 +444,7 @@ if (app.Environment.IsDevelopment())
             "support" => "support@tickethub.io",
             "tech" => "tech@tickethub.io",
             "user" => "user@tickethub.io",
+            "guest" => "guest@tickethub.io",
             _ => defaultAdminEmail // default: admin
         };
 
