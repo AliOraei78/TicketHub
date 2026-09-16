@@ -50,6 +50,13 @@ public partial class TicketDetails : ComponentBase, IDisposable
     protected string NewCommentContent { get; set; } = string.Empty;
     protected bool IsSubmittingComment { get; set; } = false;
 
+    protected int ActiveMobileTab { get; set; } = 0;
+
+    protected void SetMobileTab(int tabIndex)
+    {
+        ActiveMobileTab = tabIndex;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try

@@ -274,5 +274,29 @@ namespace TicketHub.Tests.bUnit
 
             nav.Uri.Should().EndWith("/tickets");
         }
+
+        [Fact]
+        public void MobileTabs_ClickingTabs_SwitchesActiveCardState()
+        {
+            var cut = Render<TicketDetails>(parameters => parameters.Add(p => p.TicketId, 42));
+
+            // Default tab should be 0 (مشخصات)
+            var commentsTabBtn = cut.Find("button:contains('نظرات')");
+            commentsTabBtn.Click();
+
+            // After clicking 'نظرات', tab 1 is active
+            var property = cut.Instance.GetType().GetProperty("ActiveMobileTab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            property!.GetValue(cut.Instance).Should().Be(1);
+
+            // Click 'گردش‌کار'
+            var workflowTabBtn = cut.Find("button:contains('گردش‌کار')");
+            workflowTabBtn.Click();
+            property.GetValue(cut.Instance).Should().Be(2);
+
+            // Click 'مشخصات'
+            var overviewTabBtn = cut.Find("button:contains('مشخصات')");
+            overviewTabBtn.Click();
+            property.GetValue(cut.Instance).Should().Be(0);
+        }
     }
 }
